@@ -13,7 +13,6 @@ the passing test files, none of which import across test modules.
 from __future__ import annotations
 
 from collections.abc import Sequence
-
 from palimpsests.providers.native.backend import BatchEntry, NativeBackend, Token
 from palimpsests.providers.native.scheduler import (
     GenerationRequest,
