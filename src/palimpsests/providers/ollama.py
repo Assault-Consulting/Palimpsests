@@ -212,6 +212,49 @@ class OllamaEngine(BaseInferenceEngine):
             options["num_gpu"] = memory.gpu_layers
         return options
 
+    # ─── embeddings ──────────────────────────────────────────────────────
+
+    def embed(self, *, model: str, text: str) -> list[float]:
+        """Return an embedding vector for ``text`` via ``/api/embeddings``.
+
+        Level 1 exposes Ollama's embedding endpoint directly. The model
+        must be one Ollama can embed with (e.g. ``nomic-embed-text``);
+        a chat-only model returns an error, surfaced as ModelNotFound
+        or EngineRequestError like any other call.
+
+        This is what BlockMemory's default embedder routes through, so
+        retrieval of evicted context works with the same daemon and no
+        extra dependency — but BlockMemory takes an injectable embedder,
+        so a caller can bypass this entirely.
+        """
+        try:
+            resp = self._client.post(
+                "/api/embeddings", json={"model": model, "prompt": text}
+            )
+        except httpx.ConnectError as e:
+            raise EngineUnavailable(
+                f"cannot reach Ollama at {self._base_url}"
+            ) from e
+        except httpx.HTTPError as e:
+            raise EngineRequestError(f"embedding request failed: {e}") from e
+
+        if resp.status_code == 404:
+            raise ModelNotFound(model, ENGINE_ID)
+        if resp.status_code != 200:
+            raise EngineRequestError(
+                "embedding request failed",
+                status=resp.status_code,
+                body=resp.text[:500],
+            )
+
+        data = resp.json()
+        embedding = data.get("embedding")
+        if not embedding:
+            raise EngineRequestError(
+                f"Ollama returned no embedding for model {model!r}"
+            )
+        return embedding
+
     # ─── lifecycle ───────────────────────────────────────────────────────
 
     def close(self) -> None:
