@@ -6,18 +6,94 @@ code, so every branch of the loop (admission, batching, sampling, stop
 tokens, the token cap, seq recycling) is verified in CI. The real
 llama.cpp backend is validated separately, on hardware.
 
-``FakeBackend`` lives in conftest.py so this module and the engine tests
-share it.
+FakeBackend is defined inline (rather than imported from another test
+module or conftest) so this file's import block stays simple and matches
+the passing test files, none of which import across test modules.
 """
 from __future__ import annotations
 
-from palimpsests.providers.native.backend import NativeBackend
+from collections.abc import Sequence
+
+from palimpsests.providers.native.backend import BatchEntry, NativeBackend, Token
 from palimpsests.providers.native.scheduler import (
     GenerationRequest,
     Scheduler,
     StepToken,
 )
-from tests.conftest import FakeBackend
+
+
+class FakeBackend:
+    """A deterministic stand-in for a real llama.cpp backend.
+
+    It implements the ``NativeBackend`` surface without a model. Decode
+    returns, for each sequence, a logits vector that makes ``argmax`` pick
+    a scripted next token — so a test can assert the exact token stream.
+
+    The script is ``{seq_id: [t0, t1, ...]}`` and is keyed to *generation
+    steps per sequence*: the i-th decode of a sequence emits ``t_i``. When
+    a sequence's script is exhausted it emits ``eos``.
+
+    It also records ``seq_copy`` / ``seq_remove`` / ``state_*`` calls so
+    the scheduler's KV bookkeeping (slot recycling) can be asserted.
+    """
+
+    def __init__(
+        self,
+        *,
+        vocab_size: int = 32,
+        n_seq_max: int = 4,
+        eos: Token = 0,
+        script: dict[int, list[Token]] | None = None,
+    ) -> None:
+        self._vocab = vocab_size
+        self._n_seq_max = n_seq_max
+        self._eos = eos
+        self._script = script or {}
+        self._decode_count: dict[int, int] = {}
+        self.removed: list[int] = []
+        self.copied: list[tuple[int, int]] = []
+        self.states: dict[int, bytes] = {}
+
+    def tokenize(self, text: str, *, add_special: bool = True) -> list[Token]:
+        return [(ord(c) % self._vocab) for c in text]
+
+    def detokenize(self, tokens: Sequence[Token]) -> str:
+        return " ".join(str(t) for t in tokens)
+
+    def decode(self, entries: Sequence[BatchEntry]) -> dict[int, list[float]]:
+        out: dict[int, list[float]] = {}
+        for entry in entries:
+            if not entry.wants_logits:
+                continue
+            i = self._decode_count.get(entry.seq_id, 0)
+            self._decode_count[entry.seq_id] = i + 1
+            script = self._script.get(entry.seq_id, [])
+            token = script[i] if i < len(script) else self._eos
+            logits = [0.0] * self._vocab
+            logits[token] = 1.0
+            out[entry.seq_id] = logits
+        return out
+
+    def seq_copy(
+        self, src_seq: int, dst_seq: int, p0: int = -1, p1: int = -1
+    ) -> None:
+        self.copied.append((src_seq, dst_seq))
+
+    def seq_remove(self, seq_id: int, p0: int = -1, p1: int = -1) -> None:
+        self.removed.append(seq_id)
+        self._decode_count.pop(seq_id, None)
+
+    def state_get(self, seq_id: int) -> bytes:
+        return self.states.get(seq_id, b"")
+
+    def state_set(self, seq_id: int, state: bytes) -> None:
+        self.states[seq_id] = state
+
+    def n_seq_max(self) -> int:
+        return self._n_seq_max
+
+    def close(self) -> None:
+        return None
 
 
 # ─── the fake really is a NativeBackend ───────────────────────────────────
@@ -91,9 +167,7 @@ def test_two_sequential_requests_reuse_the_freed_slot():
     """At N=1 the second request runs only after the first frees seq 0.
 
     Each request uses its own fresh backend so the test asserts scheduler
-    behavior (the single seq is used then released) without poking at
-    fake-backend internals between runs — the earlier version reset
-    private counters by hand, which was brittle and wrong.
+    behavior without poking at fake-backend internals between runs.
     """
     backend_a = FakeBackend(script={0: [1, 1]})
     sched_a = Scheduler(backend_a, max_active=1)
@@ -105,7 +179,6 @@ def test_two_sequential_requests_reuse_the_freed_slot():
 
     assert first == [1, 1]
     assert second == [3, 3]
-    # each scheduler released its single seq (id 0) on completion
     assert backend_a.removed == [0]
     assert backend_b.removed == [0]
 
