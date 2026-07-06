@@ -6,9 +6,9 @@
 [![CI](https://img.shields.io/badge/CI-pending-lightgrey.svg)](#)
 [![PyPI](https://img.shields.io/badge/PyPI-unreleased-lightgrey.svg)](#)
 
-> **Status: early development.** The abstraction and the level-1 (Ollama) path
-> are the current focus. Levels 2–3 are on the roadmap (see below). APIs will
-> change before v1.0.
+> **Status: v0.1.** Level 1 (Ollama) works end to end from the CLI, with the
+> context-memory window manager and an encrypted audit log. Levels 2–3 are on
+> the roadmap (see below). APIs may change before v1.0.
 
 ---
 
@@ -82,25 +82,38 @@ pip install "palimpsests[llamacpp]"   # + level 2 (native wheel build)
 
 ## Quick start
 
+Requires a running [Ollama](https://ollama.com) daemon for level 1.
+
 ```bash
-# uses your local Ollama daemon (level 1)
-palimpsests chat --model qwen2.5 "explain KV cache quantization in two sentences"
+# talk to a model (prompt via -m, or piped over stdin)
+palimpsests chat qwen2.5:7b -m "explain KV cache quantization in two sentences"
+echo "same, but piped" | palimpsests chat qwen2.5:7b
+
+# give a long conversation a smaller context budget (sink/window/evict kicks in)
+palimpsests chat qwen2.5:7b -m "..." --context-size 4096
 
 # list models the active engine can see
 palimpsests models
 
-# inspect / switch the active engine
-palimpsests engine
-palimpsests engine set llamacpp
+# inspect engines (control level, installed, * = active) and switch
+palimpsests engine list
+palimpsests engine use llamacpp
 ```
+
+Or drive the same orchestration from Python, without the terminal:
 
 ```python
-from palimpsests.engine import get_active_engine
+from palimpsests.core import init_app, chat
 
-engine = get_active_engine()
-for chunk in engine.chat_stream(model="qwen2.5", messages=[...]):
+ctx = init_app()
+messages = [{"role": "user", "content": "hello"}]
+for chunk in chat(ctx, model="qwen2.5:7b", messages=messages):
     print(chunk.delta, end="", flush=True)
 ```
+
+The `chat` function fits the conversation to the context budget (sink + window +
+evict) before it reaches the engine, and records the call to the audit log —
+you get context management and auditability without wiring them yourself.
 
 ---
 
@@ -149,7 +162,8 @@ abstraction from wrapper to native service.**
 
 ## Roadmap
 
-- [ ] **v0.1** — Level 1 (Ollama) + context-memory (window manager, block memory), CLI
+- [x] **v0.1** — Level 1 (Ollama) + context-memory window manager + CLI +
+      audit/registry foundation *(block memory lands in a v0.1.x point release)*
 - [ ] **v0.2** — Level 2 (llama.cpp) with full `EngineMemoryConfig`
 - [ ] **v0.3+** — Level 3 native service, incrementally: continuous batching +
       shared prefix KV → server-side tool loop → speculative decoding →
