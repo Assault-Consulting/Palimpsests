@@ -36,7 +36,7 @@ from palimpsests.context import (
     engine_embedder,
 )
 from palimpsests.engine import ChatChunk, InferenceEngine, Message, ModelInfo
-from palimpsests.providers import LlamaCppEngine, OllamaEngine
+from palimpsests.providers import LlamaCppEngine, NativeEngine, OllamaEngine
 from palimpsests.registry import DEFAULT_ENGINE_ID, EngineRegistry, set_registry
 from pathlib import Path
 
@@ -58,12 +58,20 @@ def default_config_dir() -> Path:
 
 # ─── engine construction ─────────────────────────────────────────────────
 
-# Known engine adapters and how to build one. Only Ollama exists today;
-# llama.cpp and the native slot register here in later PRs. Keeping the
-# factory in a table (not a chain of ifs) means adding an engine is a
+# Known engine adapters and how to build one. Ollama (L1) and the
+# pal-native slot (L3) construct with no arguments, so they live in the
+# factory table. llama.cpp (L2) needs a model path, so it registers
+# separately below via _maybe_llamacpp_engine. Keeping the zero-arg ones
+# in a table (not a chain of ifs) means adding such an engine is a
 # one-line change.
+#
+# pal-native is a level-3 placeholder: it registers so the architecture
+# is complete and visible (engine list shows all three levels), but its
+# is_available() is always False, so it appears as known-but-not-installed
+# and every call refuses loudly until real level-3 code lands.
 _ENGINE_FACTORIES = {
     "ollama": OllamaEngine,
+    "pal-native": NativeEngine,
 }
 
 
