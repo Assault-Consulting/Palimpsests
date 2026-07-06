@@ -49,15 +49,15 @@ class _Slot:
 
     Holds the per-sequence decode state: which ``seq_id`` it owns, the
     tokens still to be fed on the next step (the prompt on the first
-    step, then one sampled token per step after), how many tokens have
-    been generated, and the output collected so far.
+    step, then one sampled token per step after), the stop tokens that
+    end it, how many tokens have been generated, and the output so far.
     """
 
     seq_id: int
     pending: list[Token]
     max_tokens: int
+    stop_tokens: tuple[Token, ...] = ()
     generated: list[Token] = field(default_factory=list)
-    prefixed: bool = False
     done: bool = False
 
 
@@ -119,6 +119,7 @@ class Scheduler:
                 seq_id=seq_id,
                 pending=list(request.prompt_tokens),
                 max_tokens=request.max_tokens,
+                stop_tokens=request.stop_tokens,
             )
 
     def _release(self, seq_id: int) -> None:
@@ -155,7 +156,6 @@ class Scheduler:
         produced: list[StepToken] = []
         finished: list[int] = []
         for seq_id, slot in self._slots.items():
-            slot.prefixed = True
             logits = logits_by_seq.get(seq_id)
             if logits is None:
                 continue
@@ -164,7 +164,7 @@ class Scheduler:
             # Next step feeds back only the freshly sampled token.
             slot.pending = [token]
 
-            is_stop = token in self._current_stops.get(seq_id, ())
+            is_stop = token in slot.stop_tokens
             hit_cap = len(slot.generated) >= slot.max_tokens
             slot.done = is_stop or hit_cap
             produced.append(StepToken(seq_id=seq_id, token=token, done=slot.done))
@@ -177,8 +177,6 @@ class Scheduler:
 
     # ─── convenience: drive one request to completion ────────────────────
 
-    _current_stops: dict[int, tuple[Token, ...]]
-
     def run(self, request: GenerationRequest) -> Iterator[Token]:
         """Submit one request and yield its tokens until it finishes.
 
@@ -187,13 +185,7 @@ class Scheduler:
         generated token in order.
         """
         self.submit(request)
-        # Track stops per admitted seq so step() can see them.
-        self._current_stops = {}
         while self._queue or self._slots:
-            # Bind stop tokens to whatever slot the request lands in.
-            for seq_id, slot in self._slots.items():
-                if seq_id not in self._current_stops and not slot.generated:
-                    self._current_stops[seq_id] = request.stop_tokens
             produced = self.step()
             for st in produced:
                 yield st.token
