@@ -1,0 +1,82 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "palimpsests"
+version = "0.0.0"
+description = "A layered local-LLM inference engine: from thin wrapper to your own serving service, under one abstraction."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "Assault Consulting" }]
+keywords = [
+    "llm",
+    "inference",
+    "local-llm",
+    "ollama",
+    "llama-cpp",
+    "kv-cache",
+    "context-management",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+# Base install is deliberately light: level 1 (Ollama over HTTP) plus the
+# pure-Python context-memory layer. Nothing here pulls a native wheel.
+dependencies = [
+    "httpx>=0.27",
+    "pydantic>=2.7",
+]
+
+[project.optional-dependencies]
+# Level 2. Pulls a native dependency — isolated behind an extra so the base
+# install stays wheel-free. GPU builds (Metal/CUDA/Vulkan) are a runtime
+# opt-in, not covered by CI.
+llamacpp = [
+    "llama-cpp-python>=0.2.90",
+]
+# Local embeddings for block-memory retrieval when not routing through the
+# active engine's embedding endpoint.
+embeddings = [
+    "numpy>=1.26",
+]
+dev = [
+    "pytest>=8.2",
+    "pytest-httpx>=0.30",
+    "ruff>=0.5",
+]
+
+[project.urls]
+Homepage = "https://github.com/Assault-Consulting/Palimpsests"
+Repository = "https://github.com/Assault-Consulting/Palimpsests"
+Issues = "https://github.com/Assault-Consulting/Palimpsests/issues"
+
+[project.scripts]
+palimpsests = "palimpsests.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/palimpsests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+# E/F: pyflakes+pycodestyle, I: isort, B: bugbear, UP: pyupgrade.
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Import mode importlib keeps src-layout test discovery clean without an
+# editable install rewriting sys.path in surprising ways.
+addopts = "--import-mode=importlib"
