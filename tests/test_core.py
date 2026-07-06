@@ -171,3 +171,111 @@ def test_chat_applies_context_fitting(ctx, httpx_mock):
     sent = json.loads(request.content)["messages"]
     # Context fitting dropped some messages before the engine saw them.
     assert len(sent) < len(messages)
+
+
+# ─── block-memory wiring ─────────────────────────────────────────────────
+
+# A deterministic embedder so retrieval is exact and offline. Mirrors the
+# fake used in test_block_memory: fixed-vocab axes.
+_VOCAB = ["alpha", "beta", "gamma", "delta", "epsilon"]
+
+
+def _fake_embed(text: str) -> list[float]:
+    vec = [0.0] * len(_VOCAB)
+    for word in text.lower().split():
+        if word in _VOCAB:
+            vec[_VOCAB.index(word)] += 1.0
+    return vec + [0.1]
+
+
+@pytest.fixture
+def ctx_with_memory(tmp_path, audit_log):
+    """AppContext whose block memory uses the deterministic fake embedder
+    (no network), so we can assert on store + retrieval behavior."""
+    from palimpsests.context import BlockMemory
+
+    registry = EngineRegistry(tmp_path / "registry.json")
+    set_registry(registry)
+    engine = OllamaEngine(base_url=BASE)
+    registry.register("ollama", control_level=1, installed=True)
+    mem = BlockMemory(workspace=tmp_path, embedder=_fake_embed)
+    context = AppContext(
+        config_dir=tmp_path,
+        registry=registry,
+        engines={"ollama": engine},
+        block_memory=mem,
+    )
+    yield context
+    mem.close()
+    engine.close()
+    set_registry(None)
+
+
+def test_chat_stores_evicted_in_block_memory(ctx_with_memory, httpx_mock):
+    """When the window manager evicts, the evicted messages are stored."""
+    httpx_mock.add_response(
+        url=f"{BASE}/api/chat",
+        content=_ndjson({"message": {"content": "ok"}, "done": True}),
+    )
+    big = "x" * 400
+    messages = [{"role": "user", "content": f"alpha {i} {big}"} for i in range(20)]
+    list(chat(ctx_with_memory, model="m", messages=messages, context_size=256))
+    # Something was evicted and therefore stored.
+    assert ctx_with_memory.block_memory.count() > 0
+
+
+def test_chat_recalls_relevant_block(ctx_with_memory, httpx_mock):
+    """Evicted content relevant to the latest turn is recalled as a
+    system message prepended to what the engine sees."""
+    httpx_mock.add_response(
+        url=f"{BASE}/api/chat",
+        content=_ndjson({"message": {"content": "ok"}, "done": True}),
+    )
+    # First user message carries a distinctive vocab word; it'll be
+    # evicted. The final user turn queries with the same word.
+    big = "x" * 400
+    messages = [{"role": "user", "content": f"gamma secret {big}"}]
+    messages += [
+        {"role": "user", "content": f"beta {i} {big}"} for i in range(18)
+    ]
+    messages += [{"role": "user", "content": "gamma"}]
+    list(chat(ctx_with_memory, model="m", messages=messages, context_size=256))
+
+    sent = json.loads(httpx_mock.get_request().content)["messages"]
+    # A recalled-context system message was prepended.
+    assert sent[0]["role"] == "system"
+    assert "recalled" in sent[0]["content"].lower()
+
+
+def test_chat_no_eviction_skips_block_memory(ctx_with_memory, httpx_mock):
+    """A short conversation evicts nothing, so block memory is never
+    touched — no stored blocks, no wasted embedding calls."""
+    httpx_mock.add_response(
+        url=f"{BASE}/api/chat",
+        content=_ndjson({"message": {"content": "ok"}, "done": True}),
+    )
+    messages = [{"role": "user", "content": "hello"}]
+    list(chat(ctx_with_memory, model="m", messages=messages, context_size=8192))
+    assert ctx_with_memory.block_memory.count() == 0
+    sent = json.loads(httpx_mock.get_request().content)["messages"]
+    # No recalled-context system message injected.
+    assert not any(
+        m["role"] == "system" and "recalled" in m.get("content", "").lower()
+        for m in sent
+    )
+
+
+def test_chat_without_block_memory_still_works(ctx, httpx_mock):
+    """With block_memory=None (the default ctx), chat still fits and
+    streams — retrieval is an enhancement, not a requirement."""
+    httpx_mock.add_response(
+        url=f"{BASE}/api/chat",
+        content=_ndjson({"message": {"content": "hi"}, "done": True}),
+    )
+    big = "x" * 400
+    messages = [{"role": "user", "content": f"{i} {big}"} for i in range(20)]
+    chunks = list(chat(ctx, model="m", messages=messages, context_size=256))
+    assert "".join(c.delta for c in chunks) == "hi"
+    # No system recall message, since there's no block memory.
+    sent = json.loads(httpx_mock.get_request().content)["messages"]
+    assert not any(m["role"] == "system" for m in sent)
