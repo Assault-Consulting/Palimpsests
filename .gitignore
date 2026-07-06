@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+
+# Test / tooling
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Palimpsests runtime state (never commit user workspaces or models)
+.palimpsests/
+*.gguf
+workspace/
+.context-memory/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
