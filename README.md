@@ -6,9 +6,10 @@
 [![CI](https://img.shields.io/badge/CI-pending-lightgrey.svg)](#)
 [![PyPI](https://img.shields.io/badge/PyPI-unreleased-lightgrey.svg)](#)
 
-> **Status: v0.1.** Level 1 (Ollama) works end to end from the CLI, with the
-> context-memory window manager and an encrypted audit log. Levels 2–3 are on
-> the roadmap (see below). APIs may change before v1.0.
+> **Status: v0.2.** Levels 1 (Ollama) and 2 (llama.cpp) both work behind one
+> abstraction, with the context-memory layer (window manager + block-memory
+> retrieval) and an encrypted audit log. Level 3 (pal-native) is a registered
+> slot, not yet implemented. APIs may change before v1.0.
 
 ---
 
@@ -73,12 +74,21 @@ honest accounting of what already exists.
 ## Install
 
 ```bash
-pip install palimpsests               # base (level 1, context-memory)
-pip install "palimpsests[llamacpp]"   # + level 2 (native wheel build)
+pip install palimpsests                # base: level 1 (Ollama) + context-memory
+pip install "palimpsests[embeddings]"  # + numpy, for block-memory retrieval
 ```
 
-> `[llamacpp]` pulls a native dependency. GPU builds (Metal / CUDA / Vulkan) are
-> a runtime opt-in, not tested in CI — CPU baseline only.
+Level 2 (llama.cpp) needs the `llama-server` binary on your `PATH` — Palimpsests
+spawns and manages it as a subprocess, so there is **no native pip build**.
+Install it out-of-band (`brew install llama.cpp`, a release binary, or your own
+GPU build) and point Palimpsests at a model:
+
+```bash
+export PALIMPSESTS_LLAMACPP_MODEL=/path/to/model.gguf   # enables level 2
+```
+
+The `[llamacpp]` extra is an empty, documented marker — the Python side needs
+only `httpx`, which the base already pulls.
 
 ## Quick start
 
@@ -167,8 +177,11 @@ abstraction from wrapper to native service.**
 ## Roadmap
 
 - [x] **v0.1** — Level 1 (Ollama) + context-memory window manager + CLI +
-      audit/registry foundation *(block memory lands in a v0.1.x point release)*
-- [ ] **v0.2** — Level 2 (llama.cpp) with full `EngineMemoryConfig`
+      audit/registry foundation
+- [x] **v0.1.x** — block-memory retrieval of evicted context, wired into the
+      chat flow
+- [x] **v0.2** — Level 2 (llama.cpp) with the full `EngineMemoryConfig` applied
+      as launch flags to a managed `llama-server`; level-3 slot registered
 - [ ] **v0.3+** — Level 3 native service, incrementally: continuous batching +
       shared prefix KV → server-side tool loop → speculative decoding →
       KV-as-memory
