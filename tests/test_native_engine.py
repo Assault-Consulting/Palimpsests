@@ -12,8 +12,8 @@ files, none of which import across test modules.
 """
 from __future__ import annotations
 
-from collections.abc import Sequence
 import pytest
+from collections.abc import Sequence
 from palimpsests.engine import (
     CapabilityUnsupported,
     ChatResponse,
