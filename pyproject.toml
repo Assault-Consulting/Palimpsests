@@ -61,8 +61,9 @@ encryption = [
 llamacpp = [
     "llama-cpp-python>=0.2.90",
 ]
-# Local embeddings for block-memory retrieval when not routing through the
-# active engine's embedding endpoint.
+# Local vector math for block-memory retrieval (cosine over stored
+# embeddings). numpy is the only requirement; the embed source itself is
+# the active engine by default (no model dependency here).
 embeddings = [
     "numpy>=1.26",
 ]
@@ -71,6 +72,9 @@ dev = [
     "pytest>=8.2",
     "pytest-httpx>=0.30",
     "ruff==0.15.20",
+    # numpy is the [embeddings] extra in production; dev pulls it so the
+    # BlockMemory retrieval path (cosine over stored vectors) runs in CI.
+    "numpy>=1.26",
 ]
 
 [project.urls]

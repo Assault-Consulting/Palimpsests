@@ -239,3 +239,46 @@ def test_base_url_override(httpx_mock) -> None:
         assert eng.is_available() is True
     finally:
         eng.close()
+
+
+# ─── embeddings ──────────────────────────────────────────────────────────
+
+
+def test_embed_returns_vector(engine: OllamaEngine, httpx_mock) -> None:
+    httpx_mock.add_response(
+        url=f"{BASE}/api/embeddings",
+        json={"embedding": [0.1, 0.2, 0.3]},
+    )
+    vec = engine.embed(model="nomic-embed-text", text="hello")
+    assert vec == [0.1, 0.2, 0.3]
+
+
+def test_embed_model_not_found(engine: OllamaEngine, httpx_mock) -> None:
+    httpx_mock.add_response(
+        url=f"{BASE}/api/embeddings", status_code=404, text="not found"
+    )
+    with pytest.raises(ModelNotFound) as exc:
+        engine.embed(model="ghost", text="hello")
+    assert exc.value.model == "ghost"
+
+
+def test_embed_server_error(engine: OllamaEngine, httpx_mock) -> None:
+    httpx_mock.add_response(
+        url=f"{BASE}/api/embeddings", status_code=500, text="boom"
+    )
+    with pytest.raises(EngineRequestError) as exc:
+        engine.embed(model="m", text="hello")
+    assert exc.value.status == 500
+
+
+def test_embed_empty_response(engine: OllamaEngine, httpx_mock) -> None:
+    """A 200 with no embedding is a request error, not a silent empty."""
+    httpx_mock.add_response(url=f"{BASE}/api/embeddings", json={})
+    with pytest.raises(EngineRequestError, match="no embedding"):
+        engine.embed(model="m", text="hello")
+
+
+def test_embed_connection_refused(engine: OllamaEngine, httpx_mock) -> None:
+    httpx_mock.add_exception(httpx.ConnectError("refused"))
+    with pytest.raises(EngineUnavailable):
+        engine.embed(model="m", text="hello")
