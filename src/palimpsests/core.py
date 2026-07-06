@@ -58,17 +58,17 @@ def default_config_dir() -> Path:
 
 # ─── engine construction ─────────────────────────────────────────────────
 
-# Known engine adapters and how to build one. Ollama (L1) and the
-# pal-native slot (L3) construct with no arguments, so they live in the
-# factory table. llama.cpp (L2) needs a model path, so it registers
-# separately below via _maybe_llamacpp_engine. Keeping the zero-arg ones
-# in a table (not a chain of ifs) means adding such an engine is a
-# one-line change.
+# Known engine adapters and how to build one. Ollama (L1) and pal-native
+# (L3) construct with no arguments, so they live in the factory table.
+# llama.cpp (L2) needs a model path, so it registers separately below via
+# _maybe_llamacpp_engine. Keeping the zero-arg ones in a table (not a
+# chain of ifs) means adding such an engine is a one-line change.
 #
-# pal-native is a level-3 placeholder: it registers so the architecture
-# is complete and visible (engine list shows all three levels), but its
-# is_available() is always False, so it appears as known-but-not-installed
-# and every call refuses loudly until real level-3 code lands.
+# pal-native registers here so the architecture is visible in `engine
+# list`. A zero-arg NativeEngine has no backend configured, so its
+# is_available() is False in a plain environment (the [native] extra and
+# a model are needed) — it shows as known-but-not-installed until the
+# native backend is present, at which point its streaming path activates.
 _ENGINE_FACTORIES = {
     "ollama": OllamaEngine,
     "pal-native": NativeEngine,

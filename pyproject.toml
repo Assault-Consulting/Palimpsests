@@ -63,6 +63,15 @@ encryption = [
 # documented marker of the L2 requirement. httpx (already a base dep) is
 # all the Python side needs.
 llamacpp = []
+# Level 3 (pal-native) runs an in-process decode loop over llama.cpp via
+# its low-level Python bindings (ADR-0001/0002). llama-cpp-python pulls a
+# native build (a C toolchain, or a prebuilt wheel), so it is isolated
+# behind this extra and never installed in CI: the scheduler and engine
+# are tested with a fake backend, and the real LlamaCppBackend is
+# validated on hardware with a GGUF model.
+native = [
+    "llama-cpp-python>=0.3.0",
+]
 # Local vector math for block-memory retrieval (cosine over stored
 # embeddings). numpy is the only requirement; the embed source itself is
 # the active engine by default (no model dependency here).
