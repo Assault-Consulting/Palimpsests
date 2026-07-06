@@ -1,0 +1,65 @@
+name: release
+
+# Publish to PyPI on a version tag. Build and publish are split so the
+# OIDC-scoped publish job has the narrowest possible permissions, and so
+# the built artifacts are visible even if publishing is skipped.
+#
+# Publishing uses PyPI Trusted Publishing (OIDC) — no API token is stored
+# in the repo. The trusted publisher must be configured once on PyPI for
+# project "palimpsests", workflow "release.yml", environment "pypi"
+# (a pending publisher works before the first release, so the first tag
+# creates the project). Until that is configured, the publish step fails
+# harmlessly; the build job still runs.
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    name: build distributions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install --upgrade build
+          python -m build
+
+      - name: Check metadata
+        run: |
+          python -m pip install --upgrade twine
+          python -m twine check dist/*
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    name: publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    # The environment gates the release and scopes the OIDC token. Create
+    # an environment named "pypi" in the repo settings; optionally add a
+    # required reviewer there for a manual approval gate on every publish.
+    environment:
+      name: pypi
+      url: https://pypi.org/p/palimpsests
+    permissions:
+      # id-token: write is what lets PyPI verify this workflow via OIDC.
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish
+        uses: pypa/gh-action-pypi-publish@release/v1
