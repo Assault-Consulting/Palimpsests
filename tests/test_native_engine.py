@@ -5,10 +5,15 @@ streaming — with an injected fake backend, so no model or native build is
 needed. The scheduler itself is tested separately in
 test_native_scheduler.py; here the focus is the engine's composition and
 its capability contract.
+
+FakeBackend is defined inline (not imported from another test module or
+conftest) to keep the import block simple — matching the passing test
+files, none of which import across test modules.
 """
 from __future__ import annotations
 
 import pytest
+from collections.abc import Sequence
 from palimpsests.engine import (
     CapabilityUnsupported,
     ChatResponse,
@@ -17,23 +22,83 @@ from palimpsests.engine import (
 )
 from palimpsests.providers.errors import EngineUnavailable
 from palimpsests.providers.native import NativeEngine
-from palimpsests.providers.native.backend import Token
-from tests.conftest import FakeBackend
+from palimpsests.providers.native.backend import BatchEntry, Token
+
+
+class FakeBackend:
+    """A deterministic stand-in for a real llama.cpp backend.
+
+    Decode returns one-hot logits from a per-seq script so argmax yields
+    an exact token stream; seq_copy / seq_remove / state_* are recorded.
+    """
+
+    def __init__(
+        self,
+        *,
+        vocab_size: int = 32,
+        n_seq_max: int = 4,
+        eos: Token = 0,
+        script: dict[int, list[Token]] | None = None,
+    ) -> None:
+        self._vocab = vocab_size
+        self._n_seq_max = n_seq_max
+        self._eos = eos
+        self._script = script or {}
+        self._decode_count: dict[int, int] = {}
+        self.removed: list[int] = []
+        self.copied: list[tuple[int, int]] = []
+        self.states: dict[int, bytes] = {}
+
+    def tokenize(self, text: str, *, add_special: bool = True) -> list[Token]:
+        return [(ord(c) % self._vocab) for c in text]
+
+    def detokenize(self, tokens: Sequence[Token]) -> str:
+        return " ".join(str(t) for t in tokens)
+
+    def decode(self, entries: Sequence[BatchEntry]) -> dict[int, list[float]]:
+        out: dict[int, list[float]] = {}
+        for entry in entries:
+            if not entry.wants_logits:
+                continue
+            i = self._decode_count.get(entry.seq_id, 0)
+            self._decode_count[entry.seq_id] = i + 1
+            script = self._script.get(entry.seq_id, [])
+            token = script[i] if i < len(script) else self._eos
+            logits = [0.0] * self._vocab
+            logits[token] = 1.0
+            out[entry.seq_id] = logits
+        return out
+
+    def seq_copy(
+        self, src_seq: int, dst_seq: int, p0: int = -1, p1: int = -1
+    ) -> None:
+        self.copied.append((src_seq, dst_seq))
+
+    def seq_remove(self, seq_id: int, p0: int = -1, p1: int = -1) -> None:
+        self.removed.append(seq_id)
+        self._decode_count.pop(seq_id, None)
+
+    def state_get(self, seq_id: int) -> bytes:
+        return self.states.get(seq_id, b"")
+
+    def state_set(self, seq_id: int, state: bytes) -> None:
+        self.states[seq_id] = state
+
+    def n_seq_max(self) -> int:
+        return self._n_seq_max
+
+    def close(self) -> None:
+        return None
 
 
 class TextFakeBackend(FakeBackend):
-    """FakeBackend with a detokenize that yields readable text.
-
-    The scheduler samples argmax over one-hot logits, so the scripted
-    tokens come out verbatim; mapping each to a short string lets a test
-    assert the streamed text.
-    """
+    """FakeBackend whose detokenize yields readable text."""
 
     def __init__(self, *, script_tokens: list[Token], eos: Token = 0) -> None:
         super().__init__(eos=eos, script={0: script_tokens})
         self._text = {1: "Hel", 2: "lo", 3: "!", eos: ""}
 
-    def detokenize(self, tokens: list[Token]) -> str:
+    def detokenize(self, tokens: Sequence[Token]) -> str:
         return "".join(self._text.get(t, f"<{t}>") for t in tokens)
 
 
