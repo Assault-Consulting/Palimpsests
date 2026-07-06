@@ -10,7 +10,6 @@ from palimpsests.registry import (
 )
 from pathlib import Path
 
-
 # ─── registration ────────────────────────────────────────────────────────
 
 
