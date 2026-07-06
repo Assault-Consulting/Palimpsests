@@ -115,6 +115,10 @@ The `chat` function fits the conversation to the context budget (sink + window +
 evict) before it reaches the engine, and records the call to the audit log —
 you get context management and auditability without wiring them yourself.
 
+**Full run + settings guide:** **[docs/USAGE.md](docs/USAGE.md)** — every
+command, every working setting (`--context-size`, environment variables, adapter
+timeouts, `EngineMemoryConfig`), the Python API, and troubleshooting.
+
 ---
 
 ## Architecture in one screen
