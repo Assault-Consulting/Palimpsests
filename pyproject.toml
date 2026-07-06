@@ -32,16 +32,19 @@ classifiers = [
 
 # Base install is deliberately light: level 1 (Ollama over HTTP), the
 # pure-Python context-memory layer, and the audit/registry foundation.
-# keyring is base because audit key management needs the OS keychain;
-# it's pure-Python with platform backends, no native wheel. Nothing here
-# pulls a compiled dependency.
+# No compiled dependency here — the native pain lives behind extras.
 dependencies = [
     "httpx>=0.27",
     "pydantic>=2.7",
-    "keyring>=25.0",
 ]
 
 [project.optional-dependencies]
+# Audit key management via the OS keychain. Optional so the base package
+# and CI don't depend on a Secret Service daemon being present; when
+# absent, the caller passes an explicit key (tests do exactly this).
+keyring = [
+    "keyring>=25.0",
+]
 # At-rest audit-log encryption. sqlcipher3-wheels ships prebuilt binaries
 # so it doesn't need a local SQLCipher/OpenSSL toolchain. Isolated behind
 # an extra: without it the audit log falls back to plain sqlite3 (dev/CI),
@@ -60,10 +63,13 @@ llamacpp = [
 embeddings = [
     "numpy>=1.26",
 ]
+# Pinned ruff so local and CI agree on isort behavior exactly — a version
+# drift in isort's first-party detection is precisely what we do not want
+# silently differing between a contributor's machine and CI.
 dev = [
     "pytest>=8.2",
     "pytest-httpx>=0.30",
-    "ruff>=0.5",
+    "ruff==0.15.20",
 ]
 
 [project.urls]
@@ -88,10 +94,9 @@ select = ["E", "F", "I", "B", "UP"]
 
 [tool.ruff.lint.isort]
 # Declare the package as first-party so isort separates it from
-# third-party imports with a blank line. Without this, ruff treats
-# `palimpsests` as third-party (the package isn't installed at lint
-# time under the src layout) and demands the blank line be removed,
-# which fights the natural stdlib / third-party / first-party grouping.
+# third-party imports with a blank line. Under the editable (-e) install
+# CI uses, `palimpsests` is importable and would otherwise be classified
+# as third-party, producing an unstable grouping.
 known-first-party = ["palimpsests"]
 
 [tool.pytest.ini_options]
