@@ -416,8 +416,8 @@ differentiates faster.
 | I3 | `ContextWindowManager` | Ideas 1+3: sink/window/evict + prefix stability. Pure Python. | I1 |
 | I4 | `local_chat` API / CLI | `chat`/`models`/`engine` commands; routes through `ContextWindowManager`. | I2, I3 |
 | I5 | `BlockMemory` | Idea 2: evicted -> embed -> retrieval; backing `workspace/.context-memory/` + SQLite index. | I3, fs layer |
-| I6 | llama.cpp level-2 adapter | `LlamaCppEngine`, subprocess JSON-lines; full `EngineMemoryConfig`; FA<->KV-quant validation; GGUF in `~/.palimpsests/models/`; `llama-cpp-python` optional extra, CPU-only CI. | I1 |
-| I7 | Native wire slot | `NativeEngine` (Protocol stub, `NotImplementedError`), `control_level=3`, `installed=False`; documents the wire contract. | I1 |
+| I6 | llama.cpp level-2 adapter | `LlamaCppEngine` spawns and owns a `llama-server` subprocess (OpenAI-compatible HTTP, not the `llama-cpp-python` binding); full `EngineMemoryConfig` applied as launch flags; FA<->KV-quant validation inherited; spawn + attach modes; opt-in via `PALIMPSESTS_LLAMACPP_MODEL`; `[llamacpp]` extra is an empty marker (binary out-of-band); wire-level CI (no real llama.cpp). | I1 |
+| I7 | Native wire slot | `NativeEngine` subclasses `BaseInferenceEngine`; `control_level=3` with every feature flag `False`; every operation raises `CapabilityUnsupported`; `is_available()` `False`. Honest placeholder — `ProcessManager` extracted later, on the first real native lifecycle. | I1 |
 
 After that: sequential implementation of the level-3 features (§5) on top of the
 I7 slot, in the order of §5.6.
