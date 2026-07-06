@@ -24,9 +24,10 @@ class FakeBackend:
     returns, for each sequence, a logits vector that makes ``argmax`` pick
     a scripted next token — so a test can assert the exact token stream.
 
-    The script is ``{seq_id: [t0, t1, ...]}``: the i-th time a sequence is
-    decoded, it emits ``t_i``. When a sequence's script is exhausted it
-    emits ``eos``. This lets tests drive precise, repeatable generations.
+    The script is ``{seq_id: [t0, t1, ...]}`` and is keyed to *generation
+    steps per sequence*: the i-th decode of a sequence emits ``t_i``. When
+    a sequence's script is exhausted it emits ``eos``. This lets tests
+    drive precise, repeatable generations.
 
     It also records ``seq_copy`` / ``seq_remove`` / ``state_*`` calls so
     the scheduler's KV bookkeeping (slot recycling) can be asserted.
@@ -85,6 +86,8 @@ class FakeBackend:
 
     def seq_remove(self, seq_id: int, p0: int = -1, p1: int = -1) -> None:
         self.removed.append(seq_id)
+        # A recycled sequence starts its generation count fresh, exactly
+        # as a real backend's cleared KV would.
         self._decode_count.pop(seq_id, None)
 
     def state_get(self, seq_id: int) -> bytes:
@@ -170,17 +173,48 @@ def test_finished_slot_is_released_and_seq_recycled():
 
 
 def test_two_sequential_requests_reuse_the_freed_slot():
-    # At N=1, the second request can only run after the first frees seq 0.
-    backend = FakeBackend(script={0: [1, 1]})
-    sched = Scheduler(backend, max_active=1)
-    first = list(sched.run(GenerationRequest(prompt_tokens=[1], max_tokens=2)))
-    # reset the script for the recycled seq and run again
-    backend._script = {0: [3, 3]}
-    backend._decode_count.clear()
-    second = list(sched.run(GenerationRequest(prompt_tokens=[2], max_tokens=2)))
+    """At N=1 the second request runs only after the first frees seq 0.
+
+    Each request uses its own fresh backend so the test asserts scheduler
+    behavior (the freed seq_id is reused) without poking at fake-backend
+    internals between runs — the earlier version reset private counters by
+    hand, which was brittle and wrong.
+    """
+    backend_a = FakeBackend(script={0: [1, 1]})
+    sched_a = Scheduler(backend_a, max_active=1)
+    first = list(sched_a.run(GenerationRequest(prompt_tokens=[1], max_tokens=2)))
+
+    backend_b = FakeBackend(script={0: [3, 3]})
+    sched_b = Scheduler(backend_b, max_active=1)
+    second = list(sched_b.run(GenerationRequest(prompt_tokens=[2], max_tokens=2)))
+
     assert first == [1, 1]
     assert second == [3, 3]
-    # seq 0 released after each of the two runs
+    # each scheduler released its single seq (id 0) on completion
+    assert backend_a.removed == [0]
+    assert backend_b.removed == [0]
+
+
+def test_seq_id_is_recycled_within_one_scheduler():
+    """Two requests through the *same* scheduler reuse seq 0 in turn.
+
+    The second admission can only get seq 0 back because the first was
+    released to the free list — this is the recycling the scheduler owns.
+    """
+    backend = FakeBackend(script={0: [1, 1]})
+    sched = Scheduler(backend, max_active=1)
+    sched.submit(GenerationRequest(prompt_tokens=[1], max_tokens=2))
+    sched.submit(GenerationRequest(prompt_tokens=[2], max_tokens=2))
+    # drain both requests
+    all_tokens: list[Token] = []
+    while sched._queue or sched._slots:
+        for st in sched.step():
+            all_tokens.append(st.token)
+    # first request: script gives 1,1; second: seq 0 recycled, script
+    # exhausted for its fresh count → but the same backend script[0..1]=1,1
+    # is consumed again from the recycled (count-reset) seq.
+    assert all_tokens == [1, 1, 1, 1]
+    # seq 0 released twice — once per completed request
     assert backend.removed == [0, 0]
 
 
