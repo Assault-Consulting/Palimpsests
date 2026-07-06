@@ -30,14 +30,28 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 
-# Base install is deliberately light: level 1 (Ollama over HTTP) plus the
-# pure-Python context-memory layer. Nothing here pulls a native wheel.
+# Base install is deliberately light: level 1 (Ollama over HTTP), the
+# pure-Python context-memory layer, and the audit/registry foundation.
+# No compiled dependency here — the native pain lives behind extras.
 dependencies = [
     "httpx>=0.27",
     "pydantic>=2.7",
 ]
 
 [project.optional-dependencies]
+# Audit key management via the OS keychain. Optional so the base package
+# and CI don't depend on a Secret Service daemon being present; when
+# absent, the caller passes an explicit key (tests do exactly this).
+keyring = [
+    "keyring>=25.0",
+]
+# At-rest audit-log encryption. sqlcipher3-wheels ships prebuilt binaries
+# so it doesn't need a local SQLCipher/OpenSSL toolchain. Isolated behind
+# an extra: without it the audit log falls back to plain sqlite3 (dev/CI),
+# which is functional but not the production-encrypted path.
+encryption = [
+    "sqlcipher3-wheels>=0.5",
+]
 # Level 2. Pulls a native dependency — isolated behind an extra so the base
 # install stays wheel-free. GPU builds (Metal/CUDA/Vulkan) are a runtime
 # opt-in, not covered by CI.
@@ -49,10 +63,11 @@ llamacpp = [
 embeddings = [
     "numpy>=1.26",
 ]
+# Pinned ruff so local and CI agree on isort behavior exactly.
 dev = [
     "pytest>=8.2",
     "pytest-httpx>=0.30",
-    "ruff>=0.5",
+    "ruff==0.15.20",
 ]
 
 [project.urls]
@@ -74,6 +89,17 @@ src = ["src", "tests"]
 [tool.ruff.lint]
 # E/F: pyflakes+pycodestyle, I: isort, B: bugbear, UP: pyupgrade.
 select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.isort]
+# no-sections merges third-party and first-party imports into a single
+# alphabetically-sorted block (after __future__ and stdlib). This makes
+# import ordering INDEPENDENT of whether ruff classifies `palimpsests`
+# as first-party (src heuristic, plain checkout) or third-party (when
+# pip-installed via -e). That classification differs between a local
+# machine and CI and was the sole cause of a CI-only I001 failure while
+# every test job passed. With no-sections the grouping is deterministic
+# in both environments.
+no-sections = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
