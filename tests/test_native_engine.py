@@ -9,7 +9,6 @@ its capability contract.
 from __future__ import annotations
 
 import pytest
-from collections.abc import Sequence
 from palimpsests.engine import (
     CapabilityUnsupported,
     ChatResponse,
@@ -37,7 +36,7 @@ class TextFakeBackend(FakeBackend):
         super().__init__(eos=eos, script={0: script_tokens})
         self._text = {1: "Hel", 2: "lo", 3: "!", eos: ""}
 
-    def detokenize(self, tokens: Sequence[Token]) -> str:
+    def detokenize(self, tokens: list[Token]) -> str:
         return "".join(self._text.get(t, f"<{t}>") for t in tokens)
 
 
