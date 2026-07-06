@@ -12,7 +12,6 @@ from palimpsests.audit import (
 )
 from pathlib import Path
 
-
 # ─── key management ──────────────────────────────────────────────────────
 
 
