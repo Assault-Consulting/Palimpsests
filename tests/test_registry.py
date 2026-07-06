@@ -1,16 +1,14 @@
 """Tests for the engine registry (radio active-selection)."""
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
-
 from palimpsests.registry import (
     DEFAULT_ENGINE_ID,
     EngineRegistry,
     get_registry,
     set_registry,
 )
+from pathlib import Path
 
 
 # ─── registration ────────────────────────────────────────────────────────
