@@ -63,9 +63,7 @@ llamacpp = [
 embeddings = [
     "numpy>=1.26",
 ]
-# Pinned ruff so local and CI agree on isort behavior exactly — a version
-# drift in isort's first-party detection is precisely what we do not want
-# silently differing between a contributor's machine and CI.
+# Pinned ruff so local and CI agree on isort behavior exactly.
 dev = [
     "pytest>=8.2",
     "pytest-httpx>=0.30",
@@ -93,11 +91,15 @@ src = ["src", "tests"]
 select = ["E", "F", "I", "B", "UP"]
 
 [tool.ruff.lint.isort]
-# Declare the package as first-party so isort separates it from
-# third-party imports with a blank line. Under the editable (-e) install
-# CI uses, `palimpsests` is importable and would otherwise be classified
-# as third-party, producing an unstable grouping.
-known-first-party = ["palimpsests"]
+# no-sections merges third-party and first-party imports into a single
+# alphabetically-sorted block (after __future__ and stdlib). This makes
+# import ordering INDEPENDENT of whether ruff classifies `palimpsests`
+# as first-party (src heuristic, plain checkout) or third-party (when
+# pip-installed via -e). That classification differs between a local
+# machine and CI and was the sole cause of a CI-only I001 failure while
+# every test job passed. With no-sections the grouping is deterministic
+# in both environments.
+no-sections = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
