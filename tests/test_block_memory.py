@@ -16,7 +16,6 @@ from palimpsests.context import (
 )
 from palimpsests.engine import Message
 
-
 # ─── a deterministic fake embedder ───────────────────────────────────────
 
 # Fixed vocabulary → one-hot-ish axes, so "similarity" is just shared
