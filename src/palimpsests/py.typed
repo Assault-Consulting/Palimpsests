@@ -1,0 +1,3 @@
+# Marker file (PEP 561): declares that this package ships inline type
+# hints, so downstream type checkers (mypy, pyright) trust the
+# annotations in the source instead of treating the package as untyped.
