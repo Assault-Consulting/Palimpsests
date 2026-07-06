@@ -21,9 +21,6 @@ from palimpsests.providers.native.backend import Token
 from tests.conftest import FakeBackend
 
 
-# ─── a fake backend whose token stream maps to known text ─────────────────
-
-
 class TextFakeBackend(FakeBackend):
     """FakeBackend with a detokenize that yields readable text.
 
