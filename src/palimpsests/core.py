@@ -35,8 +35,8 @@ from palimpsests.context import (
     ContextWindowManager,
     engine_embedder,
 )
-from palimpsests.engine import ChatChunk, Message, ModelInfo
-from palimpsests.providers import OllamaEngine
+from palimpsests.engine import ChatChunk, InferenceEngine, Message, ModelInfo
+from palimpsests.providers import LlamaCppEngine, OllamaEngine
 from palimpsests.registry import DEFAULT_ENGINE_ID, EngineRegistry, set_registry
 from pathlib import Path
 
@@ -78,10 +78,10 @@ class AppContext:
 
     config_dir: Path
     registry: EngineRegistry
-    engines: dict[str, OllamaEngine]
+    engines: dict[str, InferenceEngine]
     block_memory: BlockMemory | None = None
 
-    def active_engine(self) -> OllamaEngine:
+    def active_engine(self) -> InferenceEngine:
         """Return the currently active engine instance.
 
         Raises KeyError if the active engine id has no constructed
@@ -120,7 +120,7 @@ def init_app(config_dir: Path | None = None) -> AppContext:
     registry = EngineRegistry(cfg / "registry.json")
     set_registry(registry)
 
-    engines: dict[str, OllamaEngine] = {}
+    engines: dict[str, InferenceEngine] = {}
     for engine_id, factory in _ENGINE_FACTORIES.items():
         engine = factory()
         engines[engine_id] = engine
@@ -129,6 +129,20 @@ def init_app(config_dir: Path | None = None) -> AppContext:
             engine_id,
             control_level=engine.capabilities.control_level,
             installed=installed,
+        )
+
+    # Level 2 (llama.cpp) is opt-in: it needs a model file to spawn a
+    # server against, so it registers only when PALIMPSESTS_LLAMACPP_MODEL
+    # points at one. Unlike Ollama (a zero-arg daemon client), an L2
+    # engine without a model has nothing to do, so we don't register a
+    # dead one. PALIMPSESTS_LLAMACPP_BIN overrides the llama-server path.
+    llama_engine = _maybe_llamacpp_engine()
+    if llama_engine is not None:
+        engines["llamacpp"] = llama_engine
+        registry.register(
+            "llamacpp",
+            control_level=llama_engine.capabilities.control_level,
+            installed=llama_engine.is_available(),
         )
 
     ctx = AppContext(config_dir=cfg, registry=registry, engines=engines)
@@ -157,6 +171,25 @@ def _build_block_memory(
         return BlockMemory(workspace=config_dir, embedder=embedder)
     except Exception:
         # Never let a memory-layer failure break basic chat.
+        return None
+
+
+def _maybe_llamacpp_engine() -> LlamaCppEngine | None:
+    """Build a level-2 engine if the environment points at a model.
+
+    Reads ``PALIMPSESTS_LLAMACPP_MODEL`` (a .gguf path) and optionally
+    ``PALIMPSESTS_LLAMACPP_BIN`` (the llama-server binary, default on
+    PATH). Returns None when no model is configured — L2 is opt-in.
+    Construction is side-effect-free (the server spawns lazily on first
+    use), so this never launches anything.
+    """
+    model = os.environ.get("PALIMPSESTS_LLAMACPP_MODEL")
+    if not model:
+        return None
+    binary = os.environ.get("PALIMPSESTS_LLAMACPP_BIN", "llama-server")
+    try:
+        return LlamaCppEngine(model_path=model, binary=binary)
+    except Exception:
         return None
 
 

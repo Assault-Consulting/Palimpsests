@@ -55,12 +55,14 @@ keyring = [
 encryption = [
     "sqlcipher3-wheels>=0.5",
 ]
-# Level 2. Pulls a native dependency — isolated behind an extra so the base
-# install stays wheel-free. GPU builds (Metal/CUDA/Vulkan) are a runtime
-# opt-in, not covered by CI.
-llamacpp = [
-    "llama-cpp-python>=0.2.90",
-]
+# Level 2 needs the `llama-server` binary from llama.cpp on PATH — the
+# adapter spawns and manages it as a subprocess (it does NOT use the
+# llama-cpp-python bindings). That binary is installed out-of-band
+# (brew install llama.cpp, a release build, or a custom GPU build), not
+# via pip, so this extra adds no Python packages: it exists only as a
+# documented marker of the L2 requirement. httpx (already a base dep) is
+# all the Python side needs.
+llamacpp = []
 # Local vector math for block-memory retrieval (cosine over stored
 # embeddings). numpy is the only requirement; the embed source itself is
 # the active engine by default (no model dependency here).
