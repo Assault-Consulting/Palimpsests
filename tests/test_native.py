@@ -1,51 +1,42 @@
-"""Tests for the pal-native level-3 slot.
+"""Tests for the pal-native engine's registration-facing behavior.
 
-The slot is a placeholder: it must be *registerable* and satisfy the
-engine contract, but every operation must refuse loudly rather than
-return a fake answer. These tests pin exactly that — the honesty of the
-placeholder — so a future real implementation can't silently regress
-into a stateless shim without a test noticing.
+The detailed N1 engine behavior (streaming, the scheduler path, backend
+loading) lives in test_native_engine.py; the scheduler in
+test_native_scheduler.py. This module pins the small surface the rest of
+the app relies on: that a zero-arg NativeEngine is a valid InferenceEngine
+that can be constructed and registered, and that without a backend or
+model it degrades cleanly (not-available, loud EngineUnavailable) rather
+than crashing or pretending to work.
 """
 from __future__ import annotations
 
 import pytest
-from palimpsests.engine import CapabilityUnsupported, InferenceEngine
+from palimpsests.engine import InferenceEngine
 from palimpsests.providers import NativeEngine
+from palimpsests.providers.errors import EngineUnavailable
 
 
-@pytest.fixture
-def engine():
+def test_zero_arg_construction_is_valid_engine():
+    """core.init_app builds this with no arguments; it must still be a
+    structural InferenceEngine so it can live in the registry."""
     eng = NativeEngine()
-    yield eng
-    eng.close()
+    assert isinstance(eng, InferenceEngine)
+    assert eng.engine_id == "pal-native"
 
 
-# ─── contract ─────────────────────────────────────────────────────────────
+def test_control_level_is_3():
+    assert NativeEngine().capabilities.control_level == 3
 
 
-def test_satisfies_engine_protocol(engine: NativeEngine):
-    """Must be a structural InferenceEngine so it can live in the
-    registry and AppContext alongside the other adapters."""
-    assert isinstance(engine, InferenceEngine)
+def test_streaming_capability_is_on():
+    """N1 shipped the stateless streaming path, so unlike the old
+    placeholder this flag is now True."""
+    assert NativeEngine().capabilities.streaming is True
 
 
-def test_engine_id(engine: NativeEngine):
-    assert engine.engine_id == "pal-native"
-
-
-# ─── capabilities: level 3, nothing implemented ───────────────────────────
-
-
-def test_capabilities_are_level_3(engine: NativeEngine):
-    assert engine.capabilities.control_level == 3
-
-
-def test_all_level_3_features_are_off(engine: NativeEngine):
-    """The whole point of the placeholder: control_level says 3, but no
-    feature flag is set, so the orchestrator never routes real work here.
-    Each flag flips to True in the PR that ships that feature."""
-    c = engine.capabilities
-    assert c.streaming is False
+def test_stateful_features_still_off():
+    """The genuinely stateful level-3 features have not shipped yet."""
+    c = NativeEngine().capabilities
     assert c.stateful_sessions is False
     assert c.shared_prefix is False
     assert c.server_side_tools is False
@@ -53,37 +44,15 @@ def test_all_level_3_features_are_off(engine: NativeEngine):
     assert c.kv_persistence is False
 
 
-# ─── availability: known but not installed ────────────────────────────────
+def test_not_available_without_backend_or_model():
+    """No injected backend, no model, no [native] extra in CI → the
+    registry sees it as not-installed."""
+    assert NativeEngine().is_available() is False
 
 
-def test_is_not_available(engine: NativeEngine):
-    """No serving service exists yet, so the registry sees it as
-    not-installed."""
-    assert engine.is_available() is False
-
-
-# ─── every operation refuses loudly ───────────────────────────────────────
-
-
-def test_list_models_refuses(engine: NativeEngine):
-    with pytest.raises(CapabilityUnsupported, match="not implemented yet"):
-        engine.list_models()
-
-
-def test_chat_stream_refuses(engine: NativeEngine):
-    with pytest.raises(CapabilityUnsupported, match="not implemented yet"):
-        list(engine.chat_stream(model="m", messages=[]))
-
-
-def test_chat_refuses(engine: NativeEngine):
-    """chat is derived from chat_stream, so it refuses along with it —
-    no accidental stateless answer."""
-    with pytest.raises(CapabilityUnsupported):
-        engine.chat(model="m", messages=[])
-
-
-def test_open_session_refuses(engine: NativeEngine):
-    """Inherited from the base: while stateful_sessions is False, opening
-    a session is a loud refusal, not a fake stateless shim."""
-    with pytest.raises(CapabilityUnsupported):
-        engine.open_session(model="m")
+def test_chat_without_backend_raises_unavailable():
+    """A stateless call with nothing configured is a clear
+    EngineUnavailable, not a crash or a fake answer."""
+    eng = NativeEngine()
+    with pytest.raises(EngineUnavailable):
+        eng.chat(model="m", messages=[{"role": "user", "content": "hi"}])
