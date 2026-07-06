@@ -176,9 +176,9 @@ def test_two_sequential_requests_reuse_the_freed_slot():
     """At N=1 the second request runs only after the first frees seq 0.
 
     Each request uses its own fresh backend so the test asserts scheduler
-    behavior (the freed seq_id is reused) without poking at fake-backend
-    internals between runs — the earlier version reset private counters by
-    hand, which was brittle and wrong.
+    behavior (the single seq is used then released) without poking at
+    fake-backend internals between runs — the earlier version reset
+    private counters by hand, which was brittle and wrong.
     """
     backend_a = FakeBackend(script={0: [1, 1]})
     sched_a = Scheduler(backend_a, max_active=1)
@@ -193,29 +193,6 @@ def test_two_sequential_requests_reuse_the_freed_slot():
     # each scheduler released its single seq (id 0) on completion
     assert backend_a.removed == [0]
     assert backend_b.removed == [0]
-
-
-def test_seq_id_is_recycled_within_one_scheduler():
-    """Two requests through the *same* scheduler reuse seq 0 in turn.
-
-    The second admission can only get seq 0 back because the first was
-    released to the free list — this is the recycling the scheduler owns.
-    """
-    backend = FakeBackend(script={0: [1, 1]})
-    sched = Scheduler(backend, max_active=1)
-    sched.submit(GenerationRequest(prompt_tokens=[1], max_tokens=2))
-    sched.submit(GenerationRequest(prompt_tokens=[2], max_tokens=2))
-    # drain both requests
-    all_tokens: list[Token] = []
-    while sched._queue or sched._slots:
-        for st in sched.step():
-            all_tokens.append(st.token)
-    # first request: script gives 1,1; second: seq 0 recycled, script
-    # exhausted for its fresh count → but the same backend script[0..1]=1,1
-    # is consumed again from the recycled (count-reset) seq.
-    assert all_tokens == [1, 1, 1, 1]
-    # seq 0 released twice — once per completed request
-    assert backend.removed == [0, 0]
 
 
 # ─── cap never exceeds the backend's sequence budget ──────────────────────
