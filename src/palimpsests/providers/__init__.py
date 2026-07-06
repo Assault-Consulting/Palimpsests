@@ -2,8 +2,8 @@
 
 - ``OllamaEngine``    — level 1, thin HTTP client to an external daemon.
 - ``LlamaCppEngine``  — level 2, a managed llama-server subprocess we own.
-- ``NativeEngine``    — level 3 slot: declared and registered, not yet
-                        implemented (every operation refuses loudly).
+- ``NativeEngine``    — level 3, an in-process decode loop over a llama.cpp
+                        backend (N1: the stateless streaming path).
 
 The error taxonomy (``EngineError`` and friends) is shared by all
 adapters so callers handle failures by kind, not by backend.
