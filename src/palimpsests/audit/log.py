@@ -42,7 +42,7 @@ import sqlite3
 import threading
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import TypeVar
 
@@ -137,7 +137,7 @@ class AuditLog:
         error_message: str | None = None,
     ) -> None:
         """Append one event. Timestamped in UTC at write time."""
-        ts = datetime.now(timezone.utc).isoformat()
+        ts = datetime.now(UTC).isoformat()
         with self._lock:
             self._conn.execute(
                 "INSERT INTO audit_events "
