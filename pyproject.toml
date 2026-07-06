@@ -86,6 +86,14 @@ src = ["src", "tests"]
 # E/F: pyflakes+pycodestyle, I: isort, B: bugbear, UP: pyupgrade.
 select = ["E", "F", "I", "B", "UP"]
 
+[tool.ruff.lint.isort]
+# Declare the package as first-party so isort separates it from
+# third-party imports with a blank line. Without this, ruff treats
+# `palimpsests` as third-party (the package isn't installed at lint
+# time under the src layout) and demands the blank line be removed,
+# which fights the natural stdlib / third-party / first-party grouping.
+known-first-party = ["palimpsests"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 # Import mode importlib keeps src-layout test discovery clean without an
