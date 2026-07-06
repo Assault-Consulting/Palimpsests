@@ -9,6 +9,7 @@ its capability contract.
 from __future__ import annotations
 
 from collections.abc import Sequence
+import pytest
 from palimpsests.engine import (
     CapabilityUnsupported,
     ChatResponse,
@@ -18,7 +19,6 @@ from palimpsests.engine import (
 from palimpsests.providers.errors import EngineUnavailable
 from palimpsests.providers.native import NativeEngine
 from palimpsests.providers.native.backend import Token
-import pytest
 from tests.test_native_scheduler import FakeBackend
 
 
