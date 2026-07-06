@@ -8,17 +8,17 @@ its capability contract.
 """
 from __future__ import annotations
 
+import pytest
 from collections.abc import Sequence
 from palimpsests.engine import (
     CapabilityUnsupported,
-    ChatChunk,
     ChatResponse,
     EngineCapabilities,
     InferenceEngine,
 )
 from palimpsests.providers.errors import EngineUnavailable
 from palimpsests.providers.native import NativeEngine
-from palimpsests.providers.native.backend import BatchEntry, Token
+from palimpsests.providers.native.backend import Token
 from tests.test_native_scheduler import FakeBackend
 
 
@@ -155,8 +155,5 @@ def test_close_releases_backend():
     backend = FakeBackend()
     eng = NativeEngine(backend=backend)
     eng.close()
-    # a fresh backend would be needed after close; nothing raised
+    # closing without a loaded native backend must not raise
     assert True
-
-
-import pytest  # noqa: E402 - imported after helpers for readability
