@@ -8,14 +8,15 @@ the decisions the individual pieces deliberately don't:
   with no knowledge of our registry or audit log; this module is what
   knows about global state. A downstream product can embed the adapter
   directly and skip all of this.
-- **how context management enters the chat flow** — ``chat`` runs the
-  message list through a ``ContextWindowManager`` before handing it to
-  the engine, so context fitting is automatic rather than every caller
-  remembering to do it.
+- **how the context-memory layer enters the chat flow** — ``chat`` fits
+  the message list (sink/window/evict), *stores what was evicted* in
+  BlockMemory, and *retrieves relevant evicted blocks back* before
+  handing off to the engine. Both halves of the palimpsest — scrape and
+  bleed-through — happen here, automatically, so no caller wires them.
 
-App state (config dir, registry, audit log) is initialized once via
-``init_app`` and cached. Tests build their own ``AppContext`` with
-tmp paths instead.
+App state (config dir, registry, audit log, block memory) is
+initialized once via ``init_app``. Tests build their own ``AppContext``
+with tmp paths instead.
 """
 from __future__ import annotations
 
@@ -29,13 +30,20 @@ from palimpsests.audit import (
     load_or_create_key,
     set_audit_log,
 )
-from palimpsests.context import ContextWindowManager
+from palimpsests.context import (
+    BlockMemory,
+    ContextWindowManager,
+    engine_embedder,
+)
 from palimpsests.engine import ChatChunk, Message, ModelInfo
 from palimpsests.providers import OllamaEngine
 from palimpsests.registry import DEFAULT_ENGINE_ID, EngineRegistry, set_registry
 from pathlib import Path
 
 APP_NAME = "palimpsests"
+
+# How many evicted blocks to pull back into context on a retrieval.
+_RETRIEVAL_TOP_K = 3
 
 
 def default_config_dir() -> Path:
@@ -63,13 +71,15 @@ _ENGINE_FACTORIES = {
 class AppContext:
     """The initialized application state.
 
-    Holds the registry and the constructed engines. Built by
-    ``init_app`` for real use, or directly by tests with tmp paths.
+    Holds the registry, the constructed engines, and (when available)
+    block memory. Built by ``init_app`` for real use, or directly by
+    tests with tmp paths.
     """
 
     config_dir: Path
     registry: EngineRegistry
     engines: dict[str, OllamaEngine]
+    block_memory: BlockMemory | None = None
 
     def active_engine(self) -> OllamaEngine:
         """Return the currently active engine instance.
@@ -83,11 +93,16 @@ class AppContext:
 
 
 def init_app(config_dir: Path | None = None) -> AppContext:
-    """Initialize app state: config dir, registry, audit log, engines.
+    """Initialize app state: config dir, registry, audit log, engines,
+    and block memory.
 
     Idempotent enough for a CLI invocation: safe to call once per run.
     Registers every known engine and probes availability so the
     registry's installed-state reflects reality this run.
+
+    Block memory is best-effort: it needs an engine that can embed and
+    numpy (the ``embeddings`` extra). If either is missing, ``chat``
+    still works — just without retrieval of evicted context.
     """
     cfg = config_dir or default_config_dir()
     cfg.mkdir(parents=True, exist_ok=True)
@@ -116,7 +131,33 @@ def init_app(config_dir: Path | None = None) -> AppContext:
             installed=installed,
         )
 
-    return AppContext(config_dir=cfg, registry=registry, engines=engines)
+    ctx = AppContext(config_dir=cfg, registry=registry, engines=engines)
+    ctx.block_memory = _build_block_memory(cfg, ctx)
+    return ctx
+
+
+def _build_block_memory(
+    config_dir: Path, ctx: AppContext
+) -> BlockMemory | None:
+    """Construct block memory if the active engine can embed.
+
+    Routes embeddings through the active engine (Ollama's
+    ``/api/embeddings``). If the engine has no ``embed`` method, or
+    construction fails for any reason, returns None — retrieval is an
+    enhancement, never a hard requirement of chat.
+    """
+    try:
+        engine = ctx.active_engine()
+    except KeyError:
+        return None
+    if not hasattr(engine, "embed"):
+        return None
+    try:
+        embedder = engine_embedder(engine)
+        return BlockMemory(workspace=config_dir, embedder=embedder)
+    except Exception:
+        # Never let a memory-layer failure break basic chat.
+        return None
 
 
 # ─── orchestrated operations (audited) ───────────────────────────────────
@@ -151,6 +192,41 @@ def list_engines(ctx: AppContext) -> list[tuple[str, int, bool, bool]]:
     return rows
 
 
+def _last_user_text(messages: Sequence[Message]) -> str | None:
+    """The most recent user message's content — the retrieval query."""
+    for msg in reversed(messages):
+        if msg.get("role") == "user" and msg.get("content"):
+            return msg["content"]
+    return None
+
+
+def _recall_block(ctx: AppContext, query: str) -> Message | None:
+    """Retrieve relevant evicted blocks and fold them into one system
+    message, or None if there's nothing useful to recall.
+
+    Kept as a single system message so that next turn it lands in the
+    sink (stable prefix, prefix-cache friendly), and so its role marks
+    it clearly as recalled context rather than part of the live
+    exchange.
+    """
+    if ctx.block_memory is None:
+        return None
+    try:
+        hits = ctx.block_memory.retrieve(query, top_k=_RETRIEVAL_TOP_K)
+    except Exception:
+        return None  # retrieval is best-effort; never break the call
+    if not hits:
+        return None
+    recalled = "\n\n".join(h.message.get("content", "") for h in hits)
+    return {
+        "role": "system",
+        "content": (
+            "Relevant earlier context, recalled from this conversation:\n\n"
+            f"{recalled}"
+        ),
+    }
+
+
 @audited("model.call", model_locality="local")
 def chat(
     ctx: AppContext,
@@ -161,16 +237,40 @@ def chat(
 ) -> Iterator[ChatChunk]:
     """Stream a chat response through the active engine.
 
-    The message list is fitted to a context budget first (sink/window/
-    evict) so long conversations don't overflow. Context management is
-    applied here, in orchestration, so no individual caller has to
-    remember it.
+    The full context-memory flow lives here, in orchestration, so no
+    caller wires it:
+
+    1. Fit the messages to the budget (sink/window/evict).
+    2. If anything was evicted, store it in block memory *and* retrieve
+       the blocks most relevant to the latest user turn, folded into a
+       single system message prepended to the context. Retrieval is
+       lazy — skipped entirely when nothing was evicted, so a short
+       conversation makes no extra embedding calls.
+    3. Stream from the active engine.
+
+    Block memory is optional: without it (no embed-capable engine or no
+    numpy), steps 2's store/retrieve are simply skipped and chat behaves
+    as a plain fitted call.
     """
     manager = ContextWindowManager(context_size=context_size)
     fitted = manager.fit(messages)
-    return ctx.active_engine().chat_stream(
-        model=model, messages=fitted.messages
-    )
+    outgoing = list(fitted.messages)
+
+    # Only touch block memory when the window manager actually evicted
+    # something — otherwise there's nothing new to remember and no reason
+    # to spend embedding calls on retrieval.
+    if fitted.evicted and ctx.block_memory is not None:
+        try:
+            ctx.block_memory.add(fitted.evicted)
+        except Exception:
+            pass  # storing is best-effort; a failure must not break chat
+        query = _last_user_text(messages)
+        if query:
+            recall = _recall_block(ctx, query)
+            if recall is not None:
+                outgoing = [recall, *outgoing]
+
+    return ctx.active_engine().chat_stream(model=model, messages=outgoing)
 
 
 __all__ = [
