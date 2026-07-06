@@ -1,10 +1,7 @@
 """Tests for the audit subsystem."""
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
-
 from palimpsests.audit import (
     AuditDenied,
     AuditLog,
@@ -13,6 +10,7 @@ from palimpsests.audit import (
     get_audit_log,
     set_audit_log,
 )
+from pathlib import Path
 
 
 # ─── key management ──────────────────────────────────────────────────────
