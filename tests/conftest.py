@@ -6,12 +6,10 @@ don't request the setup fixture by name.
 """
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
-
 from palimpsests.audit import AuditLog, generate_key, set_audit_log
 from palimpsests.registry import EngineRegistry, set_registry
+from pathlib import Path
 
 
 @pytest.fixture
