@@ -9,6 +9,7 @@ its capability contract.
 from __future__ import annotations
 
 from collections.abc import Sequence
+
 import pytest
 from palimpsests.engine import (
     CapabilityUnsupported,
