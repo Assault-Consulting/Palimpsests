@@ -18,7 +18,7 @@ from palimpsests.engine import (
 from palimpsests.providers.errors import EngineUnavailable
 from palimpsests.providers.native import NativeEngine
 from palimpsests.providers.native.backend import Token
-from tests.test_native_scheduler import FakeBackend
+from tests.conftest import FakeBackend
 
 
 # ─── a fake backend whose token stream maps to known text ─────────────────
