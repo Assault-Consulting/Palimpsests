@@ -1,0 +1,19 @@
+# REUSE configuration — https://reuse.software/
+#
+# Bulk licensing annotation. Instead of adding an SPDX header to every
+# source file, this declares the whole tree as Apache-2.0 in one place.
+# The project is single-licensed (Apache-2.0), so per-file headers would
+# add noise, not information; a central declaration is the cleaner and
+# REUSE-supported way to reach compliance without touching the code.
+#
+# The full license text lives at LICENSES/Apache-2.0.txt (REUSE expects
+# license texts under LICENSES/). Run `reuse lint` to verify compliance.
+version = 1
+
+[[annotations]]
+# Everything in the tree: source, tests, docs, config, the benchmarks
+# shelf, and the HTML tool — all authored for this project under Apache-2.0.
+path = "**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Assault Consulting"
+SPDX-License-Identifier = "Apache-2.0"
