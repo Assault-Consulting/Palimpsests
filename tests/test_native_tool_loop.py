@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import pytest
 from collections.abc import Sequence
-from palimpsests.engine import CapabilityUnsupported
 from palimpsests.providers.native.backend import BatchEntry, Token
 from palimpsests.providers.native.scheduler import Scheduler
 from palimpsests.providers.native.session import NativeSession
@@ -145,18 +144,3 @@ def test_append_tool_result_after_close_raises():
     sess.close()
     with pytest.raises(RuntimeError):
         list(sess.append_tool_result("call_1", "r"))
-
-
-# ─── persistence still refuses (N6) ───────────────────────────────────────
-
-
-def test_save_state_still_refuses():
-    sess = _session(FakeBackend())
-    with pytest.raises(CapabilityUnsupported):
-        sess.save_state()
-
-
-def test_load_state_still_refuses():
-    sess = _session(FakeBackend())
-    with pytest.raises(CapabilityUnsupported):
-        sess.load_state(b"")
