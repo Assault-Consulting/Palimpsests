@@ -16,14 +16,20 @@ on:
     tags:
       - "v*"
 
+# Least-privilege default for the whole workflow. The publish job below
+# additively grants only id-token: write (for OIDC), scoped to itself —
+# the pattern the OpenSSF Scorecard Token-Permissions check rewards.
+permissions:
+  contents: read
+
 jobs:
   build:
     name: build distributions
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v4.2.2
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
@@ -37,7 +43,7 @@ jobs:
           python -m pip install --upgrade twine
           python -m twine check dist/*
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist/
@@ -54,9 +60,10 @@ jobs:
       url: https://pypi.org/p/palimpsests
     permissions:
       # id-token: write is what lets PyPI verify this workflow via OIDC.
+      # Granted only to this job — the rest of the workflow stays read-only.
       id-token: write
     steps:
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist/
