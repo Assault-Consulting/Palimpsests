@@ -19,12 +19,17 @@ raising the admission cap to N>1 is an unlock, not a rewrite.
   a slot is held across turns. ``feed`` pushes a turn's tokens into an
   existing slot without releasing it; ``run_turn`` advances the loop
   until *that* slot finishes its turn and yields its tokens, leaving the
-  slot (and its KV) alive for the next turn. This is the substrate for
-  ``NativeSession`` (N3a).
+  slot (and its KV) alive for the next turn.
 
-In N3a the admission cap is still 1, so one slot is active at a time —
-the session model is proven correct before concurrency is switched on in
-N3b. The batching machinery is already multi-slot; only the cap gates it.
+**Concurrency (N3b).** With ``max_active > 1`` several held sessions
+occupy slots at once. ``run_batch`` is the synchronous batch driver: it
+advances every active session's turn together — one ``step`` is one
+``decode`` over all of them — and yields each session's tokens as they
+are produced. This is continuous batching in its literal form: a single
+loop serving many sequences, not many threads. A single session still
+uses ``run_turn``; concurrency is an additional entry point, not a
+replacement (see ADR — synchronous driver, no asyncio/threading imposed
+on callers).
 
 Sampling is intentionally trivial (greedy argmax); a real sampler chain
 replaces ``_argmax`` later without touching the loop.
@@ -32,7 +37,7 @@ replaces ``_argmax`` later without touching the loop.
 from __future__ import annotations
 
 from collections import deque
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
 from palimpsests.providers.native.backend import BatchEntry, NativeBackend, Token
 
@@ -91,6 +96,21 @@ class GenerationRequest:
 
 
 @dataclass
+class TurnRequest:
+    """One session's turn, handed to the batch driver.
+
+    Pairs a held session's ``seq_id`` with the tokens to feed and the
+    per-turn limits. The driver feeds all of these, then advances the
+    shared decode loop until every one has finished its turn.
+    """
+
+    seq_id: int
+    tokens: list[Token]
+    max_tokens: int = 128
+    stop_tokens: tuple[Token, ...] = ()
+
+
+@dataclass
 class StepToken:
     """One token produced for one slot in a step — the demux output."""
 
@@ -102,9 +122,9 @@ class StepToken:
 class Scheduler:
     """Drives a ``NativeBackend`` through batched decode steps.
 
-    N3a admits at most one item at a time (``max_active=1``); the loop is
-    written to admit and batch several, so lifting the cap (N3b) is the
-    only change needed here to run sessions concurrently.
+    ``max_active`` caps how many slots are live at once. At 1 (N3a) one
+    session runs at a time; above 1 (N3b) several sessions share each
+    batched ``step`` via ``run_batch``.
     """
 
     def __init__(self, backend: NativeBackend, *, max_active: int = 1) -> None:
@@ -114,6 +134,12 @@ class Scheduler:
         self._queue: deque[GenerationRequest] = deque()
         self._slots: dict[int, _Slot] = {}
         self._free_seq_ids: deque[int] = deque(range(backend.n_seq_max()))
+
+    @property
+    def max_active(self) -> int:
+        """How many slots may be live at once (after clamping to the
+        backend's sequence budget)."""
+        return self._max_active
 
     # ─── stateless admission (the N1 chat_stream path) ────────────────────
 
@@ -144,14 +170,15 @@ class Scheduler:
         self._slots.pop(seq_id, None)
         self._free_seq_ids.append(seq_id)
 
-    # ─── stateful slots (the session path, N3a) ───────────────────────────
+    # ─── stateful slots (the session path) ────────────────────────────────
 
     def open_slot(self) -> int:
         """Reserve a held slot for a session and return its ``seq_id``.
 
         Unlike ``submit``, this occupies a sequence immediately and keeps
-        it until ``close_slot``. Raises if no sequence is free (with
-        ``max_active=1`` that means one session at a time in N3a).
+        it until ``close_slot``. Raises if no sequence is free — with
+        ``max_active=1`` that means one session at a time; above 1 it
+        means up to ``max_active`` concurrent sessions.
         """
         if not self._free_seq_ids or len(self._slots) >= self._max_active:
             raise RuntimeError("no free sequence slot for a new session")
@@ -190,7 +217,7 @@ class Scheduler:
         if seq_id in self._slots:
             self._release(seq_id)
 
-    # ─── the decode step (shared by both lifecycles) ──────────────────────
+    # ─── the decode step (shared by all drivers) ──────────────────────────
 
     def step(self) -> list[StepToken]:
         """Run one batched forward pass across all active slots.
@@ -254,17 +281,15 @@ class Scheduler:
             for st in self.step():
                 yield st.token
 
-    # ─── stateful driver (session turn, N3a) ──────────────────────────────
+    # ─── stateful driver: one session's turn (N3a) ────────────────────────
 
     def run_turn(self, seq_id: int) -> Iterator[Token]:
         """Advance the loop until session ``seq_id`` finishes its turn.
 
         Yields that session's tokens in order. The slot is left alive on
         completion (its KV persists for the next ``feed``); only
-        ``close_slot`` releases it. With ``max_active=1`` this drives the
-        one active session; at N>1 the same ``step`` advances every active
-        session together, and a per-session driver reads off its own
-        tokens.
+        ``close_slot`` releases it. For a single session; several
+        concurrent sessions use ``run_batch``.
         """
         slot = self._slots[seq_id]
         while not slot.turn_done:
@@ -275,3 +300,39 @@ class Scheduler:
             # finishing (should not happen; prevents a spin).
             if not slot.pending and not slot.turn_done:
                 break
+
+    # ─── stateful driver: many sessions at once (N3b) ─────────────────────
+
+    def run_batch(self, turns: Sequence[TurnRequest]) -> Iterator[StepToken]:
+        """Advance several sessions' turns together, yielding as they go.
+
+        Feeds every turn into its held slot, then advances the shared
+        decode loop: each ``step`` is one ``decode`` over all still-active
+        sessions (true continuous batching). Yields ``StepToken`` for each
+        token as it is produced, tagged with its ``seq_id`` so the caller
+        can demultiplex. Returns when every fed turn has finished.
+
+        Slots are left alive on completion — this is the session path, so
+        their KV persists for the next turn; ``close_slot`` releases them.
+        The caller is responsible for having opened each ``seq_id`` via
+        ``open_slot`` and for not exceeding ``max_active``.
+        """
+        fed_ids = [t.seq_id for t in turns]
+        for turn in turns:
+            self.feed(
+                turn.seq_id,
+                turn.tokens,
+                max_tokens=turn.max_tokens,
+                stop_tokens=turn.stop_tokens,
+            )
+        # Advance until every fed session has finished its turn.
+        while any(
+            sid in self._slots and not self._slots[sid].turn_done
+            for sid in fed_ids
+        ):
+            produced = self.step()
+            if not produced:
+                break
+            for st in produced:
+                if st.seq_id in fed_ids:
+                    yield st
