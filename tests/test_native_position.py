@@ -163,9 +163,12 @@ def test_seed_n_past_sets_the_starting_position():
 def test_recycled_stateless_slot_starts_fresh_at_zero():
     backend = PositionRecordingBackend(eos=0, script={0: [5, 0]})
     sched = Scheduler(backend, max_active=1)
-    # First request occupies seq 0 and finishes, freeing it.
+    # First request occupies a sequence and finishes, freeing it.
     list(sched.run(GenerationRequest(prompt_tokens=[1, 2], max_tokens=5)))
     mark = len(backend.entries_log)
-    # Second request reuses seq 0 — but as a fresh sequence at pos 0.
+    # Second request gets a fresh sequence — its recycled id may differ
+    # (the free list is a queue), but it must start at position 0 with a
+    # clean KV, not inherit the first request's position.
     list(sched.run(GenerationRequest(prompt_tokens=[3, 4, 5], max_tokens=5)))
-    assert backend.entries_log[mark] == (0, 0, 3)
+    _seq, start_pos, length = backend.entries_log[mark]
+    assert (start_pos, length) == (0, 3)
