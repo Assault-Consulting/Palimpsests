@@ -1,19 +1,23 @@
-# REUSE configuration — https://reuse.software/
+# REUSE configuration — https://reuse.software (REUSE.toml, spec 3.3)
 #
-# Bulk licensing annotation. Instead of adding an SPDX header to every
-# source file, this declares the whole tree as Apache-2.0 in one place.
-# The project is single-licensed (Apache-2.0), so per-file headers would
-# add noise, not information; a central declaration is the cleaner and
-# REUSE-supported way to reach compliance without touching the code.
+# Declares copyright and licensing for every file in the repository in one
+# place, so `reuse lint` passes without a per-file SPDX header in each
+# source file. This is the machine-readable, tool-verifiable statement that
+# every file has an explicit, known license — the signal OpenSSF Scorecard
+# and grant reviewers (IP provenance) look for.
 #
-# The full license text lives at LICENSES/Apache-2.0.txt (REUSE expects
-# license texts under LICENSES/). Run `reuse lint` to verify compliance.
+# Everything in the project is Apache-2.0, copyright Assault Consulting.
+# The globs below cover the whole tree; add a more specific block above the
+# catch-all only if a vendored file with a different license is ever added.
+#
+# The license text itself lives at LICENSES/Apache-2.0.txt (the location
+# REUSE expects). The root LICENSE file is kept as the conventional,
+# human-facing copy.
+
 version = 1
 
 [[annotations]]
-# Everything in the tree: source, tests, docs, config, the benchmarks
-# shelf, and the HTML tool — all authored for this project under Apache-2.0.
 path = "**"
 precedence = "aggregate"
-SPDX-FileCopyrightText = "2026 Assault Consulting"
+SPDX-FileCopyrightText = "Assault Consulting"
 SPDX-License-Identifier = "Apache-2.0"
