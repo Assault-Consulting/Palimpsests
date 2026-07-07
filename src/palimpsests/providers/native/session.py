@@ -12,10 +12,17 @@ Several sessions that share one scheduler can be advanced together by the
 batch driver (``run_sessions``), which feeds each turn and then runs one
 shared decode loop over all of them — true continuous batching (N3b).
 
-``append_tool_result`` is the server-side tool loop's entry point (N5)
-and refuses for now; ``save_state`` / ``load_state`` are KV persistence
-(N6) and refuse for now. Refusing loudly here — rather than faking —
-keeps the capability flags honest.
+**Server-side tool loop (N5).** ``append_tool_result`` continues the
+*same* turn after an external tool ran: it feeds only the tool result's
+tokens into the live KV and resumes generation. This is the level's
+strongest case — an agentic loop of generate → call tool → continue does
+not re-prefill the conversation on each hop, unlike a stateless engine.
+It reuses ``feed`` / ``run_turn``; no new backend primitive is needed
+(the KV is already live in the slot).
+
+``save_state`` / ``load_state`` are KV persistence (N6) and refuse for
+now. Refusing loudly there — rather than faking — keeps the
+``kv_persistence`` flag honest.
 """
 from __future__ import annotations
 
@@ -116,18 +123,34 @@ class NativeSession:
             max_tokens=self._max_tokens,
             stop_tokens=self._stop_tokens,
         )
-        for token in self._scheduler.run_turn(self._seq_id):
-            yield ChatChunk(delta=self._backend.detokenize([token]))
-        yield ChatChunk(delta="", done=True, finish_reason="stop")
+        yield from self._stream_turn()
 
     def append_tool_result(
         self, tool_call_id: str, result: str
     ) -> Iterator[ChatChunk]:
-        """Resume after a server-side tool call — not yet implemented (N5)."""
-        raise CapabilityUnsupported(
-            "server-side tool loop (append_tool_result) is not implemented "
-            "yet; it arrives with the tool-loop step (N5)"
+        """Resume generation after a server-side tool call.
+
+        Continues the *same* turn: only the tool result's tokens are fed
+        into the live KV and generation resumes — the conversation is not
+        re-prefilled. This is the agentic-loop win: generate → tool →
+        continue costs one short feed per hop, not a full re-read.
+
+        ``tool_call_id`` identifies which pending call this answers; in
+        this minimal loop it is echoed into the rendered result so the
+        model can correlate. Real tool-call *parsing* from the model's
+        output (deciding a tool was requested) is a model-format concern
+        layered above this method.
+        """
+        self._ensure_open()
+        result_text = f"tool_result[{tool_call_id}]: {result}\nassistant:"
+        tokens = self._backend.tokenize(result_text, add_special=False)
+        self._scheduler.feed(
+            self._seq_id,
+            tokens,
+            max_tokens=self._max_tokens,
+            stop_tokens=self._stop_tokens,
         )
+        yield from self._stream_turn()
 
     def save_state(self) -> bytes:
         """Serialize session KV — not yet implemented (N6)."""
@@ -150,6 +173,16 @@ class NativeSession:
             self._closed = True
 
     # ─── internals ────────────────────────────────────────────────────────
+
+    def _stream_turn(self) -> Iterator[ChatChunk]:
+        """Drive the held slot to the end of its current turn.
+
+        Shared by ``send`` and ``append_tool_result``: both feed input
+        into the live slot and then stream the generated continuation.
+        """
+        for token in self._scheduler.run_turn(self._seq_id):
+            yield ChatChunk(delta=self._backend.detokenize([token]))
+        yield ChatChunk(delta="", done=True, finish_reason="stop")
 
     def _ensure_open(self) -> None:
         if self._closed:

@@ -2,9 +2,10 @@
 
 Exercises NativeSession end to end with a fake backend: the session holds
 a slot across turns, later turns reuse the held KV instead of
-re-prefilling, and the not-yet-implemented features (tool loop, KV
-persistence) refuse loudly. Pure Python, no model — the whole session
-path is CI-verified.
+re-prefilling, and the not-yet-implemented feature (KV persistence)
+refuses loudly. The server-side tool loop (N5) is covered in
+test_native_tool_loop.py. Pure Python, no model — the whole session path
+is CI-verified.
 
 Sessions are created with stop_tokens=(0,) so a turn ends at the fake
 backend's eos (0) rather than running to the token cap.
@@ -108,14 +109,14 @@ def test_open_session_returns_inference_session():
     assert isinstance(sess, InferenceSession)
 
 
-def test_capabilities_stateful_and_batching_on():
+def test_capabilities_sessions_batching_and_tools_on():
     caps = NativeEngine(backend=FakeBackend()).capabilities
-    # sessions (N3a) and concurrent batching (N3b) both work now
+    # sessions (N3a), concurrent batching (N3b), tool loop (N5) all work
     assert caps.stateful_sessions is True
     assert caps.continuous_batching is True
+    assert caps.server_side_tools is True
     # unshipped features still off
     assert caps.shared_prefix is False
-    assert caps.server_side_tools is False
     assert caps.kv_persistence is False
 
 
@@ -182,13 +183,7 @@ def test_send_after_close_raises():
         list(sess.send("a"))
 
 
-# ─── unshipped features refuse loudly ─────────────────────────────────────
-
-
-def test_append_tool_result_refuses():
-    sess = _session(FakeBackend())
-    with pytest.raises(CapabilityUnsupported):
-        list(sess.append_tool_result("call_1", "result"))
+# ─── persistence still refuses (N6) ───────────────────────────────────────
 
 
 def test_save_state_refuses():
