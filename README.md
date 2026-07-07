@@ -6,14 +6,16 @@
 [![CI](https://img.shields.io/badge/CI-pending-lightgrey.svg)](#)
 [![PyPI](https://img.shields.io/badge/PyPI-unreleased-lightgrey.svg)](#)
 
-> **Status: v0.2, with the level-3 skeleton complete.** Levels 1 (Ollama) and 2
-> (llama.cpp) work behind one abstraction, with the context-memory layer (window
-> manager + block-memory retrieval) and an encrypted audit log. Level 3
+> **Status: v0.3 — the level-3 serving skeleton is complete.** Levels 1 (Ollama)
+> and 2 (llama.cpp) work behind one abstraction, with the context-memory layer
+> (window manager + block-memory retrieval) and an encrypted audit log. Level 3
 > (pal-native) now has its full serving skeleton — streaming, stateful sessions,
 > continuous batching, server-side tool loop, shared-prefix KV, and KV
 > persistence — implemented and test-covered against a fake backend behind the
-> ADR-0002 seam. The real in-process `LlamaCppBackend` (and the first on-hardware
-> benchmarks) are the next step. APIs may change before v1.0.
+> ADR-0002 seam. This closes the *architectural* half of level 3; the *empirical*
+> half — the real in-process `LlamaCppBackend` and the first on-hardware
+> benchmarks — is the target of v0.4. No performance is claimed yet. APIs may
+> change before v1.0.
 
 ---
 
@@ -256,19 +258,22 @@ the novelty is in this composition and its seams, not in a new inference kernel.
       chat flow
 - [x] **v0.2** — Level 2 (llama.cpp) with the full `EngineMemoryConfig` applied
       as launch flags to a managed `llama-server`; level-3 slot registered
-- [x] **Level-3 skeleton (fake backend)** — the pal-native serving loop, complete
-      behind the ADR-0002 seam: streaming → stateful sessions → continuous
-      batching → server-side tool loop → shared-prefix KV → KV persistence →
-      content-addressed KV store. All six capability flags true.
-- [ ] **Real `LlamaCppBackend` + first benchmarks** — the ctypes backend on
-      hardware, measured against a tuned baseline under
-      [docs/BENCHMARKING.md](docs/BENCHMARKING.md).
-- [ ] **Beyond the skeleton** — sleep-time compute (edge), disk-backed KV store,
+- [x] **v0.3 — level-3 serving skeleton (fake backend)** — the pal-native
+      serving loop, complete behind the ADR-0002 seam: streaming → stateful
+      sessions → continuous batching → server-side tool loop → shared-prefix KV →
+      KV persistence → content-addressed KV store. All six capability flags true.
+      The *architectural* half of level 3.
+- [ ] **v0.4 — real `LlamaCppBackend` + first benchmarks** — the in-process
+      ctypes backend on hardware, measured against a tuned baseline under
+      [docs/BENCHMARKING.md](docs/BENCHMARKING.md). The *empirical* half — the
+      first numbers we can call our own.
+- [ ] **Beyond v0.4** — sleep-time compute (edge), disk-backed KV store,
       speculative decoding. See [docs/ROADMAP.md](docs/ROADMAP.md).
 
 Each level graduates by flipping the corresponding `capabilities` flag from
 `False` to `True`. A flipped flag means the *mechanism* is implemented and
-tested — **not** that a speedup has been measured; that is the benchmarking phase.
+tested — **not** that a speedup has been measured; that is the v0.4 benchmarking
+phase.
 
 ---
 
