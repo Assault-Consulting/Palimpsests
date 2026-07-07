@@ -4,7 +4,7 @@ Proves save_state / load_state on the fake backend: save returns a
 self-contained blob (an n_past header plus the backend's KV bytes); load
 restores the backend state and the position, so a restored session
 resumes from where it was frozen without re-prefilling. A round trip
-into a fresh session reproduces the saved position.
+reproduces the saved position.
 
 FakeBackend is defined inline to keep the import block simple, matching
 the other native test files.
@@ -119,7 +119,7 @@ def test_load_state_restores_backend_and_position():
     saved_n_past = int.from_bytes(saved[:4], "big")
 
     # A fresh session on the same backend, restored from the blob.
-    restored = _session(backend, script=None)
+    restored = _session(backend)
     restored.load_state(saved)
     # the backend received the KV payload (without the header)
     assert backend.set_calls
@@ -133,7 +133,7 @@ def test_load_state_restores_backend_and_position():
 
 
 def test_restored_session_resumes_without_reprefill():
-    backend = StateFakeBackend(eos=0, script={0: [5, 0], 1: [6, 0]})
+    backend = StateFakeBackend(eos=0, script={0: [5, 0]})
     sess = _session(backend)
     list(sess.send("a reasonably long first user turn"))
     saved = sess.save_state()
