@@ -11,15 +11,25 @@ batch from *all* active slots and calls ``decode`` once, then routes each
 slot's sampled token back. ``step`` has always looped over slots, so
 raising the admission cap to N>1 is an unlock, not a rewrite.
 
+**Position tracking (N-pos).** Each slot tracks ``n_past`` — how many
+tokens already sit in its KV. Every ``decode`` entry carries
+``start_pos = n_past``, and ``n_past`` grows by the number of tokens fed
+that step. This is invisible on the fake backend but is exactly what the
+real ``llama_batch`` needs (each token's ``pos``), and it is the
+substrate shared-prefix (N4) and KV persistence (N6) build on: a slot
+seeded from a copied or restored KV simply starts with a nonzero
+``n_past``.
+
 **Two ways to drive it.**
 
 - *Stateless* (``run``): submit one request, drive it to completion, free
   the slot. This is the ``chat_stream`` path shipped in N1.
 - *Stateful* (``open_slot`` / ``feed`` / ``run_turn`` / ``close_slot``):
   a slot is held across turns. ``feed`` pushes a turn's tokens into an
-  existing slot without releasing it; ``run_turn`` advances the loop
-  until *that* slot finishes its turn and yields its tokens, leaving the
-  slot (and its KV) alive for the next turn.
+  existing slot without releasing it and *without* resetting ``n_past``,
+  so generation continues from the existing KV; ``run_turn`` advances the
+  loop until *that* slot finishes its turn and yields its tokens, leaving
+  the slot (and its KV) alive for the next turn.
 
 **Concurrency (N3b).** With ``max_active > 1`` several held sessions
 occupy slots at once. ``run_batch`` is the synchronous batch driver: it
@@ -64,12 +74,14 @@ class _Slot:
     Holds the per-sequence decode state: which ``seq_id`` it owns, the
     tokens to feed on the next step (a prompt/turn first, then one
     sampled token per step), the stop tokens that end a turn, the count
-    generated *this turn*, and the output of the current turn.
+    generated *this turn*, the output of the current turn, and ``n_past``
+    — the number of tokens already committed to this sequence's KV, which
+    becomes the ``start_pos`` of the next decode.
 
     ``session`` distinguishes the two lifecycles. A stateless slot is
     released the moment its turn ends. A session slot stays alive when a
-    turn ends (``turn_done``) — its KV persists for the next ``feed`` —
-    and is released only by ``close_slot``.
+    turn ends (``turn_done``) — its KV, and its ``n_past``, persist for
+    the next ``feed`` — and is released only by ``close_slot``.
     """
 
     seq_id: int
@@ -79,6 +91,7 @@ class _Slot:
     session: bool = False
     generated: list[Token] = field(default_factory=list)
     turn_done: bool = False
+    n_past: int = 0
 
 
 @dataclass
@@ -201,9 +214,9 @@ class Scheduler:
     ) -> None:
         """Load a turn's input into a held session slot.
 
-        Resets the per-turn counters but leaves the slot (and its KV)
-        in place, so generation continues from the existing context
-        rather than re-prefilling.
+        Resets the per-turn counters but leaves the slot (and its KV, and
+        its ``n_past``) in place, so generation continues from the
+        existing context rather than re-prefilling.
         """
         slot = self._slots[seq_id]
         slot.pending = list(tokens)
@@ -211,6 +224,15 @@ class Scheduler:
         slot.stop_tokens = stop_tokens
         slot.generated = []
         slot.turn_done = False
+
+    def seed_n_past(self, seq_id: int, n_past: int) -> None:
+        """Set a slot's KV position directly.
+
+        Used when a slot is seeded from a copied prefix (N4) or a restored
+        state (N6): the KV already holds ``n_past`` tokens, so the next
+        decode must start from that position rather than 0.
+        """
+        self._slots[seq_id].n_past = n_past
 
     def close_slot(self, seq_id: int) -> None:
         """Release a session slot and its KV. Idempotent."""
@@ -222,12 +244,14 @@ class Scheduler:
     def step(self) -> list[StepToken]:
         """Run one batched forward pass across all active slots.
 
-        Builds one batch from every active slot with pending input, calls
-        ``decode`` once, samples each such slot's next token, appends it,
-        and reports it. A slot that hits ``max_tokens`` or a stop token
-        ends its turn: a stateless slot is released; a session slot is
-        marked ``turn_done`` and kept alive for the next ``feed``.
-        Returns the tokens produced this step (the demux).
+        Builds one batch from every active slot with pending input — each
+        entry carrying that slot's ``start_pos`` (its ``n_past``) — calls
+        ``decode`` once, samples each slot's next token, appends it, and
+        advances ``n_past`` by the number of tokens that slot fed. A slot
+        that hits ``max_tokens`` or a stop token ends its turn: a
+        stateless slot is released; a session slot is marked ``turn_done``
+        and kept alive for the next ``feed``. Returns the tokens produced
+        this step (the demux).
         """
         self._admit()
         # Only slots that still have input to process take part this step.
@@ -238,7 +262,12 @@ class Scheduler:
             return []
 
         entries = [
-            BatchEntry(seq_id=s.seq_id, tokens=s.pending, wants_logits=True)
+            BatchEntry(
+                seq_id=s.seq_id,
+                tokens=s.pending,
+                start_pos=s.n_past,
+                wants_logits=True,
+            )
             for s in active
         ]
         logits_by_seq = self._backend.decode(entries)
@@ -246,6 +275,9 @@ class Scheduler:
         produced: list[StepToken] = []
         finished_stateless: list[int] = []
         for slot in active:
+            # These tokens are now committed to the slot's KV.
+            slot.n_past += len(slot.pending)
+
             logits = logits_by_seq.get(slot.seq_id)
             if logits is None:
                 continue
