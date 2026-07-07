@@ -1,17 +1,27 @@
-# OpenSSF Scorecard — automated security-health checks.
+# OpenSSF Scorecard — automated security-health checks (for us, not for show).
 #
 # Runs the Scorecard analysis on push to the default branch and weekly,
-# publishes the result so the README badge auto-updates, and uploads a
-# SARIF report to GitHub's code-scanning dashboard.
+# publishes the result so the score is queryable and the README badge can
+# auto-update, and uploads a SARIF report to GitHub's code-scanning tab.
 #
-# Constraints imposed by the Scorecard publish API (do not "tidy" these
-# away — they are required for publish_results to be accepted):
+# WHY THE PINS BELOW ARE EXACT: the Scorecard publish API only accepts a
+# fixed, approved list of actions in this job, and rejects the run (or the
+# tag fails to resolve) otherwise. The previous version of this file used
+# `ossf/scorecard-action@v2` — which is NOT a real tag — and unreleased
+# `@v7` action tags, so the job failed at "Set up job" before analysis.
+# These versions are taken from a known-good, current example (Microsoft
+# hve-core, Jan 2026) and the approved list is:
+#   actions/checkout, actions/upload-artifact,
+#   github/codeql-action/upload-sarif, ossf/scorecard-action,
+#   step-security/harden-runner
+#
+# Publish-API workflow rules (do not "tidy" away):
 #   - no workflow-level `env:` or `defaults:` blocks;
-#   - no workflow-level write permissions;
-#   - ONLY the job running ossf/scorecard-action may hold id-token: write;
+#   - no workflow-level WRITE permissions (top-level is read-only below);
+#   - only the job running ossf/scorecard-action may hold id-token: write;
 #   - must run on an Ubuntu hosted runner.
 #
-# The badge this enables (add to README once the first run completes):
+# Badge (add to README once the first run publishes successfully):
 #   [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Assault-Consulting/Palimpsests/badge)](https://scorecard.dev/viewer/?uri=github.com/Assault-Consulting/Palimpsests)
 name: scorecard
 
@@ -24,8 +34,8 @@ on:
     branches:
       - main
 
-# No workflow-level permissions block: permissions are granted per-job
-# only, as the publish API requires.
+# Top-level permissions are read-only, as the publish API requires. Write
+# scopes are granted per-job below, only to the analysis job.
 permissions: read-all
 
 jobs:
@@ -33,31 +43,31 @@ jobs:
     name: Scorecard analysis
     runs-on: ubuntu-latest
     permissions:
-      # Needed to upload the SARIF results to the code-scanning dashboard.
+      # Upload the SARIF results to the code-scanning dashboard.
       security-events: write
-      # Needed to publish the results and enable the auto-updating badge
-      # (OIDC token). Scoped to THIS job only, per the publish API rules.
+      # OIDC token, so publish_results can prove the run's authenticity and
+      # the badge can auto-update. Scoped to THIS job only.
       id-token: write
       contents: read
       actions: read
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4.2.2
         with:
           persist-credentials: false
 
       - name: Run analysis
-        uses: ossf/scorecard-action@v2
+        uses: ossf/scorecard-action@v2.4.3
         with:
           results_file: results.sarif
           results_format: sarif
-          # Publish so the weekly public scan is replaced by our own run
-          # and the README badge reflects the latest state.
+          # Publish so the score is queryable via the public API and the
+          # README badge reflects the latest state. Requires id-token: write.
           publish_results: true
 
-      # Keep the raw SARIF as an artifact for inspection.
+      # Keep the raw SARIF as an artifact for inspection (5-day retention).
       - name: Upload artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: scorecard-results
           path: results.sarif
@@ -65,6 +75,6 @@ jobs:
 
       # Surface findings in the Security tab (Code Scanning Alerts).
       - name: Upload to code-scanning
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: results.sarif
