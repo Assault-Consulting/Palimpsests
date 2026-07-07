@@ -23,7 +23,9 @@ Ollama and llama.cpp are optimized for one question: *how fast can I answer a
 single request?* A growing class of workloads has a different shape — **agentic
 workloads**: a process that makes hundreds of calls in a loop, shares one system
 prompt across calls, retries, branches, and invokes tools. That is a different
-profile than single-request throughput.
+profile than single-request throughput, and the tools tuned for single requests
+leave the agentic-specific wins — reusing a shared prefix, not re-prefilling
+across a tool loop, persisting KV between sessions — on the table.
 
 Palimpsests gives you **three levels of control** over local inference behind a
 **single `InferenceEngine` abstraction**, plus a **context-memory layer** that
@@ -50,15 +52,21 @@ retrieval. At level 3 the same image applies to KV state.
 
 ---
 
-## Why it might be useful
+## What it does
 
 - **Long context on small models without OOM.** The context-memory layer keeps a
   stable *sink* (system prompt + first turns) and a recent *window*, evicts the
   middle to disk, and retrieves relevant blocks back on demand. A 7B model with
-  an 8K real context behaves as if it had a far longer one — bounded by disk,
-  not RAM.
-- **One API, three engines.** Prototype on Ollama, get fine-grained control with
-  llama.cpp, and run the native service — same calling code.
+  an 8K real context serves a conversation far longer than 8K — the ceiling is
+  disk, not RAM.
+- **One API, three engines.** Prototype on Ollama, take fine-grained control with
+  llama.cpp, run the native service — the calling code above the engine does not
+  change. The same context-memory layer runs identically on all three.
+- **Agentic-workload serving at level 3.** Continuous batching, a shared system
+  prompt decoded once and copied rather than recomputed per session, a tool loop
+  that continues in-place without re-prefilling the conversation, and KV state
+  that persists and is reusable by content. These are the levers that matter when
+  a process makes hundreds of calls in a loop, not one.
 - **Local-first, air-gap capable, auditable.** Inference runs on-host; nothing
   leaves the machine to answer a request. Every model and KV operation is
   recorded to an encrypted, tamper-evident audit log. This is the sharp edge for
@@ -70,13 +78,16 @@ retrieval. At level 3 the same image applies to KV state.
 
 ---
 
-## What this is *not*
+## Scope: what it deliberately does not touch
 
-This project **does not invent new inference mechanisms.** Everything it does
-lives either as engine launch parameters (levels 1–2), orchestration above the
-engine (context-memory), or a serving service with KV-state management (level
-3). It never modifies the attention kernel. See **Prior art** below for an
-honest accounting of what already exists.
+Palimpsests works **above the attention kernel**, not inside it. It composes
+llama.cpp's existing primitives (batched decode, per-sequence KV save/restore,
+shared-prefix copy) into serving policy; it orchestrates context above the
+engine; it manages KV state at level 3. It does **not** modify the attention
+math, write custom CUDA kernels, or change how a forward pass is computed — that
+is a different project (and a different risk profile). Drawing this line
+deliberately is what keeps the claims verifiable: everything the project asserts,
+it can demonstrate.
 
 It is also an **inference library, not a certified compliance product** — it
 provides primitives designed to help address regulatory obligations, but using
@@ -193,29 +204,47 @@ is in **[docs/POSITIONING.md](docs/POSITIONING.md)**.
 
 ---
 
-## Prior art & positioning
+## Prior art & the gap we close
 
-We researched the landscape before writing this. The honest finding: **no single
-project assembles this whole stack, but every individual piece already exists
-somewhere.** We hold this in view so the project is built on integration, not a
-false sense of novelty.
+We mapped the landscape before building, and hold it in view so the project rests
+on a real, defensible gap rather than a false sense of novelty. Every *component*
+below exists somewhere. What does **not** exist is any single system that
+composes all of them under one abstraction, specialized for agentic edge
+workloads, cross-platform.
 
-| Stack component | State of the world | Examples |
+| Stack component | Where it exists today | The limit |
 |---|---|---|
-| Provider abstraction (L1–2) | commodity | LM Studio, Jan, ServiceStack AI Server |
-| Sink/window context | known technique | StreamingLLM; practical guides |
-| Block retrieval of evicted context | RAG pattern | many memory projects |
-| Continuous batching on edge | actively worked on | Clairvoyant (SJF sidecar); vLLM/SGLang (datacenter) |
-| Shared prefix KV | serving standard | vLLM, SGLang |
-| KV persistence as memory | **already shipped** | **oMLX** (macOS, paged SSD KV); *Persistent Q4 KV Cache*, arXiv 2603.04428 |
+| Provider abstraction (L1–2) | LM Studio, Jan, ServiceStack AI Server | wrappers only — no native serving level below them |
+| Sink/window context | StreamingLLM; practical guides | a technique, not a product that also does the rest |
+| Block retrieval of evicted context | many memory / RAG projects | not integrated with a KV-managing serving loop |
+| Continuous batching on edge | Clairvoyant (sidecar); vLLM/SGLang (datacenter) | datacenter-scale or a bolt-on, not a local library |
+| Shared-prefix KV | vLLM, SGLang | server-class, not exposed as a local, cross-platform policy |
+| KV persistence as memory | oMLX (macOS); *Persistent Q4 KV Cache*, arXiv 2603.04428 | Apple/MLX-only, or a research artifact — persistence alone |
 
-**Where the value actually is:** integration and positioning, not a new
-mechanism. The closest single tool by substance is **oMLX** — but it is Apple/MLX
-only and does KV persistence alone, without the three-level abstraction or the
-context-memory layer. Palimpsests' bets are (1) the **full stack as one
-product**, (2) **cross-platform** (not tied to Apple Silicon), (3) **one
-abstraction from wrapper to native service**, and (4) an **auditable, local-first
-posture** aimed at regulated deployments.
+**The gap, stated positively:** no tool combines continuous batching +
+shared-prefix KV + KV-persistence under a single engine abstraction, specialized
+for agentic edge workloads, and portable across platforms. The nearest single
+system by substance is **oMLX** — and it covers only the KV-persistence facet,
+only on Apple Silicon, without the three-level abstraction or the context-memory
+layer.
+
+**Why this composition is hard, not just assembled.** The difficulty is not
+finding the pieces; it is that they fight each other unless the seams are
+designed. Three levels with genuinely different control surfaces (an external
+daemon, a managed subprocess, an in-process serving loop) have to present *one*
+`InferenceEngine` contract, so callers query `capabilities` and never branch on
+engine identity. The context-memory layer has to behave identically whether it
+sits above an opaque HTTP daemon or above KV state we own directly. Shared-prefix
+reuse and KV persistence have to share the *same* position-tracking substrate
+(`n_past` / `start_pos`) as continuous batching, or a restored or copied KV lands
+at the wrong position and silently corrupts output. And it has to hold on
+commodity local hardware, not a datacenter. That coordination — the seams, the
+one substrate under several features, the single contract over three control
+models — is the system-level work. "Integration" undersells it; it is
+architecture.
+
+The honest scope line still holds (see [Scope](#scope-what-it-deliberately-does-not-touch)):
+the novelty is in this composition and its seams, not in a new inference kernel.
 
 ---
 
