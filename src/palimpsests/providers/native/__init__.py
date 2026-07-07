@@ -9,11 +9,21 @@ the KV primitives directly.
 **Scope so far.** N1 shipped the stateless path (``chat_stream`` →
 ``streaming``). N3a added stateful sessions (``open_session`` →
 ``stateful_sessions``). N3b made sessions concurrent (``run_sessions`` /
-``Scheduler.run_batch`` → ``continuous_batching``). N5 adds the
-server-side tool loop: ``NativeSession.append_tool_result`` continues a
-turn after an external tool by feeding only the result into the live KV,
-no re-prefill, flipping ``server_side_tools`` on. Shared-prefix KV (N4)
-and KV persistence (N6) remain off until their steps.
+``Scheduler.run_batch`` → ``continuous_batching``). N5 added the
+server-side tool loop (``append_tool_result`` → ``server_side_tools``).
+N4 adds shared-prefix KV: with ``share_prefixes=True`` the engine keeps a
+prefix holder per unique system prompt and copies it into each session's
+slot instead of re-decoding it, flipping ``shared_prefix`` on. KV
+persistence (N6) remains off until its step.
+
+**Prefix policy (Variant B).** The scheduler owns only the mechanism
+(``reserve_prefix_holder`` / ``warm_prefix`` / ``copy_prefix_to_slot`` /
+``release_prefix_holder``). The *policy* lives here: a registry keyed by
+the exact prefix tokens decides when to reserve a new holder and when to
+reuse one. Reuse is by exact token match — simplest and collision-free.
+Holders live until ``close`` (per-session refcount eviction is a later
+refinement); this is fine for a local single-user runtime where holders
+are few and freed at shutdown.
 
 **The test seam (ADR-0002).** The engine composes the pure-Python
 ``Scheduler`` (fully CI-tested with a fake backend) and a
@@ -36,7 +46,7 @@ from palimpsests.engine import (
     ModelInfo,
 )
 from palimpsests.providers.errors import EngineUnavailable
-from palimpsests.providers.native.backend import NativeBackend
+from palimpsests.providers.native.backend import NativeBackend, Token
 from palimpsests.providers.native.scheduler import GenerationRequest, Scheduler
 from palimpsests.providers.native.session import NativeSession
 
@@ -61,13 +71,30 @@ def _render_prompt(messages: Sequence[Message]) -> str:
     return "\n".join(lines)
 
 
+class _Holder:
+    """A reserved prefix holder and how many sessions reference it."""
+
+    __slots__ = ("seq_id", "prefix_len", "refcount")
+
+    def __init__(self, seq_id: int, prefix_len: int) -> None:
+        self.seq_id = seq_id
+        self.prefix_len = prefix_len
+        self.refcount = 0
+
+
 class NativeEngine(BaseInferenceEngine):
     """Level-3 engine: an in-process decode loop over a llama.cpp backend.
 
     Constructed with an optional explicit ``backend`` (tests pass a fake
     one); otherwise the backend is loaded lazily from the ``[native]``
     extra on first use. Everything above the backend — prompt rendering,
-    the scheduler, streaming, sessions — is backend-agnostic and CI-tested.
+    the scheduler, streaming, sessions, prefix policy — is backend-agnostic
+    and CI-tested.
+
+    ``share_prefixes`` opts into shared-prefix KV (N4): sessions with an
+    identical system prompt share one prefix holder instead of each
+    re-decoding it. Off by default because a holder costs a sequence from
+    the budget, which only pays off when prefixes actually coincide.
     """
 
     def __init__(
@@ -77,14 +104,19 @@ class NativeEngine(BaseInferenceEngine):
         model_path: str | None = None,
         max_tokens: int = 512,
         max_sessions: int = _DEFAULT_MAX_SESSIONS,
+        share_prefixes: bool = False,
     ) -> None:
         self._backend = backend
         self._model_path = model_path
         self._max_tokens = max_tokens
         self._max_sessions = max_sessions
+        self._share_prefixes = share_prefixes
         # One shared scheduler for all sessions, so concurrent sessions
         # occupy slots in the same batch. Built lazily on first session.
         self._session_scheduler: Scheduler | None = None
+        # Prefix policy state (Variant B): holders keyed by exact prefix
+        # tokens. Populated only when share_prefixes is on.
+        self._holders: dict[tuple[Token, ...], _Holder] = {}
 
     # ─── identity ────────────────────────────────────────────────────────
 
@@ -95,13 +127,13 @@ class NativeEngine(BaseInferenceEngine):
     @property
     def capabilities(self) -> EngineCapabilities:
         # Streaming (N1), stateful sessions (N3a), concurrent batching
-        # (N3b), and the server-side tool loop (N5) work. shared_prefix
-        # (N4) and kv_persistence (N6) wait for their steps.
+        # (N3b), the server-side tool loop (N5), and shared-prefix KV (N4)
+        # work. kv_persistence (N6) waits for its step.
         return EngineCapabilities(
             control_level=3,
             streaming=True,
             stateful_sessions=True,
-            shared_prefix=False,
+            shared_prefix=True,
             server_side_tools=True,
             continuous_batching=True,
             kv_persistence=False,
@@ -211,6 +243,28 @@ class NativeEngine(BaseInferenceEngine):
             )
         return self._session_scheduler
 
+    def _prefix_key(self, backend: NativeBackend, system_prompt: str) -> tuple[Token, ...]:
+        """The exact prefix tokens used as the holder registry key."""
+        return tuple(backend.tokenize(f"system: {system_prompt}\n", add_special=True))
+
+    def _holder_for(
+        self, scheduler: Scheduler, backend: NativeBackend, system_prompt: str
+    ) -> _Holder:
+        """Return the holder for this prefix, reserving+warming if new.
+
+        Exact token match: an identical system prompt reuses the existing
+        holder; a new one reserves a fresh holder and decodes the prefix
+        into it once.
+        """
+        key = self._prefix_key(backend, system_prompt)
+        holder = self._holders.get(key)
+        if holder is None:
+            seq_id = scheduler.reserve_prefix_holder()
+            prefix_len = scheduler.warm_prefix(seq_id, list(key))
+            holder = _Holder(seq_id=seq_id, prefix_len=prefix_len)
+            self._holders[key] = holder
+        return holder
+
     def open_session(
         self,
         *,
@@ -220,13 +274,30 @@ class NativeEngine(BaseInferenceEngine):
     ) -> InferenceSession:
         """Open a stateful session on the shared session scheduler.
 
-        Up to ``max_sessions`` sessions can be open at once; several
-        active turns advance together in one batched step. A single
-        session still streams via ``send``; concurrent turns go through
-        ``run_sessions`` over the shared scheduler.
+        With ``share_prefixes`` on and a system prompt given, the session's
+        slot is seeded from a shared prefix holder (the prompt is decoded
+        once per unique prompt and copied in), so the session skips
+        prepending it inline. Otherwise the session prepends the system
+        prompt on its first turn as before.
         """
         scheduler = self._get_session_scheduler()
         backend = self._load_backend()
+
+        if self._share_prefixes and system_prompt:
+            holder = self._holder_for(scheduler, backend, system_prompt)
+            session = NativeSession(
+                backend,
+                scheduler,
+                system_prompt=system_prompt,
+                max_tokens=self._max_tokens,
+                prefix_already_seeded=True,
+            )
+            scheduler.copy_prefix_to_slot(
+                holder.seq_id, session.seq_id, holder.prefix_len
+            )
+            holder.refcount += 1
+            return session
+
         return NativeSession(
             backend,
             scheduler,
@@ -237,7 +308,11 @@ class NativeEngine(BaseInferenceEngine):
     # ─── lifecycle ───────────────────────────────────────────────────────
 
     def close(self) -> None:
-        """Release the backend if one was loaded."""
+        """Release prefix holders and the backend if one was loaded."""
+        if self._session_scheduler is not None:
+            for holder in self._holders.values():
+                self._session_scheduler.release_prefix_holder(holder.seq_id)
+        self._holders.clear()
         self._session_scheduler = None
         if self._backend is not None:
             self._backend.close()
