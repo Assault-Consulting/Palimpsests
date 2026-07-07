@@ -114,16 +114,16 @@ def test_engine_id():
     assert NativeEngine(backend=FakeBackend()).engine_id == "pal-native"
 
 
-def test_capabilities_streaming_sessions_and_batching_on():
+def test_capabilities_streaming_sessions_batching_and_tools_on():
     caps = NativeEngine(backend=FakeBackend()).capabilities
     assert isinstance(caps, EngineCapabilities)
     assert caps.control_level == 3
     assert caps.streaming is True
-    # N3a sessions + N3b concurrent batching on; the rest still off
+    # N3a sessions + N3b batching + N5 tool loop on; N4/N6 still off
     assert caps.stateful_sessions is True
     assert caps.continuous_batching is True
+    assert caps.server_side_tools is True
     assert caps.shared_prefix is False
-    assert caps.server_side_tools is False
     assert caps.kv_persistence is False
 
 
