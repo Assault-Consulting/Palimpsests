@@ -35,16 +35,16 @@ def test_streaming_capability_is_on():
     assert NativeEngine().capabilities.streaming is True
 
 
-def test_sessions_batching_tools_and_prefix_on_persistence_off():
-    """N3a sessions, N3b batching, N5 tool loop, and N4 shared-prefix KV
-    have shipped, so those flags are True. Only KV persistence (N6) has
-    not."""
+def test_all_level3_capabilities_on():
+    """The full level-3 skeleton has shipped: sessions (N3a), batching
+    (N3b), tool loop (N5), shared prefix (N4), and KV persistence (N6) are
+    all True."""
     c = NativeEngine().capabilities
     assert c.stateful_sessions is True
     assert c.continuous_batching is True
     assert c.server_side_tools is True
     assert c.shared_prefix is True
-    assert c.kv_persistence is False
+    assert c.kv_persistence is True
 
 
 def test_not_available_without_backend_or_model():

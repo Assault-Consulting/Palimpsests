@@ -11,10 +11,11 @@ the KV primitives directly.
 ``stateful_sessions``). N3b made sessions concurrent (``run_sessions`` /
 ``Scheduler.run_batch`` → ``continuous_batching``). N5 added the
 server-side tool loop (``append_tool_result`` → ``server_side_tools``).
-N4 adds shared-prefix KV: with ``share_prefixes=True`` the engine keeps a
-prefix holder per unique system prompt and copies it into each session's
-slot instead of re-decoding it, flipping ``shared_prefix`` on. KV
-persistence (N6) remains off until its step.
+N4 added shared-prefix KV (``share_prefixes`` → ``shared_prefix``). N6
+adds KV persistence: ``NativeSession.save_state`` / ``load_state``
+serialize a session's KV to bytes and back — position packed in — so a
+session can be frozen and thawed without re-prefill, flipping
+``kv_persistence`` on. That completes the level-3 skeleton.
 
 **Prefix policy (Variant B).** The scheduler owns only the mechanism
 (``reserve_prefix_holder`` / ``warm_prefix`` / ``copy_prefix_to_slot`` /
@@ -126,9 +127,9 @@ class NativeEngine(BaseInferenceEngine):
 
     @property
     def capabilities(self) -> EngineCapabilities:
-        # Streaming (N1), stateful sessions (N3a), concurrent batching
-        # (N3b), the server-side tool loop (N5), and shared-prefix KV (N4)
-        # work. kv_persistence (N6) waits for its step.
+        # The full level-3 skeleton: streaming (N1), stateful sessions
+        # (N3a), concurrent batching (N3b), the server-side tool loop
+        # (N5), shared-prefix KV (N4), and KV persistence (N6).
         return EngineCapabilities(
             control_level=3,
             streaming=True,
@@ -136,7 +137,7 @@ class NativeEngine(BaseInferenceEngine):
             shared_prefix=True,
             server_side_tools=True,
             continuous_batching=True,
-            kv_persistence=False,
+            kv_persistence=True,
         )
 
     # ─── backend loading (lazy, behind the [native] extra) ───────────────
@@ -243,9 +244,12 @@ class NativeEngine(BaseInferenceEngine):
             )
         return self._session_scheduler
 
-    def _prefix_key(self, backend: NativeBackend, system_prompt: str) -> tuple[Token, ...]:
+    def _prefix_key(
+        self, backend: NativeBackend, system_prompt: str
+    ) -> tuple[Token, ...]:
         """The exact prefix tokens used as the holder registry key."""
-        return tuple(backend.tokenize(f"system: {system_prompt}\n", add_special=True))
+        rendered = f"system: {system_prompt}\n"
+        return tuple(backend.tokenize(rendered, add_special=True))
 
     def _holder_for(
         self, scheduler: Scheduler, backend: NativeBackend, system_prompt: str

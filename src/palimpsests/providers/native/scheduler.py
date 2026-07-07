@@ -29,6 +29,13 @@ reference counting — lives in the engine (Variant B). A holder occupies a
 real sequence id, so it reduces the session budget by one per unique
 prefix; that is the honest cost of not recomputing shared prefixes.
 
+**KV persistence (N6).** ``save_slot_state`` / ``load_slot_state`` map to
+``state_get`` / ``state_set`` — a slot's KV serialized to bytes and back.
+Paired with ``slot_n_past`` (the position that goes with the bytes) they
+let a session be frozen and thawed without re-prefilling. This is the
+primitive; the content-addressed store that reuses these by content is a
+layer above (N6b).
+
 **Two ways to drive it.**
 
 - *Stateless* (``run``): submit one request, drive it to completion, free
@@ -250,6 +257,32 @@ class Scheduler:
         """Release a session slot and its KV. Idempotent."""
         if seq_id in self._slots:
             self._release(seq_id)
+
+    # ─── KV persistence (N6) ──────────────────────────────────────────────
+
+    def slot_n_past(self, seq_id: int) -> int:
+        """How many tokens sit in this slot's KV (its position)."""
+        return self._slots[seq_id].n_past
+
+    def save_slot_state(self, seq_id: int) -> bytes:
+        """Serialize a slot's KV to opaque bytes (``state_get``).
+
+        The bytes are the backend's per-sequence KV. The *position* that
+        goes with them (``n_past``) is read separately via ``slot_n_past``;
+        the session packs the two together so a restore knows where to
+        resume.
+        """
+        return self._backend.state_get(seq_id)
+
+    def load_slot_state(self, seq_id: int, state: bytes, n_past: int) -> None:
+        """Restore a slot's KV from bytes and set its position (``state_set``).
+
+        After this the slot holds ``n_past`` tokens of KV and the next
+        decode resumes from that position — no re-prefill of the restored
+        context.
+        """
+        self._backend.state_set(seq_id, state)
+        self.seed_n_past(seq_id, n_past)
 
     # ─── prefix holders (N4a) ─────────────────────────────────────────────
 
