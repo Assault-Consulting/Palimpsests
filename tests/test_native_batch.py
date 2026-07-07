@@ -14,10 +14,7 @@ from __future__ import annotations
 import pytest
 from collections.abc import Sequence
 from palimpsests.providers.native.backend import BatchEntry, Token
-from palimpsests.providers.native.scheduler import (
-    Scheduler,
-    TurnRequest,
-)
+from palimpsests.providers.native.scheduler import Scheduler, TurnRequest
 from palimpsests.providers.native.session import NativeSession, run_sessions
 
 
@@ -96,8 +93,8 @@ def test_two_sessions_are_batched_into_one_decode():
         eos=0, script={0: [5, 6, 0], 1: [7, 8, 0]}, n_seq_max=4
     )
     scheduler = Scheduler(backend, max_active=4)
-    a = NativeSession(backend, scheduler)
-    b = NativeSession(backend, scheduler)
+    a = NativeSession(backend, scheduler, stop_tokens=(0,))
+    b = NativeSession(backend, scheduler, stop_tokens=(0,))
 
     result = run_sessions(scheduler, [(a, "hi"), (b, "yo")])
 
@@ -112,7 +109,7 @@ def test_sequential_single_sessions_are_width_one():
     # A single session at a time never batches — every decode is width 1.
     backend = BatchRecordingBackend(eos=0, script={0: [5, 0]}, n_seq_max=4)
     scheduler = Scheduler(backend, max_active=4)
-    a = NativeSession(backend, scheduler)
+    a = NativeSession(backend, scheduler, stop_tokens=(0,))
     list(a.send("hi"))
     assert backend.decode_widths  # something happened
     assert max(backend.decode_widths) == 1
