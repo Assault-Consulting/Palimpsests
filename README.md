@@ -6,10 +6,14 @@
 [![CI](https://img.shields.io/badge/CI-pending-lightgrey.svg)](#)
 [![PyPI](https://img.shields.io/badge/PyPI-unreleased-lightgrey.svg)](#)
 
-> **Status: v0.2.** Levels 1 (Ollama) and 2 (llama.cpp) both work behind one
-> abstraction, with the context-memory layer (window manager + block-memory
-> retrieval) and an encrypted audit log. Level 3 (pal-native) is a registered
-> slot, not yet implemented. APIs may change before v1.0.
+> **Status: v0.2, with the level-3 skeleton complete.** Levels 1 (Ollama) and 2
+> (llama.cpp) work behind one abstraction, with the context-memory layer (window
+> manager + block-memory retrieval) and an encrypted audit log. Level 3
+> (pal-native) now has its full serving skeleton — streaming, stateful sessions,
+> continuous batching, server-side tool loop, shared-prefix KV, and KV
+> persistence — implemented and test-covered against a fake backend behind the
+> ADR-0002 seam. The real in-process `LlamaCppBackend` (and the first on-hardware
+> benchmarks) are the next step. APIs may change before v1.0.
 
 ---
 
@@ -54,7 +58,12 @@ retrieval. At level 3 the same image applies to KV state.
   an 8K real context behaves as if it had a far longer one — bounded by disk,
   not RAM.
 - **One API, three engines.** Prototype on Ollama, get fine-grained control with
-  llama.cpp, and (eventually) run the native service — same calling code.
+  llama.cpp, and run the native service — same calling code.
+- **Local-first, air-gap capable, auditable.** Inference runs on-host; nothing
+  leaves the machine to answer a request. Every model and KV operation is
+  recorded to an encrypted, tamper-evident audit log. This is the sharp edge for
+  **regulated and sensitive deployments** — see **[Regulated / air-gapped
+  deployments](#regulated--air-gapped-deployments)** below.
 - **Memory mechanisms, exposed not reinvented.** KV-cache quantization, flash
   attention, GPU offload, mmap trade-offs — surfaced as declared capabilities
   per engine, validated (e.g. KV-quant requires flash attention).
@@ -68,6 +77,11 @@ lives either as engine launch parameters (levels 1–2), orchestration above the
 engine (context-memory), or a serving service with KV-state management (level
 3). It never modifies the attention kernel. See **Prior art** below for an
 honest accounting of what already exists.
+
+It is also an **inference library, not a certified compliance product** — it
+provides primitives designed to help address regulatory obligations, but using
+it does not by itself make a deployment compliant. See
+**[SECURITY.md](SECURITY.md)**.
 
 ---
 
@@ -138,14 +152,44 @@ timeouts, `EngineMemoryConfig`), the Python API, and troubleshooting.
   `EngineMemoryConfig`. `chat()` is derived from `chat_stream()` — adapters
   implement streaming only.
 - **`providers/`** — engine adapters: `ollama` (L1), `llamacpp` (L2),
-  `native` (L3 slot).
+  `native` (L3: scheduler + session + prefix holders + KV store).
 - **`context/`** — context-memory: `window_manager` (sink + window + evict) and
   `block_memory` (evicted text → embeddings → retrieval), sharing one backing
-  store with future KV persistence.
+  store with KV persistence.
 - **`registry.py`** — one active engine globally (radio, not checkbox).
 - **`audit/`** — every model / KV operation is auditable.
 
-Full design: **[ARCHITECTURE.md](ARCHITECTURE.md)**.
+Full design: **[ARCHITECTURE.md](ARCHITECTURE.md)**. Positioning, audiences, and
+performance targets: **[docs/POSITIONING.md](docs/POSITIONING.md)**.
+
+---
+
+## Regulated / air-gapped deployments
+
+Palimpsests is aimed, in part, at teams for whom *where inference runs* and
+*whether the audit trail can be trusted* matter as much as raw speed — finance,
+defense, healthcare, public sector.
+
+- **Local-first / air-gap capable** — no request content leaves the host; no
+  third-party call is needed to answer a request. Data residency on hardware you
+  control.
+- **Encrypted, tamper-evident audit log** — every model and KV operation is
+  recorded to an encrypted store (SQLCipher, key in the OS keychain), so the
+  trail's integrity can be demonstrated, not merely asserted.
+
+These map onto real obligations. The **EU AI Act** (Regulation (EU) 2024/1689)
+makes automatic, lifetime event logging a legal requirement for high-risk systems
+(**Article 12**) with a **six-month minimum retention** (Article 26(6)) — and an
+autonomous tool-calling agent is a strong candidate for the high-risk (Annex III)
+classification. Article 12 does not say *tamper-proof*, but a silently-alterable
+log has little evidentiary value in an audit; a tamper-evident trail targets that
+gap.
+
+**This is not a compliance claim.** The project is not certified, the audit log
+has not been independently pen-tested, and the AI Act's own technical standards
+are not yet final. Full references, caveats, and the moving timeline are in
+**[SECURITY.md](SECURITY.md)**; the honest target-vs-measured performance picture
+is in **[docs/POSITIONING.md](docs/POSITIONING.md)**.
 
 ---
 
@@ -170,7 +214,8 @@ mechanism. The closest single tool by substance is **oMLX** — but it is Apple/
 only and does KV persistence alone, without the three-level abstraction or the
 context-memory layer. Palimpsests' bets are (1) the **full stack as one
 product**, (2) **cross-platform** (not tied to Apple Silicon), (3) **one
-abstraction from wrapper to native service.**
+abstraction from wrapper to native service**, and (4) an **auditable, local-first
+posture** aimed at regulated deployments.
 
 ---
 
@@ -182,20 +227,30 @@ abstraction from wrapper to native service.**
       chat flow
 - [x] **v0.2** — Level 2 (llama.cpp) with the full `EngineMemoryConfig` applied
       as launch flags to a managed `llama-server`; level-3 slot registered
-- [ ] **v0.3+** — Level 3 native service, incrementally: continuous batching +
-      shared prefix KV → server-side tool loop → speculative decoding →
-      KV-as-memory
+- [x] **Level-3 skeleton (fake backend)** — the pal-native serving loop, complete
+      behind the ADR-0002 seam: streaming → stateful sessions → continuous
+      batching → server-side tool loop → shared-prefix KV → KV persistence →
+      content-addressed KV store. All six capability flags true.
+- [ ] **Real `LlamaCppBackend` + first benchmarks** — the ctypes backend on
+      hardware, measured against a tuned baseline under
+      [docs/BENCHMARKING.md](docs/BENCHMARKING.md).
+- [ ] **Beyond the skeleton** — sleep-time compute (edge), disk-backed KV store,
+      speculative decoding. See [docs/ROADMAP.md](docs/ROADMAP.md).
 
 Each level graduates by flipping the corresponding `capabilities` flag from
-`False` to `True`.
+`False` to `True`. A flipped flag means the *mechanism* is implemented and
+tested — **not** that a speedup has been measured; that is the benchmarking phase.
 
 ---
 
 ## Contributing
 
-Early, but PRs and issues welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
+Early, but PRs and issues welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) and our
+[Code of Conduct](CODE_OF_CONDUCT.md).
 Python code lands via PR (never direct to `main`); ruff `["E","F","I","B","UP"]`,
 line length 100, Python 3.11+, pytest.
+
+Security issues: please report privately — see [SECURITY.md](SECURITY.md).
 
 ## License
 
