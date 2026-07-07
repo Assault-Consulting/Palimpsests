@@ -1,10 +1,13 @@
-"""Tests for the level-3 stateful session (N3a).
+"""Tests for the level-3 stateful session.
 
 Exercises NativeSession end to end with a fake backend: the session holds
 a slot across turns, later turns reuse the held KV instead of
 re-prefilling, and the not-yet-implemented features (tool loop, KV
 persistence) refuse loudly. Pure Python, no model — the whole session
 path is CI-verified.
+
+Sessions are created with stop_tokens=(0,) so a turn ends at the fake
+backend's eos (0) rather than running to the token cap.
 
 FakeBackend is defined inline (not imported across test modules) to keep
 the import block simple, matching the other native test files.
@@ -23,9 +26,9 @@ from palimpsests.providers.native.session import NativeSession
 class FakeBackend:
     """Deterministic NativeBackend: scripted per-seq tokens, recorded calls.
 
-    ``feed_lengths`` records the number of input tokens the scheduler put
-    into each decode call's first step for a sequence — used to prove that
-    a second turn does NOT re-prefill the whole conversation.
+    ``first_feed_lengths`` records the number of input tokens the scheduler
+    put into each sequence's first decode — used to prove that a second
+    turn does NOT re-prefill the whole conversation.
     """
 
     def __init__(
@@ -91,6 +94,8 @@ class FakeBackend:
 
 
 def _session(backend: FakeBackend, **kwargs) -> NativeSession:
+    # Default to stopping at the fake eos (0) unless a test overrides it.
+    kwargs.setdefault("stop_tokens", (0,))
     return NativeSession(backend, Scheduler(backend, max_active=1), **kwargs)
 
 
@@ -103,11 +108,11 @@ def test_open_session_returns_inference_session():
     assert isinstance(sess, InferenceSession)
 
 
-def test_capabilities_stateful_on_batching_off():
+def test_capabilities_stateful_and_batching_on():
     caps = NativeEngine(backend=FakeBackend()).capabilities
-    # N3a: sessions work, concurrency does not yet
+    # sessions (N3a) and concurrent batching (N3b) both work now
     assert caps.stateful_sessions is True
-    assert caps.continuous_batching is False
+    assert caps.continuous_batching is True
     # unshipped features still off
     assert caps.shared_prefix is False
     assert caps.server_side_tools is False
@@ -118,7 +123,7 @@ def test_capabilities_stateful_on_batching_off():
 
 
 def test_send_streams_a_turn():
-    backend = FakeBackend(eos=0, script={0: [5, 6, 7]})
+    backend = FakeBackend(eos=0, script={0: [5, 6, 7, 0]})
     sess = _session(backend)
     chunks = list(sess.send("hello"))
     text = "".join(c.delta for c in chunks)
@@ -198,14 +203,14 @@ def test_load_state_refuses():
         sess.load_state(b"")
 
 
-# ─── one session at a time in N3a ─────────────────────────────────────────
+# ─── capacity on a single-slot scheduler ──────────────────────────────────
 
 
-def test_only_one_session_at_a_time_n3a():
+def test_one_session_at_a_time_on_cap_one_scheduler():
     backend = FakeBackend(n_seq_max=4)
     scheduler = Scheduler(backend, max_active=1)
     first = NativeSession(backend, scheduler)
-    # A second session on the same (cap-1) scheduler cannot get a slot.
+    # A second session on the same cap-1 scheduler cannot get a slot.
     with pytest.raises(RuntimeError):
         NativeSession(backend, scheduler)
     first.close()
