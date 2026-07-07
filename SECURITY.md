@@ -6,7 +6,7 @@ Please report suspected vulnerabilities **privately**, not in a public issue.
 
 - Use [GitHub's private security advisories](https://github.com/Assault-Consulting/Palimpsests/security/advisories/new)
   for this repository, **or**
-- email **[INSERT SECURITY CONTACT — e.g. security@your-domain]**.
+- email as@assault.consulting
 
 Include, where possible: affected version or commit, a description of the issue,
 reproduction steps or a proof of concept, and the impact you foresee. We aim to
