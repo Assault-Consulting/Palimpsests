@@ -1,12 +1,13 @@
 """Tests for the pal-native engine's registration-facing behavior.
 
-The detailed N1 engine behavior (streaming, the scheduler path, backend
+The detailed engine behavior (streaming, the scheduler path, backend
 loading) lives in test_native_engine.py; the scheduler in
-test_native_scheduler.py. This module pins the small surface the rest of
-the app relies on: that a zero-arg NativeEngine is a valid InferenceEngine
-that can be constructed and registered, and that without a backend or
-model it degrades cleanly (not-available, loud EngineUnavailable) rather
-than crashing or pretending to work.
+test_native_scheduler.py; sessions in test_native_session.py. This module
+pins the small surface the rest of the app relies on: that a zero-arg
+NativeEngine is a valid InferenceEngine that can be constructed and
+registered, and that without a backend or model it degrades cleanly
+(not-available, loud EngineUnavailable) rather than crashing or pretending
+to work.
 """
 from __future__ import annotations
 
@@ -34,13 +35,15 @@ def test_streaming_capability_is_on():
     assert NativeEngine().capabilities.streaming is True
 
 
-def test_stateful_features_still_off():
-    """The genuinely stateful level-3 features have not shipped yet."""
+def test_stateful_sessions_on_batching_and_rest_off():
+    """N3a shipped stateful sessions, so that flag is now True. The
+    remaining level-3 features — concurrency, shared prefix, tools,
+    persistence — have not shipped yet."""
     c = NativeEngine().capabilities
-    assert c.stateful_sessions is False
+    assert c.stateful_sessions is True
+    assert c.continuous_batching is False
     assert c.shared_prefix is False
     assert c.server_side_tools is False
-    assert c.continuous_batching is False
     assert c.kv_persistence is False
 
 

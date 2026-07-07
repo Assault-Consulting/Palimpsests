@@ -1,9 +1,9 @@
-"""Tests for the pal-native level-3 engine (N1 stateless path).
+"""Tests for the pal-native level-3 engine (stateless + session entry).
 
-Exercises the full engine path — prompt rendering, tokenize, scheduler,
+Exercises the engine path — prompt rendering, tokenize, scheduler,
 streaming — with an injected fake backend, so no model or native build is
-needed. The scheduler itself is tested separately in
-test_native_scheduler.py; here the focus is the engine's composition and
+needed. The scheduler is tested in test_native_scheduler.py and sessions
+in test_native_session.py; here the focus is the engine's composition and
 its capability contract.
 
 FakeBackend is defined inline (not imported from another test module or
@@ -15,10 +15,10 @@ from __future__ import annotations
 import pytest
 from collections.abc import Sequence
 from palimpsests.engine import (
-    CapabilityUnsupported,
     ChatResponse,
     EngineCapabilities,
     InferenceEngine,
+    InferenceSession,
 )
 from palimpsests.providers.errors import EngineUnavailable
 from palimpsests.providers.native import NativeEngine
@@ -114,23 +114,23 @@ def test_engine_id():
     assert NativeEngine(backend=FakeBackend()).engine_id == "pal-native"
 
 
-def test_capabilities_streaming_on_stateful_off():
+def test_capabilities_streaming_and_sessions_on():
     caps = NativeEngine(backend=FakeBackend()).capabilities
     assert isinstance(caps, EngineCapabilities)
     assert caps.control_level == 3
     assert caps.streaming is True
-    # the genuinely stateful level-3 features stay off in N1
-    assert caps.stateful_sessions is False
-    assert caps.shared_prefix is False
+    # N3a: sessions on, concurrency and the rest still off
+    assert caps.stateful_sessions is True
     assert caps.continuous_batching is False
+    assert caps.shared_prefix is False
     assert caps.server_side_tools is False
     assert caps.kv_persistence is False
 
 
-def test_open_session_still_refuses():
-    """N1 has no sessions yet — open_session refuses via the base."""
-    with pytest.raises(CapabilityUnsupported):
-        NativeEngine(backend=FakeBackend()).open_session(model="m")
+def test_open_session_returns_a_session():
+    """N3a: open_session now returns a live session instead of refusing."""
+    sess = NativeEngine(backend=FakeBackend()).open_session(model="m")
+    assert isinstance(sess, InferenceSession)
 
 
 # ─── availability / backend loading ───────────────────────────────────────
@@ -148,7 +148,7 @@ def test_chat_stream_without_backend_or_model_is_unavailable():
         list(eng.chat_stream(model="m", messages=[{"role": "user", "content": "hi"}]))
 
 
-# ─── the stateless chat path (N=1) ────────────────────────────────────────
+# ─── the stateless chat path ──────────────────────────────────────────────
 
 
 def test_chat_stream_yields_detokenized_tokens():
