@@ -1,23 +1,33 @@
-"""The level-3 scheduler — a batch-ready decode loop, at N=1.
+"""The level-3 scheduler — a batch-ready decode loop.
 
-This is the core of the level-3 server: the loop that turns queued
-generation requests into forward passes. It is written entirely against
-``NativeBackend`` (ADR-0002 seam), so it is pure Python and fully tested
-with a fake backend.
+This is the core of the level-3 server: the loop that turns queued work
+into forward passes. It is written entirely against ``NativeBackend``
+(ADR-0002 seam), so it is pure Python and fully tested with a fake
+backend.
 
-**Batch-ready, N=1.** The structure is ``queue -> scheduler -> batched
-decode-step -> demux``: requests wait in a queue, the scheduler admits
-them into slots, each ``step`` builds one batch from *all* active slots
-and calls ``decode`` once, then routes each slot's sampled token back.
-In N1 the admission cap is 1, so exactly one slot is ever active and the
-batch always holds one sequence. Raising that cap to N>1 (step N3) is an
-unlock, not a rewrite: the batch-building and demux already loop over
-slots.
+**Batch-ready.** The structure is ``queue -> scheduler -> batched
+decode-step -> demux``: work occupies slots, each ``step`` builds one
+batch from *all* active slots and calls ``decode`` once, then routes each
+slot's sampled token back. ``step`` has always looped over slots, so
+raising the admission cap to N>1 is an unlock, not a rewrite.
 
-Sampling is intentionally trivial here (greedy argmax). Real sampling
-(temperature, top-p, penalties) is a later concern; N1 exists to prove
-the loop drives a backend end-to-end through our contract, not to be a
-good sampler.
+**Two ways to drive it.**
+
+- *Stateless* (``run``): submit one request, drive it to completion, free
+  the slot. This is the ``chat_stream`` path shipped in N1.
+- *Stateful* (``open_slot`` / ``feed`` / ``run_turn`` / ``close_slot``):
+  a slot is held across turns. ``feed`` pushes a turn's tokens into an
+  existing slot without releasing it; ``run_turn`` advances the loop
+  until *that* slot finishes its turn and yields its tokens, leaving the
+  slot (and its KV) alive for the next turn. This is the substrate for
+  ``NativeSession`` (N3a).
+
+In N3a the admission cap is still 1, so one slot is active at a time —
+the session model is proven correct before concurrency is switched on in
+N3b. The batching machinery is already multi-slot; only the cap gates it.
+
+Sampling is intentionally trivial (greedy argmax); a real sampler chain
+replaces ``_argmax`` later without touching the loop.
 """
 from __future__ import annotations
 
@@ -30,9 +40,8 @@ from palimpsests.providers.native.backend import BatchEntry, NativeBackend, Toke
 def _argmax(logits: list[float]) -> int:
     """Greedy sampling: the highest-logit token id.
 
-    Deliberately the simplest possible sampler — N1 proves the loop, not
-    the sampling. A real sampler chain replaces this later without
-    touching the scheduler's structure.
+    Deliberately the simplest possible sampler. A real sampler chain
+    replaces this later without touching the scheduler's structure.
     """
     best_i = 0
     best_v = logits[0]
@@ -45,29 +54,35 @@ def _argmax(logits: list[float]) -> int:
 
 @dataclass
 class _Slot:
-    """One active generation, occupying a backend sequence.
+    """One occupied backend sequence.
 
     Holds the per-sequence decode state: which ``seq_id`` it owns, the
-    tokens still to be fed on the next step (the prompt on the first
-    step, then one sampled token per step after), the stop tokens that
-    end it, how many tokens have been generated, and the output so far.
+    tokens to feed on the next step (a prompt/turn first, then one
+    sampled token per step), the stop tokens that end a turn, the count
+    generated *this turn*, and the output of the current turn.
+
+    ``session`` distinguishes the two lifecycles. A stateless slot is
+    released the moment its turn ends. A session slot stays alive when a
+    turn ends (``turn_done``) — its KV persists for the next ``feed`` —
+    and is released only by ``close_slot``.
     """
 
     seq_id: int
     pending: list[Token]
     max_tokens: int
     stop_tokens: tuple[Token, ...] = ()
+    session: bool = False
     generated: list[Token] = field(default_factory=list)
-    done: bool = False
+    turn_done: bool = False
 
 
 @dataclass
 class GenerationRequest:
-    """A unit of work handed to the scheduler.
+    """A unit of stateless work handed to the scheduler.
 
     ``prompt_tokens`` is the already-tokenized prompt; the scheduler does
-    not tokenize (that is the engine's job, via the backend) so the
-    scheduler stays free of vocab concerns and easy to test.
+    not tokenize (that is the engine's job, via the backend) so it stays
+    free of vocab concerns and easy to test.
     """
 
     prompt_tokens: list[Token]
@@ -87,9 +102,9 @@ class StepToken:
 class Scheduler:
     """Drives a ``NativeBackend`` through batched decode steps.
 
-    N1 admits at most one request at a time (``max_active=1``); the loop
-    is written to admit and batch several, so lifting the cap is the only
-    change N3 needs here.
+    N3a admits at most one item at a time (``max_active=1``); the loop is
+    written to admit and batch several, so lifting the cap (N3b) is the
+    only change needed here to run sessions concurrently.
     """
 
     def __init__(self, backend: NativeBackend, *, max_active: int = 1) -> None:
@@ -100,14 +115,14 @@ class Scheduler:
         self._slots: dict[int, _Slot] = {}
         self._free_seq_ids: deque[int] = deque(range(backend.n_seq_max()))
 
-    # ─── admission ───────────────────────────────────────────────────────
+    # ─── stateless admission (the N1 chat_stream path) ────────────────────
 
     def submit(self, request: GenerationRequest) -> None:
-        """Queue a request. It is admitted into a slot when one is free."""
+        """Queue a stateless request; admitted when a slot frees."""
         self._queue.append(request)
 
     def _admit(self) -> None:
-        """Move queued requests into free slots, up to the active cap."""
+        """Move queued stateless requests into free slots, up to the cap."""
         while (
             self._queue
             and len(self._slots) < self._max_active
@@ -120,43 +135,91 @@ class Scheduler:
                 pending=list(request.prompt_tokens),
                 max_tokens=request.max_tokens,
                 stop_tokens=request.stop_tokens,
+                session=False,
             )
 
     def _release(self, seq_id: int) -> None:
-        """Free a finished slot and recycle its sequence id.
-
-        Clears the slot's KV so a future occupant of this ``seq_id``
-        starts clean.
-        """
+        """Free a slot and recycle its sequence id, clearing its KV."""
         self._backend.seq_remove(seq_id)
         self._slots.pop(seq_id, None)
         self._free_seq_ids.append(seq_id)
 
-    # ─── the decode step ─────────────────────────────────────────────────
+    # ─── stateful slots (the session path, N3a) ───────────────────────────
+
+    def open_slot(self) -> int:
+        """Reserve a held slot for a session and return its ``seq_id``.
+
+        Unlike ``submit``, this occupies a sequence immediately and keeps
+        it until ``close_slot``. Raises if no sequence is free (with
+        ``max_active=1`` that means one session at a time in N3a).
+        """
+        if not self._free_seq_ids or len(self._slots) >= self._max_active:
+            raise RuntimeError("no free sequence slot for a new session")
+        seq_id = self._free_seq_ids.popleft()
+        self._slots[seq_id] = _Slot(
+            seq_id=seq_id,
+            pending=[],
+            max_tokens=0,
+            session=True,
+        )
+        return seq_id
+
+    def feed(
+        self,
+        seq_id: int,
+        tokens: list[Token],
+        *,
+        max_tokens: int,
+        stop_tokens: tuple[Token, ...] = (),
+    ) -> None:
+        """Load a turn's input into a held session slot.
+
+        Resets the per-turn counters but leaves the slot (and its KV)
+        in place, so generation continues from the existing context
+        rather than re-prefilling.
+        """
+        slot = self._slots[seq_id]
+        slot.pending = list(tokens)
+        slot.max_tokens = max_tokens
+        slot.stop_tokens = stop_tokens
+        slot.generated = []
+        slot.turn_done = False
+
+    def close_slot(self, seq_id: int) -> None:
+        """Release a session slot and its KV. Idempotent."""
+        if seq_id in self._slots:
+            self._release(seq_id)
+
+    # ─── the decode step (shared by both lifecycles) ──────────────────────
 
     def step(self) -> list[StepToken]:
         """Run one batched forward pass across all active slots.
 
-        Builds one batch from every active slot's pending tokens, calls
-        ``decode`` once, samples each slot's next token, appends it, and
-        reports it. Slots that hit ``max_tokens`` or a stop token are
-        marked done and released. Returns the tokens produced this step
-        (one per slot that generated), i.e. the demux.
+        Builds one batch from every active slot with pending input, calls
+        ``decode`` once, samples each such slot's next token, appends it,
+        and reports it. A slot that hits ``max_tokens`` or a stop token
+        ends its turn: a stateless slot is released; a session slot is
+        marked ``turn_done`` and kept alive for the next ``feed``.
+        Returns the tokens produced this step (the demux).
         """
         self._admit()
-        if not self._slots:
+        # Only slots that still have input to process take part this step.
+        active = [
+            s for s in self._slots.values() if s.pending and not s.turn_done
+        ]
+        if not active:
             return []
 
         entries = [
-            BatchEntry(seq_id=slot.seq_id, tokens=slot.pending, wants_logits=True)
-            for slot in self._slots.values()
+            BatchEntry(seq_id=s.seq_id, tokens=s.pending, wants_logits=True)
+            for s in active
         ]
         logits_by_seq = self._backend.decode(entries)
 
         produced: list[StepToken] = []
-        finished: list[int] = []
-        for seq_id, slot in self._slots.items():
-            logits = logits_by_seq.get(seq_id)
+        finished_stateless: list[int] = []
+        for slot in active:
+            logits = logits_by_seq.get(slot.seq_id)
             if logits is None:
                 continue
             token = _argmax(logits)
@@ -166,26 +229,49 @@ class Scheduler:
 
             is_stop = token in slot.stop_tokens
             hit_cap = len(slot.generated) >= slot.max_tokens
-            slot.done = is_stop or hit_cap
-            produced.append(StepToken(seq_id=seq_id, token=token, done=slot.done))
-            if slot.done:
-                finished.append(seq_id)
+            done = is_stop or hit_cap
+            produced.append(StepToken(seq_id=slot.seq_id, token=token, done=done))
+            if done:
+                slot.turn_done = True
+                slot.pending = []
+                if not slot.session:
+                    finished_stateless.append(slot.seq_id)
 
-        for seq_id in finished:
+        for seq_id in finished_stateless:
             self._release(seq_id)
         return produced
 
-    # ─── convenience: drive one request to completion ────────────────────
+    # ─── stateless driver (N1 chat_stream) ────────────────────────────────
 
     def run(self, request: GenerationRequest) -> Iterator[Token]:
-        """Submit one request and yield its tokens until it finishes.
+        """Submit one stateless request and yield its tokens to completion.
 
         A thin driver over ``submit``/``step`` for the single-request
-        (N=1) path the engine's ``chat_stream`` uses. Yields each
-        generated token in order.
+        path the engine's ``chat_stream`` uses.
         """
         self.submit(request)
-        while self._queue or self._slots:
-            produced = self.step()
-            for st in produced:
+        while self._queue or any(not s.session for s in self._slots.values()):
+            for st in self.step():
                 yield st.token
+
+    # ─── stateful driver (session turn, N3a) ──────────────────────────────
+
+    def run_turn(self, seq_id: int) -> Iterator[Token]:
+        """Advance the loop until session ``seq_id`` finishes its turn.
+
+        Yields that session's tokens in order. The slot is left alive on
+        completion (its KV persists for the next ``feed``); only
+        ``close_slot`` releases it. With ``max_active=1`` this drives the
+        one active session; at N>1 the same ``step`` advances every active
+        session together, and a per-session driver reads off its own
+        tokens.
+        """
+        slot = self._slots[seq_id]
+        while not slot.turn_done:
+            for st in self.step():
+                if st.seq_id == seq_id:
+                    yield st.token
+            # Guard against a slot that somehow lost its input without
+            # finishing (should not happen; prevents a spin).
+            if not slot.pending and not slot.turn_done:
+                break
