@@ -40,13 +40,16 @@ class BatchEntry:
     ``seq_id`` tags which sequence these tokens belong to — the field
     that makes one ``llama_decode`` serve several sequences (the
     continuous-batching primitive, ADR-0001 S1.1). ``tokens`` are the
-    positions to evaluate this step; ``logits`` marks whether the last
-    token's logits are wanted back (only the sequences that are actually
-    generating this step need them).
+    positions to evaluate this step; ``start_pos`` is the KV position of
+    the first of them (how many tokens already sit in this sequence's KV),
+    which the real ``llama_batch`` needs as each token's ``pos``.
+    ``wants_logits`` marks whether the last token's logits are wanted back
+    (only the sequences actually generating this step need them).
     """
 
     seq_id: int
     tokens: Sequence[Token]
+    start_pos: int = 0
     wants_logits: bool = True
 
 
@@ -75,9 +78,10 @@ class NativeBackend(Protocol):
         """Run one forward pass over a multi-sequence batch.
 
         Maps to building a ``llama_batch`` with per-token ``seq_id`` and
-        calling ``llama_decode`` once. Returns, per ``seq_id`` that asked
-        for logits, the logits vector for its last position. Sequences
-        sharing one ``decode`` call is the whole point of the level.
+        ``pos`` (from each entry's ``start_pos``) and calling
+        ``llama_decode`` once. Returns, per ``seq_id`` that asked for
+        logits, the logits vector for its last position. Sequences sharing
+        one ``decode`` call is the whole point of the level.
         """
         ...
 
