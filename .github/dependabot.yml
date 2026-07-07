@@ -1,0 +1,34 @@
+# Dependabot — automated dependency-update PRs.
+#
+# Satisfies the OpenSSF Scorecard "Dependency-Update-Tool" check and keeps
+# the pinned toolchain (ruff, pytest) and the GitHub Actions we use current
+# without manual tracking. Grouped and rate-limited so it does not spam.
+version: 2
+updates:
+  # Python dependencies declared in pyproject.toml (the [dev] pins and the
+  # runtime deps). Weekly, grouped, so related bumps arrive as one PR.
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      python-deps:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "deps"
+
+  # The GitHub Actions pinned in .github/workflows/*. Keeping actions current
+  # is itself a supply-chain concern Scorecard weighs (pinned + up to date).
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      actions:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "ci"
