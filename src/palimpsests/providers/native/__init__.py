@@ -8,12 +8,12 @@ the KV primitives directly.
 
 **Scope so far.** N1 shipped the stateless path (``chat_stream`` →
 ``streaming``). N3a added stateful sessions (``open_session`` →
-``stateful_sessions``). N3b makes sessions concurrent: a shared
-session-scheduler with ``max_active > 1`` lets several sessions occupy
-slots at once and advance together in one batched step (via
-``run_sessions`` / ``Scheduler.run_batch``), flipping
-``continuous_batching`` on. Shared-prefix KV, the server-side tool loop,
-and KV persistence remain off until their steps.
+``stateful_sessions``). N3b made sessions concurrent (``run_sessions`` /
+``Scheduler.run_batch`` → ``continuous_batching``). N5 adds the
+server-side tool loop: ``NativeSession.append_tool_result`` continues a
+turn after an external tool by feeding only the result into the live KV,
+no re-prefill, flipping ``server_side_tools`` on. Shared-prefix KV (N4)
+and KV persistence (N6) remain off until their steps.
 
 **The test seam (ADR-0002).** The engine composes the pure-Python
 ``Scheduler`` (fully CI-tested with a fake backend) and a
@@ -94,15 +94,15 @@ class NativeEngine(BaseInferenceEngine):
 
     @property
     def capabilities(self) -> EngineCapabilities:
-        # Streaming (N1), stateful sessions (N3a), and concurrent batching
-        # (N3b) work. shared_prefix / tools / persistence wait for their
-        # steps.
+        # Streaming (N1), stateful sessions (N3a), concurrent batching
+        # (N3b), and the server-side tool loop (N5) work. shared_prefix
+        # (N4) and kv_persistence (N6) wait for their steps.
         return EngineCapabilities(
             control_level=3,
             streaming=True,
             stateful_sessions=True,
             shared_prefix=False,
-            server_side_tools=False,
+            server_side_tools=True,
             continuous_batching=True,
             kv_persistence=False,
         )
