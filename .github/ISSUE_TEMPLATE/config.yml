@@ -1,0 +1,12 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability (private)
+    url: https://github.com/Assault-Consulting/Palimpsests/security/advisories/new
+    about: >
+      Do not report vulnerabilities in public issues. Use a private security
+      advisory, or the contact in SECURITY.md.
+  - name: Question or discussion
+    url: https://github.com/Assault-Consulting/Palimpsests/issues
+    about: >
+      For usage questions, search existing issues first; open a regular issue
+      if none matches.

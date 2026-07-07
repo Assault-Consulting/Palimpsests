@@ -11,8 +11,9 @@ Early-stage but contributions are welcome. This document is short on purpose.
 - **We do not modify the attention kernel.** Everything lives as engine launch
   parameters, orchestration above the engine, or the native serving service. If a
   change needs kernel access, it does not belong here.
-- **We do not claim novelty.** See the Prior art section of the README. Describe
-  what a change does, not how revolutionary it is.
+- **We describe what a change does, not how revolutionary it is.** See the "Prior
+  art & the gap we close" section of the README: the project's novelty is the
+  *composition*, and it is stated honestly. Describe a change's effect plainly.
 
 ## Workflow
 
@@ -22,6 +23,22 @@ Early-stage but contributions are welcome. This document is short on purpose.
 - CI must be green on all three platforms (macOS/Linux/Windows) before merge.
   Windows path-separator and absolute-path behavior differs from POSIX — do not
   assume a POSIX-only fix is complete.
+
+## Building and running the tests
+
+The test suite is public FLOSS (pytest) and runs with no model and no native
+build — the level-3 scheduler is exercised against a fake backend.
+
+```bash
+python -m pip install -e ".[dev]"   # ruff (pinned), pytest, pytest-httpx, numpy
+python -m pytest                     # the full suite
+ruff check .                         # lint (E/F/I/B/UP, line length 100, py311)
+```
+
+The same suite runs in CI (`.github/workflows/ci.yml`) on macOS, Linux, and
+Windows across Python 3.11 and 3.12. The `[native]` extra (the real
+`LlamaCppBackend`) is deliberately **not** part of CI: it needs a GGUF model and
+a build toolchain, and is validated separately on hardware.
 
 ## Code style
 
@@ -40,6 +57,21 @@ Early-stage but contributions are welcome. This document is short on purpose.
   reset fixture so no test bleeds into another.
 - Path-safety and capability-gating code is security-sensitive — test the escape
   and denial paths explicitly, not just the happy path.
+
+## Reporting vulnerabilities
+
+Please **do not** report security issues in public issues or pull requests. Use a
+[private security advisory](https://github.com/Assault-Consulting/Palimpsests/security/advisories/new)
+or the contact in **[SECURITY.md](SECURITY.md)**, which also describes the
+disclosure process and the supported-versions policy. We aim to acknowledge a
+report within a few business days and to agree a disclosure timeline with the
+reporter.
+
+## Licensing of contributions
+
+By contributing you agree your contribution is licensed under the project's
+[Apache-2.0](LICENSE) license. The tree is single-licensed; see `REUSE.toml`.
+There is no separate CLA.
 
 ## Scope
 

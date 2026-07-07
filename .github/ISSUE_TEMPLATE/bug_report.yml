@@ -1,0 +1,46 @@
+name: Bug report
+description: Report something that does not work as documented.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. For anything security-sensitive, do **not**
+        open a public issue — see [SECURITY.md](../blob/main/SECURITY.md)
+        for private disclosure.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Palimpsests version (`pip show palimpsests`) or commit SHA.
+      placeholder: "0.3.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: level
+    attributes:
+      label: Which control level?
+      options:
+        - "Level 1 (Ollama)"
+        - "Level 2 (llama.cpp)"
+        - "Level 3 (pal-native)"
+        - "Context-memory / other"
+        - "Not sure"
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, what you got instead.
+      placeholder: Steps to reproduce, expected vs actual behaviour.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Python version, and (for L2/L3) the model and any flags.
+      placeholder: "macOS 15, Python 3.12, qwen2.5:7b, --context-size 4096"
+    validations:
+      required: false
