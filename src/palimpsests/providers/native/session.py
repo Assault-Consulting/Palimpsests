@@ -22,7 +22,7 @@ from __future__ import annotations
 from collections.abc import Iterator, Sequence
 from palimpsests.engine.capabilities import CapabilityUnsupported
 from palimpsests.engine.messages import ChatChunk
-from palimpsests.providers.native.backend import NativeBackend
+from palimpsests.providers.native.backend import NativeBackend, Token
 from palimpsests.providers.native.scheduler import Scheduler, TurnRequest
 
 # Default per-turn generation cap, mirroring the engine's stateless path.
@@ -36,6 +36,10 @@ class NativeSession:
     every later turn shares that context without recomputation). Each
     ``send`` feeds only the new user turn's tokens and continues
     generation from the preserved KV.
+
+    ``stop_tokens`` are the ids that end a turn (typically the model's EOS,
+    which the real backend knows; tests pass it explicitly). Without them a
+    turn only ends at ``max_tokens``.
     """
 
     def __init__(
@@ -45,10 +49,12 @@ class NativeSession:
         *,
         system_prompt: str | None = None,
         max_tokens: int = _DEFAULT_MAX_TOKENS,
+        stop_tokens: tuple[Token, ...] = (),
     ) -> None:
         self._backend = backend
         self._scheduler = scheduler
         self._max_tokens = max_tokens
+        self._stop_tokens = stop_tokens
         self._closed = False
         self._seq_id = scheduler.open_slot()
         # The system prefix is tokenized once and prepended only on the
@@ -87,6 +93,7 @@ class NativeSession:
             seq_id=self._seq_id,
             tokens=self._prepare_turn_tokens(content),
             max_tokens=self._max_tokens,
+            stop_tokens=self._stop_tokens,
         )
 
     def detokenize(self, token: int) -> str:
@@ -107,6 +114,7 @@ class NativeSession:
             self._seq_id,
             tokens,
             max_tokens=self._max_tokens,
+            stop_tokens=self._stop_tokens,
         )
         for token in self._scheduler.run_turn(self._seq_id):
             yield ChatChunk(delta=self._backend.detokenize([token]))
