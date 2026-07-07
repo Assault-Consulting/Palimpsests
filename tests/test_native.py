@@ -35,15 +35,15 @@ def test_streaming_capability_is_on():
     assert NativeEngine().capabilities.streaming is True
 
 
-def test_sessions_batching_and_tools_on_rest_off():
-    """N3a sessions, N3b concurrent batching, and N5 the server-side tool
-    loop have shipped, so those flags are True. Shared prefix (N4) and
-    persistence (N6) have not."""
+def test_sessions_batching_tools_and_prefix_on_persistence_off():
+    """N3a sessions, N3b batching, N5 tool loop, and N4 shared-prefix KV
+    have shipped, so those flags are True. Only KV persistence (N6) has
+    not."""
     c = NativeEngine().capabilities
     assert c.stateful_sessions is True
     assert c.continuous_batching is True
     assert c.server_side_tools is True
-    assert c.shared_prefix is False
+    assert c.shared_prefix is True
     assert c.kv_persistence is False
 
 
