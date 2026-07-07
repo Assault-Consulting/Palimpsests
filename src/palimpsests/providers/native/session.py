@@ -20,6 +20,12 @@ not re-prefill the conversation on each hop, unlike a stateless engine.
 It reuses ``feed`` / ``run_turn``; no new backend primitive is needed
 (the KV is already live in the slot).
 
+**Shared prefix (N4).** When the engine seeds this slot from a prefix
+holder (``prefix_already_seeded=True``), the system prompt is already in
+the slot's KV — copied once from the holder — so the session must NOT
+prepend it inline again. Otherwise (the default) the system prompt is
+tokenized here and prepended on the first turn, as before.
+
 ``save_state`` / ``load_state`` are KV persistence (N6) and refuse for
 now. Refusing loudly there — rather than faking — keeps the
 ``kv_persistence`` flag honest.
@@ -47,6 +53,10 @@ class NativeSession:
     ``stop_tokens`` are the ids that end a turn (typically the model's EOS,
     which the real backend knows; tests pass it explicitly). Without them a
     turn only ends at ``max_tokens``.
+
+    ``prefix_already_seeded`` means the engine has copied a shared prefix
+    into this slot's KV already (N4); the session then skips prepending the
+    system prompt inline, since it is present in the KV.
     """
 
     def __init__(
@@ -57,6 +67,7 @@ class NativeSession:
         system_prompt: str | None = None,
         max_tokens: int = _DEFAULT_MAX_TOKENS,
         stop_tokens: tuple[Token, ...] = (),
+        prefix_already_seeded: bool = False,
     ) -> None:
         self._backend = backend
         self._scheduler = scheduler
@@ -65,9 +76,11 @@ class NativeSession:
         self._closed = False
         self._seq_id = scheduler.open_slot()
         # The system prefix is tokenized once and prepended only on the
-        # first turn; after that it lives in the slot's KV.
+        # first turn — UNLESS the engine already seeded it into the slot's
+        # KV from a shared prefix holder (N4), in which case it is already
+        # present and must not be prepended again.
         self._prefix_tokens: list[int] = []
-        if system_prompt:
+        if system_prompt and not prefix_already_seeded:
             self._prefix_tokens = backend.tokenize(
                 f"system: {system_prompt}\n", add_special=True
             )

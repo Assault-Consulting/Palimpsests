@@ -109,14 +109,14 @@ def test_open_session_returns_inference_session():
     assert isinstance(sess, InferenceSession)
 
 
-def test_capabilities_sessions_batching_and_tools_on():
+def test_capabilities_sessions_batching_tools_and_prefix_on():
     caps = NativeEngine(backend=FakeBackend()).capabilities
-    # sessions (N3a), concurrent batching (N3b), tool loop (N5) all work
+    # sessions (N3a), batching (N3b), tool loop (N5), shared prefix (N4) work
     assert caps.stateful_sessions is True
     assert caps.continuous_batching is True
     assert caps.server_side_tools is True
-    # unshipped features still off
-    assert caps.shared_prefix is False
+    assert caps.shared_prefix is True
+    # only KV persistence (N6) is still off
     assert caps.kv_persistence is False
 
 
