@@ -13,7 +13,8 @@ baseline. Everything below is weighed by that lens.
 A note on numbers: figures cited from external papers (e.g. sleep-time
 compute's 2.5×, KV-reuse speedups) are **hypotheses until measured on our
 own hardware** per `BENCHMARKING.md`. We adopt their *logic* now; their
-*numbers* are flagged "to verify."
+*numbers* are flagged "to verify." A consolidated, sourced table of those
+targets lives in `POSITIONING.md`.
 
 ---
 
@@ -27,35 +28,45 @@ own hardware** per `BENCHMARKING.md`. We adopt their *logic* now; their
 - **N5** — server-side tool loop, no re-prefill (`server_side_tools`).
 - **N-pos** — per-slot KV position (`n_past` / `start_pos`), the
   substrate N4 and N6 both need. No user-visible feature; no flag moved.
+- **N4a** — scheduler primitives for a prefix holder (reserve / warm /
+  copy-to-slot), the first case of slot-orchestration policy. No flag.
+- **N4b** — engine-side prefix registry + refcounted holders + exact
+  token-match identity; `shared_prefix` on. Variant B: engine owns the
+  registry, scheduler stays thin.
+- **N6** — KV persistence: `save_state` / `load_state` with the position
+  packed into a self-contained blob; `kv_persistence` on.
+- **N6b** — content-addressed KV store ("LMCache for edge") layered over
+  N6: reuse a saved state by a hash of the tokens that produced it, not by
+  an opaque path. No flag (a convenience layer over the N6 primitive).
 - **BENCHMARKING.md** — the honest measurement protocol.
 
-The L3 skeleton is functionally complete for the four things a benchmark
-needs: streaming, sessions, concurrent batching, tool loop.
+**The level-3 skeleton is complete.** All six capability flags —
+`streaming`, `stateful_sessions`, `continuous_batching`,
+`server_side_tools`, `shared_prefix`, `kv_persistence` — are true on the
+fake backend behind the ADR-0002 seam, with the content-addressed store on
+top. What remains is not more skeleton: it is a *real backend* to measure,
+and research layers on top.
 
 ---
 
-## Reframing: two planned steps are stronger as policy, not mechanism
+## Reframing: two planned steps were stronger as policy, not mechanism
 
 External review sharpened two steps we were about to build as raw
-mechanism into their more valuable framing:
+mechanism into their more valuable framing. Both are now landed in that
+sharper form:
 
-- **N4 was "shared-prefix KV". It becomes prefix-aware slot
-  orchestration.** The value is not `seq_cp` (that is llama.cpp's
-  primitive) but the *policy* over it: agent→slot affinity, prefix-aware
-  routing, cache-invalidation-aware placement. The documented real pain
-  is people manually pinning a main session to slot 0 and subagents to
-  slot 1 so they don't evict each other's KV, and cache invalidation when
-  a system prompt changes. Nobody has productized the policy layer. That
-  is exactly our "integration, not mechanisms" mandate, and the scheduler
-  is already half of it. The shared-prefix holder is the *first case* of
-  this policy, not the whole of N4.
+- **N4 was "shared-prefix KV"; it became prefix-aware slot
+  orchestration.** The value is not `seq_cp` (llama.cpp's primitive) but
+  the *policy* over it: agent→slot affinity, prefix-aware routing,
+  cache-invalidation-aware placement. The shared-prefix holder (N4a/N4b)
+  is the *first case* of this policy; broader prefix-aware routing grows
+  out of it as scheduling matures.
 
-- **N6 was "KV save/restore". It becomes a content-addressed KV store.**
-  Plain `save_state`/`load_state` is yesterday — `--slot-save-path`
-  already exists in llama.cpp. The value shifts to a content-addressed,
-  reusable KV store: "LMCache for edge" (LMCache is the datacenter/vLLM
-  version; the edge niche is open). N6 should be built as that store, not
-  as bare save/restore.
+- **N6 was "KV save/restore"; it became a content-addressed KV store.**
+  Plain `save_state`/`load_state` (N6) is the primitive — `--slot-save-path`
+  already exists in llama.cpp. The value is the content-addressed reuse
+  layer (N6b): "LMCache for edge," addressing a warm KV by what it
+  represents rather than where it happens to be stored.
 
 ---
 
@@ -71,7 +82,7 @@ correlates with how predictable the user's query is.
 
 Why this fits Palimpsests specifically, more than it fits anyone else:
 
-- **Edge idle compute is free.** On local hardware the GPU idles ~95% of
+- **Edge idle compute is free.** On local hardware the GPU idles most of
   the time at no marginal cost — unlike cloud, where sleep-time compute
   spends billable cycles. The edge is the *natural* home for it.
 - **It lands on what we already have.** `session.sleep()` → produce `c'`
@@ -81,9 +92,9 @@ Why this fits Palimpsests specifically, more than it fits anyone else:
 
 We are not first to the concept (Letta shipped it in MemGPT 2.0). Our
 niche is the *edge-native* framing: free idle compute, local store, no
-cloud. This is a strong candidate to slot **before N6**, possibly before
-finishing N4, because its benefit (idle compute) does not depend on
-prompts coinciding the way prefix-sharing does.
+cloud. Its benefit is best *measured*, not asserted — which is why it now
+sits **after** the real backend, alongside the first benchmarks, rather
+than as one more fake-backend mechanism.
 
 ---
 
@@ -106,23 +117,25 @@ prompts coinciding the way prefix-sharing does.
 
 ## Working order (subject to revision)
 
-1. **N4a** — scheduler primitives for a prefix holder (reserve / warm /
-   copy-to-slot), on the fake backend, framed as the first case of slot
-   orchestration policy. No flag change.
-2. **N4b** — engine-side prefix registry + refcounted holders + exact
-   token-match identity; flip `shared_prefix`. (Variant B: engine owns the
-   registry; scheduler stays thin.)
-3. **Sleep-time compute (edge)** — `session.sleep()` → `c'` → BlockMemory.
-   Evaluate slotting this before N6.
-4. **N6** — content-addressed KV store ("LMCache for edge"), built on
-   N-pos + `state_get`/`state_set`; flip `kv_persistence`.
-5. **N7 + spec-decode safety interlock** — optional, later.
-6. **Real `LlamaCppBackend` + run the BENCHMARKING protocol** — the first
-   real measurement, on the user's hardware (needs a GGUF and a build
-   toolchain; validated off-CI).
+The fake-backend skeleton (N1 → N3a → N3b → N5 → N-pos → N4a → N4b → N6 →
+N6b) is **done**. What follows needs hardware, so the order is now
+gated on a real backend:
 
-Prefix-aware routing (the broader policy beyond a single shared holder)
-grows out of N4b as scheduling matures.
+1. **Real `LlamaCppBackend` + run the BENCHMARKING protocol** — the ctypes
+   backend mapping onto the same primitives the fake backend exposes, on
+   the user's hardware (needs a GGUF and a build toolchain; validated
+   off-CI). The **first real measurement**, against a tuned baseline. The
+   strongest single thing to measure first is the tool-loop (N5) vs
+   re-prefill — our strongest claimed advantage.
+2. **Sleep-time compute (edge)** — `session.sleep()` → `c'` → BlockMemory,
+   built and measured together, since its value only shows on hardware.
+3. **Disk-backed KV store** — persist the N6b store across process exit,
+   behind the same `KVStore` interface (survive restarts / memory
+   pressure).
+4. **N7 + spec-decode safety interlock** — optional, later.
+
+Until a real backend exists, additional fake-backend mechanisms add
+skeleton without adding evidence; the priority is measurement.
 
 ---
 
