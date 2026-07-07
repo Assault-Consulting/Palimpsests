@@ -1,9 +1,9 @@
 """Tests for the level-3 stateful session.
 
 Exercises NativeSession end to end with a fake backend: the session holds
-a slot across turns, later turns reuse the held KV instead of
-re-prefilling, and the not-yet-implemented feature (KV persistence)
-refuses loudly. The server-side tool loop (N5) is covered in
+a slot across turns and later turns reuse the held KV instead of
+re-prefilling. KV persistence (save_state / load_state) is covered in
+test_native_persistence.py; the server-side tool loop (N5) in
 test_native_tool_loop.py. Pure Python, no model — the whole session path
 is CI-verified.
 
@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import pytest
 from collections.abc import Sequence
-from palimpsests.engine import CapabilityUnsupported, InferenceSession
+from palimpsests.engine import InferenceSession
 from palimpsests.providers.native import NativeEngine
 from palimpsests.providers.native.backend import BatchEntry, Token
 from palimpsests.providers.native.scheduler import Scheduler
@@ -109,15 +109,15 @@ def test_open_session_returns_inference_session():
     assert isinstance(sess, InferenceSession)
 
 
-def test_capabilities_sessions_batching_tools_and_prefix_on():
+def test_capabilities_all_level3_flags_on():
     caps = NativeEngine(backend=FakeBackend()).capabilities
-    # sessions (N3a), batching (N3b), tool loop (N5), shared prefix (N4) work
+    # the complete level-3 skeleton: sessions (N3a), batching (N3b), tool
+    # loop (N5), shared prefix (N4), KV persistence (N6)
     assert caps.stateful_sessions is True
     assert caps.continuous_batching is True
     assert caps.server_side_tools is True
     assert caps.shared_prefix is True
-    # only KV persistence (N6) is still off
-    assert caps.kv_persistence is False
+    assert caps.kv_persistence is True
 
 
 # ─── the session streams a turn ───────────────────────────────────────────
@@ -181,21 +181,6 @@ def test_send_after_close_raises():
     sess.close()
     with pytest.raises(RuntimeError):
         list(sess.send("a"))
-
-
-# ─── persistence still refuses (N6) ───────────────────────────────────────
-
-
-def test_save_state_refuses():
-    sess = _session(FakeBackend())
-    with pytest.raises(CapabilityUnsupported):
-        sess.save_state()
-
-
-def test_load_state_refuses():
-    sess = _session(FakeBackend())
-    with pytest.raises(CapabilityUnsupported):
-        sess.load_state(b"")
 
 
 # ─── capacity on a single-slot scheduler ──────────────────────────────────
