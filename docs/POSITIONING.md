@@ -1,11 +1,11 @@
 # Positioning
 
-Where Palimpsests sits, who it is for, and — honestly — what performance we are
-*aiming* for versus what we have *measured*. This document is deliberately blunt
-about that distinction, because the whole project is built on a measurement
-discipline (see [BENCHMARKING.md](BENCHMARKING.md)): a number we have not
-produced on our own hardware is a **target**, not a result, and is labeled as
-such here.
+Where Palimpsests sits, who it is for, where the novelty actually is, and —
+honestly — what performance we are *aiming* for versus what we have *measured*.
+This document is deliberately blunt about the last distinction, because the whole
+project is built on a measurement discipline (see [BENCHMARKING.md](BENCHMARKING.md)):
+a number we have not produced on our own hardware is a **target**, not a result,
+and is labeled as such here.
 
 ---
 
@@ -52,6 +52,56 @@ obligations. Compliance is a determination for the deploying organization.
 
 ---
 
+## What is novel here
+
+Novelty has two forms, and conflating them is what makes strong systems work
+sound trivial. There is **mechanism novelty** — a new inference primitive, a new
+attention kernel — and there is **composition novelty** — a combination that does
+not exist as a coherent system, closing a real gap. Palimpsests makes a
+composition claim, and states the mechanism scope honestly so the claim stays
+defensible.
+
+**The mechanism scope (what we do not claim).** We do not invent a new inference
+primitive or touch the attention kernel. Batched decode, per-sequence KV
+save/restore, and shared-prefix copy are llama.cpp's. Saying so is not modesty;
+it is what keeps every claim verifiable against a running system.
+
+**The composition claim (where the novelty is).** No single system today combines
+*continuous batching + shared-prefix KV + KV-persistence* under **one engine
+abstraction**, **specialized for agentic edge workloads**, and **portable across
+platforms**. Each component exists somewhere (see the Prior-art table in the
+README), but the assembled system does not. The nearest by substance, **oMLX**,
+covers only KV-persistence, only on Apple Silicon, without the three-level
+abstraction or the context-memory layer.
+
+**Why the composition is hard — the part "integration" hides.** The pieces resist
+being combined unless the seams are designed:
+
+- **One contract over three control models.** An external daemon (Ollama), a
+  managed subprocess (llama.cpp), and an in-process serving loop (pal-native)
+  have genuinely different control surfaces, yet must present a single
+  `InferenceEngine` contract so callers query `capabilities` and never branch on
+  engine identity.
+- **One substrate under three features.** Continuous batching, shared-prefix
+  copy, and KV persistence all depend on the *same* position tracking (`n_past` /
+  `start_pos`). Get it wrong and a copied or restored KV resumes at the wrong
+  position and silently corrupts output — so the substrate had to be built once,
+  deliberately, beneath all three (this is why the position step shipped as its
+  own invisible layer before the visible features).
+- **One context-memory layer over opaque and transparent engines alike.** The
+  sink/window/evict + block-retrieval layer must behave identically whether it
+  sits above an opaque HTTP daemon or above KV state we own directly.
+- **Commodity hardware, not a datacenter.** The serving techniques that exist
+  (vLLM, SGLang) assume datacenter scale; the contribution is making the policy
+  work as a local, cross-platform library.
+
+That coordination — one contract over three control models, one substrate under
+several features, one memory layer over both opaque and owned engines, on
+commodity hardware — is the system-level engineering. It is architecture, not
+glue.
+
+---
+
 ## Performance: targets, not yet results
 
 > **Read this first.** None of the numbers below were produced by Palimpsests on
@@ -78,11 +128,13 @@ store.
 | **24×** TTFT reduction when querying cached experts | 10-expert routing | arXiv 2603.04428 |
 | Capacity: Q4 fits **12** agents vs FP16's **3** at 8K on 24 GB | edge, fixed memory | arXiv 2603.04428 |
 
-The same paper is the closest external twin to our direction — edge, persistent
-quantized KV, multi-agent — which is why it is both our strongest reference and a
-reminder that the idea is **not** novel to us (see Prior art in the README). Our
-contribution is the integration and the content-addressed reuse layer, not the
-mechanism.
+This paper is the closest external twin to our direction — edge, persistent
+quantized KV, multi-agent — which makes it our strongest reference *and* our
+honesty check: the underlying persistence mechanism is not ours to claim. What is
+ours is the surrounding system — the same persistence exposed under the
+three-level abstraction, addressed by content (N6b), and sharing one position
+substrate with batching and shared-prefix reuse — which no existing tool assembles
+on cross-platform local hardware.
 
 ### Shared-prefix KV — computing a common prefix once (our N4 direction)
 
@@ -121,10 +173,14 @@ even more favorable on-device than in the cloud. This is roadmap, not built.
 - **What is real today:** the three-level abstraction, the context-memory layer,
   the encrypted audit log, and a fully test-covered level-3 skeleton (streaming,
   stateful sessions, continuous batching, server-side tool loop, shared-prefix
-  KV, KV persistence) on a fake backend behind the ADR-0002 seam.
+  KV, KV persistence) on a fake backend behind the ADR-0002 seam. The composition
+  — several serving features over one position substrate, under one contract, on
+  cross-platform local hardware — exists and is tested; that is the novel part.
 - **What is a target:** every performance number above. They come from external
   systems exercising the same mechanisms; reproducing them on our hardware, with
   a strong baseline (a tuned Ollama), is the point of the benchmarking phase.
-- **What we will not do:** publish a speedup we have not measured, or call the
-  project compliant with a regulation it has not been certified against. The
-  discipline is the product as much as the code is.
+- **What we will not do:** claim a new inference primitive we did not build,
+  publish a speedup we have not measured, or call the project compliant with a
+  regulation it has not been certified against. The scope honesty and the
+  measurement discipline are what make the composition claim credible — they are
+  part of the product, not a hedge against it.
