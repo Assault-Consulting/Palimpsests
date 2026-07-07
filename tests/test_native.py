@@ -35,13 +35,13 @@ def test_streaming_capability_is_on():
     assert NativeEngine().capabilities.streaming is True
 
 
-def test_stateful_sessions_on_batching_and_rest_off():
-    """N3a shipped stateful sessions, so that flag is now True. The
-    remaining level-3 features — concurrency, shared prefix, tools,
-    persistence — have not shipped yet."""
+def test_sessions_and_batching_on_rest_off():
+    """N3a shipped stateful sessions and N3b concurrent batching, so both
+    flags are now True. Shared prefix, tools, and persistence have not
+    shipped yet."""
     c = NativeEngine().capabilities
     assert c.stateful_sessions is True
-    assert c.continuous_batching is False
+    assert c.continuous_batching is True
     assert c.shared_prefix is False
     assert c.server_side_tools is False
     assert c.kv_persistence is False

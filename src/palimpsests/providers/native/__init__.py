@@ -7,12 +7,13 @@ forward pass is llama.cpp via its low-level C API; per ADR-0002 it runs
 the KV primitives directly.
 
 **Scope so far.** N1 shipped the stateless path (``chat_stream`` →
-``streaming``). N3a adds stateful sessions: ``open_session`` returns a
-``NativeSession`` that holds live KV across turns, flipping
-``stateful_sessions`` on. Concurrency (running several sessions in one
-batched step) stays off — ``continuous_batching`` remains False — until
-N3b lifts the scheduler's admission cap. Shared-prefix KV, the
-server-side tool loop, and KV persistence remain off until their steps.
+``streaming``). N3a added stateful sessions (``open_session`` →
+``stateful_sessions``). N3b makes sessions concurrent: a shared
+session-scheduler with ``max_active > 1`` lets several sessions occupy
+slots at once and advance together in one batched step (via
+``run_sessions`` / ``Scheduler.run_batch``), flipping
+``continuous_batching`` on. Shared-prefix KV, the server-side tool loop,
+and KV persistence remain off until their steps.
 
 **The test seam (ADR-0002).** The engine composes the pure-Python
 ``Scheduler`` (fully CI-tested with a fake backend) and a
@@ -44,6 +45,9 @@ ENGINE_ID = "pal-native"
 # How the model file is located, mirroring the level-2 opt-in convention.
 _MODEL_ENV = "PALIMPSESTS_NATIVE_MODEL"
 
+# How many sessions may run concurrently in one batched step by default.
+_DEFAULT_MAX_SESSIONS = 4
+
 
 def _render_prompt(messages: Sequence[Message]) -> str:
     """Flatten chat messages into a single prompt string.
@@ -72,10 +76,15 @@ class NativeEngine(BaseInferenceEngine):
         backend: NativeBackend | None = None,
         model_path: str | None = None,
         max_tokens: int = 512,
+        max_sessions: int = _DEFAULT_MAX_SESSIONS,
     ) -> None:
         self._backend = backend
         self._model_path = model_path
         self._max_tokens = max_tokens
+        self._max_sessions = max_sessions
+        # One shared scheduler for all sessions, so concurrent sessions
+        # occupy slots in the same batch. Built lazily on first session.
+        self._session_scheduler: Scheduler | None = None
 
     # ─── identity ────────────────────────────────────────────────────────
 
@@ -85,16 +94,16 @@ class NativeEngine(BaseInferenceEngine):
 
     @property
     def capabilities(self) -> EngineCapabilities:
-        # Streaming (N1) and stateful sessions (N3a) work. Concurrency
-        # (continuous_batching) waits for N3b to lift the scheduler cap;
-        # shared_prefix / tools / persistence wait for their steps.
+        # Streaming (N1), stateful sessions (N3a), and concurrent batching
+        # (N3b) work. shared_prefix / tools / persistence wait for their
+        # steps.
         return EngineCapabilities(
             control_level=3,
             streaming=True,
             stateful_sessions=True,
             shared_prefix=False,
             server_side_tools=False,
-            continuous_batching=False,
+            continuous_batching=True,
             kv_persistence=False,
         )
 
@@ -168,9 +177,9 @@ class NativeEngine(BaseInferenceEngine):
         """Stream a response by driving one generation through the scheduler.
 
         Renders the messages to a prompt, tokenizes via the backend, runs
-        the scheduler to completion, and yields each detokenized token as
-        a ``ChatChunk``. This is the stateless path; stateful multi-turn
-        work goes through ``open_session``.
+        a dedicated single-slot scheduler to completion, and yields each
+        detokenized token as a ``ChatChunk``. Stateless work uses its own
+        scheduler so it never contends with session slots.
         """
         backend = self._load_backend()
         prompt = _render_prompt(messages)
@@ -186,7 +195,21 @@ class NativeEngine(BaseInferenceEngine):
             yield ChatChunk(delta=text)
         yield ChatChunk(delta="", done=True, finish_reason="stop")
 
-    # ─── sessions (stateful path, N3a) ────────────────────────────────────
+    # ─── sessions (stateful, concurrent path) ─────────────────────────────
+
+    def _get_session_scheduler(self) -> Scheduler:
+        """Return the shared session scheduler, building it on first use.
+
+        All sessions share one scheduler with ``max_active=max_sessions``,
+        so several can occupy slots and advance together in one batched
+        step (continuous batching).
+        """
+        if self._session_scheduler is None:
+            backend = self._load_backend()
+            self._session_scheduler = Scheduler(
+                backend, max_active=self._max_sessions
+            )
+        return self._session_scheduler
 
     def open_session(
         self,
@@ -195,14 +218,15 @@ class NativeEngine(BaseInferenceEngine):
         system_prompt: str | None = None,
         memory: EngineMemoryConfig | None = None,
     ) -> InferenceSession:
-        """Open a stateful session holding live KV across turns.
+        """Open a stateful session on the shared session scheduler.
 
-        Each session gets its own scheduler and a held slot. In N3a the
-        scheduler admits one session at a time; N3b raises the cap so
-        several sessions share one batched step.
+        Up to ``max_sessions`` sessions can be open at once; several
+        active turns advance together in one batched step. A single
+        session still streams via ``send``; concurrent turns go through
+        ``run_sessions`` over the shared scheduler.
         """
+        scheduler = self._get_session_scheduler()
         backend = self._load_backend()
-        scheduler = Scheduler(backend, max_active=1)
         return NativeSession(
             backend,
             scheduler,
@@ -214,6 +238,7 @@ class NativeEngine(BaseInferenceEngine):
 
     def close(self) -> None:
         """Release the backend if one was loaded."""
+        self._session_scheduler = None
         if self._backend is not None:
             self._backend.close()
             self._backend = None
