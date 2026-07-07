@@ -20,6 +20,15 @@ substrate shared-prefix (N4) and KV persistence (N6) build on: a slot
 seeded from a copied or restored KV simply starts with a nonzero
 ``n_past``.
 
+**Prefix holders (N4a).** A *holder* is a frozen sequence that carries a
+system prefix, decoded once, kept out of the slot pool. A session that
+shares that prefix gets it copied into its slot (``seq_copy``) and its
+position seeded (``seed_n_past``) instead of re-decoding the prefix. This
+is the mechanism; the *policy* — which prefixes to hold, when to reuse,
+reference counting — lives in the engine (Variant B). A holder occupies a
+real sequence id, so it reduces the session budget by one per unique
+prefix; that is the honest cost of not recomputing shared prefixes.
+
 **Two ways to drive it.**
 
 - *Stateless* (``run``): submit one request, drive it to completion, free
@@ -147,6 +156,9 @@ class Scheduler:
         self._queue: deque[GenerationRequest] = deque()
         self._slots: dict[int, _Slot] = {}
         self._free_seq_ids: deque[int] = deque(range(backend.n_seq_max()))
+        # Sequence ids held as frozen prefixes (N4a). Kept apart from the
+        # slot pool: a holder occupies a sequence but never generates.
+        self._holders: set[int] = set()
 
     @property
     def max_active(self) -> int:
@@ -238,6 +250,60 @@ class Scheduler:
         """Release a session slot and its KV. Idempotent."""
         if seq_id in self._slots:
             self._release(seq_id)
+
+    # ─── prefix holders (N4a) ─────────────────────────────────────────────
+
+    def reserve_prefix_holder(self) -> int:
+        """Reserve a frozen sequence to hold a shared prefix.
+
+        Takes a sequence id from the same pool as slots — a holder is a
+        real sequence and costs one from the budget — but keeps it out of
+        ``_slots`` so it never takes part in a decode step. Raises if no
+        sequence is free.
+        """
+        if not self._free_seq_ids:
+            raise RuntimeError("no free sequence to reserve as a prefix holder")
+        seq_id = self._free_seq_ids.popleft()
+        self._holders.add(seq_id)
+        return seq_id
+
+    def warm_prefix(self, holder_seq: int, tokens: Sequence[Token]) -> int:
+        """Decode a prefix into a holder once, and return its length.
+
+        A single ``decode`` at position 0 that commits the prefix to the
+        holder's KV. The returned length is what a consuming slot passes
+        to ``seed_n_past`` after the prefix is copied in. Decoding here is
+        outside ``step`` — the holder never generates.
+        """
+        if holder_seq not in self._holders:
+            raise RuntimeError(f"sequence {holder_seq} is not a prefix holder")
+        toks = list(tokens)
+        if toks:
+            self._backend.decode(
+                [BatchEntry(seq_id=holder_seq, tokens=toks, start_pos=0)]
+            )
+        return len(toks)
+
+    def copy_prefix_to_slot(
+        self, holder_seq: int, slot_seq: int, prefix_len: int
+    ) -> None:
+        """Seed a session slot from a warmed prefix holder.
+
+        Copies the holder's KV into the slot (``seq_copy``) and sets the
+        slot's position past the prefix (``seed_n_past``), so the session
+        continues after the shared prefix without re-decoding it.
+        """
+        if holder_seq not in self._holders:
+            raise RuntimeError(f"sequence {holder_seq} is not a prefix holder")
+        self._backend.seq_copy(holder_seq, slot_seq)
+        self.seed_n_past(slot_seq, prefix_len)
+
+    def release_prefix_holder(self, holder_seq: int) -> None:
+        """Drop a prefix holder's KV and recycle its sequence. Idempotent."""
+        if holder_seq in self._holders:
+            self._backend.seq_remove(holder_seq)
+            self._holders.discard(holder_seq)
+            self._free_seq_ids.append(holder_seq)
 
     # ─── the decode step (shared by all drivers) ──────────────────────────
 
