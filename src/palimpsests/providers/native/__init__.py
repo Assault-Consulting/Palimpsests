@@ -6,16 +6,16 @@ forward pass is llama.cpp via its low-level C API; per ADR-0002 it runs
 **in-process** (no subprocess, no wire protocol) so the scheduler calls
 the KV primitives directly.
 
-**N1 scope.** This ships the stateless path only: ``chat_stream`` drives
-one generation through the batch-ready ``Scheduler`` at N=1. That flips
-the ``streaming`` capability to True. The genuinely stateful level-3
-features — multi-session batching (N>1), shared-prefix KV, the
-server-side tool loop, KV persistence — stay off, and ``open_session``
-still refuses via the base class, until their PRs land and flip their
-flags.
+**Scope so far.** N1 shipped the stateless path (``chat_stream`` →
+``streaming``). N3a adds stateful sessions: ``open_session`` returns a
+``NativeSession`` that holds live KV across turns, flipping
+``stateful_sessions`` on. Concurrency (running several sessions in one
+batched step) stays off — ``continuous_batching`` remains False — until
+N3b lifts the scheduler's admission cap. Shared-prefix KV, the
+server-side tool loop, and KV persistence remain off until their steps.
 
-**The test seam (ADR-0002).** The engine composes two pieces: the pure
-Python ``Scheduler`` (fully CI-tested with a fake backend) and a
+**The test seam (ADR-0002).** The engine composes the pure-Python
+``Scheduler`` (fully CI-tested with a fake backend) and a
 ``NativeBackend`` implementation. The real backend — ``LlamaCppBackend``,
 mapping onto ``llama_cpp.llama_cpp`` — needs a build toolchain and a GGUF
 model, so it lives behind the ``[native]`` extra with a lazy import and
@@ -30,12 +30,14 @@ from palimpsests.engine import (
     ChatChunk,
     EngineCapabilities,
     EngineMemoryConfig,
+    InferenceSession,
     Message,
     ModelInfo,
 )
 from palimpsests.providers.errors import EngineUnavailable
 from palimpsests.providers.native.backend import NativeBackend
 from palimpsests.providers.native.scheduler import GenerationRequest, Scheduler
+from palimpsests.providers.native.session import NativeSession
 
 ENGINE_ID = "pal-native"
 
@@ -46,8 +48,8 @@ _MODEL_ENV = "PALIMPSESTS_NATIVE_MODEL"
 def _render_prompt(messages: Sequence[Message]) -> str:
     """Flatten chat messages into a single prompt string.
 
-    N1 uses a minimal ``role: content`` rendering. A model-specific chat
-    template belongs to the backend later; the scheduler and engine stay
+    A minimal ``role: content`` rendering. A model-specific chat template
+    belongs to the backend later; the scheduler and engine stay
     template-agnostic for now.
     """
     lines = [f"{m.get('role', 'user')}: {m.get('content', '')}" for m in messages]
@@ -61,7 +63,7 @@ class NativeEngine(BaseInferenceEngine):
     Constructed with an optional explicit ``backend`` (tests pass a fake
     one); otherwise the backend is loaded lazily from the ``[native]``
     extra on first use. Everything above the backend — prompt rendering,
-    the scheduler, streaming — is backend-agnostic and CI-tested.
+    the scheduler, streaming, sessions — is backend-agnostic and CI-tested.
     """
 
     def __init__(
@@ -83,12 +85,13 @@ class NativeEngine(BaseInferenceEngine):
 
     @property
     def capabilities(self) -> EngineCapabilities:
-        # N1: streaming works via the N=1 scheduler. The stateful level-3
-        # features stay off until their PRs flip them on.
+        # Streaming (N1) and stateful sessions (N3a) work. Concurrency
+        # (continuous_batching) waits for N3b to lift the scheduler cap;
+        # shared_prefix / tools / persistence wait for their steps.
         return EngineCapabilities(
             control_level=3,
             streaming=True,
-            stateful_sessions=False,
+            stateful_sessions=True,
             shared_prefix=False,
             server_side_tools=False,
             continuous_batching=False,
@@ -153,7 +156,7 @@ class NativeEngine(BaseInferenceEngine):
         name = self._model_path or "pal-native"
         return [ModelInfo(name=name, engine_id=ENGINE_ID)]
 
-    # ─── chat (stateless path, N=1) ──────────────────────────────────────
+    # ─── chat (stateless path) ────────────────────────────────────────────
 
     def chat_stream(
         self,
@@ -165,9 +168,9 @@ class NativeEngine(BaseInferenceEngine):
         """Stream a response by driving one generation through the scheduler.
 
         Renders the messages to a prompt, tokenizes via the backend, runs
-        the N=1 scheduler to completion, and yields each detokenized token
-        as a ``ChatChunk``. This is the stateless path; stateful sessions
-        arrive with ``open_session`` in a later PR.
+        the scheduler to completion, and yields each detokenized token as
+        a ``ChatChunk``. This is the stateless path; stateful multi-turn
+        work goes through ``open_session``.
         """
         backend = self._load_backend()
         prompt = _render_prompt(messages)
@@ -182,6 +185,30 @@ class NativeEngine(BaseInferenceEngine):
             text = backend.detokenize([token])
             yield ChatChunk(delta=text)
         yield ChatChunk(delta="", done=True, finish_reason="stop")
+
+    # ─── sessions (stateful path, N3a) ────────────────────────────────────
+
+    def open_session(
+        self,
+        *,
+        model: str,
+        system_prompt: str | None = None,
+        memory: EngineMemoryConfig | None = None,
+    ) -> InferenceSession:
+        """Open a stateful session holding live KV across turns.
+
+        Each session gets its own scheduler and a held slot. In N3a the
+        scheduler admits one session at a time; N3b raises the cap so
+        several sessions share one batched step.
+        """
+        backend = self._load_backend()
+        scheduler = Scheduler(backend, max_active=1)
+        return NativeSession(
+            backend,
+            scheduler,
+            system_prompt=system_prompt,
+            max_tokens=self._max_tokens,
+        )
 
     # ─── lifecycle ───────────────────────────────────────────────────────
 
