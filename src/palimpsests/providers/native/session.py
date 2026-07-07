@@ -20,20 +20,25 @@ not re-prefill the conversation on each hop, unlike a stateless engine.
 It reuses ``feed`` / ``run_turn``; no new backend primitive is needed
 (the KV is already live in the slot).
 
-``save_state`` / ``load_state`` are KV persistence (N6) and refuse for
-now. Refusing loudly there — rather than faking — keeps the
-``kv_persistence`` flag honest.
+**KV persistence (N6).** ``save_state`` serializes this session's KV to
+bytes; ``load_state`` restores it. The position (``n_past``) is packed
+into the bytes alongside the backend state, so a restored session resumes
+without re-prefilling. This is the per-session primitive; a
+content-addressed store that reuses saved states by content is a layer
+above (N6b).
 """
 from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
-from palimpsests.engine.capabilities import CapabilityUnsupported
 from palimpsests.engine.messages import ChatChunk
 from palimpsests.providers.native.backend import NativeBackend, Token
 from palimpsests.providers.native.scheduler import Scheduler, TurnRequest
 
 # Default per-turn generation cap, mirroring the engine's stateless path.
 _DEFAULT_MAX_TOKENS = 512
+
+# Width in bytes of the n_past header packed in front of the KV state.
+_N_PAST_HEADER = 4
 
 
 class NativeSession:
@@ -47,6 +52,10 @@ class NativeSession:
     ``stop_tokens`` are the ids that end a turn (typically the model's EOS,
     which the real backend knows; tests pass it explicitly). Without them a
     turn only ends at ``max_tokens``.
+
+    ``prefix_already_seeded`` means the engine has copied a shared prefix
+    into this slot's KV already (N4); the session then skips prepending the
+    system prompt inline, since it is present in the KV.
     """
 
     def __init__(
@@ -57,6 +66,7 @@ class NativeSession:
         system_prompt: str | None = None,
         max_tokens: int = _DEFAULT_MAX_TOKENS,
         stop_tokens: tuple[Token, ...] = (),
+        prefix_already_seeded: bool = False,
     ) -> None:
         self._backend = backend
         self._scheduler = scheduler
@@ -65,9 +75,11 @@ class NativeSession:
         self._closed = False
         self._seq_id = scheduler.open_slot()
         # The system prefix is tokenized once and prepended only on the
-        # first turn; after that it lives in the slot's KV.
+        # first turn — UNLESS the engine already seeded it into the slot's
+        # KV from a shared prefix holder (N4), in which case it is already
+        # present and must not be prepended again.
         self._prefix_tokens: list[int] = []
-        if system_prompt:
+        if system_prompt and not prefix_already_seeded:
             self._prefix_tokens = backend.tokenize(
                 f"system: {system_prompt}\n", add_special=True
             )
@@ -153,18 +165,31 @@ class NativeSession:
         yield from self._stream_turn()
 
     def save_state(self) -> bytes:
-        """Serialize session KV — not yet implemented (N6)."""
-        raise CapabilityUnsupported(
-            "KV persistence (save_state) is not implemented yet; it arrives "
-            "with the persistence step (N6)"
-        )
+        """Serialize this session's KV to bytes (N6).
+
+        The slot's KV bytes with a small header carrying ``n_past`` (the
+        position), so a restore knows where to resume. Self-contained: the
+        returned bytes are everything ``load_state`` needs.
+        """
+        self._ensure_open()
+        n_past = self._scheduler.slot_n_past(self._seq_id)
+        state = self._scheduler.save_slot_state(self._seq_id)
+        header = n_past.to_bytes(_N_PAST_HEADER, "big")
+        return header + state
 
     def load_state(self, state: bytes) -> None:
-        """Restore session KV — not yet implemented (N6)."""
-        raise CapabilityUnsupported(
-            "KV persistence (load_state) is not implemented yet; it arrives "
-            "with the persistence step (N6)"
-        )
+        """Restore this session's KV from bytes produced by ``save_state``.
+
+        Unpacks the ``n_past`` header, restores the backend KV, and sets
+        the slot's position so the next turn resumes without re-prefilling
+        the restored context.
+        """
+        self._ensure_open()
+        if len(state) < _N_PAST_HEADER:
+            raise ValueError("state blob too short to contain an n_past header")
+        n_past = int.from_bytes(state[:_N_PAST_HEADER], "big")
+        payload = state[_N_PAST_HEADER:]
+        self._scheduler.load_slot_state(self._seq_id, payload, n_past)
 
     def close(self) -> None:
         """Release the held slot and its KV. Idempotent."""
