@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <g stroke="currentColor" stroke-width="8" stroke-linecap="round" fill="none">
+    <path d="M32 37h32"/><path d="M74 37h6" opacity="0.4"/><path d="M88 37h4" opacity="0.25"/>
+    <path d="M32 55h26"/><path d="M66 55h10" opacity="0.5"/><path d="M84 55h5" opacity="0.3"/>
+    <path d="M32 73h34"/><path d="M74 73h4" opacity="0.35"/><path d="M86 73h6" opacity="0.2"/>
+    <path d="M32 91h22"/><path d="M62 91h8" opacity="0.45"/><path d="M78 91h4" opacity="0.25"/>
+  </g>
+</svg>
