@@ -1,9 +1,12 @@
 # Usage — running Palimpsests and which settings work
 
-A practical guide to the current state of the project (v0.1). It
-describes **only what is actually implemented and working** — level 1
-(Ollama). Levels 2 and 3 are not wired up yet, so their settings are
-not listed here.
+A practical guide to the current state of the project (v0.3). Level 1
+(Ollama) is the fully documented, end-to-end path below. Levels 2
+(llama.cpp) and 3 (pal-native) exist behind one abstraction — level 3's
+serving skeleton is complete and test-covered against a fake backend, and
+its real in-process backend plus benchmarks are the v0.4 target. Where a
+level-2/3 setting is not yet a stable, user-facing knob, this guide says so
+rather than documenting something that may change.
 
 ---
 
@@ -20,6 +23,13 @@ Without a running Ollama daemon, `models` and `chat` return a clean
 error (`engine unavailable`) rather than a traceback — that is the
 expected behavior.
 
+For **level 2**, you additionally need the `llama-server` binary from
+llama.cpp on your `PATH` (installed out-of-band — `brew install llama.cpp`,
+a release binary, or your own GPU build) and a GGUF model; point Palimpsests
+at it with `PALIMPSESTS_LLAMACPP_MODEL`. For **level 3** (the native serving
+loop), the real backend ships behind the `[native]` extra and is validated
+on hardware — see the roadmap and `docs/BENCHMARKING.md`.
+
 ---
 
 ## 2. Installation
@@ -29,26 +39,19 @@ expected behavior.
 pip install palimpsests
 ```
 
-> As of v0.1 the package is not yet on PyPI. Until it is published,
-> install from a clone of the repository:
-> ```bash
-> git clone https://github.com/Assault-Consulting/Palimpsests.git
-> cd Palimpsests
-> pip install -e .
-> ```
-
 The base package pulls **no native dependency** — only `httpx`,
 `pydantic`, and `typer`. All native complexity (llama.cpp) lives behind
-the `[llamacpp]` extra, which is not yet active in v0.1.
+extras.
 
-### Optional extras (present, but not all active in v0.1)
+### Optional extras
 
-| Extra | What it provides | State in v0.1 |
+| Extra | What it provides | State |
 |---|---|---|
 | `[keyring]` | audit-log encryption key from the OS keychain | works |
 | `[encryption]` | at-rest audit-log encryption (SQLCipher) | works |
-| `[llamacpp]` | level 2 (llama.cpp) | **level code not wired yet** |
-| `[embeddings]` | local embeddings for block memory | for the upcoming block-memory work |
+| `[embeddings]` | local embeddings (numpy) for block memory | works |
+| `[llamacpp]` | level 2 marker (needs the `llama-server` binary on PATH) | works; empty marker |
+| `[native]` | level 3 real backend (llama-cpp-python) | ships; validated on hardware |
 
 Example, with audit-log encryption:
 ```bash
@@ -91,9 +94,10 @@ palimpsests engine list
 palimpsests engine use llamacpp
 ```
 
-> In v0.1 only `ollama` can actually be active. `engine use` on an
-> engine that isn't in the factory returns an error. `llamacpp` and
-> `pal-native` arrive in later versions.
+`engine list` shows all three levels (`ollama`, `llamacpp`, `pal-native`)
+with their control level and installed state. `engine use` on an engine
+that isn't available in your environment returns a clean error rather than
+a traceback.
 
 ### Everything `--help` shows
 
@@ -106,8 +110,6 @@ palimpsests engine --help       # engine subcommands
 ---
 
 ## 4. Which settings work
-
-This is the exhaustive list of **actually working** settings in v0.1.
 
 ### 4.1. `chat` command settings
 
@@ -138,6 +140,7 @@ tokens rather than an OOM.
 |---|---|---|
 | `PALIMPSESTS_CONFIG_DIR` | `~/.config/palimpsests` | where `audit.db` and `registry.json` live |
 | `XDG_CONFIG_HOME` | — | if set, config → `$XDG_CONFIG_HOME/palimpsests` |
+| `PALIMPSESTS_LLAMACPP_MODEL` | — | path to a GGUF model; enables level 2 |
 
 ```bash
 # isolated config (handy for tests / multiple profiles)
@@ -157,18 +160,19 @@ Python you can override it:
 
 ### 4.4. Memory settings (`EngineMemoryConfig`)
 
-These are the knobs **declared** in the contract. Level 1 (Ollama)
-accepts only a subset; the rest are deliberately ignored (level 1 never
-claimed them — see the table below).
+These are the knobs **declared** in the contract. Each level accepts the
+subset it can honor; the rest are deliberately ignored (a level never
+silently pretends to apply a knob it does not support — query
+`engine.capabilities`).
 
-| Field | Default | Ollama L1 |
-|---|---|---|
-| `context_size` | `None` | → `num_ctx` (applied) |
-| `gpu_layers` | `None` | → `num_gpu` (applied) |
-| `kv_cache_quant` | `None` | ignored at L1 |
-| `flash_attention` | `False` | ignored at L1 |
-| `use_mmap` | `True` | ignored at L1 |
-| `draft_model` | `None` | ignored at L1 |
+| Field | Default | Ollama L1 | llama.cpp L2 |
+|---|---|---|---|
+| `context_size` | `None` | → `num_ctx` | → `--ctx-size` |
+| `gpu_layers` | `None` | → `num_gpu` | → `--n-gpu-layers` |
+| `kv_cache_quant` | `None` | ignored at L1 | → cache-type flags |
+| `flash_attention` | `False` | ignored at L1 | → `--flash-attn` |
+| `use_mmap` | `True` | ignored at L1 | → mmap flags |
+| `draft_model` | `None` | ignored at L1 | → draft-model flags |
 
 **One hard validation rule** (applies at every level): `kv_cache_quant`
 requires `flash_attention=True`. Otherwise a `ValueError` is raised
@@ -218,6 +222,18 @@ for chunk in engine.chat_stream(model="qwen2.5:7b", messages=messages):
 engine.close()
 ```
 
+### Level-3 stateful sessions (Python)
+
+Level 3 adds stateful sessions with a server-side tool loop and KV
+persistence, behind the same `InferenceEngine` abstraction. The serving
+skeleton is complete and test-covered against a fake backend; the real
+in-process backend is validated on hardware (the `[native]` extra). The
+session API surface — `open_session`, `send`, `append_tool_result`,
+`save_state` / `load_state` — is documented in `ARCHITECTURE.md` and
+exercised in the `tests/test_native_*` suite. Because the on-hardware
+backend and its performance are the v0.4 target, this guide does not yet
+quote level-3 runtime settings as stable user-facing knobs.
+
 ---
 
 ## 6. What happens under the hood on `chat`
@@ -238,7 +254,7 @@ palimpsests chat qwen2.5:7b -m "..."
 Every operation (`model.call`, `engine.list_models`, `engine.select`)
 is written to an append-only audit log. For now the log can be read
 only via Python (`get_audit_log().recent()`); there is no dedicated CLI
-command to view it in v0.1.
+command to view it yet.
 
 ---
 
@@ -250,9 +266,11 @@ command to view it in v0.1.
 | `model not found` | model isn't in Ollama | `ollama pull <model>` |
 | `engine list` shows `not installed` | daemon didn't answer at `init_app` | check that Ollama listens on :11434 |
 | empty reply from `chat` without `-m` in a terminal | neither `-m` nor a pipe provided | add `-m "..."` or pipe text in |
+| level 2 not available | `llama-server` not on PATH or `PALIMPSESTS_LLAMACPP_MODEL` unset | install llama.cpp, set the model env var |
 
 ---
 
-*This document describes the v0.1 state. Later versions (level 2
-llama.cpp, block-memory retrieval, level 3) will add new settings; this
-file will be updated accordingly.*
+*This document describes the v0.3 state: level 1 fully documented, level 2
+available, level 3's serving skeleton complete with its real backend and
+benchmarks as the v0.4 target. It is updated as the level-2/3 surfaces
+stabilize into user-facing settings.*

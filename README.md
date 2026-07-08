@@ -3,8 +3,10 @@
 **A layered local-LLM inference engine: from thin wrapper to your own serving service, under one abstraction.**
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![CI](https://img.shields.io/badge/CI-pending-lightgrey.svg)](#)
-[![PyPI](https://img.shields.io/badge/PyPI-unreleased-lightgrey.svg)](#)
+[![CI](https://github.com/Assault-Consulting/Palimpsests/actions/workflows/ci.yml/badge.svg)](https://github.com/Assault-Consulting/Palimpsests/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/palimpsests.svg)](https://pypi.org/project/palimpsests/)
+[![Python](https://img.shields.io/pypi/pyversions/palimpsests.svg)](https://pypi.org/project/palimpsests/)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Assault-Consulting/Palimpsests/badge)](https://scorecard.dev/viewer/?uri=github.com/Assault-Consulting/Palimpsests)
 
 > **Status: v0.3 — the level-3 serving skeleton is complete.** Levels 1 (Ollama)
 > and 2 (llama.cpp) work behind one abstraction, with the context-memory layer
