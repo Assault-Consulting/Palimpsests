@@ -1,0 +1,48 @@
+# Static application security testing (SAST) with Bandit.
+#
+# Bandit scans the package source for common Python security issues —
+# hardcoded credentials, unsafe subprocess/eval, weak crypto calls, unsafe
+# deserialization, and similar. It runs on every push and pull request so a
+# security-relevant pattern is caught before it reaches a release, and it
+# satisfies the OpenSSF 'static analysis applied before release' criterion
+# with a dedicated SAST tool (distinct from the ruff linter).
+#
+# Scope: src/ only. Tests and benchmarks are deliberately excluded — they
+# legitimately use constructs Bandit flags (asserts, fixed example values),
+# and scanning them would produce noise, not signal.
+name: sast
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Least-privilege: this job only needs to read the code.
+permissions:
+  contents: read
+
+jobs:
+  bandit:
+    name: bandit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Bandit
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit
+
+      # Scan the package source. -r recurses; -ll reports only medium+ and
+      # high-severity findings (low-severity Bandit hits on a library like
+      # this are dominated by false positives). A real finding fails the job.
+      - name: Run Bandit
+        run: |
+          bandit --version
+          bandit -r src/ -ll
