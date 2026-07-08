@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/icon-dark.svg" alt="Palimpsests" width="96" height="96">
+</p>
+
 # Palimpsests
 
 **A layered local-LLM inference engine: from thin wrapper to your own serving service, under one abstraction.**
