@@ -41,8 +41,12 @@ References to keep open while validating on hardware:
   prefix pattern this mirrors).
 - ``examples/save-load-state`` (the ``state_seq`` round-trip).
 
-Validated against: (fill in once run) llama-cpp-python ==X.Y.Z,
-llama.cpp commit ..., model ...gguf, on <hardware>.
+Validated against: llama-cpp-python ==0.3.33 (CPU wheel, built from
+source), model Qwen2.5-1.5B-Instruct Q4_K_M, on Debian 12 (Docker,
+CPU-only) — first run 2026-07-08. The vocab/memory/state_seq version
+shims all resolved down their newer-API branch; construction, tokenize
+round-trip, and a scheduler/session smoke test passed. One context-param
+fix was needed (n_batch, see __init__).
 """
 from __future__ import annotations
 
@@ -58,6 +62,28 @@ _IMPORT_ERROR_HINT = (
     "LlamaCppBackend needs the [native] extra: pip install 'palimpsests[native]'. "
     "It pulls llama-cpp-python, which requires a C toolchain or a prebuilt wheel."
 )
+
+
+def _first_attr(lib, *names):
+    """Return the first attribute present on ``lib`` among ``names``.
+
+    A version shim across llama-cpp-python API generations: the newer and
+    older symbol names for the same operation are passed in order, and the
+    first one that exists in the installed build is used. ``getattr`` is
+    called with a *variable* name (not a constant), so this is genuinely
+    dynamic dispatch — the older ``getattr(lib, "const") or getattr(...)``
+    form was flagged by ruff B009 precisely because a constant getattr is
+    indistinguishable from attribute access; here the lookup is over a
+    runtime-chosen name, which is the real intent.
+    """
+    for name in names:
+        fn = getattr(lib, name, None)
+        if fn is not None:
+            return fn
+    raise AttributeError(
+        f"none of {names!r} found on the llama_cpp library — "
+        "unexpected llama-cpp-python version"
+    )
 
 
 class LlamaCppBackend:
@@ -394,21 +420,16 @@ class LlamaCppBackend:
         """Dispatch a seq copy/remove across the two API generations.
 
         Isolated so both version branches live in one place. On the first
-        hardware run, whichever pair of names resolves is the one the
-        pinned llama-cpp-python ships; the other is dead. Note which in
-        the module docstring once known.
+        hardware run, whichever pair of names resolves (via ``_first_attr``)
+        is the one the pinned llama-cpp-python ships; the other is dead.
+        Note which in the module docstring once known.
         """
-        lib = self._lib
         mem = self._memory()
         if op == "cp":
-            fn = getattr(lib, "llama_memory_seq_cp", None) or getattr(
-                lib, "llama_kv_cache_seq_cp"
-            )
+            fn = _first_attr(self._lib, "llama_memory_seq_cp", "llama_kv_cache_seq_cp")
             fn(mem, a, b, p0, p1)
         elif op == "rm":
-            fn = getattr(lib, "llama_memory_seq_rm", None) or getattr(
-                lib, "llama_kv_cache_seq_rm"
-            )
+            fn = _first_attr(self._lib, "llama_memory_seq_rm", "llama_kv_cache_seq_rm")
             fn(mem, a, p0, p1)
         else:  # pragma: no cover - internal misuse
             raise ValueError(f"unknown seq op {op!r}")
