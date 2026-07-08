@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<!--
+  Palimpsests benchmark command builder — a single static file.
+
+  DESIGN: zero dependencies, zero backend, zero build step. Open it by
+  double-clicking the file (file:// works; no server needed), fully
+  offline. This mirrors the project itself: an air-gap-capable, local-first
+  tool should not ship a config UI that pulls a CDN or runs a server. All
+  HTML + CSS + JS inline, vanilla, no framework.
+
+  WHAT IT DOES: turns the flags of benchmarks/bench_tool_loop.py into a
+  form, builds the exact `python benchmarks/bench_tool_loop.py ...` command
+  live, and explains each flag with the control-vs-sweep guidance from
+  benchmarks/RUNBOOK.md. It generates a command; it never runs anything.
+
+  This file lives in benchmarks/, outside the package — not in the wheel,
+  not in CI. It is a developer aid for the v0.4 measurement phase.
+
+  KEEP IN SYNC: if bench_tool_loop.py's argparse changes, update the FIELD
+  set below. The defaults here mirror that script's argparse defaults so an
+  unchanged field is omitted from the command for a cleaner line.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Palimpsests · benchmark command builder</title>
+<style>
+  :root {
+    --bg: #0e1116;
+    --panel: #161b22;
+    --panel-2: #1c2230;
+    --ink: #e6edf3;
+    --muted: #8b949e;
+    --line: #2d333b;
+    --accent: #7ee787;      /* lime — matches the toolweave-adjacent palette */
+    --accent-dim: #2ea043;
+    --warn: #f0883e;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--sans); line-height: 1.5;
+    padding: 2rem 1rem 4rem;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; }
+  header h1 { margin: 0 0 .25rem; font-size: 1.5rem; }
+  header p { margin: 0 0 1.5rem; color: var(--muted); }
+  header code { font-family: var(--mono); color: var(--accent); }
+  .grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+  @media (min-width: 720px) { .grid { grid-template-columns: 1fr 1fr; } }
+  .field {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; padding: 1rem;
+  }
+  .field label { display: block; font-weight: 600; margin-bottom: .35rem; }
+  .field .flag { font-family: var(--mono); color: var(--accent); font-weight: 400; }
+  .field input {
+    width: 100%; background: var(--panel-2); color: var(--ink);
+    border: 1px solid var(--line); border-radius: 6px;
+    padding: .5rem .6rem; font-family: var(--mono); font-size: .95rem;
+  }
+  .field input:focus { outline: 1px solid var(--accent-dim); border-color: var(--accent-dim); }
+  .field .help { color: var(--muted); font-size: .85rem; margin-top: .5rem; }
+  .field .help b { color: var(--ink); font-weight: 600; }
+  .field .presets { margin-top: .5rem; display: flex; gap: .4rem; flex-wrap: wrap; }
+  .field .presets button {
+    background: transparent; color: var(--accent); border: 1px solid var(--accent-dim);
+    border-radius: 999px; padding: .15rem .6rem; font-size: .8rem; cursor: pointer;
+    font-family: var(--mono);
+  }
+  .field .presets button:hover { background: var(--accent-dim); color: #0b1a0f; }
+  .out {
+    margin-top: 1.75rem; background: #0b0f14; border: 1px solid var(--line);
+    border-radius: 10px; padding: 1rem;
+  }
+  .out .row { display: flex; align-items: center; justify-content: space-between; margin-bottom: .5rem; }
+  .out .row h2 { margin: 0; font-size: .95rem; color: var(--muted); font-weight: 600; }
+  .out pre {
+    margin: 0; padding: .9rem 1rem; background: #06090d; border: 1px solid var(--line);
+    border-radius: 8px; overflow-x: auto; font-family: var(--mono); font-size: .9rem;
+    color: var(--ink); white-space: pre;
+  }
+  .copy {
+    background: var(--accent); color: #06120a; border: 0; border-radius: 6px;
+    padding: .4rem .9rem; font-weight: 700; cursor: pointer; font-family: var(--sans);
+  }
+  .copy:active { transform: translateY(1px); }
+  .note {
+    margin-top: 1.25rem; padding: .85rem 1rem; border-left: 3px solid var(--warn);
+    background: var(--panel); border-radius: 0 8px 8px 0; color: var(--muted); font-size: .9rem;
+  }
+  .note b { color: var(--ink); }
+  .sweep { margin-top: 1.25rem; }
+  .sweep h2 { font-size: 1rem; margin: 0 0 .5rem; }
+  .sweep pre { font-size: .82rem; }
+  footer { margin-top: 2.5rem; color: var(--muted); font-size: .8rem; }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Palimpsests · benchmark command builder</h1>
+    <p>Builds a <code>python benchmarks/bench_tool_loop.py</code> command for the
+       tool-loop&nbsp;vs&nbsp;re-prefill measurement. Static, offline, generates
+       a command only — it never runs anything.</p>
+  </header>
+
+  <div class="grid" id="fields"></div>
+
+  <div class="out">
+    <div class="row">
+      <h2>Command</h2>
+      <button class="copy" id="copyBtn">Copy</button>
+    </div>
+    <pre id="cmd"></pre>
+  </div>
+
+  <div class="note" id="dirtyNote"></div>
+
+  <div class="sweep">
+    <h2>Suggested sweep (per RUNBOOK Step 5)</h2>
+    <p style="color:var(--muted);font-size:.9rem;margin:.25rem 0 .5rem">
+      Run the control first — the two arms should be close. Then walk the
+      sweep; the tool-loop claim is that the speedup <b>grows</b> with prefix
+      size and hops. A flat or &lt;1× result is a real negative — keep it
+      (RUNBOOK Step&nbsp;0).
+    </p>
+    <pre id="sweep"></pre>
+  </div>
+
+  <footer>
+    Reflects <code>bench_tool_loop.py</code> flags and <code>RUNBOOK.md</code>
+    guidance. If the script's arguments change, update this file's field set.
+    Nothing here leaves your machine.
+  </footer>
+</div>
+
+<script>
+// ── Field definitions ────────────────────────────────────────────────────
+// Mirror bench_tool_loop.py's argparse. `def` is the script default; a field
+// left at its default is OMITTED from the command for a cleaner line.
+// `required` fields are always emitted.
+const FIELDS = [
+  {
+    flag: "--model", key: "model", type: "text", def: "", required: true,
+    placeholder: "/path/to/model.gguf",
+    help: "Path to a GGUF model. A 1–3B model is enough to validate correctness first; size up only once it runs (RUNBOOK Step 1).",
+    presets: []
+  },
+  {
+    flag: "--prefix-tokens", key: "prefix", type: "number", def: 2000, required: false,
+    help: "Approx size of the shared system prompt — the prefix carried across hops. This is the variable the tool-loop advantage should scale with: bigger prefix ⇒ bigger re-prefill cost avoided.",
+    presets: [["control", 50], ["small", 500], ["mid", 2000], ["large", 4000]]
+  },
+  {
+    flag: "--hops", key: "hops", type: "number", def: 8, required: false,
+    help: "Number of tool-loop iterations (generate → tool → continue). More hops ⇒ the baseline re-prefills more times, so the gap should widen.",
+    presets: [["control", 1], ["4", 4], ["8", 8], ["12", 12]]
+  },
+  {
+    flag: "--repeats", key: "repeats", type: "number", def: 5, required: false,
+    help: "Repeats per arm. BENCHMARKING.md §5 requires ≥5; the script reports median + spread, never a single run.",
+    presets: [["min 5", 5], ["10", 10]]
+  },
+  {
+    flag: "--n-ctx", key: "nctx", type: "number", def: 8192, required: false,
+    help: "Context window. Must be large enough to hold system prompt + the full grown transcript at the last hop, or the baseline arm will overflow. If you OOM on context creation, shrink this and n-seq (RUNBOOK failure index).",
+    presets: [["4096", 4096], ["8192", 8192], ["16384", 16384]]
+  },
+  {
+    flag: "--n-gpu-layers", key: "ngl", type: "number", def: 0, required: false,
+    help: "Layers offloaded to GPU. 0 = CPU only (safe first run). Raise once the CPU run is correct; keep it identical across both arms — it is not the variable under test.",
+    presets: [["CPU (0)", 0], ["20", 20], ["all (99)", 99]]
+  }
+];
+
+const state = {};
+FIELDS.forEach(f => { state[f.key] = f.def; });
+
+// ── Render fields ────────────────────────────────────────────────────────
+const fieldsEl = document.getElementById("fields");
+FIELDS.forEach(f => {
+  const wrap = document.createElement("div");
+  wrap.className = "field";
+
+  const label = document.createElement("label");
+  label.innerHTML = `${f.key === "model" ? "Model" : f.key} <span class="flag">${f.flag}</span>` +
+                    (f.required ? ' <span style="color:var(--warn)">· required</span>' : "");
+  wrap.appendChild(label);
+
+  const input = document.createElement("input");
+  input.type = f.type;
+  input.value = f.def === "" ? "" : f.def;
+  if (f.placeholder) input.placeholder = f.placeholder;
+  input.addEventListener("input", () => {
+    state[f.key] = f.type === "number"
+      ? (input.value === "" ? f.def : Number(input.value))
+      : input.value.trim();
+    render();
+  });
+  wrap.appendChild(input);
+
+  if (f.presets && f.presets.length) {
+    const presets = document.createElement("div");
+    presets.className = "presets";
+    f.presets.forEach(([name, val]) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = name;
+      b.addEventListener("click", () => {
+        input.value = val;
+        state[f.key] = val;
+        render();
+      });
+      presets.appendChild(b);
+    });
+    wrap.appendChild(presets);
+  }
+
+  const help = document.createElement("div");
+  help.className = "help";
+  help.innerHTML = f.help;
+  wrap.appendChild(help);
+
+  fieldsEl.appendChild(wrap);
+});
+
+// ── Command construction ─────────────────────────────────────────────────
+// A flag is emitted if it is required, or if its value differs from the
+// script default. The model path is quoted if it contains a space.
+function buildCommand() {
+  const parts = ["python benchmarks/bench_tool_loop.py"];
+  FIELDS.forEach(f => {
+    const v = state[f.key];
+    const isDefault = String(v) === String(f.def);
+    if (!f.required && isDefault) return;      // omit unchanged optionals
+    if (f.required && (v === "" || v === undefined)) {
+      parts.push(`${f.flag} <REQUIRED>`);      // visible placeholder
+      return;
+    }
+    let val = String(v);
+    if (f.type === "text" && /\s/.test(val)) val = `"${val}"`;
+    parts.push(`${f.flag} ${val}`);
+  });
+  // Multi-line for readability when long.
+  return parts.join(" \\\n    ");
+}
+
+function render() {
+  document.getElementById("cmd").textContent = buildCommand();
+
+  // Dirty note: warn if the model is unset, or if a rigged-looking combo is set.
+  const notes = [];
+  if (!state.model) notes.push("Set <b>--model</b> to a real .gguf path before running.");
+  if (Number(state.prefix) <= 100 && Number(state.hops) <= 1) {
+    notes.push("This is the <b>control</b> config — expect the two arms to be <b>close</b>. If it already shows a big win, the harness is rigged; stop and find the bug (RUNBOOK Step 0).");
+  }
+  const nctxRoughNeed = Number(state.prefix) + Number(state.hops) * 40 + 256;
+  if (Number(state.nctx) < nctxRoughNeed) {
+    notes.push(`<b>--n-ctx</b> may be too small: the last baseline hop re-prefills roughly ${nctxRoughNeed}+ tokens. Raise n-ctx or the baseline arm may overflow.`);
+  }
+  document.getElementById("dirtyNote").innerHTML =
+    notes.length ? notes.join("<br><br>") : "Looks runnable. Remember: decide the expected result <b>before</b> you trust the number (RUNBOOK Step 0).";
+
+  // Suggested sweep, using the current model path.
+  const m = state.model || "MODEL.gguf";
+  const q = /\s/.test(m) ? `"${m}"` : m;
+  const r = Number(state.repeats) || 5;
+  document.getElementById("sweep").textContent = [
+    `# control — expect the arms close:`,
+    `python benchmarks/bench_tool_loop.py --model ${q} --prefix-tokens 50 --hops 1 --repeats ${r}`,
+    ``,
+    `# sweep — expect a growing margin:`,
+    `python benchmarks/bench_tool_loop.py --model ${q} --prefix-tokens 500  --hops 4  --repeats ${r}`,
+    `python benchmarks/bench_tool_loop.py --model ${q} --prefix-tokens 2000 --hops 8  --repeats ${r}`,
+    `python benchmarks/bench_tool_loop.py --model ${q} --prefix-tokens 4000 --hops 12 --repeats ${r}`,
+  ].join("\n");
+}
+
+// ── Copy ─────────────────────────────────────────────────────────────────
+document.getElementById("copyBtn").addEventListener("click", async () => {
+  const text = document.getElementById("cmd").textContent;
+  const btn = document.getElementById("copyBtn");
+  try {
+    await navigator.clipboard.writeText(text);
+    btn.textContent = "Copied";
+  } catch {
+    // clipboard API needs a secure context; file:// may block it. Fall back
+    // to a manual select so the tool still works offline from disk.
+    const range = document.createRange();
+    range.selectNodeContents(document.getElementById("cmd"));
+    const sel = window.getSelection();
+    sel.removeAllRanges(); sel.addRange(range);
+    btn.textContent = "Select+⌘C";
+  }
+  setTimeout(() => { btn.textContent = "Copy"; }, 1500);
+});
+
+render();
+</script>
+</body>
+</html>
