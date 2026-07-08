@@ -122,6 +122,12 @@ class LlamaCppBackend:
         # single most likely first-run AttributeError — isolated here.
         ctx_params = _lib.llama_context_default_params()
         ctx_params.n_ctx = n_ctx
+        # First-run fix: llama.cpp asserts n_tokens_all <= n_batch inside
+        # llama_decode. The default logical batch (2048) is smaller than a
+        # large single-call prefill (e.g. a 4000-token prefix), which
+        # aborts the process. The logical batch must admit the largest
+        # prefill we can ever pass, which is bounded by n_ctx.
+        ctx_params.n_batch = n_ctx
         ctx_params.n_seq_max = n_seq_max
         if n_threads is not None:
             ctx_params.n_threads = n_threads
