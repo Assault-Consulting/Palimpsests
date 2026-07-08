@@ -14,7 +14,8 @@ A note on numbers: figures cited from external papers (e.g. sleep-time
 compute's 2.5×, KV-reuse speedups) are **hypotheses until measured on our
 own hardware** per `BENCHMARKING.md`. We adopt their *logic* now; their
 *numbers* are flagged "to verify." A consolidated, sourced table of those
-targets lives in `POSITIONING.md`.
+targets lives in `POSITIONING.md`. As of 0.4 one of those hypotheses — the
+tool-loop advantage — has a first measured result (see below).
 
 ---
 
@@ -39,12 +40,31 @@ targets lives in `POSITIONING.md`.
   N6: reuse a saved state by a hash of the tokens that produced it, not by
   an opaque path. No flag (a convenience layer over the N6 primitive).
 - **BENCHMARKING.md** — the honest measurement protocol.
+- **Real `LlamaCppBackend` — validated on hardware (0.4).** The ctypes
+  backend mapping onto the same primitives the fake backend exposes,
+  brought online on real hardware (llama-cpp-python 0.3.33, Qwen2.5-1.5B
+  Q4_K_M). Construction, tokenize round-trip, and a scheduler/session
+  smoke test passed; the vocab/memory/state_seq version shims resolved
+  cleanly. One context-param fix was needed on first contact
+  (`n_batch = n_ctx`, so a large single-call prefill does not trip
+  `GGML_ASSERT` inside `llama_decode`). This closes the "real backend"
+  gap — the skeleton now runs a real model.
+- **First measurement — tool-loop (N5) vs re-prefill.** Our strongest
+  claimed advantage, measured first per the working order below. Result:
+  1.08× at the control (negligible prefix) growing to ~7× at
+  prefix≈3000 / 12 hops — the speedup tracks the re-prefill work the tool
+  loop avoids, with near-identical TTFT between arms. Measured **CPU-only
+  on a 1.5B model** as a mechanism sanity check, **not** a representative
+  performance figure; the numbers and full method are in `results/` and
+  `POSITIONING.md`. A GPU / larger-model run is the pending next step.
 
-**The level-3 skeleton is complete.** All six capability flags —
-`streaming`, `stateful_sessions`, `continuous_batching`,
-`server_side_tools`, `shared_prefix`, `kv_persistence` — are true on the
-fake backend behind the ADR-0002 seam, with the content-addressed store on
-top. What remains is not more skeleton: it is a *real backend* to measure,
+**The level-3 skeleton is complete, and the real backend is now
+validated.** All six capability flags — `streaming`, `stateful_sessions`,
+`continuous_batching`, `server_side_tools`, `shared_prefix`,
+`kv_persistence` — are true behind the ADR-0002 seam, with the
+content-addressed store on top, and the `[native]` backend runs a real
+model on hardware. What remains is not more skeleton: it is more
+measurement (GPU, larger models, the persistence and shared-prefix cases)
 and research layers on top.
 
 ---
@@ -118,15 +138,17 @@ than as one more fake-backend mechanism.
 ## Working order (subject to revision)
 
 The fake-backend skeleton (N1 → N3a → N3b → N5 → N-pos → N4a → N4b → N6 →
-N6b) is **done**. What follows needs hardware, so the order is now
-gated on a real backend:
+N6b) is **done**, and the real backend is now **validated on hardware with
+the first tool-loop measurement landed** (0.4). What follows continues to
+need hardware:
 
-1. **Real `LlamaCppBackend` + run the BENCHMARKING protocol** — the ctypes
-   backend mapping onto the same primitives the fake backend exposes, on
-   the user's hardware (needs a GGUF and a build toolchain; validated
-   off-CI). The **first real measurement**, against a tuned baseline. The
-   strongest single thing to measure first is the tool-loop (N5) vs
-   re-prefill — our strongest claimed advantage.
+1. ~~**Real `LlamaCppBackend` + run the BENCHMARKING protocol.**~~
+   **Done (0.4).** The ctypes backend runs a real model; the first
+   measurement (tool-loop vs re-prefill, our strongest claimed advantage)
+   is landed — a CPU-only 1.5B sanity check confirming the mechanism and
+   its direction. **Next within this step:** a GPU / larger-model run for
+   representative magnitudes, and the persistence (N6) and shared-prefix
+   (N4) benchmarks against a tuned baseline.
 2. **Sleep-time compute (edge)** — `session.sleep()` → `c'` → BlockMemory,
    built and measured together, since its value only shows on hardware.
 3. **Disk-backed KV store** — persist the N6b store across process exit,
@@ -134,8 +156,9 @@ gated on a real backend:
    pressure).
 4. **N7 + spec-decode safety interlock** — optional, later.
 
-Until a real backend exists, additional fake-backend mechanisms add
-skeleton without adding evidence; the priority is measurement.
+The priority remains measurement: now that a real backend exists, the
+next numbers to produce are the GPU/larger-model tool-loop run and the
+persistence and shared-prefix cases.
 
 ---
 

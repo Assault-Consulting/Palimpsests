@@ -6,6 +6,77 @@ aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 once it reaches v1.0. Before v1.0, minor versions may include breaking
 API changes.
 
+## [0.4.0] — 2026-07-08
+
+The **empirical half of level 3**: the real in-process backend now runs a
+real model on hardware, and the first benchmark our strongest claim rests
+on — the server-side tool loop vs a re-prefill baseline — has been measured.
+0.3.0 shipped the level-3 skeleton on a fake backend and claimed no
+performance; 0.4.0 brings up the real backend and produces the first number
+we can call our own. That number is a **CPU-only 1.5B mechanism sanity
+check, not a representative performance figure** — see **Notes**.
+
+### Added
+
+- **Real `LlamaCppBackend` (the `[native]` extra).** The ctypes backend
+  that maps `NativeBackend` (the ADR-0002 seam) onto llama.cpp's low-level
+  C API — batched `decode`, per-sequence `seq_copy` / `seq_remove`,
+  `state_get` / `state_set`, tokenize/detokenize — is now brought online
+  and validated on hardware (llama-cpp-python 0.3.33, Qwen2.5-1.5B Q4_K_M,
+  CPU). Construction, a tokenize round-trip, and a scheduler/session smoke
+  test passed; the vocab / memory / state_seq cross-version shims resolved
+  cleanly against the pinned build. The same scheduler, session, and engine
+  that 0.3 tested against a fake backend now drive a real model unchanged —
+  the point of the ADR-0002 seam.
+- **First on-hardware measurement — tool loop (N5) vs re-prefill**
+  (`benchmarks/bench_tool_loop.py`, `results/report.md`,
+  `results/REPRODUCE.md`). Both arms decode the same content through the
+  same backend/model/sampling; the only variable is state control (live KV
+  vs re-prefilling the conversation each hop). Result: near-parity at the
+  control (1.08× at ~27 prefix tokens, 1 hop) growing to ~7× at ~2979
+  prefix tokens / 12 hops, with TTFT near-identical between arms — the win
+  comes from avoided re-prefill, and it scales with the re-prefill work
+  removed. Expectations were pre-registered before the first number, per
+  `BENCHMARKING.md` Rule 0.
+- **`benchmarks/RUNBOOK.md` and `benchmarks/config.html`.** The
+  hardware-bring-up checklist (primitive-by-primitive backend validation,
+  then the benchmark sweep, control first) and a dependency-free static
+  command builder for the benchmark.
+
+### Fixed
+
+- **`n_batch` on context creation (`LlamaCppBackend`).** On the first
+  hardware run, a large single-call prefill (~3000 tokens) aborted the
+  process with `GGML_ASSERT(n_tokens_all <= cparams.n_batch)` inside
+  `llama_decode`, because the logical batch size was left at llama.cpp's
+  default (2048). The context is now created with `n_batch = n_ctx` so the
+  logical batch admits the largest prefill the context can hold. The
+  measured decode logic is untouched; smaller configs were unaffected.
+- **`_seq_op` version shim (`LlamaCppBackend`).** The newer/older KV
+  symbol fallback (`llama_memory_seq_*` vs `llama_kv_cache_seq_*`) is now
+  resolved through a small `_first_attr(lib, *names)` helper that looks up
+  a runtime-chosen name, replacing a constant-attribute `getattr` chain
+  (ruff B009) while preserving the cross-version dispatch intent.
+
+### Notes
+
+- **The measured numbers are a mechanism sanity check, not representative
+  performance.** The first run was **CPU-only** (Docker, no GPU) on a
+  **1.5B** model with greedy sampling. The *direction and shape* of the
+  result — near-parity when there is no prefix to reuse, a growing win as
+  the avoided re-prefill work grows — are the finding. Absolute magnitudes
+  will differ on GPU and larger models. We do **not** present "7×" as a
+  headline; a GPU / larger-model run is the pending next step, and the
+  KV-persistence and shared-prefix numbers in `POSITIONING.md` remain
+  external **targets** until measured the same way.
+- **Cite the measured prefix, not the nominal label.** The benchmark's
+  filler heuristic produces fewer tokens than the nominal config name
+  (e.g. "4000" is ~2979 measured); the measured column is the honest one.
+- **Positioning and roadmap** updated: `POSITIONING.md` gains a "What we
+  have measured ourselves" section (clearly separated from the external
+  targets), and `ROADMAP.md` moves the real-backend/first-measurement step
+  into Done with a GPU/larger-model run as the next measurement priority.
+
 ## [0.3.0] — 2026-07-07
 
 The **level-3 serving skeleton is structurally complete**: all six of the
@@ -163,6 +234,7 @@ Initial release.
   from the OS keychain, falling back to an ephemeral key headless.
 - **CLI** — `chat`, `models`, `engine list` / `engine use`.
 
+[0.4.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.4.0
 [0.3.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.3.0
 [0.2.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.2.0
 [0.1.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.1.0

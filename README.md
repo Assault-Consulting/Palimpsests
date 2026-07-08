@@ -9,16 +9,18 @@
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13534/badge)](https://www.bestpractices.dev/projects/13534)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Assault-Consulting/Palimpsests/badge)](https://scorecard.dev/viewer/?uri=github.com/Assault-Consulting/Palimpsests)
 
-> **Status: v0.3 — the level-3 serving skeleton is complete.** Levels 1 (Ollama)
-> and 2 (llama.cpp) work behind one abstraction, with the context-memory layer
-> (window manager + block-memory retrieval) and an encrypted audit log. Level 3
-> (pal-native) now has its full serving skeleton — streaming, stateful sessions,
-> continuous batching, server-side tool loop, shared-prefix KV, and KV
-> persistence — implemented and test-covered against a fake backend behind the
-> ADR-0002 seam. This closes the *architectural* half of level 3; the *empirical*
-> half — the real in-process `LlamaCppBackend` and the first on-hardware
-> benchmarks — is the target of v0.4. No performance is claimed yet. APIs may
-> change before v1.0.
+> **Status: v0.4 — the real backend runs, with the first measurement in.** Levels
+> 1 (Ollama) and 2 (llama.cpp) work behind one abstraction, with the
+> context-memory layer (window manager + block-memory retrieval) and an encrypted
+> audit log. Level 3 (pal-native) has its full serving skeleton — streaming,
+> stateful sessions, continuous batching, server-side tool loop, shared-prefix KV,
+> and KV persistence — and as of v0.4 the real in-process `LlamaCppBackend` runs a
+> real model on hardware. The first benchmark is in: the server-side tool loop
+> beats a re-prefill baseline, growing with the avoided re-prefill work — measured
+> **CPU-only on a 1.5B model as a mechanism sanity check, not a representative
+> performance figure** (a GPU / larger-model run is the pending next step). See
+> **[docs/POSITIONING.md](docs/POSITIONING.md)** for the numbers and their limits.
+> APIs may change before v1.0.
 
 ---
 
@@ -266,17 +268,23 @@ the novelty is in this composition and its seams, not in a new inference kernel.
       sessions → continuous batching → server-side tool loop → shared-prefix KV →
       KV persistence → content-addressed KV store. All six capability flags true.
       The *architectural* half of level 3.
-- [ ] **v0.4 — real `LlamaCppBackend` + first benchmarks** — the in-process
-      ctypes backend on hardware, measured against a tuned baseline under
-      [docs/BENCHMARKING.md](docs/BENCHMARKING.md). The *empirical* half — the
-      first numbers we can call our own.
-- [ ] **Beyond v0.4** — sleep-time compute (edge), disk-backed KV store,
-      speculative decoding. See [docs/ROADMAP.md](docs/ROADMAP.md).
+- [x] **v0.4 — real `LlamaCppBackend` + first benchmark** — the in-process
+      ctypes backend runs a real model on hardware, and the first measurement
+      (tool-loop vs re-prefill) is in: a win that grows with the avoided
+      re-prefill work, measured CPU-only on a 1.5B model as a *mechanism sanity
+      check* per [docs/BENCHMARKING.md](docs/BENCHMARKING.md). The *empirical*
+      half begins — first numbers we can call our own, with a GPU / larger-model
+      run still to come.
+- [ ] **Beyond v0.4** — a GPU / larger-model benchmark run for representative
+      magnitudes, the persistence (N6) and shared-prefix (N4) benchmarks,
+      sleep-time compute (edge), disk-backed KV store, speculative decoding. See
+      [docs/ROADMAP.md](docs/ROADMAP.md).
 
 Each level graduates by flipping the corresponding `capabilities` flag from
 `False` to `True`. A flipped flag means the *mechanism* is implemented and
-tested — **not** that a speedup has been measured; that is the v0.4 benchmarking
-phase.
+tested; a *measured* speedup is a separate step — the tool-loop benchmark in v0.4
+is the first such measurement, and it is a CPU-only sanity check, not a
+representative figure.
 
 ---
 

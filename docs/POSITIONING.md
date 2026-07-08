@@ -7,6 +7,10 @@ project is built on a measurement discipline (see [BENCHMARKING.md](BENCHMARKING
 a number we have not produced on our own hardware is a **target**, not a result,
 and is labeled as such here.
 
+As of 0.4 there is exactly **one** number we have produced ourselves — the
+tool-loop vs re-prefill measurement below. Everything else in the performance
+section remains an external target. Keeping that line sharp is the point.
+
 ---
 
 ## Who this is for
@@ -102,16 +106,68 @@ glue.
 
 ---
 
+## What we have measured ourselves (0.4)
+
+One measurement exists so far, and it is the one the level's strongest claim
+rests on: **the server-side tool loop (N5) vs a re-prefill baseline.** In an
+agentic `generate → tool → continue` cycle, the tool loop keeps the shared prefix
+and growing conversation live in KV and feeds only each tool result; a stateless
+engine re-reads (re-prefills) the whole conversation every hop. Both arms of the
+benchmark decode the same content through the same backend, model, and sampling —
+the only variable is state control (see `benchmarks/bench_tool_loop.py`).
+
+**First run — measured on our hardware:**
+
+| config (nominal) | prefix tokens (measured) | tool loop | re-prefill | speedup |
+|---|---|---|---|---|
+| prefix=50, hops=1 (control) | 27 | 2.65 s | 2.86 s | **1.08×** |
+| prefix=500, hops=4 | 363 | 9.96 s | 21.37 s | **2.14×** |
+| prefix=2000, hops=8 | 1491 | 27.93 s | 130.37 s | **4.67×** |
+| prefix=4000, hops=12 | 2979 | 52.99 s | 382.90 s | **7.23×** |
+
+5 repeats per arm per config, greedy sampling, `n_ctx=8192`. The full JSON blobs,
+the environment, and the pre-registered expectations are in
+`results/report.md`; reproduction steps are in `results/REPRODUCE.md`.
+
+**What this does and does not show — read before quoting it:**
+
+- **It is a mechanism sanity check, not a representative performance figure.**
+  The run was **CPU-only** (Docker, no GPU), on a **1.5B** model (Qwen2.5-1.5B
+  Q4_K_M). The *direction and shape* of the result are the finding; the absolute
+  magnitudes will differ on GPU and larger models. We are **not** claiming
+  "Palimpsests is 7× faster" as a headline — we are claiming the KV-reuse
+  mechanism works and scales the way the design predicted.
+- **The control behaved correctly.** At negligible prefix (27 tokens, 1 hop) the
+  arms are near-parity (1.08×), which is what an un-rigged harness must show — the
+  advantage only appears when there is a prefix worth not re-reading. This is the
+  check that the benchmark is measuring the mechanism and not an artifact.
+- **The win grows with the re-prefill work avoided.** The speedup tracks prefix
+  size × hop count — exactly the quantity the tool loop removes — and TTFT is
+  near-identical between arms in every config, confirming the gain comes from the
+  hop loop, not a first-fill asymmetry.
+- **Use the measured prefix, not the nominal label.** The filler heuristic
+  produces fewer tokens than the nominal name (e.g. "4000" is ~2979 measured), so
+  cite the measured column.
+- **A GPU / larger-model run is a separate, pending exercise.** It is the next
+  step, not part of this release.
+
+This is the first of the numbers the performance targets below anticipate. The
+others — KV-persistence and shared-prefix speedups — remain **targets** until we
+measure them the same way.
+
+---
+
 ## Performance: targets, not yet results
 
 > **Read this first.** None of the numbers below were produced by Palimpsests on
 > our hardware. They are published results from **other** systems and papers that
 > exercise the *same mechanisms* we implement. We list them as **orientation
-> targets** — the ballpark we aim to reproduce once the real `LlamaCppBackend`
-> runs on hardware, under the protocol in [BENCHMARKING.md](BENCHMARKING.md).
-> Until then, treat every figure as "someone else achieved this on their setup;
-> our goal is to get into this range on ours." A benchmark is only worth running
-> if it can disappoint us — so these are hypotheses to test, not marketing.
+> targets** — the ballpark we aim to reproduce as each mechanism is measured on
+> hardware, under the protocol in [BENCHMARKING.md](BENCHMARKING.md). Until then,
+> treat every figure as "someone else achieved this on their setup; our goal is
+> to get into this range on ours." A benchmark is only worth running if it can
+> disappoint us — so these are hypotheses to test, not marketing. (The one
+> exception, now measured by us, is the tool-loop result in the section above.)
 
 ### KV persistence — avoiding re-prefill (our N6 / N6b direction)
 
@@ -173,14 +229,21 @@ even more favorable on-device than in the cloud. This is roadmap, not built.
 - **What is real today:** the three-level abstraction, the context-memory layer,
   the encrypted audit log, and a fully test-covered level-3 skeleton (streaming,
   stateful sessions, continuous batching, server-side tool loop, shared-prefix
-  KV, KV persistence) on a fake backend behind the ADR-0002 seam. The composition
-  — several serving features over one position substrate, under one contract, on
-  cross-platform local hardware — exists and is tested; that is the novel part.
-- **What is a target:** every performance number above. They come from external
-  systems exercising the same mechanisms; reproducing them on our hardware, with
-  a strong baseline (a tuned Ollama), is the point of the benchmarking phase.
+  KV, KV persistence) — now backed by a **real `LlamaCppBackend` validated on
+  hardware** (0.4). The composition — several serving features over one position
+  substrate, under one contract, on cross-platform local hardware — exists and is
+  tested; that is the novel part.
+- **What we have measured ourselves:** one result — the tool-loop vs re-prefill
+  benchmark (2–7× on our first run, growing with avoided re-prefill work),
+  measured CPU-only on a 1.5B model as a **mechanism sanity check**, not a
+  representative performance figure. GPU and larger-model runs are pending.
+- **What is still a target:** the KV-persistence and shared-prefix numbers above.
+  They come from external systems exercising the same mechanisms; reproducing them
+  on our hardware, with a strong baseline (a tuned Ollama), is the continuing
+  point of the benchmarking phase.
 - **What we will not do:** claim a new inference primitive we did not build,
-  publish a speedup we have not measured, or call the project compliant with a
-  regulation it has not been certified against. The scope honesty and the
-  measurement discipline are what make the composition claim credible — they are
-  part of the product, not a hedge against it.
+  publish a speedup we have not measured, quote a CPU sanity number as a headline
+  performance figure, or call the project compliant with a regulation it has not
+  been certified against. The scope honesty and the measurement discipline are
+  what make the composition claim credible — they are part of the product, not a
+  hedge against it.
