@@ -77,10 +77,9 @@ import threading
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from palimpsests.audit.key_manager import load_head_anchor, store_head_anchor
 from pathlib import Path
 from typing import TypeVar
-
-from palimpsests.audit.key_manager import load_head_anchor, store_head_anchor
 
 #: The chain's fixed starting point. The first row's ``prev_hash``.
 #: A constant (not a random nonce) so a fresh log is reproducible and a
