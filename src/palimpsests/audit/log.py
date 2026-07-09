@@ -44,10 +44,19 @@ unforgeability requires committing the head somewhere outside the
 host's trust boundary — a remote append-only log, a notary, a
 transparency log. Palimpsests does not do that, and does not claim it.
 
+Anchoring rules
+---------------
 The anchor is refreshed every ``anchor_every`` rows (default 1: every
 write). Raising it trades a window — the last few events before a crash
 would be unanchored, though still chained — for fewer keychain calls,
 which are not free on macOS and Windows.
+
+``close()`` flushes the anchor **only if this process actually wrote a
+row**, and anchors the hash *it* wrote. Opening a log and closing it
+must never move the anchor: otherwise a read-only operation (notably
+``verify``) would silently re-anchor whatever chain happens to be on
+disk — blessing a forged one and destroying the very evidence it was
+asked to check.
 
 The ``AuditDenied`` exception
 -----------------------------
@@ -123,9 +132,9 @@ class AuditEvent:
 class VerifyResult:
     """The outcome of a chain verification.
 
-    ``ok`` is the headline, but the two flags below matter for an
-    auditor: they state *which* guarantees were actually checked, so a
-    passing result is never read as stronger than it is.
+    ``ok`` is the headline, but the flags below matter for an auditor:
+    they state *which* guarantees were actually checked, so a passing
+    result is never read as stronger than it is.
     """
 
     ok: bool
@@ -247,6 +256,10 @@ class AuditLog:
         self._lock = threading.Lock()
         self._anchor_every = anchor_every
         self._since_anchor = 0
+        # The hash of the last row *this process* appended. None means we
+        # have written nothing, and therefore have nothing to anchor: see
+        # close(). Read-only use must not move the anchor.
+        self._last_written: str | None = None
         self._conn = self._connect(key, allow_unencrypted=allow_unencrypted)
         self._conn.executescript(_SCHEMA)
         self._conn.commit()
@@ -345,6 +358,7 @@ class AuditLog:
                 ),
             )
             self._conn.commit()
+            self._last_written = rh
 
             self._since_anchor += 1
             if self._since_anchor >= self._anchor_every:
@@ -391,6 +405,8 @@ class AuditLog:
         replacement check was actually performed: a chain that verifies
         with ``head_anchored=False`` is internally consistent but could
         have been rebuilt from scratch.
+
+        Read-only. Verifying never writes to the log or the anchor.
         """
         with self._lock:
             rows = self._conn.execute(
@@ -471,12 +487,17 @@ class AuditLog:
         return VerifyResult(ok=True, rows_checked=len(rows), head_anchored=True)
 
     def close(self) -> None:
+        """Close the connection, anchoring only what this process wrote.
+
+        If no row was appended in this session, the anchor is left exactly
+        as it was. That matters: a read-only consumer — ``verify`` above
+        all — must not re-anchor whatever chain is on disk, or it would
+        bless a forged history and destroy the evidence it was asked to
+        examine.
+        """
         with self._lock:
-            # Flush the anchor even if anchor_every > 1 left it stale, so a
-            # clean shutdown never leaves unanchored rows behind.
-            head = self._head_hash_locked()
-            if head != GENESIS:
-                store_head_anchor(head)
+            if self._last_written is not None:
+                store_head_anchor(self._last_written)
             self._conn.close()
 
 

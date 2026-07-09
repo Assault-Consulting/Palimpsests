@@ -53,6 +53,9 @@ _RETRIEVAL_TOP_K = 3
 #: are readable by anyone with the file.
 UNENCRYPTED_ENV = "PALIMPSESTS_ALLOW_UNENCRYPTED_AUDIT"
 
+#: The audit database's filename inside the config directory.
+AUDIT_DB_NAME = "audit.db"
+
 
 def default_config_dir() -> Path:
     """Return the per-user config directory, honoring XDG on Linux."""
@@ -108,20 +111,26 @@ class AppContext:
         return self.engines[engine_id]
 
 
-def _open_audit_log(cfg: Path) -> AuditLog:
-    """Open the audit log, refusing to degrade silently.
+def open_audit_log(cfg: Path) -> AuditLog:
+    """Open the audit log at ``cfg``, refusing to degrade silently.
+
+    Public because more than one entry point needs a trustworthy log
+    without building the whole application: ``init_app`` for a normal
+    run, and ``palimpsests audit verify`` for a read-only inspection that
+    must not touch the network or construct engines.
 
     Two things can go wrong, and neither may be papered over:
 
     - **No keychain.** Headless runs have no Secret Service. We fall back
       to an ephemeral key so the run still audits, to a fresh database.
       The trail is real for this process; it just isn't readable across
-      runs. This is a availability trade, not an integrity one.
-    - **No SQLCipher.** Then at-rest encryption is impossible. The old
-      code quietly wrote plaintext. We now raise, and require the
-      operator to say so out loud via ``PALIMPSESTS_ALLOW_UNENCRYPTED_AUDIT=1``.
-      Chained-but-unencrypted is a coherent posture (tampering is still
-      evident); *silently* unencrypted is not.
+      runs. This is an availability trade, not an integrity one.
+    - **No SQLCipher.** Then at-rest encryption is impossible. Older
+      versions quietly wrote plaintext. We now raise, and require the
+      operator to say so out loud via
+      ``PALIMPSESTS_ALLOW_UNENCRYPTED_AUDIT=1``. Chained-but-unencrypted
+      is a coherent posture (tampering is still evident); *silently*
+      unencrypted is not.
     """
     try:
         key = load_or_create_key()
@@ -130,7 +139,7 @@ def _open_audit_log(cfg: Path) -> AuditLog:
 
     allow_plain = os.environ.get(UNENCRYPTED_ENV) == "1"
     try:
-        return AuditLog(cfg / "audit.db", key, allow_unencrypted=allow_plain)
+        return AuditLog(cfg / AUDIT_DB_NAME, key, allow_unencrypted=allow_plain)
     except AuditIntegrityError as e:
         raise AuditIntegrityError(
             f"{e}\n\n"
@@ -153,12 +162,12 @@ def init_app(config_dir: Path | None = None) -> AppContext:
     still works — just without retrieval of evicted context.
 
     Raises ``AuditIntegrityError`` if the audit log cannot be opened in a
-    trustworthy state; see ``_open_audit_log``.
+    trustworthy state; see ``open_audit_log``.
     """
     cfg = config_dir or default_config_dir()
     cfg.mkdir(parents=True, exist_ok=True)
 
-    audit_log = _open_audit_log(cfg)
+    audit_log = open_audit_log(cfg)
     set_audit_log(audit_log)
 
     registry = EngineRegistry(cfg / "registry.json")
@@ -352,6 +361,7 @@ def chat(
 
 __all__ = [
     "APP_NAME",
+    "AUDIT_DB_NAME",
     "UNENCRYPTED_ENV",
     "AppContext",
     "DEFAULT_ENGINE_ID",
@@ -360,5 +370,6 @@ __all__ = [
     "init_app",
     "list_engines",
     "list_models",
+    "open_audit_log",
     "select_engine",
 ]
