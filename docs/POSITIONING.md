@@ -31,14 +31,21 @@ about why.
 ## Why regulated / air-gapped deployments
 
 A cloud inference API cannot simultaneously offer all three of the following.
-Local-first execution with a tamper-evident audit log can.
+Local-first execution with a hash-chained audit log can.
 
 - **Data residency.** Request content never leaves infrastructure the operator
   controls. Air-gapped operation is a supported mode, not a workaround.
 - **Traceability after the fact.** Every model and KV-state operation is recorded
   — the trail a regulator or internal auditor asks for.
-- **Integrity of the trail.** The record is encrypted and tamper-evident, so its
-  integrity can be demonstrated rather than merely asserted.
+- **Integrity of the trail.** The record is encrypted at rest *and* each row is
+  SHA-256-chained to its predecessor, with the chain's head anchored outside the
+  database. Editing, deleting, reordering, or replacing the log is therefore
+  **detectable** (`AuditLog.verify()`), not merely discouraged — integrity can be
+  demonstrated on demand rather than asserted. The limits of that guarantee — an
+  attacker holding both the encryption key and keychain write access can forge
+  chain and anchor together — are stated in the audit-log threat model in
+  [SECURITY.md](../SECURITY.md), including a table of which attacker capabilities
+  are and are not detected.
 
 The regulatory anchor is the **EU AI Act** (Regulation (EU) 2024/1689). For
 high-risk systems (Annex III — which an autonomous tool-calling agent is a strong
@@ -46,7 +53,7 @@ candidate for), **Article 12** makes automatic, lifetime event logging a legal
 requirement, and **Article 26(6)** sets a minimum six-month retention. Article 12
 does not say *tamper-proof*, but a log that can be silently altered has little
 evidentiary value in an audit — which is exactly the gap an encrypted,
-tamper-evident trail addresses. Full references and caveats (including the moving
+hash-chained trail addresses. Full references and caveats (including the moving
 Digital Omnibus timeline and the not-yet-final technical standards) are in
 [SECURITY.md](../SECURITY.md).
 
@@ -227,12 +234,12 @@ even more favorable on-device than in the cloud. This is roadmap, not built.
 ## The honest summary
 
 - **What is real today:** the three-level abstraction, the context-memory layer,
-  the encrypted audit log, and a fully test-covered level-3 skeleton (streaming,
-  stateful sessions, continuous batching, server-side tool loop, shared-prefix
-  KV, KV persistence) — now backed by a **real `LlamaCppBackend` validated on
-  hardware** (0.4). The composition — several serving features over one position
-  substrate, under one contract, on cross-platform local hardware — exists and is
-  tested; that is the novel part.
+  the encrypted hash-chained audit log, and a fully test-covered level-3 skeleton
+  (streaming, stateful sessions, continuous batching, server-side tool loop,
+  shared-prefix KV, KV persistence) — now backed by a **real `LlamaCppBackend`
+  validated on hardware** (0.4). The composition — several serving features over
+  one position substrate, under one contract, on cross-platform local hardware —
+  exists and is tested; that is the novel part.
 - **What we have measured ourselves:** one result — the tool-loop vs re-prefill
   benchmark (2–7× on our first run, growing with avoided re-prefill work),
   measured CPU-only on a 1.5B model as a **mechanism sanity check**, not a
@@ -243,7 +250,8 @@ even more favorable on-device than in the cloud. This is roadmap, not built.
   point of the benchmarking phase.
 - **What we will not do:** claim a new inference primitive we did not build,
   publish a speedup we have not measured, quote a CPU sanity number as a headline
-  performance figure, or call the project compliant with a regulation it has not
-  been certified against. The scope honesty and the measurement discipline are
-  what make the composition claim credible — they are part of the product, not a
-  hedge against it.
+  performance figure, describe an integrity guarantee more strongly than the code
+  provides, or call the project compliant with a regulation it has not been
+  certified against. The scope honesty and the measurement discipline are what
+  make the composition claim credible — they are part of the product, not a hedge
+  against it.
