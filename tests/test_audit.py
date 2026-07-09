@@ -1,9 +1,8 @@
 """Tests for the audit subsystem."""
 from __future__ import annotations
 
-import sqlite3
-
 import pytest
+import sqlite3
 from palimpsests.audit import (
     GENESIS,
     AuditDenied,
@@ -171,7 +170,9 @@ def test_each_row_links_to_its_predecessor(tmp_path: Path) -> None:
         for i in range(4):
             log.record(operation="model.call", tool_name=f"c{i}", outcome="success")
         rows = _raw_rows(tmp_path / "a.db")
-        for prev_row, row in zip(rows, rows[1:], strict=True):
+        # Pairwise neighbours: the offset slice is deliberately one shorter,
+        # so strict=False is the intent, not an oversight.
+        for prev_row, row in zip(rows, rows[1:], strict=False):
             assert row[1] == prev_row[2]  # prev_hash == predecessor's row_hash
     finally:
         log.close()
@@ -278,7 +279,9 @@ def test_verify_detects_null_field_forgery(tmp_path: Path) -> None:
         log2.close()
 
 
-def test_verify_detects_wholesale_replacement(tmp_path: Path, _isolated_keychain) -> None:
+def test_verify_detects_wholesale_replacement(
+    tmp_path: Path, _isolated_keychain
+) -> None:
     """A rebuilt-from-scratch chain is internally valid but not *ours*.
 
     This is what the head anchor exists for: the attacker drops the table
