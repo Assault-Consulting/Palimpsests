@@ -7,9 +7,10 @@ project is built on a measurement discipline (see [BENCHMARKING.md](BENCHMARKING
 a number we have not produced on our own hardware is a **target**, not a result,
 and is labeled as such here.
 
-As of 0.4 there is exactly **one** number we have produced ourselves — the
-tool-loop vs re-prefill measurement below. Everything else in the performance
-section remains an external target. Keeping that line sharp is the point.
+Today there is exactly **one benchmark** we have run ourselves — the tool-loop vs
+re-prefill measurement below, now repeated across three environments. Everything
+else in the performance section remains an external target. Keeping that line
+sharp is the point.
 
 ---
 
@@ -113,54 +114,95 @@ glue.
 
 ---
 
-## What we have measured ourselves (0.4)
+## What we have measured ourselves
 
-One measurement exists so far, and it is the one the level's strongest claim
-rests on: **the server-side tool loop (N5) vs a re-prefill baseline.** In an
-agentic `generate → tool → continue` cycle, the tool loop keeps the shared prefix
-and growing conversation live in KV and feeds only each tool result; a stateless
-engine re-reads (re-prefills) the whole conversation every hop. Both arms of the
-benchmark decode the same content through the same backend, model, and sampling —
-the only variable is state control (see `benchmarks/bench_tool_loop.py`).
+One benchmark, run three times. It is the one the level's strongest claim rests
+on: **the server-side tool loop (N5) vs a re-prefill baseline.** In an agentic
+`generate → tool → continue` cycle, the tool loop keeps the shared prefix and the
+growing conversation live in KV and feeds only each tool result; a stateless
+engine re-reads (re-prefills) the whole conversation every hop. Both arms decode
+the same content through the same backend, model, and sampling — the only
+variable is state control (see `benchmarks/bench_tool_loop.py`). Expectations
+were pre-registered in writing before each run, per `BENCHMARKING.md` Rule 0.
 
-**First run — measured on our hardware:**
+### The three runs
 
-| config (nominal) | prefix tokens (measured) | tool loop | re-prefill | speedup |
+| config (nominal) | prefix (measured) | CPU · 1.5B | iGPU · 1.5B | iGPU · 7B |
 |---|---|---|---|---|
-| prefix=50, hops=1 (control) | 27 | 2.65 s | 2.86 s | **1.08×** |
-| prefix=500, hops=4 | 363 | 9.96 s | 21.37 s | **2.14×** |
-| prefix=2000, hops=8 | 1491 | 27.93 s | 130.37 s | **4.67×** |
-| prefix=4000, hops=12 | 2979 | 52.99 s | 382.90 s | **7.23×** |
+| prefix=50, hops=1 (control) | 27 | 1.08× | 1.00× | 0.99× |
+| prefix=500, hops=4 | 363 | 2.14× | 1.22× | 1.34× |
+| prefix=2000, hops=8 | 1491 | 4.67× | 2.13× | 2.46× |
+| prefix=4000, hops=12 | 2979 | 7.23× | 3.41× | 4.10× |
 
-5 repeats per arm per config, greedy sampling, `n_ctx=8192`. The full JSON blobs,
-the environment, and the pre-registered expectations are in
-`results/report.md`; reproduction steps are in `results/REPRODUCE.md`.
+Greedy sampling, `n_ctx=8192`, 5 repeats per arm (10 where a wide spread demanded
+a re-run). Full JSON, environments, and pre-registered expectations:
+`results/report.md` (CPU), `results/report-igpu-vulkan.md` (iGPU 1.5B),
+`results/report-igpu-7b.md` (iGPU 7B). Reproduction: `results/REPRODUCE.md`.
 
-**What this does and does not show — read before quoting it:**
+**Only the two iGPU columns are a controlled comparison.** They share a machine,
+a build, a pinned commit, and a virtualenv; the single changed variable is the
+model. The CPU column is an **earlier run in a different environment** (Docker /
+Debian / gcc, versus native Windows / MSVC / Vulkan), so its *within-run* speedups
+are valid but its absolute times are not directly comparable to the others.
 
-- **It is a mechanism sanity check, not a representative performance figure.**
-  The run was **CPU-only** (Docker, no GPU), on a **1.5B** model (Qwen2.5-1.5B
-  Q4_K_M). The *direction and shape* of the result are the finding; the absolute
-  magnitudes will differ on GPU and larger models. We are **not** claiming
-  "Palimpsests is 7× faster" as a headline — we are claiming the KV-reuse
-  mechanism works and scales the way the design predicted.
-- **The control behaved correctly.** At negligible prefix (27 tokens, 1 hop) the
-  arms are near-parity (1.08×), which is what an un-rigged harness must show — the
-  advantage only appears when there is a prefix worth not re-reading. This is the
-  check that the benchmark is measuring the mechanism and not an artifact.
-- **The win grows with the re-prefill work avoided.** The speedup tracks prefix
-  size × hop count — exactly the quantity the tool loop removes — and TTFT is
-  near-identical between arms in every config, confirming the gain comes from the
-  hop loop, not a first-fill asymmetry.
-- **Use the measured prefix, not the nominal label.** The filler heuristic
-  produces fewer tokens than the nominal name (e.g. "4000" is ~2979 measured), so
-  cite the measured column.
-- **A GPU / larger-model run is a separate, pending exercise.** It is the next
-  step, not part of this release.
+### What the numbers say
 
-This is the first of the numbers the performance targets below anticipate. The
-others — KV-persistence and shared-prefix speedups — remain **targets** until we
-measure them the same way.
+**The control behaves.** At a negligible prefix (27 tokens, one hop) the arms sit
+at parity — 1.00× and 0.99× on the two iGPU runs. An un-rigged harness must show
+this: with no prefix worth keeping, there is nothing for the tool loop to win.
+
+**The win is exactly the re-prefill work avoided — and the arithmetic closes.**
+If the mechanism is what we say it is, the treatment arm pays the prefill once
+while the baseline pays it on every hop. Then the saved wall time should equal
+*hops × TTFT*. On the 7B run:
+
+| config | baseline − tool loop | TTFT | ratio | hops |
+|---|---|---|---|---|
+| prefix=500, hops=4 | 6.21 s | 1.59 s | 3.9 | 4 |
+| prefix=2000, hops=8 | 56.86 s | 7.02 s | 8.1 | 8 |
+| prefix=4000, hops=12 | 197.79 s | 16.26 s | 12.2 | 12 |
+
+It lands within a few percent at every config, and the same check holds on the
+1.5B runs. TTFT medians are near-identical between arms throughout (16.26 s vs
+16.32 s at 4000/12), so the gain comes from the hop loop, not from any first-fill
+asymmetry. This is a stronger statement than "we are faster": the saved time is
+accounted for, not merely observed.
+
+**The speedup scales with the prefill cost being avoided.** Two independent axes,
+one cause:
+
+- *Faster prefill hardware lowers the coefficient.* Moving from CPU to the iGPU,
+  the baseline's per-hop penalty shrinks, and so does our advantage.
+- *A larger model raises it.* Prefill cost grows faster than decode cost with
+  model size, so at 7B the baseline pays more per hop — 1.34× / 2.46× / 4.10×
+  against 1.22× / 2.13× / 3.41× at 1.5B, on the same machine.
+
+Both were predicted in writing before the runs, and both held. Together they are
+the mechanism, measured from two directions.
+
+**In practical terms**, on the 7B agent loop (12 hops, ~3k-token prefix), the
+integrated GPU takes **4 min 22 s** re-prefilling and **1 min 4 s** with the tool
+loop.
+
+### What this does not show — read before quoting it
+
+- **This is an edge claim, not a server-class one.** The advantage is largest
+  where prefill is expensive relative to decode: commodity and integrated
+  hardware, larger models, longer prefixes. On datacenter accelerators with very
+  fast prefill it will compress further. We measured that direction rather than
+  guessing it, and we do not extend the claim past where we measured.
+- **It is a mechanism check, not a representative performance figure.** Every run
+  so far is on an **integrated** GPU or CPU, on Qwen2.5 Q4_K_M. A discrete-GPU
+  (CUDA) run is a separate, pending exercise. We do not present "7×" or "4×" as a
+  headline.
+- **Cite the measured prefix, not the nominal label.** The filler heuristic
+  produces fewer tokens than the config name suggests ("4000" is ~2979 measured).
+- **One soft number.** At 500/4 on the 1.5B iGPU run the two arms' ranges overlap
+  at 5 repeats, so its 1.22× is the least firm figure in the set. The same config
+  at 7B shows no overlap (18.11–19.38 s vs 23.22–25.64 s), and every other config
+  is tight.
+- **One benchmark, not a suite.** The KV-persistence and shared-prefix speedups
+  below remain **targets** until measured the same way.
 
 ---
 
@@ -236,22 +278,25 @@ even more favorable on-device than in the cloud. This is roadmap, not built.
 - **What is real today:** the three-level abstraction, the context-memory layer,
   the encrypted hash-chained audit log, and a fully test-covered level-3 skeleton
   (streaming, stateful sessions, continuous batching, server-side tool loop,
-  shared-prefix KV, KV persistence) — now backed by a **real `LlamaCppBackend`
-  validated on hardware** (0.4). The composition — several serving features over
-  one position substrate, under one contract, on cross-platform local hardware —
+  shared-prefix KV, KV persistence) — backed by a **real `LlamaCppBackend`
+  validated on hardware**. The composition — several serving features over one
+  position substrate, under one contract, on cross-platform local hardware —
   exists and is tested; that is the novel part.
-- **What we have measured ourselves:** one result — the tool-loop vs re-prefill
-  benchmark (2–7× on our first run, growing with avoided re-prefill work),
-  measured CPU-only on a 1.5B model as a **mechanism sanity check**, not a
-  representative performance figure. GPU and larger-model runs are pending.
+- **What we have measured ourselves:** one benchmark, three runs — the tool loop
+  against a re-prefill baseline, on CPU (1.5B) and an integrated GPU (1.5B and
+  7B). The advantage grows with the prefill cost avoided, the arithmetic accounts
+  for the saved time (*hops × TTFT*), and the control sits at parity. It is a
+  **mechanism check on edge-class hardware**, not a representative discrete-GPU
+  figure, and we do not extend it to server-class deployments.
 - **What is still a target:** the KV-persistence and shared-prefix numbers above.
   They come from external systems exercising the same mechanisms; reproducing them
   on our hardware, with a strong baseline (a tuned Ollama), is the continuing
   point of the benchmarking phase.
 - **What we will not do:** claim a new inference primitive we did not build,
-  publish a speedup we have not measured, quote a CPU sanity number as a headline
-  performance figure, describe an integrity guarantee more strongly than the code
-  provides, or call the project compliant with a regulation it has not been
-  certified against. The scope honesty and the measurement discipline are what
-  make the composition claim credible — they are part of the product, not a hedge
-  against it.
+  publish a speedup we have not measured, quote a sanity-check number as a
+  headline performance figure, extend a measured claim to hardware we have not
+  measured, describe an integrity guarantee more strongly than the code provides,
+  or call the project compliant with a regulation it has not been certified
+  against. The scope honesty and the measurement discipline are what make the
+  composition claim credible — they are part of the product, not a hedge against
+  it.
