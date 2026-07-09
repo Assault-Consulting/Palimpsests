@@ -42,10 +42,10 @@ evaluating Palimpsests in regulated or sensitive environments.
   dependency, no per-token cost to an external provider, and data residency on
   hardware you control.
 - **Encrypted, tamper-evident audit log.** Every model and KV-state operation is
-  recorded to an audit log backed by an encrypted store (SQLCipher, with the key
-  held in the OS keychain). The intent is an audit trail whose integrity can be
-  demonstrated after the fact — not merely application logs that live on mutable
-  infrastructure and can be silently altered.
+  recorded to an encrypted store (SQLCipher, key in the OS keychain), and each
+  record is cryptographically chained to its predecessor so that alteration is
+  *detectable*, not merely discouraged. The exact guarantee — and its limits —
+  is specified in [Audit-log threat model](#audit-log-threat-model) below.
 - **Capabilities are declared, not assumed.** Each engine advertises exactly
   what it supports (`engine.capabilities`), and memory options are validated
   (e.g. KV-cache quantization requires flash attention). Callers program against
@@ -57,12 +57,93 @@ evaluating Palimpsests in regulated or sensitive environments.
   It has **not** undergone any formal certification or conformity assessment
   (e.g. against a harmonized standard), and using it does not by itself make a
   deployment compliant with any regulation.
-- The audit log's tamper-evidence is a property of the design; it has **not**
-  been independently audited or penetration-tested. Treat it as a strong default
-  to build on, not a certified guarantee.
-- Encryption at rest protects the audit store; it does not protect against a
-  compromised host, a leaked keychain, or a malicious operator with local
-  privileges. Threat-model your deployment accordingly.
+- The audit log's tamper-evidence is implemented and tested (see below), but the
+  implementation has **not** been independently audited or penetration-tested.
+  Treat it as a strong default to build on, not a certified guarantee.
+- Encryption at rest protects the audit store's *contents*; the hash chain
+  protects its *integrity*. Neither protects against a compromised host or a
+  malicious operator who holds both the encryption key and write access to the
+  keychain. Threat-model your deployment accordingly.
+
+---
+
+## Audit-log threat model
+
+The audit log is the project's compliance surface, so its guarantees are stated
+precisely rather than by adjective. Two mechanisms, two different properties.
+
+### Confidentiality — encryption at rest
+
+The store is SQLCipher-encrypted with a 256-bit key held in the OS keychain
+(Keychain, Credential Manager, Secret Service). Without the key, the file's
+contents are not readable.
+
+If no native SQLCipher build is present, the log **refuses to open**. The
+operator may accept a plaintext log deliberately — `allow_unencrypted=True` in
+the API, or `PALIMPSESTS_ALLOW_UNENCRYPTED_AUDIT=1` for the CLI — but it is never
+a silent fallback. A plaintext log is still chained, so tampering remains
+evident; only confidentiality is given up.
+
+### Integrity — hash chain plus out-of-band anchor
+
+Encryption is not integrity. Anyone holding the key can open the database and
+rewrite rows. Two mechanisms make that detectable:
+
+1. **Hash chain.** Every row stores `prev_hash` (its predecessor's hash) and
+   `row_hash = SHA-256(prev_hash || canonical(row fields))`. The canonical
+   encoding is length-prefixed, so no field value can forge a record boundary,
+   and `NULL` encodes distinctly from the empty string. **Altering, deleting, or
+   reordering any row breaks the chain**, and `AuditLog.verify()` reports the
+   first row that fails.
+
+2. **Out-of-band head anchor.** A chain alone cannot detect *wholesale
+   replacement*: an attacker with the key can drop the table and build a fresh,
+   internally consistent chain. The chain's current head hash is therefore also
+   stored **outside the database**, in the OS keychain, refreshed as rows are
+   written and flushed on close. `verify()` compares the chain's head to the
+   anchor; a mismatch means the history was replaced.
+
+`verify()` returns a `VerifyResult` whose `head_anchored` flag states whether the
+replacement check actually ran. **A passing result with `head_anchored=False`
+means the chain is internally consistent but wholesale replacement would not have
+been detected** — for example on a headless host with no keychain. The flag
+exists so that a passing verification is never read as stronger than it is.
+
+### What an attacker can still do
+
+Stated plainly, because the boundary matters more than the mechanism:
+
+| Attacker capability | Detected? |
+|---|---|
+| Reads the database file, no key | Contents unreadable (encrypted) |
+| Edits, deletes, or reorders rows, holding the key | **Yes** — chain breaks |
+| Replaces the whole database with a valid fresh chain, holding the key | **Yes** — head anchor mismatch |
+| Holds the key **and** can write to the keychain | **No** — chain and anchor can be forged together |
+| Compromises the host before events are written | **No** — nothing unwritten can be attested |
+
+Detecting the fourth row requires committing the chain head somewhere outside the
+host's trust boundary — a remote append-only log, a notary, or a transparency
+log. **Palimpsests does not do this, and does not claim it.** What the anchor
+buys is that tampering must compromise two separate stores rather than one file.
+
+The fifth row is inherent to any local logging: a log can only attest to what
+reached it.
+
+### Residual weaknesses we know of
+
+Named here rather than discovered by someone else:
+
+- **Timestamps are process-supplied** (`datetime.now(UTC)` at write time). A
+  compromised process can write a truthful-looking chain with false times. The
+  chain proves *order and integrity*, not *wall-clock accuracy*.
+- **The anchor is refreshed every `anchor_every` rows** (default: every write).
+  If raised for performance, the most recent rows are chained but not yet
+  anchored until the next refresh or `close()`.
+- **No independent audit.** The implementation is tested — including tests that
+  tamper with the database file directly, bypassing the API — but has not been
+  reviewed by a third party.
+
+---
 
 ### Why these primitives map to regulated-sector needs
 
@@ -89,8 +170,9 @@ the results is a strong candidate for the high-risk (Annex III) classification:
 
 Notably, Article 12 does not use the word *tamper-proof* — but a log that can be
 silently altered, and whose integrity you cannot demonstrate on demand, has
-little evidentiary value in an audit. An encrypted, tamper-evident audit trail is
-aimed squarely at that gap.
+little evidentiary value in an audit. The hash chain and head anchor described
+above are aimed squarely at that gap: they let a deployer *demonstrate* integrity
+on demand rather than assert it.
 
 A few honest caveats on the regulatory picture, current as of mid-2026:
 

@@ -76,8 +76,9 @@ retrieval. At level 3 the same image applies to KV state.
   a process makes hundreds of calls in a loop, not one.
 - **Local-first, air-gap capable, auditable.** Inference runs on-host; nothing
   leaves the machine to answer a request. Every model and KV operation is
-  recorded to an encrypted, tamper-evident audit log. This is the sharp edge for
-  **regulated and sensitive deployments** — see **[Regulated / air-gapped
+  recorded to an encrypted audit log whose rows are **hash-chained**, so
+  alteration or deletion is detectable rather than silent. This is the sharp edge
+  for **regulated and sensitive deployments** — see **[Regulated / air-gapped
   deployments](#regulated--air-gapped-deployments)** below.
 - **Memory mechanisms, exposed not reinvented.** KV-cache quantization, flash
   attention, GPU offload, mmap trade-offs — surfaced as declared capabilities
@@ -107,7 +108,17 @@ it does not by itself make a deployment compliant. See
 
 ```bash
 pip install palimpsests                # base: level 1 (Ollama) + context-memory
+pip install "palimpsests[encryption]"  # + SQLCipher, to encrypt the audit log
 pip install "palimpsests[embeddings]"  # + numpy, for block-memory retrieval
+```
+
+**On the audit log.** It is always hash-chained; encryption at rest needs the
+`[encryption]` extra. Without a native SQLCipher build the log **refuses to
+open** rather than silently writing plaintext. If you accept a plaintext (still
+chained) log, say so explicitly:
+
+```bash
+export PALIMPSESTS_ALLOW_UNENCRYPTED_AUDIT=1
 ```
 
 Level 2 (llama.cpp) needs the `llama-server` binary on your `PATH` — Palimpsests
@@ -192,8 +203,18 @@ defense, healthcare, public sector.
   third-party call is needed to answer a request. Data residency on hardware you
   control.
 - **Encrypted, tamper-evident audit log** — every model and KV operation is
-  recorded to an encrypted store (SQLCipher, key in the OS keychain), so the
-  trail's integrity can be demonstrated, not merely asserted.
+  recorded to an encrypted store (SQLCipher, key in the OS keychain). Each row is
+  chained to its predecessor by SHA-256, and the chain's head is anchored outside
+  the database, so **editing, deleting, reordering, or wholesale-replacing the
+  log is detectable** — `AuditLog.verify()` reports the first row that fails.
+  Encryption gives confidentiality; the chain gives integrity.
+
+  The boundary is stated plainly rather than implied: an attacker holding *both*
+  the encryption key and write access to the keychain can forge the chain and its
+  anchor together. Catching that would need a commitment outside the host's trust
+  boundary (a remote append-only log, a notary, a transparency log), which
+  Palimpsests does not provide. The full threat model, including which attacker
+  capabilities are and are not detected, is in **[SECURITY.md](SECURITY.md)**.
 
 These map onto real obligations. The **EU AI Act** (Regulation (EU) 2024/1689)
 makes automatic, lifetime event logging a legal requirement for high-risk systems
@@ -203,11 +224,11 @@ classification. Article 12 does not say *tamper-proof*, but a silently-alterable
 log has little evidentiary value in an audit; a tamper-evident trail targets that
 gap.
 
-**This is not a compliance claim.** The project is not certified, the audit log
-has not been independently pen-tested, and the AI Act's own technical standards
-are not yet final. Full references, caveats, and the moving timeline are in
-**[SECURITY.md](SECURITY.md)**; the honest target-vs-measured performance picture
-is in **[docs/POSITIONING.md](docs/POSITIONING.md)**.
+**This is not a compliance claim.** The project is not certified, the audit log's
+implementation has not been independently pen-tested, and the AI Act's own
+technical standards are not yet final. Full references, caveats, and the moving
+timeline are in **[SECURITY.md](SECURITY.md)**; the honest target-vs-measured
+performance picture is in **[docs/POSITIONING.md](docs/POSITIONING.md)**.
 
 ---
 

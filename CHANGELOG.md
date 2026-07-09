@@ -6,6 +6,79 @@ aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 once it reaches v1.0. Before v1.0, minor versions may include breaking
 API changes.
 
+## [Unreleased] — 0.5.0
+
+The audit log becomes **genuinely** tamper-evident. Prior versions
+described it that way, but provided only encryption at rest and an
+append-only API surface: anyone holding the key could open the database
+and rewrite or delete rows leaving no trace. Encryption is
+confidentiality, not integrity. This release closes the gap between the
+claim and the code.
+
+### Added
+
+- **Hash-chained audit records.** Every row now carries `prev_hash` and
+  `row_hash = SHA-256(prev_hash || canonical(fields))`. Altering,
+  deleting, or reordering any row breaks the chain. The canonical
+  encoding is length-prefixed, so no field value can forge a record
+  boundary, and `NULL` encodes distinctly from the empty string.
+- **`AuditLog.verify()`** — walks the chain oldest-first and returns a
+  `VerifyResult` naming the first row whose recorded hash or predecessor
+  link fails.
+- **Out-of-band head anchor.** A chain alone cannot detect *wholesale
+  replacement* — an attacker with the key can rebuild a consistent chain
+  from scratch. The chain head is therefore also stored in the OS
+  keychain, refreshed every `anchor_every` rows (default: every write)
+  and flushed on `close()`. `verify()` compares chain head to anchor.
+- **`VerifyResult.head_anchored`** — states whether the replacement check
+  actually ran. A passing verification with `head_anchored=False` means
+  the chain is internally consistent but replacement would not have been
+  caught (for example, on a host with no keychain). The flag exists so a
+  passing result is never read as stronger than it is.
+- **`AuditIntegrityError`** — raised when the store cannot be opened in a
+  trustworthy state, distinct from a verification *result*.
+
+### Breaking
+
+- **A missing SQLCipher build no longer degrades silently to plaintext.**
+  Previously, if `sqlcipher3` (the optional `[encryption]` extra) was not
+  installed, the audit log accepted the encryption key, ignored it, and
+  wrote an unencrypted database. It now raises `AuditIntegrityError`.
+
+  To keep the previous behavior, choose it explicitly:
+
+  ```bash
+  pip install 'palimpsests[encryption]'      # preferred: actually encrypt
+  # or, accepting a plaintext audit log:
+  export PALIMPSESTS_ALLOW_UNENCRYPTED_AUDIT=1
+  ```
+
+  In the API, pass `AuditLog(..., allow_unencrypted=True)`. A plaintext
+  log is still hash-chained: tampering remains evident, only
+  confidentiality is given up.
+
+### Fixed
+
+- **A wrong encryption key now fails at open.** SQLCipher does not
+  validate `PRAGMA key` when it is set, so a wrong key previously sailed
+  past the constructor — and could initialize a *new* encrypted database
+  over what looked like an unreadable one. A sanity read now forces the
+  failure immediately.
+
+### Notes
+
+- **The honest boundary is documented, not implied.** An attacker holding
+  the encryption key *and* write access to the keychain can forge the
+  chain and its anchor together. Detecting that requires committing the
+  chain head outside the host's trust boundary — a remote append-only
+  log, a notary, a transparency log. Palimpsests does not do this and
+  does not claim it. See the audit-log threat model in `SECURITY.md`,
+  which also names the residual weaknesses (process-supplied timestamps,
+  the `anchor_every` window, no independent audit).
+- Tests for this work attack the database file directly with `sqlite3`,
+  bypassing `AuditLog` entirely — an attacker does not politely go
+  through a class whose API offers no mutation.
+
 ## [0.4.0] — 2026-07-08
 
 The **empirical half of level 3**: the real in-process backend now runs a
