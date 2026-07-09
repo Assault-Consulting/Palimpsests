@@ -204,6 +204,39 @@ def test_verify_passes_on_empty_log(tmp_path: Path) -> None:
         log.close()
 
 
+# ─── verification must not disturb what it inspects ──────────────────────
+
+
+def test_open_and_close_without_writing_leaves_anchor_alone(
+    tmp_path: Path, _isolated_keychain
+) -> None:
+    """A read-only session must not move the anchor.
+
+    Otherwise `audit verify` — which opens the log, checks it, and closes
+    — would re-anchor whatever chain is on disk, blessing a forged history
+    and destroying the very evidence it was asked to examine.
+    """
+    db = tmp_path / "a.db"
+    writer = AuditLog(db, generate_key(), allow_unencrypted=True)
+    writer.record(operation="model.call", tool_name="x", outcome="success")
+    writer.close()
+    anchored = _isolated_keychain["anchor"]
+    assert anchored is not None
+
+    # An attacker rewrites history. The anchor still names the real head.
+    conn = sqlite3.connect(str(db))
+    conn.execute("UPDATE audit_events SET outcome='denied' WHERE id=1")
+    conn.commit()
+    conn.close()
+
+    reader = AuditLog(db, generate_key(), allow_unencrypted=True)
+    assert not reader.verify().ok
+    reader.close()
+
+    # The evidence survives the inspection.
+    assert _isolated_keychain["anchor"] == anchored
+
+
 # ─── the chain actually catches tampering ────────────────────────────────
 
 
@@ -287,6 +320,10 @@ def test_verify_detects_wholesale_replacement(
     This is what the head anchor exists for: the attacker drops the table
     and writes a fresh, perfectly-chained history. Only the out-of-band
     anchor reveals that the head moved to something we never wrote.
+
+    The attacker is modelled as *not* holding keychain write access — the
+    boundary stated in SECURITY.md — so after the forged writes we restore
+    the anchor the legitimate process last stored.
     """
     db = tmp_path / "a.db"
     log = AuditLog(db, generate_key(), allow_unencrypted=True)
@@ -298,14 +335,11 @@ def test_verify_detects_wholesale_replacement(
     real_anchor = _isolated_keychain["anchor"]
     assert real_anchor is not None
 
-    # Attacker rebuilds a clean chain in a fresh database at the same path.
     db.unlink()
     forged = AuditLog(db, generate_key(), allow_unencrypted=True)
     forged.record(operation="model.call", tool_name="innocuous", outcome="success")
-    # ...and the forged log's close() would overwrite the anchor, so the
-    # attacker must not be allowed to touch it: restore what we really wrote.
-    forged._conn.close()  # close without the anchor flush in close()
-    _isolated_keychain["anchor"] = real_anchor
+    forged.close()
+    _isolated_keychain["anchor"] = real_anchor  # attacker cannot reach the keychain
 
     log2 = AuditLog(db, generate_key(), allow_unencrypted=True)
     try:
@@ -314,7 +348,7 @@ def test_verify_detects_wholesale_replacement(
         assert result.head_anchored
         assert result.reason and "replaced" in result.reason
     finally:
-        log2._conn.close()
+        log2.close()
 
 
 def test_verify_reports_when_anchor_unavailable(tmp_path: Path, monkeypatch) -> None:
