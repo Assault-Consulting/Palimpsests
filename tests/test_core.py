@@ -12,6 +12,7 @@ import json
 import pytest
 from palimpsests.audit import get_audit_log, set_audit_log
 from palimpsests.core import (
+    UNENCRYPTED_ENV,
     AppContext,
     chat,
     init_app,
@@ -27,6 +28,17 @@ BASE = "http://localhost:11434"
 
 def _ndjson(*objs: dict) -> bytes:
     return ("\n".join(json.dumps(o) for o in objs) + "\n").encode()
+
+
+@pytest.fixture(autouse=True)
+def _allow_plaintext_audit(monkeypatch):
+    """init_app refuses an unencrypted audit log unless told to.
+
+    CI runners have no native SQLCipher build, so the tests here that
+    build a real app context opt in explicitly. Stated in the test rather
+    than softening the production default, which stays fail-closed.
+    """
+    monkeypatch.setenv(UNENCRYPTED_ENV, "1")
 
 
 @pytest.fixture

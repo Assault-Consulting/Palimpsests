@@ -2,7 +2,8 @@
 
 The audit log is encrypted at rest. This module owns the single
 responsibility of producing and storing the symmetric key used for
-that encryption.
+that encryption, and — since v0.5 — the *head anchor* that makes the
+log's hash chain resistant to wholesale rewriting.
 
 Key lifecycle
 -------------
@@ -22,12 +23,36 @@ purpose-built secret store; delegating to it means we inherit the
 platform's protections (biometric unlock, per-app ACLs) instead of
 reinventing them badly.
 
+The head anchor
+---------------
+The audit log is a hash chain: each row commits to the previous one,
+so altering, deleting, or reordering any row breaks the chain and is
+detected by ``AuditLog.verify()``. A chain alone, however, does not
+detect *wholesale replacement*: an attacker holding the encryption key
+can drop the table and build a fresh, internally-consistent chain.
+
+To detect that, the current head hash is stored **outside the
+database**, in the same keychain that holds the encryption key. On
+verification the stored anchor is compared against the chain's actual
+head; a mismatch means the history was replaced.
+
+**Honest boundary.** This raises the bar; it does not make the log
+unforgeable. An attacker who holds the encryption key *and* can write
+to the keychain can rewrite both the chain and its anchor. Detecting
+that requires committing the head to a store outside the host's trust
+boundary (an append-only remote log, a notary, a transparency log),
+which Palimpsests does not do. What the anchor buys is that tampering
+must now compromise two separate stores rather than one file.
+
 Graceful degradation
 --------------------
 Headless Linux CI runners often have no Secret Service daemon. When
 the keychain is unavailable, callers may pass an explicit key (tests
-do exactly this). The module never silently falls back to an
-unencrypted or on-disk key — the caller must be explicit.
+do exactly this), and the head anchor is simply not maintained — in
+which case ``verify()`` reports ``head_anchored=False`` so the caller
+knows which guarantee was and was not in force. The module never
+silently falls back to an unencrypted or on-disk key — the caller must
+be explicit.
 """
 from __future__ import annotations
 
@@ -36,6 +61,7 @@ import secrets
 KEY_BYTES = 32  # 256-bit key
 SERVICE_NAME = "palimpsests-audit"
 KEY_USERNAME = "audit-db-key"
+ANCHOR_USERNAME = "audit-head-anchor"
 
 
 def generate_key() -> bytes:
@@ -75,3 +101,59 @@ def load_or_create_key() -> bytes:
     key = generate_key()
     keyring.set_password(SERVICE_NAME, KEY_USERNAME, key.hex())
     return key
+
+
+# ─── head anchor (tamper-evidence beyond the chain) ──────────────────────
+
+
+def store_head_anchor(head_hash: str) -> bool:
+    """Persist the chain's current head hash to the OS keychain.
+
+    Returns True if the anchor was stored, False if no keychain backend
+    is available. A False return is not an error: it means the anchor
+    guarantee is not in force, which ``verify()`` reports honestly
+    rather than papering over.
+    """
+    try:
+        import keyring
+    except ImportError:
+        return False
+
+    try:
+        keyring.set_password(SERVICE_NAME, ANCHOR_USERNAME, head_hash)
+    except Exception:  # backend-specific failures (no Secret Service, etc.)
+        return False
+    return True
+
+
+def load_head_anchor() -> str | None:
+    """Read the stored head hash, or None if absent/unavailable.
+
+    None is returned both when no keychain exists and when no anchor has
+    ever been written (a fresh log). Callers distinguish "never anchored"
+    from "anchor mismatch" — only the latter is evidence of tampering.
+    """
+    try:
+        import keyring
+    except ImportError:
+        return None
+
+    try:
+        return keyring.get_password(SERVICE_NAME, ANCHOR_USERNAME)
+    except Exception:
+        return None
+
+
+def clear_head_anchor() -> None:
+    """Remove the stored anchor. Used when starting a fresh log."""
+    try:
+        import keyring
+    except ImportError:
+        return
+
+    try:
+        keyring.delete_password(SERVICE_NAME, ANCHOR_USERNAME)
+    except Exception:
+        # Nothing stored, or no backend — either way there is nothing
+        # to clear and nothing to report.
+        return

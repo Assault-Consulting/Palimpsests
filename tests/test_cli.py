@@ -10,6 +10,7 @@ import json
 import pytest
 from palimpsests.audit import set_audit_log
 from palimpsests.cli import app
+from palimpsests.core import UNENCRYPTED_ENV
 from palimpsests.registry import set_registry
 from typer.testing import CliRunner
 
@@ -24,8 +25,16 @@ def _ndjson(*objs: dict) -> bytes:
 @pytest.fixture(autouse=True)
 def _tmp_config(tmp_path, monkeypatch):
     """Point every CLI run at a throwaway config dir, and reset the
-    singletons after so runs don't leak into each other."""
+    singletons after so runs don't leak into each other.
+
+    The audit log refuses to open unencrypted unless told to, and CI
+    runners have no native SQLCipher build — so the CLI, which builds a
+    real app context, needs the opt-in set explicitly. Saying it here
+    (rather than weakening the default) keeps the production posture
+    fail-closed.
+    """
     monkeypatch.setenv("PALIMPSESTS_CONFIG_DIR", str(tmp_path))
+    monkeypatch.setenv(UNENCRYPTED_ENV, "1")
     yield
     set_audit_log(None)
     set_registry(None)
