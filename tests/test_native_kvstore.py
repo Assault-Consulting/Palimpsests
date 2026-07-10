@@ -7,6 +7,11 @@ real N6 primitive: a session's save_state blob, put under its tokens, is
 fetched by a second session with the same tokens and load_state'd — and
 that session then resumes without re-prefilling the restored context.
 
+The blob is framed (see ``session.py``): magic, version, n_past, payload
+length, payload. The store treats it as opaque bytes; only the position
+read below reaches into the frame, and it does so through the same offset
+the module documents.
+
 FakeBackend is defined inline to keep the import block simple, matching
 the other native test files.
 """
@@ -21,6 +26,11 @@ from palimpsests.providers.native.kvstore import (
 )
 from palimpsests.providers.native.scheduler import Scheduler
 from palimpsests.providers.native.session import NativeSession
+
+
+def _n_past_of(blob: bytes) -> int:
+    """Read the position out of a framed state blob (magic 6 + version 2)."""
+    return int.from_bytes(blob[8:12], "big")
 
 
 class StateFakeBackend:
@@ -190,8 +200,9 @@ def test_saved_state_is_reusable_by_content():
     warm = _session(backend)
     warm_tokens = backend.tokenize("a shared context prefix")
     list(warm.send("a shared context prefix"))
-    saved_n_past = int.from_bytes(warm.save_state()[:4], "big")
-    store.put(warm_tokens, warm.save_state())
+    saved = warm.save_state()
+    saved_n_past = _n_past_of(saved)
+    store.put(warm_tokens, saved)
 
     # Session B, about to use the same context, finds it in the store.
     blob = store.get(warm_tokens)
@@ -203,6 +214,22 @@ def test_saved_state_is_reusable_by_content():
     list(restored.send("q"))
     # B resumes at the saved position — the cached KV was reused, not rebuilt
     assert backend.decodes[mark][1] == saved_n_past
+
+
+def test_stored_blob_round_trips_unchanged():
+    """The store must not touch the frame it holds.
+
+    A content-addressed cache that silently rewrote its payload would
+    hand load_state a blob whose header no longer matched its bytes.
+    """
+    backend = StateFakeBackend(eos=0, script={0: [5, 0]})
+    store = InMemoryKVStore()
+    sess = _session(backend)
+    list(sess.send("x"))
+    saved = sess.save_state()
+
+    store.put([1, 2, 3], saved)
+    assert store.get([1, 2, 3]) == saved
 
 
 def test_cache_miss_leaves_store_untouched():

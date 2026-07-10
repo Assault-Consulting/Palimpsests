@@ -1,10 +1,15 @@
 """Tests for session KV persistence (N6).
 
 Proves save_state / load_state on the fake backend: save returns a
-self-contained blob (an n_past header plus the backend's KV bytes); load
-restores the backend state and the position, so a restored session
-resumes from where it was frozen without re-prefilling. A round trip
-reproduces the saved position.
+self-contained, framed blob (magic + version + n_past + payload length +
+the backend's KV bytes); load validates the frame, restores the backend
+state and the position, so a restored session resumes from where it was
+frozen without re-prefilling.
+
+The frame exists because load_state's payload reaches a C parser in the
+real backend. The rejection tests below therefore matter as much as the
+round-trip ones: each proves a malformed blob dies in Python, before any
+byte crosses that line.
 
 FakeBackend is defined inline to keep the import block simple, matching
 the other native test files.
@@ -15,7 +20,16 @@ import pytest
 from collections.abc import Sequence
 from palimpsests.providers.native.backend import BatchEntry, Token
 from palimpsests.providers.native.scheduler import Scheduler
-from palimpsests.providers.native.session import NativeSession
+from palimpsests.providers.native.session import (
+    NativeSession,
+    StateBlobError,
+)
+
+# Frame layout, mirrored here so a silent change to the module's constants
+# breaks these tests rather than sliding past them.
+_MAGIC = b"PALKV1"
+_HEADER_LEN = 20
+_PAYLOAD_OFFSET = _HEADER_LEN
 
 
 class StateFakeBackend:
@@ -24,7 +38,7 @@ class StateFakeBackend:
     ``state_get`` returns a bytes blob unique to the sequence's current
     decode count (so distinct histories serialize distinctly);
     ``state_set`` records what was restored. Enough to prove the session
-    packs/unpacks n_past and routes bytes through the backend.
+    packs/unpacks the frame and routes bytes through the backend.
     """
 
     def __init__(
@@ -94,18 +108,26 @@ def _session(backend: StateFakeBackend, **kwargs) -> NativeSession:
     return NativeSession(backend, Scheduler(backend, max_active=1), **kwargs)
 
 
-# ─── save_state returns a self-contained blob with the position ───────────
+def _n_past_of(blob: bytes) -> int:
+    """Read the position out of a framed blob (magic 6 + version 2)."""
+    return int.from_bytes(blob[8:12], "big")
 
 
-def test_save_state_packs_n_past_header():
+# ─── save_state returns a self-contained, framed blob ────────────────────
+
+
+def test_save_state_frames_the_blob():
     backend = StateFakeBackend(eos=0, script={0: [5, 0]})
     sess = _session(backend)
     list(sess.send("hello there"))  # advances n_past past the fed tokens
     blob = sess.save_state()
-    # first 4 bytes are the big-endian n_past; the rest is the KV payload
-    n_past = int.from_bytes(blob[:4], "big")
-    assert n_past > 0
-    assert blob[4:].startswith(b"KV")
+
+    assert blob[:6] == _MAGIC
+    assert int.from_bytes(blob[6:8], "big") == 1  # version
+    assert _n_past_of(blob) > 0
+    declared = int.from_bytes(blob[12:20], "big")
+    assert declared == len(blob) - _HEADER_LEN
+    assert blob[_PAYLOAD_OFFSET:].startswith(b"KV")
 
 
 # ─── load_state restores the backend state and the position ───────────────
@@ -116,7 +138,7 @@ def test_load_state_restores_backend_and_position():
     sess = _session(backend)
     list(sess.send("some context to build up state"))
     saved = sess.save_state()
-    saved_n_past = int.from_bytes(saved[:4], "big")
+    saved_n_past = _n_past_of(saved)
 
     # A fresh session on the same backend, restored from the blob.
     restored = _session(backend)
@@ -124,7 +146,7 @@ def test_load_state_restores_backend_and_position():
     # the backend received the KV payload (without the header)
     assert backend.set_calls
     _seq, payload = backend.set_calls[-1]
-    assert payload == saved[4:]
+    assert payload == saved[_PAYLOAD_OFFSET:]
     # and the restored slot resumes at the saved position
     assert restored._scheduler.slot_n_past(restored.seq_id) == saved_n_past
 
@@ -137,7 +159,7 @@ def test_restored_session_resumes_without_reprefill():
     sess = _session(backend)
     list(sess.send("a reasonably long first user turn"))
     saved = sess.save_state()
-    saved_n_past = int.from_bytes(saved[:4], "big")
+    saved_n_past = _n_past_of(saved)
 
     restored = _session(backend)
     restored.load_state(saved)
@@ -149,14 +171,106 @@ def test_restored_session_resumes_without_reprefill():
     assert first_after[1] == saved_n_past
 
 
-# ─── errors ───────────────────────────────────────────────────────────────
+# ─── the frame rejects malformed blobs before they reach the backend ──────
+
+# Each of these would, in the real backend, otherwise be handed to
+# llama_state_seq_set_data. The assertion that `set_calls` stayed empty is
+# the point of the test, not an extra.
 
 
-def test_load_state_rejects_truncated_blob():
+def test_load_state_rejects_blob_shorter_than_the_header():
     backend = StateFakeBackend()
     sess = _session(backend)
-    with pytest.raises(ValueError):
-        sess.load_state(b"\x00")  # shorter than the 4-byte header
+    with pytest.raises(StateBlobError, match="too short"):
+        sess.load_state(b"\x00")
+    assert backend.set_calls == []
+
+
+def test_load_state_rejects_foreign_bytes():
+    """Bytes that are simply not ours — the case the old check let through."""
+    backend = StateFakeBackend()
+    sess = _session(backend)
+    with pytest.raises(StateBlobError, match="magic"):
+        sess.load_state(b"\x00" * 64)
+    assert backend.set_calls == []
+
+
+def test_load_state_rejects_unknown_version():
+    backend = StateFakeBackend(eos=0, script={0: [5, 0]})
+    sess = _session(backend)
+    list(sess.send("x"))
+    blob = bytearray(sess.save_state())
+    blob[6:8] = (99).to_bytes(2, "big")
+
+    other = _session(backend)
+    with pytest.raises(StateBlobError, match="version"):
+        other.load_state(bytes(blob))
+    assert backend.set_calls == []
+
+
+def test_load_state_rejects_truncated_payload():
+    """A short read leaves a valid header over a partial payload."""
+    backend = StateFakeBackend(eos=0, script={0: [5, 0]})
+    sess = _session(backend)
+    list(sess.send("x"))
+    blob = sess.save_state()
+
+    other = _session(backend)
+    with pytest.raises(StateBlobError, match="length mismatch"):
+        other.load_state(blob[:-1])
+    assert backend.set_calls == []
+
+
+def test_load_state_rejects_appended_bytes():
+    """Trailing garbage is as wrong as a missing tail, and as invisible
+    to a minimum-length check."""
+    backend = StateFakeBackend(eos=0, script={0: [5, 0]})
+    sess = _session(backend)
+    list(sess.send("x"))
+    blob = sess.save_state()
+
+    other = _session(backend)
+    with pytest.raises(StateBlobError, match="length mismatch"):
+        other.load_state(blob + b"\xff\xff")
+    assert backend.set_calls == []
+
+
+def test_load_state_rejects_empty_payload():
+    header = (
+        _MAGIC
+        + (1).to_bytes(2, "big")
+        + (0).to_bytes(4, "big")
+        + (0).to_bytes(8, "big")
+    )
+    backend = StateFakeBackend()
+    sess = _session(backend)
+    with pytest.raises(StateBlobError, match="no KV payload"):
+        sess.load_state(header)
+    assert backend.set_calls == []
+
+
+def test_load_state_rejects_implausible_position():
+    payload = b"KV\x00\x00"
+    blob = (
+        _MAGIC
+        + (1).to_bytes(2, "big")
+        + (0xFFFFFFFF).to_bytes(4, "big")  # n_past far past any context
+        + len(payload).to_bytes(8, "big")
+        + payload
+    )
+    backend = StateFakeBackend()
+    sess = _session(backend)
+    with pytest.raises(StateBlobError, match="implausible position"):
+        sess.load_state(blob)
+    assert backend.set_calls == []
+
+
+def test_state_blob_error_is_a_value_error():
+    """Existing callers catching ValueError keep working."""
+    assert issubclass(StateBlobError, ValueError)
+
+
+# ─── lifecycle ────────────────────────────────────────────────────────────
 
 
 def test_save_state_after_close_raises():
@@ -165,3 +279,13 @@ def test_save_state_after_close_raises():
     sess.close()
     with pytest.raises(RuntimeError):
         sess.save_state()
+
+
+def test_load_state_after_close_raises():
+    backend = StateFakeBackend(eos=0, script={0: [5, 0]})
+    sess = _session(backend)
+    list(sess.send("x"))
+    blob = sess.save_state()
+    sess.close()
+    with pytest.raises(RuntimeError):
+        sess.load_state(blob)

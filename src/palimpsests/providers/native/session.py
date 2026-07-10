@@ -28,10 +28,40 @@ tokenized here and prepended on the first turn, as before.
 
 **KV persistence (N6).** ``save_state`` serializes this session's KV to
 bytes; ``load_state`` restores it. The position (``n_past``) is packed
-into the bytes alongside the backend state, so a restored session resumes
-without re-prefilling. This is the per-session primitive; a
+into a framed header alongside the backend state, so a restored session
+resumes without re-prefilling. This is the per-session primitive; a
 content-addressed store that reuses saved states by content is a layer
 above (N6b).
+
+The state blob's frame
+----------------------
+``load_state`` hands its payload to the backend, which — for the real
+``LlamaCppBackend`` — passes those bytes to ``llama_state_seq_set_data``,
+a **C parser**. Anything malformed reaching it is undefined behavior in a
+native library, not a Python exception. So the blob is framed and
+validated on our side of that line::
+
+    offset  size  field
+    0       6     magic       b"PALKV1"
+    6       2     version     uint16, big-endian
+    8       4     n_past      uint32, big-endian
+    12      8     payload_len uint64, big-endian
+    20      ...   payload     the backend's opaque KV bytes
+
+``load_state`` rejects a blob whose magic, version, or declared payload
+length does not match before a single byte crosses into the backend. The
+length field is what catches truncation and appended garbage — the two
+failure modes a bare "is it at least 4 bytes long?" check let straight
+through.
+
+**This is validation, not authentication.** It detects corruption, format
+confusion, truncation, and version skew. It does **not** detect a *forged*
+blob: an attacker who can hand you bytes can also compute a correct header
+for them. Authenticating a blob requires a MAC over it (HMAC-SHA256 under
+a keychain-derived key), which lands together with the disk-backed KV
+store — the point at which blobs first come from outside this process.
+Until then: **do not pass ``load_state`` a blob you did not produce.** See
+`SECURITY.md`, "Accepted risks".
 """
 from __future__ import annotations
 
@@ -43,8 +73,37 @@ from palimpsests.providers.native.scheduler import Scheduler, TurnRequest
 # Default per-turn generation cap, mirroring the engine's stateless path.
 _DEFAULT_MAX_TOKENS = 512
 
-# Width in bytes of the n_past header packed in front of the KV state.
-_N_PAST_HEADER = 4
+# ─── state-blob frame ─────────────────────────────────────────────────────
+
+#: Identifies a Palimpsests KV state blob. The trailing digit is the frame
+#: *generation*: if the layout below ever changes shape (not merely its
+#: version field), the magic changes too, so an old reader rejects a new
+#: blob outright rather than misparsing it.
+_MAGIC = b"PALKV1"
+
+#: Frame version. Bumped for compatible layout changes within generation 1.
+_FORMAT_VERSION = 1
+
+_MAGIC_LEN = len(_MAGIC)
+_VERSION_LEN = 2
+_N_PAST_LEN = 4
+_PAYLOAD_LEN_LEN = 8
+_HEADER_LEN = _MAGIC_LEN + _VERSION_LEN + _N_PAST_LEN + _PAYLOAD_LEN_LEN  # 20
+
+#: Sanity ceiling on the restored position. Not a security boundary — a
+#: forged blob can name any position under it — but a position beyond any
+#: plausible context length means the bytes are not what they claim, and
+#: saying so here is cheaper than discovering it inside llama.cpp.
+_MAX_N_PAST = 1 << 24
+
+
+class StateBlobError(ValueError):
+    """A state blob failed frame validation and was not passed to the backend.
+
+    A subclass of ``ValueError`` so existing callers that catch that keep
+    working, and distinguishable for callers that want to tell a malformed
+    blob apart from any other bad argument.
+    """
 
 
 class NativeSession:
@@ -171,31 +230,86 @@ class NativeSession:
         yield from self._stream_turn()
 
     def save_state(self) -> bytes:
-        """Serialize this session's KV to bytes (N6).
+        """Serialize this session's KV to a framed, self-contained blob (N6).
 
-        The slot's KV bytes with a small header carrying ``n_past`` (the
-        position), so a restore knows where to resume. Self-contained: the
-        returned bytes are everything ``load_state`` needs.
+        Layout is documented at the top of this module. The frame lets
+        ``load_state`` reject anything that is not one of ours *before* the
+        payload reaches a C parser.
         """
         self._ensure_open()
         n_past = self._scheduler.slot_n_past(self._seq_id)
-        state = self._scheduler.save_slot_state(self._seq_id)
-        header = n_past.to_bytes(_N_PAST_HEADER, "big")
-        return header + state
+        payload = self._scheduler.save_slot_state(self._seq_id)
+        return b"".join(
+            (
+                _MAGIC,
+                _FORMAT_VERSION.to_bytes(_VERSION_LEN, "big"),
+                n_past.to_bytes(_N_PAST_LEN, "big"),
+                len(payload).to_bytes(_PAYLOAD_LEN_LEN, "big"),
+                payload,
+            )
+        )
 
     def load_state(self, state: bytes) -> None:
         """Restore this session's KV from bytes produced by ``save_state``.
 
-        Unpacks the ``n_past`` header, restores the backend KV, and sets
-        the slot's position so the next turn resumes without re-prefilling
-        the restored context.
+        Validates the frame, then restores the backend KV and sets the
+        slot's position so the next turn resumes without re-prefilling the
+        restored context.
+
+        Every check below happens **before** the payload is handed to the
+        backend, because for the real backend that hand-off crosses into
+        llama.cpp's C state parser, where a malformed blob is undefined
+        behavior rather than an exception.
+
+        Raises ``StateBlobError`` (a ``ValueError``) on a blob that is
+        truncated, over-long, not ours, of an unknown version, empty, or
+        that claims an implausible position.
+
+        Validation is not authentication: a blob you did not produce can
+        carry a perfectly valid frame. See the module docstring.
         """
         self._ensure_open()
-        if len(state) < _N_PAST_HEADER:
-            raise ValueError("state blob too short to contain an n_past header")
-        n_past = int.from_bytes(state[:_N_PAST_HEADER], "big")
-        payload = state[_N_PAST_HEADER:]
-        self._scheduler.load_slot_state(self._seq_id, payload, n_past)
+
+        if len(state) < _HEADER_LEN:
+            raise StateBlobError(
+                f"state blob too short: {len(state)} bytes, "
+                f"header alone is {_HEADER_LEN}"
+            )
+
+        if state[:_MAGIC_LEN] != _MAGIC:
+            raise StateBlobError("state blob has no Palimpsests KV frame magic")
+
+        cursor = _MAGIC_LEN
+        version = int.from_bytes(state[cursor : cursor + _VERSION_LEN], "big")
+        if version != _FORMAT_VERSION:
+            raise StateBlobError(
+                f"unsupported state blob version {version}; "
+                f"this build reads version {_FORMAT_VERSION}"
+            )
+        cursor += _VERSION_LEN
+
+        n_past = int.from_bytes(state[cursor : cursor + _N_PAST_LEN], "big")
+        cursor += _N_PAST_LEN
+
+        declared = int.from_bytes(state[cursor : cursor + _PAYLOAD_LEN_LEN], "big")
+        cursor += _PAYLOAD_LEN_LEN
+
+        actual = len(state) - _HEADER_LEN
+        if declared != actual:
+            # Catches both truncation and appended bytes — the two shapes a
+            # bare minimum-length check waves through.
+            raise StateBlobError(
+                f"state blob payload length mismatch: header declares "
+                f"{declared} bytes, blob carries {actual}"
+            )
+        if declared == 0:
+            raise StateBlobError("state blob carries no KV payload")
+        if n_past > _MAX_N_PAST:
+            raise StateBlobError(
+                f"state blob claims an implausible position: n_past={n_past}"
+            )
+
+        self._scheduler.load_slot_state(self._seq_id, state[cursor:], n_past)
 
     def close(self) -> None:
         """Release the held slot and its KV. Idempotent."""
