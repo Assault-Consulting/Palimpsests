@@ -361,7 +361,7 @@ def test_verify_reports_when_anchor_unavailable(tmp_path: Path, monkeypatch) -> 
     log = AuditLog(db, generate_key(), allow_unencrypted=True)
     try:
         log.record(operation="model.call", tool_name="x", outcome="success")
-        monkeypatch.setattr("palimpsests.audit.log.load_head_anchor", lambda: None)
+        monkeypatch.setattr("palimpsests.audit.log.load_head_anchor", lambda *, scope="": None)
         result = log.verify()
         assert result.ok
         assert not result.head_anchored
@@ -501,3 +501,120 @@ def test_singleton_get_set(audit_log: AuditLog) -> None:
 def test_singleton_defaults_none() -> None:
     set_audit_log(None)
     assert get_audit_log() is None
+
+
+# ─── v0.4.1 hardening: scoped anchors, lag diagnosis, clipped errors ─────
+
+
+def test_two_logs_do_not_clobber_each_others_anchor(
+    tmp_path: Path, _isolated_keychain
+) -> None:
+    """Anchors are per-database: a second log on the same machine must
+    not overwrite the first log's anchor (which would make the first,
+    honest log verify as "replaced")."""
+    log_a = AuditLog(tmp_path / "a.db", generate_key(), allow_unencrypted=True)
+    log_b = AuditLog(tmp_path / "b.db", generate_key(), allow_unencrypted=True)
+    try:
+        log_a.record(operation="model.call", tool_name="ta", outcome="success")
+        log_b.record(operation="model.call", tool_name="tb", outcome="success")
+        log_b.record(operation="model.call", tool_name="tb", outcome="success")
+
+        result_a = log_a.verify()
+        result_b = log_b.verify()
+        assert result_a.ok and result_a.head_anchored
+        assert result_b.ok and result_b.head_anchored
+    finally:
+        log_a.close()
+        log_b.close()
+
+
+def test_verify_diagnoses_unanchored_tail_as_lag_not_replacement(
+    tmp_path: Path, _isolated_keychain
+) -> None:
+    """A stale anchor that names a row inside the chain is an unanchored
+    tail (crash between commit and anchoring), not a replacement. Still
+    not ok — but the reason and anchor_lag must say which case it is."""
+    log = AuditLog(tmp_path / "a.db", generate_key(), allow_unencrypted=True)
+    try:
+        log.record(operation="model.call", tool_name="t", outcome="success")
+        # Freeze the anchor at row 1, then append two rows the "keychain"
+        # never sees — simulating a crash window / keychain outage.
+        scope = log._anchor_scope
+        frozen = _isolated_keychain[scope]
+        log.record(operation="model.call", tool_name="t", outcome="success")
+        log.record(operation="model.call", tool_name="t", outcome="success")
+        _isolated_keychain[scope] = frozen
+
+        result = log.verify()
+        assert not result.ok
+        assert result.head_anchored
+        assert result.anchor_lag == 2
+        assert "unanchored tail" in (result.reason or "")
+    finally:
+        log._last_written = None  # close() must not re-anchor over the frozen value
+        log.close()
+
+
+def test_verify_diagnoses_foreign_anchor_as_replacement(
+    tmp_path: Path, _isolated_keychain
+) -> None:
+    """An anchor that names no row in the chain means this is not the
+    history that was anchored: replacement/rollback, anchor_lag=None."""
+    log = AuditLog(tmp_path / "a.db", generate_key(), allow_unencrypted=True)
+    try:
+        log.record(operation="model.call", tool_name="t", outcome="success")
+        _isolated_keychain[log._anchor_scope] = "f" * 64
+
+        result = log.verify()
+        assert not result.ok
+        assert result.head_anchored
+        assert result.anchor_lag is None
+        assert "replaced" in (result.reason or "")
+    finally:
+        log._last_written = None
+        log.close()
+
+
+def test_anchor_failures_are_counted_not_silent(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """When the keychain rejects the anchor write, the row must still be
+    chained, and the failure must be visible on anchor_failures."""
+    log = AuditLog(tmp_path / "a.db", generate_key(), allow_unencrypted=True)
+    try:
+        monkeypatch.setattr(
+            "palimpsests.audit.log.store_head_anchor",
+            lambda head_hash, *, scope="": False,
+        )
+        log.record(operation="model.call", tool_name="t", outcome="success")
+        log.record(operation="model.call", tool_name="t", outcome="success")
+        assert log.anchor_failures == 2
+        assert log.verify().rows_checked == 2  # rows landed regardless
+    finally:
+        log._last_written = None
+        log.close()
+
+
+def test_error_messages_are_clipped(tmp_path: Path) -> None:
+    """Exception text from other libraries can embed URLs-with-tokens or
+    payload fragments; the log stores at most _ERROR_CLIP characters."""
+    from palimpsests.audit.log import _ERROR_CLIP, audited
+
+    log = AuditLog(tmp_path / "a.db", generate_key(), allow_unencrypted=True)
+    set_audit_log(log)
+    try:
+
+        @audited("model.call")
+        def boom() -> dict:
+            raise ValueError("x" * 10_000)
+
+        with pytest.raises(ValueError):
+            boom()
+
+        (event,) = log.recent(limit=1)
+        assert event.outcome == "error"
+        assert event.error_message is not None
+        assert len(event.error_message) <= _ERROR_CLIP
+    finally:
+        set_audit_log(None)
+        log.close()
