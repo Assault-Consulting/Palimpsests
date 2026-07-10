@@ -166,7 +166,7 @@ def test_audit_verify_detects_tampering(tmp_path):
 def test_audit_verify_without_anchor_is_partial(tmp_path, monkeypatch):
     """Chain intact, anchor unavailable: not success, not tampering."""
     _seed_log(tmp_path)
-    monkeypatch.setattr("palimpsests.audit.log.load_head_anchor", lambda: None)
+    monkeypatch.setattr("palimpsests.audit.log.load_head_anchor", lambda *, scope="": None)
 
     result = runner.invoke(app, ["audit", "verify"])
     assert result.exit_code == 2
@@ -177,7 +177,7 @@ def test_audit_verify_without_anchor_is_partial(tmp_path, monkeypatch):
 def test_audit_verify_require_anchor_makes_partial_a_failure(tmp_path, monkeypatch):
     """--require-anchor is the strict gate: a partial pass becomes a failure."""
     _seed_log(tmp_path)
-    monkeypatch.setattr("palimpsests.audit.log.load_head_anchor", lambda: None)
+    monkeypatch.setattr("palimpsests.audit.log.load_head_anchor", lambda *, scope="": None)
 
     result = runner.invoke(app, ["audit", "verify", "--require-anchor"])
     assert result.exit_code == 1

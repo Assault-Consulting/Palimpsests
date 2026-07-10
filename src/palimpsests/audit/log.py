@@ -81,14 +81,34 @@ from __future__ import annotations
 
 import functools
 import hashlib
+import logging
+import os
 import sqlite3
 import threading
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from palimpsests.audit.key_manager import load_head_anchor, store_head_anchor
+from palimpsests.audit.key_manager import (
+    anchor_scope,
+    load_head_anchor,
+    store_head_anchor,
+)
 from pathlib import Path
 from typing import TypeVar
+
+logger = logging.getLogger("palimpsests.audit")
+
+#: Longest error text stored in a row. Exception messages are written by
+#: other libraries and can embed request URLs (with tokens), file paths,
+#: or fragments of the payload that raised — none of which belongs in a
+#: log that promises "metadata only". Clipping does not sanitize, but it
+#: bounds the exposure and keeps rows reviewable.
+_ERROR_CLIP = 200
+
+
+def _clip(text: str, limit: int = _ERROR_CLIP) -> str:
+    """Truncate ``text`` to ``limit`` chars, marking the cut."""
+    return text if len(text) <= limit else text[: limit - 1] + "\u2026"
 
 #: The chain's fixed starting point. The first row's ``prev_hash``.
 #: A constant (not a random nonce) so a fresh log is reproducible and a
@@ -147,6 +167,13 @@ class VerifyResult:
     #: The id of the first row whose hash did not match, if any.
     first_bad_row: int | None = None
     reason: str | None = None
+    #: When the head does not match the anchor but the anchor IS one of
+    #: the chain's row hashes: how many rows sit after the anchored head.
+    #: This distinguishes an *unanchored tail* (a crash between commit
+    #: and anchoring, or rows appended without keychain access) from a
+    #: *replacement/rollback*, where the anchor appears nowhere in the
+    #: chain. None when that distinction does not apply.
+    anchor_lag: int | None = None
 
 
 _SCHEMA = """
@@ -256,6 +283,14 @@ class AuditLog:
         self._lock = threading.Lock()
         self._anchor_every = anchor_every
         self._since_anchor = 0
+        # Anchors are scoped to this database's path, so two logs on one
+        # machine never overwrite each other's anchor (which would make an
+        # honest log verify as "replaced" — and bury a real alarm in noise).
+        self._anchor_scope = anchor_scope(self._path)
+        #: Failed anchor writes since open. Exposed so operators can see
+        #: that rows were chained but not anchored (see anchor_failures).
+        self._anchor_failures = 0
+        self._anchor_warned = False
         # The hash of the last row *this process* appended. None means we
         # have written nothing, and therefore have nothing to anchor: see
         # close(). Read-only use must not move the anchor.
@@ -263,6 +298,13 @@ class AuditLog:
         self._conn = self._connect(key, allow_unencrypted=allow_unencrypted)
         self._conn.executescript(_SCHEMA)
         self._conn.commit()
+        # Best-effort owner-only permissions. Matters most for the
+        # explicitly-permitted plaintext path; harmless elsewhere. Windows
+        # ACLs don't map onto POSIX bits — failure is not an error.
+        try:
+            os.chmod(self._path, 0o600)
+        except OSError:
+            pass
 
     def _connect(self, key: bytes, *, allow_unencrypted: bool) -> sqlite3.Connection:
         """Open an encrypted connection, or fail loudly.
@@ -324,7 +366,15 @@ class AuditLog:
         data_class: str = "internal",
         error_message: str | None = None,
     ) -> None:
-        """Append one event, extending the hash chain. Timestamped in UTC."""
+        """Append one event, extending the hash chain. Timestamped in UTC.
+
+        ``error_message`` is clipped to ``_ERROR_CLIP`` chars *before*
+        hashing, so the stored text and the chained text are the same
+        bytes regardless of whether the caller went through the
+        ``@audited`` decorator or called ``record`` directly.
+        """
+        if error_message is not None:
+            error_message = _clip(error_message)
         ts = datetime.now(UTC).isoformat()
         with self._lock:
             prev = self._head_hash_locked()
@@ -362,8 +412,32 @@ class AuditLog:
 
             self._since_anchor += 1
             if self._since_anchor >= self._anchor_every:
-                store_head_anchor(rh)
-                self._since_anchor = 0
+                if store_head_anchor(rh, scope=self._anchor_scope):
+                    self._since_anchor = 0
+                else:
+                    # The row is chained but NOT anchored. Silence here
+                    # would quietly drop the wholesale-replacement guarantee
+                    # mid-run, so count it and warn once per process.
+                    self._anchor_failures += 1
+                    if not self._anchor_warned:
+                        self._anchor_warned = True
+                        logger.warning(
+                            "audit head anchor could not be stored in the OS "
+                            "keychain; rows are chained but unanchored until "
+                            "an anchor write succeeds (failures so far: %d)",
+                            self._anchor_failures,
+                        )
+
+    @property
+    def anchor_failures(self) -> int:
+        """Anchor writes that failed since this log was opened.
+
+        Non-zero means some recent rows are chained but not anchored:
+        the hash chain still detects in-place edits, but a wholesale
+        replacement of those rows' tail would not be caught until a
+        later anchor write succeeds.
+        """
+        return self._anchor_failures
 
     # ─── reading ──────────────────────────────────────────────────────
 
@@ -463,7 +537,7 @@ class AuditLog:
 
         # The chain is internally consistent. Now the harder question:
         # is it the *same* chain we last wrote, or a convincing replacement?
-        anchor = load_head_anchor()
+        anchor = load_head_anchor(scope=self._anchor_scope)
         if anchor is None:
             return VerifyResult(
                 ok=True,
@@ -475,13 +549,35 @@ class AuditLog:
                 ),
             )
         if anchor != expected_prev:
+            # Same verdict (not trustworthy), two very different diagnoses.
+            # If the anchor names a row inside this chain, the chain simply
+            # extends past the anchored head: a crash between commit and
+            # anchoring, a keychain outage (see anchor_failures), or rows
+            # appended by a writer without keychain access. If the anchor
+            # appears nowhere, this is not the history that was anchored:
+            # a replacement or a rollback to an older snapshot.
+            positions = {r[10]: i for i, r in enumerate(rows)}  # row_hash -> idx
+            if anchor in positions:
+                lag = len(rows) - positions[anchor] - 1
+                return VerifyResult(
+                    ok=False,
+                    rows_checked=len(rows),
+                    head_anchored=True,
+                    anchor_lag=lag,
+                    reason=(
+                        f"chain extends {lag} row(s) beyond the stored anchor — "
+                        "an unanchored tail (interrupted anchoring or appended "
+                        "rows), not a wholesale replacement"
+                    ),
+                )
             return VerifyResult(
                 ok=False,
                 rows_checked=len(rows),
                 head_anchored=True,
                 reason=(
-                    "chain is internally consistent but its head does not match "
-                    "the stored anchor — the history appears to have been replaced"
+                    "chain is internally consistent but the stored anchor names "
+                    "no row in it — the history appears to have been replaced "
+                    "or rolled back to an older snapshot"
                 ),
             )
         return VerifyResult(ok=True, rows_checked=len(rows), head_anchored=True)
@@ -497,7 +593,7 @@ class AuditLog:
         """
         with self._lock:
             if self._last_written is not None:
-                store_head_anchor(self._last_written)
+                store_head_anchor(self._last_written, scope=self._anchor_scope)
             self._conn.close()
 
 
@@ -522,7 +618,8 @@ def get_audit_log() -> AuditLog | None:
 def set_audit_log(log: AuditLog | None) -> None:
     """Install (or clear) the process-wide audit log."""
     global _instance
-    _instance = log
+    with _singleton_lock:
+        _instance = log
 
 
 # ─── The @audited decorator ──────────────────────────────────────────────
@@ -566,7 +663,7 @@ def audited(
                         outcome="denied",
                         model_locality=model_locality,
                         data_class=data_class,
-                        error_message=str(e),
+                        error_message=_clip(str(e)),
                     )
                 raise
             except Exception as e:
@@ -577,7 +674,7 @@ def audited(
                         outcome="error",
                         model_locality=model_locality,
                         data_class=data_class,
-                        error_message=f"{type(e).__name__}: {e}",
+                        error_message=_clip(f"{type(e).__name__}: {e}"),
                     )
                 raise
             else:

@@ -23,23 +23,46 @@ def _isolated_keychain(monkeypatch):
     Patched at the point of use (``audit.log``) as well as at the source
     module, because ``log.py`` imports the names directly.
     """
-    slot: dict[str, str | None] = {"anchor": None}
+    # Keyed by scope so per-database anchor isolation is exercised by
+    # the same fake the production code path uses. The legacy unscoped
+    # entry is the "" key.
+    #
+    # Compatibility shim: existing single-log tests address "the anchor"
+    # as slots["anchor"]. With scoped anchors there is exactly one scope
+    # in those tests, so "anchor" reads/writes that single entry.
+    class _AnchorSlots(dict):
+        def __getitem__(self, key):
+            if key == "anchor":
+                vals = [v for v in self.values() if v is not None]
+                return vals[0] if vals else None
+            return super().__getitem__(key)
 
-    def _store(head_hash: str) -> bool:
-        slot["anchor"] = head_hash
+        def __setitem__(self, key, value):
+            if key == "anchor":
+                if len(self) > 1:
+                    raise AssertionError(
+                        "multiple anchor scopes present; address by scope"
+                    )
+                key = next(iter(self)) if self else ""
+            super().__setitem__(key, value)
+
+    slots: dict[str, str | None] = _AnchorSlots()
+
+    def _store(head_hash: str, *, scope: str = "") -> bool:
+        slots[scope] = head_hash
         return True
 
-    def _load() -> str | None:
-        return slot["anchor"]
+    def _load(*, scope: str = "") -> str | None:
+        return slots.get(scope)
 
-    def _clear() -> None:
-        slot["anchor"] = None
+    def _clear(*, scope: str = "") -> None:
+        slots.pop(scope, None)
 
     for module in ("palimpsests.audit.key_manager", "palimpsests.audit.log"):
         monkeypatch.setattr(f"{module}.store_head_anchor", _store, raising=False)
         monkeypatch.setattr(f"{module}.load_head_anchor", _load, raising=False)
         monkeypatch.setattr(f"{module}.clear_head_anchor", _clear, raising=False)
-    yield slot
+    yield slots
 
 
 @pytest.fixture

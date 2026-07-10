@@ -15,6 +15,48 @@ and rewrite or delete rows leaving no trace. Encryption is
 confidentiality, not integrity. This release closes the gap between the
 claim and the code.
 
+### Security (0.4.1 hardening, from the 2026-07 internal audit)
+
+- **Per-database head anchors.** The keychain anchor entry is now scoped
+  to the log's resolved path (`anchor_scope`). Previously the anchor was
+  machine-global: two audit logs on one host overwrote each other's
+  anchor, making an honest log verify as "replaced" — and burying a real
+  alarm in false ones. Existing logs re-anchor under the scoped name on
+  their first post-upgrade write; until then `verify()` reports
+  `head_anchored=False` for them.
+- **Anchor write failures are counted, not swallowed.** `record()` now
+  tracks failed keychain writes (`AuditLog.anchor_failures`) and logs a
+  one-time warning, instead of silently dropping the wholesale-replacement
+  guarantee mid-run.
+- **`verify()` distinguishes an unanchored tail from a replacement.** A
+  stale anchor that names a row *inside* the chain is now reported as
+  `anchor_lag=N` ("chain extends N rows beyond the anchor" — a crash
+  between commit and anchoring, or appends without keychain access),
+  while an anchor naming no row in the chain is reported as a
+  replacement/rollback. Both remain `ok=False`; the diagnosis differs.
+- **Error messages in audit rows are clipped** (200 chars). Exception
+  text from other libraries can embed URLs with tokens or payload
+  fragments, which does not belong in a metadata-only log.
+- **Audit DB file permissions** tightened to owner-only (best-effort
+  `0600`), which matters most for the explicitly-permitted plaintext path.
+- **First-run key race closed.** `load_or_create_key` reads back the
+  stored key after writing, so two processes racing through first run
+  converge on one key instead of encrypting with a loser's key.
+- **`set_audit_log` now takes the singleton lock** (it was declared and
+  unused).
+- **llama-server stderr no longer uses an unread `PIPE`** (a child that
+  logs > 64 KiB would block on write and hang); stderr goes to a temp
+  file whose tail is included in startup-failure errors.
+- **All GitHub Actions pinned to commit SHAs** (tags are mutable refs;
+  `pypa/gh-action-pypi-publish@release/v1` was a moving branch).
+- **Version metadata synced**: `__version__` said 0.2.0 while
+  `pyproject.toml` said 0.4.0; both now 0.4.1.
+
+Deferred by decision: local llama-server child runs without `--api-key`
+(any same-host process can reach it). Accepted for the current testing
+phase; the planned split of Level 3 into a separate distribution changes
+the HTTP exposure model and will revisit this.
+
 ### Added
 
 - **Hash-chained audit records.** Every row now carries `prev_hash` and

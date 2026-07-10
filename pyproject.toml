@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "palimpsests"
-version = "0.4.0"
+version = "0.4.1"
 description = "A layered local-LLM inference engine: from thin wrapper to your own serving service, under one abstraction."
 readme = "README.md"
 requires-python = ">=3.11"

@@ -25,8 +25,10 @@ details rather than the logic:
 from __future__ import annotations
 
 import httpx
+import os
 import socket
 import subprocess
+import tempfile
 import time
 from palimpsests.providers.errors import EngineUnavailable
 from pathlib import Path
@@ -71,6 +73,7 @@ class LlamaServerProcess:
         self._extra_args = list(extra_args or [])
         self._readiness_timeout = readiness_timeout
         self._proc: subprocess.Popen | None = None
+        self._stderr_file: object | None = None  # tempfile handle while running
 
     @property
     def base_url(self) -> str:
@@ -110,13 +113,21 @@ class LlamaServerProcess:
             raise EngineUnavailable(
                 f"model file not found: {self._model_path}"
             )
+        # stdout is discarded; stderr goes to an unbuffered temp file.
+        # PIPE without a reader would deadlock: llama-server logs freely,
+        # and once the ~64 KiB pipe buffer fills the child blocks on write
+        # and the server silently hangs. A file has no such limit, and its
+        # tail is exactly what we want in the error message when startup
+        # fails.
+        self._stderr_file = tempfile.TemporaryFile(prefix="llama-server-err-")
         try:
             self._proc = subprocess.Popen(
                 self.build_argv(),
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                stdout=subprocess.DEVNULL,
+                stderr=self._stderr_file,
             )
         except FileNotFoundError as e:
+            self._close_stderr_file()
             raise EngineUnavailable(
                 f"llama-server binary not found: {self._binary!r}"
             ) from e
@@ -131,8 +142,11 @@ class LlamaServerProcess:
             # If the process already exited, don't keep polling a corpse.
             if self._proc is not None and self._proc.poll() is not None:
                 code = self._proc.returncode
+                tail = self._stderr_tail()
+                self._close_stderr_file()
+                detail = f": {tail}" if tail else ""
                 raise EngineUnavailable(
-                    f"llama-server exited during startup (code {code})"
+                    f"llama-server exited during startup (code {code}){detail}"
                 )
             try:
                 resp = httpx.get(health, timeout=1.0)
@@ -146,6 +160,28 @@ class LlamaServerProcess:
             f"llama-server not ready within {self._readiness_timeout}s"
         )
 
+    def _stderr_tail(self, max_bytes: int = 2048) -> str:
+        """The last ``max_bytes`` of the child's stderr, for diagnostics."""
+        f = self._stderr_file
+        if f is None:
+            return ""
+        try:
+            f.flush()
+            size = f.seek(0, os.SEEK_END)
+            f.seek(max(0, size - max_bytes))
+            return f.read().decode("utf-8", errors="replace").strip()
+        except (OSError, ValueError):
+            return ""
+
+    def _close_stderr_file(self) -> None:
+        f = self._stderr_file
+        self._stderr_file = None
+        if f is not None:
+            try:
+                f.close()
+            except OSError:
+                pass
+
     def is_running(self) -> bool:
         return self._proc is not None and self._proc.poll() is None
 
@@ -157,6 +193,7 @@ class LlamaServerProcess:
         """
         proc = self._proc
         if proc is None:
+            self._close_stderr_file()
             return
         if proc.poll() is None:
             proc.terminate()
@@ -166,3 +203,4 @@ class LlamaServerProcess:
                 proc.kill()
                 proc.wait(timeout=5.0)
         self._proc = None
+        self._close_stderr_file()

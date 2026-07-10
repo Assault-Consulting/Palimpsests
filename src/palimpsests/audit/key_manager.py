@@ -56,12 +56,36 @@ be explicit.
 """
 from __future__ import annotations
 
+import hashlib
 import secrets
+from pathlib import Path
 
 KEY_BYTES = 32  # 256-bit key
 SERVICE_NAME = "palimpsests-audit"
 KEY_USERNAME = "audit-db-key"
 ANCHOR_USERNAME = "audit-head-anchor"
+
+
+def anchor_scope(db_path: Path) -> str:
+    """Derive a stable per-database scope from the log's resolved path.
+
+    The anchor must be **per database**, not per machine: two audit logs
+    on one host (two applications embedding palimpsests, or a test log
+    next to a production one) would otherwise overwrite each other's
+    anchors, making an honest log verify as "replaced". Worse, the noise
+    of false alarms is exactly where a real tampering event would hide.
+
+    The scope is the first 16 hex chars of SHA-256 over the resolved
+    POSIX path — stable across runs, distinct across paths, and short
+    enough for keychain entry names on every platform.
+    """
+    resolved = Path(db_path).resolve().as_posix()
+    return hashlib.sha256(resolved.encode("utf-8")).hexdigest()[:16]
+
+
+def _anchor_username(scope: str) -> str:
+    """Keychain entry name for a scope; legacy unscoped name if empty."""
+    return f"{ANCHOR_USERNAME}-{scope}" if scope else ANCHOR_USERNAME
 
 
 def generate_key() -> bytes:
@@ -100,19 +124,30 @@ def load_or_create_key() -> bytes:
 
     key = generate_key()
     keyring.set_password(SERVICE_NAME, KEY_USERNAME, key.hex())
-    return key
+    # Read back what actually won. Two processes racing through first-run
+    # would otherwise each hold a *different* generated key, and whichever
+    # lost the set_password race would encrypt its database with a key the
+    # keychain no longer holds. Converging on the stored value makes the
+    # race harmless: both callers end up with the same key.
+    stored = keyring.get_password(SERVICE_NAME, KEY_USERNAME)
+    return bytes.fromhex(stored) if stored is not None else key
 
 
 # ─── head anchor (tamper-evidence beyond the chain) ──────────────────────
 
 
-def store_head_anchor(head_hash: str) -> bool:
+def store_head_anchor(head_hash: str, *, scope: str = "") -> bool:
     """Persist the chain's current head hash to the OS keychain.
+
+    ``scope`` isolates the anchor per database (see ``anchor_scope``);
+    the empty default keeps the legacy machine-global entry name for
+    callers that predate scoping.
 
     Returns True if the anchor was stored, False if no keychain backend
     is available. A False return is not an error: it means the anchor
     guarantee is not in force, which ``verify()`` reports honestly
-    rather than papering over.
+    rather than papering over — but callers should surface it (the
+    AuditLog counts these and warns once).
     """
     try:
         import keyring
@@ -120,13 +155,13 @@ def store_head_anchor(head_hash: str) -> bool:
         return False
 
     try:
-        keyring.set_password(SERVICE_NAME, ANCHOR_USERNAME, head_hash)
+        keyring.set_password(SERVICE_NAME, _anchor_username(scope), head_hash)
     except Exception:  # backend-specific failures (no Secret Service, etc.)
         return False
     return True
 
 
-def load_head_anchor() -> str | None:
+def load_head_anchor(*, scope: str = "") -> str | None:
     """Read the stored head hash, or None if absent/unavailable.
 
     None is returned both when no keychain exists and when no anchor has
@@ -139,20 +174,20 @@ def load_head_anchor() -> str | None:
         return None
 
     try:
-        return keyring.get_password(SERVICE_NAME, ANCHOR_USERNAME)
+        return keyring.get_password(SERVICE_NAME, _anchor_username(scope))
     except Exception:
         return None
 
 
-def clear_head_anchor() -> None:
-    """Remove the stored anchor. Used when starting a fresh log."""
+def clear_head_anchor(*, scope: str = "") -> None:
+    """Remove the stored anchor for one scope. Used when starting a fresh log."""
     try:
         import keyring
     except ImportError:
         return
 
     try:
-        keyring.delete_password(SERVICE_NAME, ANCHOR_USERNAME)
+        keyring.delete_password(SERVICE_NAME, _anchor_username(scope))
     except Exception:
         # Nothing stored, or no backend — either way there is nothing
         # to clear and nothing to report.
