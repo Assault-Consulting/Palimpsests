@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "palimpsests"
-version = "0.4.1"
+version = "0.4.2"
 description = "A layered local-LLM inference engine: from thin wrapper to your own serving service, under one abstraction."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -50,8 +50,11 @@ keyring = [
 ]
 # At-rest audit-log encryption. sqlcipher3-wheels ships prebuilt binaries
 # so it doesn't need a local SQLCipher/OpenSSL toolchain. Isolated behind
-# an extra: without it the audit log falls back to plain sqlite3 (dev/CI),
-# which is functional but not the production-encrypted path.
+# an extra — but NOT optional in effect: without it the audit log refuses
+# to open rather than silently writing plaintext. A plaintext (still
+# hash-chained) log is available only by explicit opt-in, via
+# PALIMPSESTS_ALLOW_UNENCRYPTED_AUDIT=1 or allow_unencrypted=True, which
+# is what CI does.
 encryption = [
     "sqlcipher3-wheels>=0.5",
 ]
@@ -62,6 +65,9 @@ encryption = [
 # via pip, so this extra adds no Python packages: it exists only as a
 # documented marker of the L2 requirement. httpx (already a base dep) is
 # all the Python side needs.
+#
+# Exposure note: the managed llama-server listens on a local port with no
+# --api-key. Single-user hosts only — see SECURITY.md, "Accepted risks".
 llamacpp = []
 # Level 3 (pal-native) runs an in-process decode loop over llama.cpp via
 # its low-level Python bindings (ADR-0001/0002). llama-cpp-python pulls a
