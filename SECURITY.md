@@ -67,10 +67,56 @@ evaluating Palimpsests in regulated or sensitive environments.
 
 ---
 
+## Accepted risks
+
+Risks we know about, have decided not to fix yet, and state here so the person
+carrying the risk is the person who knows about it. Tracked in
+[`docs/security/AUDIT-2026-07.md`](docs/security/AUDIT-2026-07.md).
+
+### Level 2 (managed `llama-server`) is single-user-host only
+
+When level 2 is enabled, Palimpsests spawns and manages a `llama-server` child
+process that listens on a **local HTTP port with no authentication**
+(`--api-key` is not set). Consequences on a shared host:
+
+- **Any other process running on the same machine can reach that port** — send
+  its own prompts into your slots, read model output, or exhaust the server.
+  `llama-server`'s own built-in endpoints raise the ceiling on what a local
+  attacker can do there.
+- Port selection has a **time-of-check/time-of-use race**: a free port is chosen
+  and then bound, so a hostile local process can, in principle, occupy the port
+  first and impersonate the server to Palimpsests.
+
+**Therefore: do not enable level 2 on a host you share with untrusted users or
+untrusted processes.** Levels 1 and 3 are unaffected — level 1 talks to a daemon
+you already run, and level 3 runs in-process with no listening socket.
+
+This is **deferred by decision**, not overlooked. Level 3 is planned to split
+into a separate distribution, which changes the HTTP exposure model entirely;
+the mitigation (a per-launch random `--api-key`, plus verifying the
+health-checked process owns the expected port) will land with that work. Until
+then, treat the level-2 adapter as a single-user-host component.
+
+### `state_set` is not yet a validated trust boundary
+
+`NativeSession.load_state` passes blob bytes to llama.cpp's
+`llama_state_seq_set_data`, which parses them in C. Today those blobs are
+produced in-process by `save_state` and held in memory, so no untrusted input
+reaches that parser. This becomes a real boundary the moment a **disk-backed KV
+store** or blob sharing between hosts ships — both of which are on the roadmap.
+Before either lands, persisted blobs must be MAC'd (HMAC-SHA256 under a
+keychain-derived key) and header-validated before `state_set` sees them. Until
+then, do not feed `load_state` a blob you did not produce.
+
+---
+
 ## Audit-log threat model
 
 The audit log is the project's compliance surface, so its guarantees are stated
 precisely rather than by adjective. Two mechanisms, two different properties.
+The full model — assets, attacker capabilities, and which guarantees are in
+force under which configuration — is in
+[`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md).
 
 ### Confidentiality — encryption at rest
 
@@ -99,15 +145,19 @@ rewrite rows. Two mechanisms make that detectable:
 2. **Out-of-band head anchor.** A chain alone cannot detect *wholesale
    replacement*: an attacker with the key can drop the table and build a fresh,
    internally consistent chain. The chain's current head hash is therefore also
-   stored **outside the database**, in the OS keychain, refreshed as rows are
-   written and flushed on close. `verify()` compares the chain's head to the
-   anchor; a mismatch means the history was replaced.
+   stored **outside the database**, in the OS keychain, scoped to that database's
+   path, refreshed as rows are written and flushed on close. `verify()` compares
+   the chain's head to the anchor; a mismatch means the history was replaced or
+   rolled back.
 
 `verify()` returns a `VerifyResult` whose `head_anchored` flag states whether the
-replacement check actually ran. **A passing result with `head_anchored=False`
-means the chain is internally consistent but wholesale replacement would not have
-been detected** — for example on a headless host with no keychain. The flag
-exists so that a passing verification is never read as stronger than it is.
+replacement check was actually performed. **A passing result with
+`head_anchored=False` means the chain is internally consistent but wholesale
+replacement would not have been detected** — for example on a headless host with
+no keychain. The flag exists so that a passing verification is never read as
+stronger than it is. A stale anchor that still names a row *inside* the chain is
+reported separately as `anchor_lag` (an unanchored tail, e.g. after a crash
+between commit and anchoring), not as a replacement.
 
 ### What an attacker can still do
 
@@ -118,15 +168,16 @@ Stated plainly, because the boundary matters more than the mechanism:
 | Reads the database file, no key | Contents unreadable (encrypted) |
 | Edits, deletes, or reorders rows, holding the key | **Yes** — chain breaks |
 | Replaces the whole database with a valid fresh chain, holding the key | **Yes** — head anchor mismatch |
+| Restores an older snapshot of the database, holding the key | **Yes** — the anchor names no row in the old chain |
 | Holds the key **and** can write to the keychain | **No** — chain and anchor can be forged together |
 | Compromises the host before events are written | **No** — nothing unwritten can be attested |
 
-Detecting the fourth row requires committing the chain head somewhere outside the
+Detecting the fifth row requires committing the chain head somewhere outside the
 host's trust boundary — a remote append-only log, a notary, or a transparency
 log. **Palimpsests does not do this, and does not claim it.** What the anchor
 buys is that tampering must compromise two separate stores rather than one file.
 
-The fifth row is inherent to any local logging: a log can only attest to what
+The sixth row is inherent to any local logging: a log can only attest to what
 reached it.
 
 ### Residual weaknesses we know of
@@ -138,9 +189,14 @@ Named here rather than discovered by someone else:
   chain proves *order and integrity*, not *wall-clock accuracy*.
 - **The anchor is refreshed every `anchor_every` rows** (default: every write).
   If raised for performance, the most recent rows are chained but not yet
-  anchored until the next refresh or `close()`.
+  anchored until the next refresh or `close()`. Keychain write failures are
+  counted (`AuditLog.anchor_failures`) and warned about once, rather than
+  silently dropping the guarantee.
+- **A legitimate append after a replacement re-anchors the forged chain.** Run
+  `palimpsests audit verify` before resuming writes to a log you suspect.
 - **No independent audit.** The implementation is tested — including tests that
-  tamper with the database file directly, bypassing the API — but has not been
+  tamper with the database file directly, bypassing the API — and has been
+  reviewed internally (`docs/security/AUDIT-2026-07.md`), but has not been
   reviewed by a third party.
 
 ---
