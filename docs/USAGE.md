@@ -30,6 +30,15 @@ at it with `PALIMPSESTS_LLAMACPP_MODEL`. For **level 3** (the native serving
 loop), the real backend ships behind the `[native]` extra and is validated
 on hardware — see the roadmap and `docs/BENCHMARKING.md`.
 
+> **⚠ Level 2 is single-user-host only.**
+> The managed `llama-server` child listens on a **local HTTP port with no
+> authentication** (`--api-key` is not set). Any other process on the same
+> machine can send prompts into your slots, read output, or exhaust the
+> server; port selection also has a check-then-bind race. **Do not enable
+> level 2 on a host you share with untrusted users or processes.** Levels 1
+> and 3 are unaffected. This is a deliberate, documented deferral — see
+> [Accepted risks](../SECURITY.md#accepted-risks).
+
 ---
 
 ## 2. Installation
@@ -50,7 +59,7 @@ extras.
 | `[keyring]` | audit-log encryption key from the OS keychain | works |
 | `[encryption]` | at-rest audit-log encryption (SQLCipher) | works |
 | `[embeddings]` | local embeddings (numpy) for block memory | works |
-| `[llamacpp]` | level 2 marker (needs the `llama-server` binary on PATH) | works; empty marker |
+| `[llamacpp]` | level 2 marker (needs the `llama-server` binary on PATH) | works; empty marker; **single-user host only** — see §1 |
 | `[native]` | level 3 real backend (llama-cpp-python) | ships; validated on hardware |
 
 Example, with audit-log encryption:
@@ -140,7 +149,8 @@ tokens rather than an OOM.
 |---|---|---|
 | `PALIMPSESTS_CONFIG_DIR` | `~/.config/palimpsests` | where `audit.db` and `registry.json` live |
 | `XDG_CONFIG_HOME` | — | if set, config → `$XDG_CONFIG_HOME/palimpsests` |
-| `PALIMPSESTS_LLAMACPP_MODEL` | — | path to a GGUF model; enables level 2 |
+| `PALIMPSESTS_LLAMACPP_MODEL` | — | path to a GGUF model; enables level 2 (see the level-2 warning in §1) |
+| `PALIMPSESTS_ALLOW_UNENCRYPTED_AUDIT` | — | set to `1` to accept a plaintext (still hash-chained) audit log when SQLCipher is unavailable |
 
 ```bash
 # isolated config (handy for tests / multiple profiles)
@@ -234,6 +244,14 @@ exercised in the `tests/test_native_*` suite. Because the on-hardware
 backend and its performance are the v0.4 target, this guide does not yet
 quote level-3 runtime settings as stable user-facing knobs.
 
+> **⚠ `load_state` is not yet a validated trust boundary.**
+> The blob it takes is parsed in C by llama.cpp. Today those blobs are
+> produced in-process by `save_state`, so nothing untrusted reaches that
+> parser — but **do not pass `load_state` a blob you did not produce
+> yourself**. Header validation and a MAC over persisted blobs land before
+> the disk-backed KV store does; see
+> [Accepted risks](../SECURITY.md#accepted-risks).
+
 ---
 
 ## 6. What happens under the hood on `chat`
@@ -267,6 +285,7 @@ command to view it yet.
 | `engine list` shows `not installed` | daemon didn't answer at `init_app` | check that Ollama listens on :11434 |
 | empty reply from `chat` without `-m` in a terminal | neither `-m` nor a pipe provided | add `-m "..."` or pipe text in |
 | level 2 not available | `llama-server` not on PATH or `PALIMPSESTS_LLAMACPP_MODEL` unset | install llama.cpp, set the model env var |
+| `AuditIntegrityError` on startup | SQLCipher not installed, so the audit log refuses to open unencrypted | `pip install "palimpsests[encryption]"`, or accept plaintext with `PALIMPSESTS_ALLOW_UNENCRYPTED_AUDIT=1` |
 
 ---
 
