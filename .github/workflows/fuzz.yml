@@ -1,0 +1,89 @@
+name: fuzz
+
+# Fuzzing lives in its own workflow, not in the CI matrix, for two reasons.
+#
+# Atheris bundles libFuzzer and ships wheels only for Linux; on macOS it
+# needs a hand-built clang and on Windows it does not build at all. And a
+# fuzz run is a budget, not a pass/fail suite — it belongs on a schedule,
+# with a short regression pass on every change so that a previously found
+# crash cannot come back unnoticed.
+#
+# Python is pinned to 3.11: Atheris trails CPython releases, and pinning is
+# cheaper than discovering the gap during an incident.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # 03:27 UTC — an odd minute, so this job is not queued alongside every
+    # other project's midnight cron.
+    - cron: "27 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  state-blob:
+    name: state-blob validator
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
+        with:
+          python-version: "3.11"
+
+      # The base package only: the harness drives the pure-Python session and
+      # scheduler against a recording backend. Installing [native] would pull
+      # llama-cpp-python and prove nothing extra — the C parser it wraps is
+      # explicitly out of this harness's scope.
+      - name: Install (base + atheris)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install atheris==2.3.0
+
+      # A short deterministic pass on every change (regression: a crash once
+      # found must not return), a real budget nightly.
+      - name: Fuzz the state-blob validator
+        env:
+          BUDGET: >-
+            ${{ github.event_name == 'schedule'
+                && '-max_total_time=900'
+                || '-atheris_runs=25000' }}
+        run: |
+          mkdir -p fuzz/artifacts
+          python fuzz/fuzz_state_blob.py \
+            "$BUDGET" \
+            -max_len=512 \
+            -artifact_prefix=fuzz/artifacts/
+
+      # libFuzzer writes the reproducer next to the artifact prefix. Print it
+      # as hex rather than uploading it: an artifact upload would add a fourth
+      # third-party action to the supply chain for a file that is, at most, a
+      # few hundred bytes.
+      - name: Show the crashing input
+        if: failure()
+        run: |
+          shopt -s nullglob
+          found=0
+          for f in fuzz/artifacts/*; do
+            found=1
+            echo "=== reproducer: $f"
+            python - "$f" <<'PY'
+          import sys
+
+          data = open(sys.argv[1], "rb").read()
+          print(f"{len(data)} bytes")
+          print(data.hex())
+          PY
+          done
+          if [ "$found" -eq 0 ]; then
+            echo "no reproducer written — the failure was not a fuzzer finding"
+          fi
