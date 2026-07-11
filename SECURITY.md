@@ -31,6 +31,10 @@ This section describes what the project provides today and what it deliberately
 does **not** claim. It is written for security reviewers and for teams
 evaluating Palimpsests in regulated or sensitive environments.
 
+A structured **Claims–Arguments–Evidence assurance case** built on this posture —
+each claim paired with its residual, plus a table of the conditions that would
+defeat it — is in [`docs/ASSURANCE-CASE.md`](docs/ASSURANCE-CASE.md).
+
 ### What the design gives you
 
 - **Local-first / air-gap capable.** The core (level 1 Ollama, level 2
