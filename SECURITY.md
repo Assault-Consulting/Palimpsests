@@ -50,6 +50,12 @@ evaluating Palimpsests in regulated or sensitive environments.
   what it supports (`engine.capabilities`), and memory options are validated
   (e.g. KV-cache quantization requires flash attention). Callers program against
   declared capabilities, never against implementation details.
+- **Verifiable supply chain.** Releases are published via PyPI Trusted
+  Publishing with Sigstore-backed PEP 740 attestations, and each GitHub Release
+  carries a CycloneDX SBOM of the base-install dependency closure. A reviewer can
+  confirm *what* was shipped, that *this repository's release workflow* shipped
+  it, and which third-party packages it pulls in. The mechanism and how to verify
+  it are documented in [`RELEASING.md`](RELEASING.md).
 
 ### What this is **not**
 
