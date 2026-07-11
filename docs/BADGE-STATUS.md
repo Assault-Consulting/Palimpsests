@@ -98,10 +98,10 @@ not block the passing badge).
 | static_analysis_common_vulnerabilities | Met | Bandit targets common Python vulnerability patterns. |
 | static_analysis_fixed | Met | Bandit is a merge-blocking gate; no outstanding medium/high. |
 | static_analysis_often | Met | Runs on every push and PR. |
-| dynamic_analysis | Unmet | No dynamic-analysis tool yet; a Python fuzzer (Atheris) is a v0.4 option. |
+| dynamic_analysis | Met | Atheris (libFuzzer) coverage-guided fuzzing of the KV-state validator; per-change regression + nightly budget (.github/workflows/fuzz.yml). |
 | dynamic_analysis_unsafe | N/A | Pure Python; no memory-unsafe code developed in-project. |
-| dynamic_analysis_enable_assertions | Unmet | Paired with dynamic analysis, which is not run. |
-| dynamic_analysis_fixed | N/A | No dynamic-analysis findings (none run). |
+| dynamic_analysis_enable_assertions | Met | The fuzz harness runs the pure-Python validator under CPython with assertions enabled (no -O). |
+| dynamic_analysis_fixed | Met | Validator hardened ahead of the harness (PR #49/#50); no outstanding fuzzer findings. |
 
 ## Notes
 
@@ -109,10 +109,12 @@ not block the passing badge).
   passing badge. They are recorded honestly rather than stretched, which is
   the same measurement discipline the project applies to performance claims
   (see docs/POSITIONING.md and docs/BENCHMARKING.md).
-- **Dynamic analysis** is deferred to v0.4 on purpose: a fuzzer is most
-  useful against the untrusted-input surface (KV-state deserialization in
-  `load_state`, the tokenizer), which is only meaningful once the real
-  on-hardware backend is in place. Applying it now would fuzz a fake
-  backend.
+- **Dynamic analysis** landed in v0.4: an Atheris (libFuzzer) harness fuzzes
+  the untrusted-input **KV-state validator** that guards `load_state` — the
+  surface that becomes meaningful once real persisted blobs can reach it. It
+  runs a short deterministic regression on every change and a budget nightly
+  (`.github/workflows/fuzz.yml`). The C parser the validator guards is
+  deliberately out of the harness's scope (it needs `[native]`, and proving
+  the wrapper's parser is a separate boundary — see SECURITY.md).
 - **Solo-project structural limits** (e.g. human code review before merge)
   are inherent to a one-person team and are not misrepresented.
