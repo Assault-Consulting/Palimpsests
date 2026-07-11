@@ -9,17 +9,22 @@
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13534/badge)](https://www.bestpractices.dev/projects/13534)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Assault-Consulting/Palimpsests/badge)](https://scorecard.dev/viewer/?uri=github.com/Assault-Consulting/Palimpsests)
 
-> **Status: v0.4 — the real backend runs, with the first measurement in.** Levels
-> 1 (Ollama) and 2 (llama.cpp) work behind one abstraction, with the
-> context-memory layer (window manager + block-memory retrieval) and an encrypted
-> audit log. Level 3 (pal-native) has its full serving skeleton — streaming,
-> stateful sessions, continuous batching, server-side tool loop, shared-prefix KV,
-> and KV persistence — and as of v0.4 the real in-process `LlamaCppBackend` runs a
-> real model on hardware. The first benchmark is in: the server-side tool loop
-> beats a re-prefill baseline, growing with the avoided re-prefill work — measured
-> **CPU-only on a 1.5B model as a mechanism sanity check, not a representative
-> performance figure** (a GPU / larger-model run is the pending next step). See
-> **[docs/POSITIONING.md](docs/POSITIONING.md)** for the numbers and their limits.
+> **Status: v0.5 — the audit log is now genuinely tamper-evident, and releases are
+> supply-chain verifiable.** Levels 1 (Ollama) and 2 (llama.cpp) work behind one
+> abstraction, with the context-memory layer (window manager + block-memory
+> retrieval) and an encrypted audit log. Level 3 (pal-native) has its full serving
+> skeleton — streaming, stateful sessions, continuous batching, server-side tool
+> loop, shared-prefix KV, and KV persistence — and the real in-process
+> `LlamaCppBackend` runs a real model on hardware (the first tool-loop-vs-re-prefill
+> benchmark is in — measured **CPU-only on a 1.5B model as a mechanism sanity check,
+> not a representative figure**; a GPU / larger-model run is the pending next step).
+> **New in v0.5:** audit rows are hash-chained with an out-of-band head anchor, so
+> tampering — including wholesale replacement — is detectable, with a `palimpsests
+> audit verify` command; a reproducible CycloneDX SBOM and a signed GitHub Release;
+> coverage-guided fuzzing of the KV-state validator; and a documented governance
+> model and a security assurance case. Numbers and their limits are in
+> **[docs/POSITIONING.md](docs/POSITIONING.md)**; the integrity story is in
+> **[SECURITY.md](SECURITY.md)** and **[docs/ASSURANCE-CASE.md](docs/ASSURANCE-CASE.md)**.
 > APIs may change before v1.0.
 
 ---
@@ -228,7 +233,10 @@ gap.
 implementation has not been independently pen-tested, and the AI Act's own
 technical standards are not yet final. Full references, caveats, and the moving
 timeline are in **[SECURITY.md](SECURITY.md)**; the honest target-vs-measured
-performance picture is in **[docs/POSITIONING.md](docs/POSITIONING.md)**.
+performance picture is in **[docs/POSITIONING.md](docs/POSITIONING.md)**. The
+structured argument that the project delivers these properties — claims, evidence,
+and the explicit residuals and defeaters — is the
+**[assurance case](docs/ASSURANCE-CASE.md)**.
 
 ---
 
@@ -296,7 +304,13 @@ the novelty is in this composition and its seams, not in a new inference kernel.
       check* per [docs/BENCHMARKING.md](docs/BENCHMARKING.md). The *empirical*
       half begins — first numbers we can call our own, with a GPU / larger-model
       run still to come.
-- [ ] **Beyond v0.4** — a GPU / larger-model benchmark run for representative
+- [x] **v0.5 — integrity & supply chain** — the audit log becomes genuinely
+      tamper-evident (hash chain + out-of-band head anchor + `audit verify`),
+      the KV-state deserialization path is validated and fuzzed, releases ship a
+      reproducible CycloneDX SBOM and a signed GitHub Release, and the project's
+      governance and a [security assurance case](docs/ASSURANCE-CASE.md) are
+      documented.
+- [ ] **Beyond v0.5** — a GPU / larger-model benchmark run for representative
       magnitudes, the persistence (N6) and shared-prefix (N4) benchmarks,
       sleep-time compute (edge), disk-backed KV store, speculative decoding. See
       [docs/ROADMAP.md](docs/ROADMAP.md).
@@ -311,8 +325,9 @@ representative figure.
 
 ## Contributing
 
-Early, but PRs and issues welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) and our
-[Code of Conduct](CODE_OF_CONDUCT.md).
+Early, but PRs and issues welcome. See [CONTRIBUTING.md](CONTRIBUTING.md), our
+[Code of Conduct](CODE_OF_CONDUCT.md), and [GOVERNANCE.md](GOVERNANCE.md) (how the
+project is run and where decisions are made).
 Python code lands via PR (never direct to `main`); ruff `["E","F","I","B","UP"]`,
 line length 100, Python 3.11+, pytest.
 
