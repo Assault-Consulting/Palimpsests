@@ -6,14 +6,17 @@ aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 once it reaches v1.0. Before v1.0, minor versions may include breaking
 API changes.
 
-## [Unreleased] — 0.5.0
+## [0.5.0] — 2026-07-11
 
 The audit log becomes **genuinely** tamper-evident. Prior versions
 described it that way, but provided only encryption at rest and an
 append-only API surface: anyone holding the key could open the database
 and rewrite or delete rows leaving no trace. Encryption is
 confidentiality, not integrity. This release closes the gap between the
-claim and the code.
+claim and the code — and hardens the surrounding supply chain: a
+reproducible SBOM and a signed GitHub Release, coverage-guided fuzzing of
+the untrusted-input path, and a documented governance model and security
+assurance case.
 
 ### Security (0.4.1 hardening, from the 2026-07 internal audit)
 
@@ -79,6 +82,22 @@ the HTTP exposure model and will revisit this.
   passing result is never read as stronger than it is.
 - **`AuditIntegrityError`** — raised when the store cannot be opened in a
   trustworthy state, distinct from a verification *result*.
+- **`palimpsests audit verify` CLI.** Runs verification from the command
+  line with distinct exit codes (clean / tampered / unanchored /
+  operational error), so integrity can be checked in a script or a
+  scheduled job, not only from the API.
+- **KV-state blob validation.** `load_state` now frames and validates a
+  persisted blob's header (size and version bounds) in Python *before* its
+  bytes reach llama.cpp's C `state_set`, so a malformed or truncated blob
+  is rejected rather than parsed in C. The C parser it guards remains out
+  of scope until a disk-backed store ships — at which point persisted
+  blobs must also be MAC'd (see `SECURITY.md`).
+- **CycloneDX SBOM and a signed GitHub Release.** The release workflow now
+  generates a reproducible CycloneDX SBOM of the base install (from a
+  clean environment, so build tooling never enters the bill of materials),
+  and publishes a GitHub Release carrying the wheel, sdist, and SBOM as
+  assets — which also makes this changelog's per-version release links
+  resolve. See `RELEASING.md`.
 
 ### Breaking
 
@@ -120,6 +139,16 @@ the HTTP exposure model and will revisit this.
 - Tests for this work attack the database file directly with `sqlite3`,
   bypassing `AuditLog` entirely — an attacker does not politely go
   through a class whose API offers no mutation.
+- **Coverage-guided fuzzing.** An Atheris (libFuzzer) harness now fuzzes
+  the KV-state validator that guards `load_state` — a short deterministic
+  regression on every change and a budget nightly
+  (`.github/workflows/fuzz.yml`). The C parser the validator guards is
+  deliberately out of the harness's scope.
+- **Governance and an assurance case are documented.** `GOVERNANCE.md`
+  states how decisions are made and where release authority sits;
+  `docs/ASSURANCE-CASE.md` is a Claims–Arguments–Evidence argument for the
+  security and record-keeping properties, with each claim's residual named
+  and a table of the conditions that would defeat it.
 
 ## [0.4.0] — 2026-07-08
 
@@ -349,6 +378,7 @@ Initial release.
   from the OS keychain, falling back to an ephemeral key headless.
 - **CLI** — `chat`, `models`, `engine list` / `engine use`.
 
+[0.5.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.5.0
 [0.4.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.4.0
 [0.3.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.3.0
 [0.2.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.2.0
