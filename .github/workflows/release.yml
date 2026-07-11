@@ -1,8 +1,8 @@
 name: release
 
-# Publish to PyPI on a version tag. Build and publish are split so the
-# OIDC-scoped publish job has the narrowest possible permissions, and so
-# the built artifacts are visible even if publishing is skipped.
+# Publish to PyPI on a version tag. Build, publish, and release are split
+# so the OIDC-scoped publish job has the narrowest possible permissions,
+# and so the built artifacts are visible even if publishing is skipped.
 #
 # Publishing uses PyPI Trusted Publishing (OIDC) — no API token is stored
 # in the repo. The trusted publisher must be configured once on PyPI for
@@ -10,14 +10,19 @@ name: release
 # (a pending publisher works before the first release, so the first tag
 # creates the project). Until that is configured, the publish step fails
 # harmlessly; the build job still runs.
+#
+# The build job also generates a CycloneDX SBOM of the base install, and
+# the release job publishes a GitHub Release carrying the wheel, sdist,
+# and SBOM as downloadable assets (which also makes the CHANGELOG's
+# per-version release links resolve).
 
 on:
   push:
     tags:
       - "v*"
 
-# Least-privilege default for the whole workflow. The publish job below
-# additively grants only id-token: write (for OIDC), scoped to itself —
+# Least-privilege default for the whole workflow. Each job below additively
+# grants only the scope it needs (publish: id-token; release: contents) —
 # the pattern the OpenSSF Scorecard Token-Permissions check rewards.
 permissions:
   contents: read
@@ -42,6 +47,26 @@ jobs:
         run: |
           python -m pip install --upgrade twine
           python -m twine check dist/*
+
+      - name: Generate SBOM (CycloneDX)
+        # Build the bill of materials from a *clean* environment that holds
+        # only the freshly built wheel and its runtime dependency closure —
+        # a throwaway venv, so the build job's own tooling (build, twine,
+        # cyclonedx-bom) never leaks into the SBOM. --output-reproducible
+        # drops timestamps/random values so identical inputs yield a
+        # byte-identical SBOM; cyclonedx-bom is pinned for the same reason.
+        run: |
+          python -m pip install --upgrade "cyclonedx-bom==7.3.0"
+          python -m venv /tmp/sbom-venv
+          /tmp/sbom-venv/bin/python -m pip install --upgrade pip
+          /tmp/sbom-venv/bin/python -m pip install dist/*.whl
+          cyclonedx-py environment /tmp/sbom-venv \
+            --mc-type library \
+            --pyproject pyproject.toml \
+            --output-reproducible \
+            --spec-version 1.6 \
+            --output-format JSON \
+            --output-file dist/palimpsests.cdx.json
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
@@ -70,3 +95,35 @@ jobs:
 
       - name: Publish
         uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b  # release/v1
+
+  release:
+    name: github release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      # Scoped to this job only: create the GitHub Release for the tag and
+      # upload the distribution files plus the SBOM as assets. The rest of
+      # the workflow stays contents: read.
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Create GitHub Release with SBOM asset
+        # Uses the runner's preinstalled gh CLI rather than a third-party
+        # release action — no new dependency added to the supply chain of a
+        # supply-chain workflow. --verify-tag ties the release to the pushed
+        # git tag; --generate-notes builds notes from merged PRs.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            dist/*.whl \
+            dist/*.tar.gz \
+            dist/palimpsests.cdx.json \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "${GITHUB_REF_NAME}" \
+            --generate-notes \
+            --verify-tag
