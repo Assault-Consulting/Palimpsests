@@ -8,17 +8,22 @@ check that signature yourself.
 
 Releases are published to PyPI automatically by the `release.yml` GitHub
 Actions workflow, triggered by pushing a version tag (`v*`). The workflow
-has two jobs:
+has three jobs:
 
-1. **build** — builds the sdist and wheel with `python -m build` and runs
-   `twine check` on them.
+1. **build** — builds the sdist and wheel with `python -m build`, runs
+   `twine check` on them, and generates a **CycloneDX SBOM** of the base
+   install (see [Software Bill of Materials](#software-bill-of-materials-sbom)).
 2. **publish** — uploads to PyPI using **PyPI Trusted Publishing (OIDC)**.
+3. **release** — creates a **GitHub Release** for the tag and attaches the
+   wheel, the sdist, and the SBOM as downloadable assets. This also makes
+   the per-version release links in `CHANGELOG.md` resolve.
 
 No API token or password is stored in the repository or its secrets. The
 publish job authenticates to PyPI with a short-lived OpenID Connect token
 issued by GitHub for that specific workflow run, scoped by the `pypi`
 environment. This is why the workflow's default permissions are read-only
-and only the publish job is granted `id-token: write`.
+and each job additively grants only the one scope it needs — the publish
+job `id-token: write`, the release job `contents: write`.
 
 ## Release signing (provenance / attestations)
 
@@ -69,6 +74,27 @@ SHA-256 to `release.yml` on `Assault-Consulting/Palimpsests` at
 `refs/tags/v0.3.0` — visible in the Provenance section of that file on
 PyPI.
 
+## Software Bill of Materials (SBOM)
+
+Each release carries a **CycloneDX SBOM** (`palimpsests.cdx.json`, spec
+version 1.6, JSON), attached to its GitHub Release. It is generated during
+the build job from a throwaway virtual environment holding only the freshly
+built wheel and its resolved **base-install** dependency closure — so the
+SBOM lists exactly the third-party packages a plain `pip install palimpsests`
+pulls in (`httpx`, `pydantic`, `typer`, and their transitive dependencies),
+and nothing from the build tooling.
+
+The optional extras (`native`, `encryption`, `keyring`, `embeddings`) are
+**not** in this SBOM by design: they are opt-in, and each declares its own
+single dependency in `pyproject.toml`. The SBOM is generated with
+`--output-reproducible`, so identical inputs produce a byte-identical file,
+and `cyclonedx-bom` is version-pinned in the workflow for the same reason.
+
+The SBOM records *what* is shipped; the Sigstore provenance above records
+*that this project's workflow* shipped it. Attesting the SBOM itself —
+binding it to the artifact digest via `actions/attest-sbom` — is a natural
+next step and is not yet done.
+
 ## Scope of the signing (an honest boundary)
 
 The provenance above covers the **PyPI distribution artifacts** (wheel and
@@ -92,8 +118,9 @@ If tag signing is added later, it will be documented here.
    git tag vX.Y.Z -m "vX.Y.Z"
    git push origin vX.Y.Z
    ```
-4. The `release.yml` workflow builds, publishes to PyPI via OIDC, and the
-   Sigstore attestations are generated automatically.
-5. Confirm on PyPI that the new files show a **Provenance** section, and
-   that the CHANGELOG release link resolves once the GitHub Release is
-   created.
+4. The `release.yml` workflow builds, generates the SBOM, publishes to PyPI
+   via OIDC (Sigstore attestations generated automatically), and creates the
+   GitHub Release with the wheel, sdist, and SBOM attached.
+5. Confirm on PyPI that the new files show a **Provenance** section, that the
+   GitHub Release was created with the `palimpsests.cdx.json` asset, and that
+   the CHANGELOG release link resolves.
