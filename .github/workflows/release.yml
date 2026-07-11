@@ -11,10 +11,10 @@ name: release
 # creates the project). Until that is configured, the publish step fails
 # harmlessly; the build job still runs.
 #
-# The build job also generates a CycloneDX SBOM of the base install, and
-# the release job publishes a GitHub Release carrying the wheel, sdist,
-# and SBOM as downloadable assets (which also makes the CHANGELOG's
-# per-version release links resolve).
+# The build job also generates a CycloneDX SBOM into its own directory
+# (NOT dist/ — see the SBOM step). The release job publishes a GitHub
+# Release carrying the wheel, sdist, and SBOM as downloadable assets
+# (which also makes the CHANGELOG's per-version release links resolve).
 
 on:
   push:
@@ -49,29 +49,39 @@ jobs:
           python -m twine check dist/*
 
       - name: Generate SBOM (CycloneDX)
-        # Build the bill of materials from a *clean* environment that holds
-        # only the freshly built wheel and its runtime dependency closure —
-        # a throwaway venv, so the build job's own tooling (build, twine,
-        # cyclonedx-bom) never leaks into the SBOM. --output-reproducible
-        # drops timestamps/random values so identical inputs yield a
-        # byte-identical SBOM; cyclonedx-bom is pinned for the same reason.
+        # The SBOM is written to sbom/, deliberately NOT dist/. dist/ is what
+        # the publish job uploads to PyPI, and gh-action-pypi-publish validates
+        # every file in it — a .cdx.json there fails as "Unknown distribution
+        # format" and blocks the whole upload. Keeping the SBOM in its own
+        # directory (and its own artifact) keeps the PyPI upload to wheel +
+        # sdist only, while the release job still attaches it.
+        #
+        # Built from a *clean* throwaway venv holding only the freshly built
+        # wheel and its runtime closure, so build tooling never enters the SBOM.
+        # --output-reproducible drops timestamps; cyclonedx-bom is pinned.
         run: |
           python -m pip install --upgrade "cyclonedx-bom==7.3.0"
           python -m venv /tmp/sbom-venv
           /tmp/sbom-venv/bin/python -m pip install --upgrade pip
           /tmp/sbom-venv/bin/python -m pip install dist/*.whl
+          mkdir -p sbom
           cyclonedx-py environment /tmp/sbom-venv \
             --mc-type library \
             --pyproject pyproject.toml \
             --output-reproducible \
             --spec-version 1.6 \
             --output-format JSON \
-            --output-file dist/palimpsests.cdx.json
+            --output-file sbom/palimpsests.cdx.json
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: dist
           path: dist/
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+        with:
+          name: sbom
+          path: sbom/
 
   publish:
     name: publish to PyPI
@@ -111,19 +121,35 @@ jobs:
           name: dist
           path: dist/
 
-      - name: Create GitHub Release with SBOM asset
-        # Uses the runner's preinstalled gh CLI rather than a third-party
-        # release action — no new dependency added to the supply chain of a
-        # supply-chain workflow. --verify-tag ties the release to the pushed
-        # git tag; --generate-notes builds notes from merged PRs.
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4
+        with:
+          name: sbom
+          path: sbom/
+
+      - name: Create or update GitHub Release with SBOM asset
+        # Idempotent: if a release for this tag already exists (for example,
+        # one created from the Releases UI while tagging), upload/replace the
+        # assets on it instead of failing; otherwise create it. Uses the
+        # runner's gh CLI — no third-party action added. --verify-tag ties the
+        # release to the pushed git tag; --generate-notes builds notes from
+        # merged PRs (only on first creation).
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${GITHUB_REF_NAME}" \
-            dist/*.whl \
-            dist/*.tar.gz \
-            dist/palimpsests.cdx.json \
-            --repo "${GITHUB_REPOSITORY}" \
-            --title "${GITHUB_REF_NAME}" \
-            --generate-notes \
-            --verify-tag
+          if gh release view "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            gh release upload "${GITHUB_REF_NAME}" \
+              dist/*.whl \
+              dist/*.tar.gz \
+              sbom/palimpsests.cdx.json \
+              --repo "${GITHUB_REPOSITORY}" \
+              --clobber
+          else
+            gh release create "${GITHUB_REF_NAME}" \
+              dist/*.whl \
+              dist/*.tar.gz \
+              sbom/palimpsests.cdx.json \
+              --repo "${GITHUB_REPOSITORY}" \
+              --title "${GITHUB_REF_NAME}" \
+              --generate-notes \
+              --verify-tag
+          fi
