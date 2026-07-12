@@ -91,8 +91,12 @@ jobs:
           retention-days: 5
 
       # Surface findings in the Security tab (Code Scanning Alerts).
+      # codeql-action v3 is being deprecated by GitHub; pinned to the latest
+      # v4 release, which also runs natively on Node 24 (clearing the Node 20
+      # deprecation warning on this step). upload-sarif is a narrow action, so
+      # the v3 -> v4 major bump is low risk; the step is also soft-failed above.
       - name: Upload to code-scanning
-        uses: github/codeql-action/upload-sarif@641a925cfafe92d0fdf8b239ba4053e3f8d99d6d  # v3
+        uses: github/codeql-action/upload-sarif@99df26d4f13ea111d4ec1a7dddef6063f76b97e9  # v4.37.0
         # Non-gating: requires Code scanning enabled on the repo; a 403 here
         # must not turn main red for a report workflow.
         continue-on-error: true
