@@ -238,6 +238,10 @@ structured argument that the project delivers these properties — claims, evide
 and the explicit residuals and defeaters — is the
 **[assurance case](docs/ASSURANCE-CASE.md)**.
 
+For where the project stands against external frameworks — a self-attested
+**OSPS Baseline Level 2** and **SLSA Build Level 2** release provenance, each
+with its limits — see **[Standards posture](SECURITY.md#standards-posture)**.
+
 ---
 
 ## Prior art & the gap we close
