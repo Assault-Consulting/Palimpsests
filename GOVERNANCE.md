@@ -35,6 +35,23 @@ this size.
 - **Lead maintainer** — final decision authority on architecture, scope,
   and releases, and steward of the project's stated boundaries.
 
+## Members and access
+
+The people with elevated access to the project's sensitive resources —
+repository administration, merge rights, and releases:
+
+| Member | Role | Access |
+|---|---|---|
+| [@andreysparish](https://github.com/andreysparish) | Lead maintainer | Repository admin; release authority |
+| [@olksandrvertel-arch](https://github.com/olksandrvertel-arch) | Co-maintainer | Repository admin; review and hardware benchmarks |
+
+The `main` branch is protected: direct pushes are blocked, and every change —
+**including documentation** — requires a pull request with at least one approval
+from someone other than the author, plus passing status checks (lint, tests,
+coverage), before it can be merged. This is what makes the review described in
+[How decisions are made](#how-decisions-are-made) an enforced control rather than
+a convention.
+
 ## Becoming a maintainer
 
 By sustained, quality contribution and demonstrated alignment with the
@@ -53,12 +70,13 @@ On a team this small this is a matter of trust, not a quota.
   constraints are settled and are not re-litigated per PR: **no attention-
   kernel modification**, and **the core is a library + CLI, not an
   application** (both in [CONTRIBUTING.md](CONTRIBUTING.md)).
-- **Code review.** Python code lands via pull request with CI green on all
-  three platforms; docs and bootstrap files may land directly. As a small
-  team, a change may be authored and reviewed within a narrow group — a
-  structural limit of a one-/two-person maintainer team that is
-  acknowledged openly (see [`docs/BADGE-STATUS.md`](docs/BADGE-STATUS.md)),
-  not misrepresented.
+- **Code review.** All changes land via pull request; `main` is protected
+  (see [Members and access](#members-and-access)) — direct pushes are
+  blocked, and one non-author approval plus green status checks (lint,
+  tests, coverage) are required before merge. As a small team, a change may
+  be authored and reviewed within a narrow group — a structural limit of a
+  one-/two-person maintainer team that is acknowledged openly (see
+  [`docs/BADGE-STATUS.md`](docs/BADGE-STATUS.md)), not misrepresented.
 
 ## Decisions that need special care
 
