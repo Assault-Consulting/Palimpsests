@@ -69,9 +69,25 @@ reporter.
 
 ## Licensing of contributions
 
-By contributing you agree your contribution is licensed under the project's
-[Apache-2.0](LICENSE) license. The tree is single-licensed; see `REUSE.toml`.
-There is no separate CLA.
+Contributions are **inbound = outbound**: by contributing, you license your
+work under the project's [Apache-2.0](LICENSE) license — the same license the
+project ships under. The tree is single-licensed; see `REUSE.toml`. There is
+**no CLA** — no copyright assignment and no separate agreement to sign.
+
+Instead, we use the **Developer Certificate of Origin** (DCO,
+<https://developercertificate.org>): a short, standard attestation that you
+wrote the patch or otherwise have the right to submit it under the project's
+license. You certify it by signing off your commits:
+
+```bash
+git commit -s -m "your message"
+```
+
+This appends a `Signed-off-by: Your Name <you@example.com>` line — matching the
+commit author, with a real name and a reachable email. That line is your DCO
+certification. If you forget, `git commit --amend -s` fixes the latest commit
+and `git rebase --signoff <base>` fixes a branch. Sign-off applies to
+contributions from here on; it is not applied retroactively to history.
 
 ## Scope
 
