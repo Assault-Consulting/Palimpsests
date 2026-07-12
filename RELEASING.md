@@ -108,6 +108,26 @@ currently used; the release artifacts on PyPI are signed via Sigstore
 provenance instead, which is the relevant surface for release integrity.
 If tag signing is added later, it will be documented here.
 
+## SLSA Build Level
+
+The provenance above places the release artifacts at **SLSA Build Level 2**
+(v1.2 Build track): they are built on a **hosted** platform (GitHub Actions),
+and that platform **generates and signs** provenance bound to this repository's
+`release.yml` workflow and the tagged commit. Downstream verification checks
+that signature (see [How to verify a release](#how-to-verify-a-release)).
+
+This is **not** Build Level 3. L3 additionally requires that the material used
+to sign the provenance be **inaccessible to the user-defined build steps**, so
+that even a compromised build step cannot forge valid provenance. Here the build
+and the OIDC signing context share one workflow job, so L3 is not claimed.
+Reaching L3 would mean moving provenance generation into an **isolated builder**
+(for example the `slsa-github-generator` reusable workflow), where signing
+happens in a context the build cannot influence. That is future work.
+
+As with any SLSA level, this describes the **build of this artifact** — it says
+nothing about the artifact's dependencies (which carry their own provenance) or
+the correctness of the code itself.
+
 ## Cutting a release (maintainer checklist)
 
 1. Land all release content on `main` via PR (CI green).
