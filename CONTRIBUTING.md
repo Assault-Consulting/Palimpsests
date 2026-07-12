@@ -17,8 +17,12 @@ Early-stage but contributions are welcome. This document is short on purpose.
 
 ## Workflow
 
-- **Python code lands via pull request — never a direct push to `main`.** Docs and
-  bootstrap files are the only exception.
+- **All changes land via pull request — never a direct push to `main`.** This is
+  enforced by branch protection on `main`: direct pushes are blocked, and a pull
+  request with at least one non-author approval and green status checks (lint,
+  tests, coverage) is required before merge. Documentation is no exception — the
+  earlier "docs may land directly" allowance is retired now that `main` is
+  protected.
 - Branch from `main`, open a PR, link an issue where one exists.
 - CI must be green on all three platforms (macOS/Linux/Windows) before merge.
   Windows path-separator and absolute-path behavior differs from POSIX — do not
@@ -39,6 +43,26 @@ The same suite runs in CI (`.github/workflows/ci.yml`) on macOS, Linux, and
 Windows across Python 3.11 and 3.12. The `[native]` extra (the real
 `LlamaCppBackend`) is deliberately **not** part of CI: it needs a GGUF model and
 a build toolchain, and is validated separately on hardware.
+
+## Dependencies
+
+How dependencies are selected, obtained, and tracked:
+
+- **Selection.** The base install is deliberately minimal (`httpx`, `pydantic`,
+  `typer`); anything heavier or platform-specific — the native backend
+  (`llama-cpp-python`), at-rest encryption (`sqlcipher3`), keychain access
+  (`keyring`), vector math (`numpy`) — lives behind an opt-in extra in
+  `pyproject.toml`, so a plain install pulls the smallest surface. A new
+  dependency is added only when it earns its place, preferring well-maintained,
+  permissively-licensed packages over reinventing them.
+- **Obtaining.** Dependencies are resolved from PyPI by pip during install and in
+  CI, and the build uses standard tooling (pip / build / hatchling). Versions are
+  constrained with lower bounds in `pyproject.toml`; the lint pin (`ruff`) is
+  exact so local and CI agree.
+- **Tracking.** Direct dependencies are declared in `pyproject.toml`. Each
+  release ships a CycloneDX **SBOM** of the resolved base-install closure (see
+  [RELEASING.md](RELEASING.md)), and **Dependabot** monitors dependencies for
+  known vulnerabilities and opens update PRs.
 
 ## Code style
 
