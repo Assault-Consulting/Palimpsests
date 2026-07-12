@@ -91,6 +91,34 @@ party.
 
 ---
 
+## Standards posture
+
+Two point-in-time claims, each stated with its limits.
+
+- **OSPS Baseline — Level 2 (self-attested).** As of **2026-07-12**, Palimpsests
+  self-attests as meeting the [OpenSSF OSPS Baseline](https://baseline.openssf.org/),
+  version **v2026.02.19**, at **Level 2** (the maturity tier for a project with at
+  least two maintainers and a small, consistent user base). The OSPS Baseline is
+  a **self-attestation** framework — this is the project's own assessment against
+  its controls, not an independent audit or certification. The controls behind
+  the assessment: organization-wide required 2FA, `main` branch protection with
+  required non-author review and status checks, signed releases, a CycloneDX
+  SBOM, this documented security review, a coordinated-disclosure policy, and a
+  documented governance model.
+
+- **SLSA — Build Level 2.** Release artifacts are built on a hosted platform
+  (GitHub Actions) with signed provenance bound to the release workflow (PyPI
+  Trusted Publishing + Sigstore PEP 740 attestations). This meets **SLSA Build
+  Level 2**. It does **not** claim Build L3, which additionally requires the
+  provenance-signing material to be isolated from the user-defined build steps;
+  reaching L3 would mean generating provenance through an isolated builder (e.g.
+  `slsa-github-generator`). How to verify a release is in
+  [`RELEASING.md`](RELEASING.md). SLSA covers the *build* of this artifact — not
+  its dependencies (which carry their own provenance), and not the correctness of
+  the code.
+
+---
+
 ## Accepted risks
 
 Risks we know about, have decided not to fix yet, and state here so the person
