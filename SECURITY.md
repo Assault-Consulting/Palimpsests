@@ -75,6 +75,20 @@ defeat it — is in [`docs/ASSURANCE-CASE.md`](docs/ASSURANCE-CASE.md).
   malicious operator who holds both the encryption key and write access to the
   keychain. Threat-model your deployment accordingly.
 
+### Security review
+
+An internal security review of the full source tree, the CI and release
+workflows, and the published PyPI artifact was performed in **July 2026**
+(manual review of the audit subsystem, key management, process lifecycle,
+native backend, KV store, context memory, and CLI, plus Bandit SAST). Its
+scope, findings, severities, and remediation status are documented in
+[`docs/security/AUDIT-2026-07.md`](docs/security/AUDIT-2026-07.md): the
+significant findings were fixed (the 0.4.1 hardening and the KV-state
+validation work), and the two forward-looking items — the `state_set` MAC
+boundary and the level-2 HTTP exposure — are tracked above as accepted risks.
+The review is internal; it has not been independently repeated by a third
+party.
+
 ---
 
 ## Accepted risks

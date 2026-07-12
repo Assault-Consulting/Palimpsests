@@ -88,6 +88,7 @@ embeddings = [
 dev = [
     "pytest>=8.2",
     "pytest-httpx>=0.30",
+    "pytest-cov>=5.0",
     "ruff==0.15.20",
     # numpy is the [embeddings] extra in production; dev pulls it so the
     # BlockMemory retrieval path (cosine over stored vectors) runs in CI.
@@ -130,3 +131,21 @@ testpaths = ["tests"]
 # Import mode importlib keeps src-layout test discovery clean without an
 # editable install rewriting sys.path in surprising ways.
 addopts = "--import-mode=importlib"
+
+[tool.coverage.run]
+source = ["src/palimpsests"]
+# Statement coverage (not branch) — this is what the OpenSSF Silver
+# test_statement_coverage80 criterion asks for.
+
+[tool.coverage.report]
+show_missing = true
+precision = 1
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]
+# Note: llamacpp_backend.py (the in-process ctypes backend) reads low
+# because it can only run with the [native] extra and a real GGUF model
+# on hardware, so CI cannot exercise it — it is validated on hardware per
+# benchmarks/RUNBOOK.md. It is counted, not omitted: overall statement
+# coverage clears the 80% gate with it included.

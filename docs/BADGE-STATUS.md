@@ -60,7 +60,7 @@ not block the passing badge).
 | build_floss_tools | Met | Entire build chain is FLOSS. |
 | test | Met | pytest suite; run steps in CONTRIBUTING.md and CI. |
 | test_invocation | Met | `python -m pytest` (standard Python). |
-| test_most | Unmet | Suite covers main functionality; branch coverage not yet measured. |
+| test_most | Met | 86% statement coverage measured in CI (pytest-cov `coverage` job, gated at 80%). The one low module is the hardware-only ctypes backend (`llamacpp_backend.py`), validated on hardware per benchmarks/RUNBOOK.md, not CI. Branch coverage not yet gated. |
 | test_continuous_integration | Met | CI on push/PR, 3 OS × py3.11/3.12. |
 | test_policy | Met | CONTRIBUTING.md: tests ship with every behavioral change. |
 | tests_are_added | Met | Each L3 feature landed with its own tests/test_native_*.py. |
