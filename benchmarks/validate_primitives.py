@@ -21,7 +21,6 @@ from __future__ import annotations
 
 import argparse
 import sys
-
 from palimpsests.providers.native.backend import BatchEntry
 from palimpsests.providers.native.llamacpp_backend import LlamaCppBackend
 
