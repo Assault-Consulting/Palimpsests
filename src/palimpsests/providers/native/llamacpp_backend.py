@@ -51,6 +51,7 @@ fix was needed (n_batch, see __init__).
 from __future__ import annotations
 
 import ctypes
+import numpy as np
 from collections.abc import Sequence
 from palimpsests.providers.native.backend import BatchEntry, Token
 
@@ -249,7 +250,7 @@ class LlamaCppBackend:
 
     # ─── decode: THE batching primitive (highest-risk method) ─────────────
 
-    def decode(self, entries: Sequence[BatchEntry]) -> dict[int, list[float]]:
+    def decode(self, entries: Sequence[BatchEntry]) -> dict[int, np.ndarray]:
         """One forward pass over a multi-sequence batch.
 
         This is the method the whole level exists for, and the one most
@@ -324,12 +325,17 @@ class LlamaCppBackend:
                 raise RuntimeError(f"llama_decode returned {rc}")
 
             # 4) copy out the logits row for each entry that asked.
-            out: dict[int, list[float]] = {}
+            out: dict[int, np.ndarray] = {}
             for seq_id, idx in last_index_for.items():
                 ptr = lib.llama_get_logits_ith(self._ctx, idx)
-                # ptr is a float* to n_vocab contiguous floats. Slice via
-                # ctypes into a Python list (the scheduler wants a list).
-                out[seq_id] = [float(ptr[j]) for j in range(n_vocab)]
+                # ptr is a float* to n_vocab contiguous floats. Wrap the C
+                # buffer as a numpy array and copy it out: .copy() owns its
+                # memory, so it survives llama_batch_free and the next
+                # decode overwriting the context logits. This bulk memcpy
+                # (plus numpy argmax downstream) replaces a per-token Python
+                # loop that boxed all n_vocab (151,936) floats one at a time
+                # — the ~30% per-token cost found in bench Run 0.1.
+                out[seq_id] = np.ctypeslib.as_array(ptr, shape=(n_vocab,)).copy()
             return out
         finally:
             # 6) always free the batch, even if decode raised.
