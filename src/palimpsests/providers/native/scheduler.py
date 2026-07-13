@@ -62,25 +62,27 @@ replaces ``_argmax`` later without touching the loop.
 """
 from __future__ import annotations
 
+import numpy as np
 from collections import deque
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
 from palimpsests.providers.native.backend import BatchEntry, NativeBackend, Token
 
 
-def _argmax(logits: list[float]) -> int:
+def _argmax(logits: np.ndarray) -> int:
     """Greedy sampling: the highest-logit token id.
 
     Deliberately the simplest possible sampler. A real sampler chain
     replaces this later without touching the scheduler's structure.
+
+    ``np.asarray`` makes this accept either the real backend's native
+    ``np.ndarray`` (a no-op) or a plain float sequence from a test double,
+    and does the argmax in C rather than a Python loop over the full vocab
+    — the ~30% per-token hot-path cost identified in bench Run 0.1. The
+    tie-break is identical to the former explicit ``>`` loop: numpy argmax
+    returns the index of the *first* maximum, so generation is unchanged.
     """
-    best_i = 0
-    best_v = logits[0]
-    for i, v in enumerate(logits):
-        if v > best_v:
-            best_v = v
-            best_i = i
-    return best_i
+    return int(np.asarray(logits).argmax())
 
 
 @dataclass
