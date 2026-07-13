@@ -62,11 +62,14 @@ replaces ``_argmax`` later without touching the loop.
 """
 from __future__ import annotations
 
-import numpy as np
 from collections import deque
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
 from palimpsests.providers.native.backend import BatchEntry, NativeBackend, Token
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import numpy as np
 
 
 def _argmax(logits: np.ndarray) -> int:
@@ -81,7 +84,15 @@ def _argmax(logits: np.ndarray) -> int:
     — the ~30% per-token hot-path cost identified in bench Run 0.1. The
     tie-break is identical to the former explicit ``>`` loop: numpy argmax
     returns the index of the *first* maximum, so generation is unchanged.
+
+    numpy is imported lazily here, not at module scope, so importing the
+    scheduler needs only the base install — the native/decode path that
+    actually calls this always has numpy (it ships with llama-cpp-python),
+    while base-only consumers (e.g. the fuzz harness) can import the module
+    without pulling numpy.
     """
+    import numpy as np
+
     return int(np.asarray(logits).argmax())
 
 
