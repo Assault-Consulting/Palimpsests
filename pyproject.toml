@@ -77,6 +77,11 @@ llamacpp = []
 # validated on hardware with a GGUF model.
 native = [
     "llama-cpp-python>=0.3.0",
+    # decode() wraps the C logits buffer as a numpy array and the sampler
+    # argmaxes over it in C (bench Run 0.1 hot-path fix). numpy already
+    # arrives transitively with llama-cpp-python; declared here so the
+    # dependency is explicit rather than implied.
+    "numpy>=1.26",
 ]
 # Local vector math for block-memory retrieval (cosine over stored
 # embeddings). numpy is the only requirement; the embed source itself is

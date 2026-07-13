@@ -66,21 +66,34 @@ from collections import deque
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
 from palimpsests.providers.native.backend import BatchEntry, NativeBackend, Token
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import numpy as np
 
 
-def _argmax(logits: list[float]) -> int:
+def _argmax(logits: np.ndarray) -> int:
     """Greedy sampling: the highest-logit token id.
 
     Deliberately the simplest possible sampler. A real sampler chain
     replaces this later without touching the scheduler's structure.
+
+    ``np.asarray`` makes this accept either the real backend's native
+    ``np.ndarray`` (a no-op) or a plain float sequence from a test double,
+    and does the argmax in C rather than a Python loop over the full vocab
+    — the ~30% per-token hot-path cost identified in bench Run 0.1. The
+    tie-break is identical to the former explicit ``>`` loop: numpy argmax
+    returns the index of the *first* maximum, so generation is unchanged.
+
+    numpy is imported lazily here, not at module scope, so importing the
+    scheduler needs only the base install — the native/decode path that
+    actually calls this always has numpy (it ships with llama-cpp-python),
+    while base-only consumers (e.g. the fuzz harness) can import the module
+    without pulling numpy.
     """
-    best_i = 0
-    best_v = logits[0]
-    for i, v in enumerate(logits):
-        if v > best_v:
-            best_v = v
-            best_i = i
-    return best_i
+    import numpy as np
+
+    return int(np.asarray(logits).argmax())
 
 
 @dataclass

@@ -25,7 +25,10 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
+
+if TYPE_CHECKING:
+    import numpy as np
 
 # A token is an int id, as the C API deals in them. Text <-> token
 # conversion is a backend concern (the model's vocab), exposed via
@@ -74,14 +77,18 @@ class NativeBackend(Protocol):
 
     # ─── decode (the batching primitive) ─────────────────────────────────
 
-    def decode(self, entries: Sequence[BatchEntry]) -> dict[int, list[float]]:
+    def decode(self, entries: Sequence[BatchEntry]) -> dict[int, np.ndarray]:
         """Run one forward pass over a multi-sequence batch.
 
         Maps to building a ``llama_batch`` with per-token ``seq_id`` and
         ``pos`` (from each entry's ``start_pos``) and calling
         ``llama_decode`` once. Returns, per ``seq_id`` that asked for
-        logits, the logits vector for its last position. Sequences sharing
-        one ``decode`` call is the whole point of the level.
+        logits, the logits vector (``np.ndarray``, float32) for its last
+        position. The real backend returns numpy so the sampler can argmax
+        in C instead of a Python loop over the vocab; consumers coerce with
+        ``np.asarray``, so a test double may return any float sequence.
+        Sequences sharing one ``decode`` call is the whole point of the
+        level.
         """
         ...
 
