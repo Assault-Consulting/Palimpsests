@@ -23,10 +23,12 @@ primitives are llama.cpp's.
 """
 from __future__ import annotations
 
-import numpy as np
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
+
+if TYPE_CHECKING:
+    import numpy as np
 
 # A token is an int id, as the C API deals in them. Text <-> token
 # conversion is a backend concern (the model's vocab), exposed via
