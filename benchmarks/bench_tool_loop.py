@@ -53,6 +53,7 @@ full environment recorded).
 Nothing is written anywhere; results print as a table plus a JSON blob you
 can paste next to the environment description in a report.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -60,6 +61,7 @@ import json
 import platform
 import statistics
 import time
+from _workload import BEGIN_MESSAGE, big_system_prompt, tool_call_id, tool_result
 from dataclasses import dataclass, field
 
 # Imported lazily in main() so --help works without the native extra.
@@ -87,22 +89,6 @@ class ArmResult:
 def _now() -> float:
     """Monotonic seconds — never the wall clock, which can jump."""
     return time.perf_counter()
-
-
-def _big_system_prompt(target_tokens: int) -> str:
-    """A filler system prompt of roughly ``target_tokens`` tokens.
-
-    The point of the benchmark is the COST of carrying this prefix, so its
-    content is irrelevant — only its length matters. Rough 4 chars/token
-    heuristic; the exact count is measured from the tokenizer at runtime
-    and recorded, so the approximation here does not affect honesty.
-    """
-    sentence = (
-        "You are a meticulous assistant operating under a large, fixed "
-        "system context that must be carried across every step of the task. "
-    )
-    reps = max(1, (target_tokens * 4) // len(sentence))
-    return sentence * reps
 
 
 def _run_treatment(
@@ -133,7 +119,7 @@ def _run_treatment(
         # decoded — once.
         h0 = _now()
         first_token_seen = False
-        for _ in session.send("Begin the task."):
+        for _ in session.send(BEGIN_MESSAGE):
             if not first_token_seen:
                 ttft = _now() - h0
                 first_token_seen = True
@@ -144,8 +130,8 @@ def _run_treatment(
         for hop in range(1, hops + 1):
             hstart = _now()
             for _ in session.append_tool_result(
-                tool_call_id=f"call_{hop}",
-                result=f"tool {hop} returned value {hop * 7}",
+                tool_call_id=tool_call_id(hop),
+                result=tool_result(hop),
             ):
                 pass
             timings.append(HopTiming(hop, _now() - hstart, input_tokens=-1))
@@ -154,9 +140,7 @@ def _run_treatment(
     return ArmResult("treatment_l3_tool_loop", _now() - t0, ttft, timings)
 
 
-def _run_baseline(
-    backend, make_scheduler, system_prompt: str, hops: int, stop_tokens
-) -> ArmResult:
+def _run_baseline(backend, make_scheduler, system_prompt: str, hops: int, stop_tokens) -> ArmResult:
     """Re-prefill baseline: a fresh session each hop, fed the WHOLE history.
 
     This is what a stateless engine must do. Each hop reconstructs the
@@ -175,7 +159,7 @@ def _run_baseline(
     t0 = _now()
 
     # The running transcript the stateless engine must re-read each hop.
-    transcript = "Begin the task."
+    transcript = BEGIN_MESSAGE
     for hop in range(0, hops + 1):
         scheduler = make_scheduler()
         # Fresh session every hop: no KV survives between hops, so the
@@ -200,7 +184,7 @@ def _run_baseline(
         # Grow the transcript exactly as the tool loop would, so hop N of
         # the baseline re-prefills the same content hop N of the treatment
         # holds live.
-        transcript += f"\ntool {hop} returned value {hop * 7}"
+        transcript += f"\n{tool_result(hop)}"
     return ArmResult("baseline_reprefill", _now() - t0, ttft, timings)
 
 
@@ -260,10 +244,8 @@ def main() -> None:
         # scheduler shape, so this is not a variable.
         return Scheduler(backend, max_active=1)
 
-    system_prompt = _big_system_prompt(args.prefix_tokens)
-    measured_prefix_tokens = len(
-        backend.tokenize(f"system: {system_prompt}\n", add_special=True)
-    )
+    system_prompt = big_system_prompt(args.prefix_tokens)
+    measured_prefix_tokens = len(backend.tokenize(f"system: {system_prompt}\n", add_special=True))
 
     # Warmup (BENCHMARKING §5.1): one discarded run of each arm so model
     # load and allocator warmup do not pollute timings.
@@ -274,14 +256,10 @@ def main() -> None:
     baselines: list[ArmResult] = []
     for _ in range(args.repeats):
         treatments.append(
-            _run_treatment(
-                backend, make_scheduler, system_prompt, args.hops, stop_tokens
-            )
+            _run_treatment(backend, make_scheduler, system_prompt, args.hops, stop_tokens)
         )
         baselines.append(
-            _run_baseline(
-                backend, make_scheduler, system_prompt, args.hops, stop_tokens
-            )
+            _run_baseline(backend, make_scheduler, system_prompt, args.hops, stop_tokens)
         )
 
     backend.close()
@@ -330,8 +308,17 @@ def main() -> None:
 
     # Machine-readable blob to paste beside the environment in a report.
     print("\nJSON:")
-    print(json.dumps({"env": env, "treatment": t_sum, "baseline": b_sum,
-                      "speedup_baseline_over_treatment": speedup}, indent=2))
+    print(
+        json.dumps(
+            {
+                "env": env,
+                "treatment": t_sum,
+                "baseline": b_sum,
+                "speedup_baseline_over_treatment": speedup,
+            },
+            indent=2,
+        )
+    )
 
 
 if __name__ == "__main__":
