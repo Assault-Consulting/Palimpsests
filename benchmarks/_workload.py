@@ -14,6 +14,9 @@ BEGIN_MESSAGE = "Begin the task."
 # Fixed short generation per turn (the win is avoided prefill, not verbosity).
 GEN_TOKENS = 32
 
+# N4 per-session generation length (plan §3: fixed small, 64 tokens).
+GEN_TOKENS_N4 = 64
+
 
 def big_system_prompt(target_tokens: int) -> str:
     """A filler system prompt of roughly ``target_tokens`` tokens.
@@ -29,6 +32,16 @@ def big_system_prompt(target_tokens: int) -> str:
     )
     reps = max(1, (target_tokens * 4) // len(sentence))
     return sentence * reps
+
+
+def session_suffix(i: int) -> str:
+    """The short unique user turn session ``i`` opens with (N4 workload).
+
+    Each concurrent session shares the big system prefix and differs only
+    in this suffix — the point of N4 is the cost of the SHARED part, so
+    the unique part stays short and structurally identical across sessions.
+    """
+    return f"Session {i}: report step {i} of the plan, then continue."
 
 
 def tool_call_id(hop: int) -> str:
