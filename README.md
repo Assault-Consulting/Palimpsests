@@ -1,6 +1,6 @@
 # <img src="assets/icon-dark.svg" alt="" height="30" align="center"> Palimpsests
 
-**A layered local-LLM inference engine: from thin wrapper to your own serving service, under one abstraction.**
+**Local-first LLM inference with a tamper-evident audit trail — capable inference that runs entirely on hardware you control, built for regulated and air-gapped deployments under the EU AI Act.**
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![CI](https://github.com/Assault-Consulting/Palimpsests/actions/workflows/ci.yml/badge.svg)](https://github.com/Assault-Consulting/Palimpsests/actions/workflows/ci.yml)
@@ -15,9 +15,12 @@
 > retrieval) and an encrypted audit log. Level 3 (pal-native) has its full serving
 > skeleton — streaming, stateful sessions, continuous batching, server-side tool
 > loop, shared-prefix KV, and KV persistence — and the real in-process
-> `LlamaCppBackend` runs a real model on hardware (the first tool-loop-vs-re-prefill
-> benchmark is in — measured **CPU-only on a 1.5B model as a mechanism sanity check,
-> not a representative figure**; a GPU / larger-model run is the pending next step).
+> `LlamaCppBackend` runs a real model on hardware. The Tool Loop is now measured
+> across full three-arm sweeps on 1.5B and 7B (iGPU/Vulkan): in-process it
+> **matches a tuned llama-server without running one**. The performance question
+> that would set Palimpsests apart — Shared Prefix and KV Persistence under
+> concurrency — is still open; the honest method, numbers, and limits are in
+> **[results/](results/)**.
 > **New in v0.5:** audit rows are hash-chained with an out-of-band head anchor, so
 > tampering — including wholesale replacement — is detectable, with a `palimpsests
 > audit verify` command; a reproducible CycloneDX SBOM and a signed GitHub Release;
@@ -74,11 +77,12 @@ retrieval. At level 3 the same image applies to KV state.
 - **One API, three engines.** Prototype on Ollama, take fine-grained control with
   llama.cpp, run the native service — the calling code above the engine does not
   change. The same context-memory layer runs identically on all three.
-- **Agentic-workload serving at level 3.** Continuous batching, a shared system
-  prompt decoded once and copied rather than recomputed per session, a tool loop
-  that continues in-place without re-prefilling the conversation, and KV state
-  that persists and is reusable by content. These are the levers that matter when
-  a process makes hundreds of calls in a loop, not one.
+- **Agentic-workload serving at level 3.** Continuous batching plus the three
+  levers a tuned server also uses, behind one API: **Shared Prefix** (decode a
+  shared system prompt once, copy it across sessions instead of recomputing it),
+  **Tool Loop** (continue in place without re-prefilling the conversation between
+  tool calls), and **KV Persistence** (freeze and restore a session's KV state).
+  These are what matter when a process makes hundreds of calls in a loop, not one.
 - **Local-first, air-gap capable, auditable.** Inference runs on-host; nothing
   leaves the machine to answer a request. Every model and KV operation is
   recorded to an encrypted audit log whose rows are **hash-chained**, so
@@ -302,28 +306,36 @@ the novelty is in this composition and its seams, not in a new inference kernel.
       KV persistence → content-addressed KV store. All six capability flags true.
       The *architectural* half of level 3.
 - [x] **v0.4 — real `LlamaCppBackend` + first benchmark** — the in-process
-      ctypes backend runs a real model on hardware, and the first measurement
-      (tool-loop vs re-prefill) is in: a win that grows with the avoided
-      re-prefill work, measured CPU-only on a 1.5B model as a *mechanism sanity
-      check* per [docs/BENCHMARKING.md](docs/BENCHMARKING.md). The *empirical*
-      half begins — first numbers we can call our own, with a GPU / larger-model
-      run still to come.
+      ctypes backend runs a real model on hardware; the first tool-loop-vs-
+      re-prefill measurement lands (a CPU-only 1.5B sanity check) per
+      [docs/BENCHMARKING.md](docs/BENCHMARKING.md). The *empirical* half begins.
+- [x] **0.5.1 (dev) — Tool Loop benchmark campaign** — full three-arm sweeps
+      (ours / naive re-prefill / tuned `llama-server`) on 1.5B and 7B
+      (iGPU/Vulkan), under a transport-fair headline convention. Result: the
+      Tool Loop **matches a tuned llama-server** in-process (adjusted parity on
+      both models), and runs up to ~3.9× over re-prefilling with no tool loop at
+      all — the value of the loop itself, *not* an edge over the server. A
+      per-sequence context-budget trade-off surfaced at deep histories. Reports:
+      [results/](results/).
 - [x] **v0.5 — integrity & supply chain** — the audit log becomes genuinely
       tamper-evident (hash chain + out-of-band head anchor + `audit verify`),
       the KV-state deserialization path is validated and fuzzed, releases ship a
       reproducible CycloneDX SBOM and a signed GitHub Release, and the project's
       governance and a [security assurance case](docs/ASSURANCE-CASE.md) are
       documented.
-- [ ] **Beyond v0.5** — a GPU / larger-model benchmark run for representative
-      magnitudes, the persistence (N6) and shared-prefix (N4) benchmarks,
-      sleep-time compute (edge), disk-backed KV store, speculative decoding. See
-      [docs/ROADMAP.md](docs/ROADMAP.md).
+- [ ] **Beyond 0.5** — the open differentiation question: **Shared Prefix** and
+      **KV Persistence** measured under concurrency (many sessions, more than the
+      slot count) — where these mechanisms can pay off, if anywhere. Plus
+      sleep-time compute (edge), a disk-backed KV store, speculative decoding.
+      See [docs/ROADMAP.md](docs/ROADMAP.md).
 
 Each level graduates by flipping the corresponding `capabilities` flag from
 `False` to `True`. A flipped flag means the *mechanism* is implemented and
-tested; a *measured* speedup is a separate step — the tool-loop benchmark in v0.4
-is the first such measurement, and it is a CPU-only sanity check, not a
-representative figure.
+tested; a *measured* result is a separate step. Those measurements are now in
+(the 1.5B and 7B Tool Loop sweeps), and they set the honest bar: at the level-3
+Tool Loop, Palimpsests matches a tuned `llama-server` rather than beating it —
+the performance case, if there is one, rests on Shared Prefix and KV Persistence
+under concurrency, still to be measured.
 
 ---
 
