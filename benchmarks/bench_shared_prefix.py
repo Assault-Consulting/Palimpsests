@@ -132,9 +132,7 @@ def mem_snapshot(tag: str) -> dict:
     handle = ctypes.windll.kernel32.OpenProcess(0x1000, False, os.getpid())
     if handle:
         try:
-            ctypes.windll.psapi.GetProcessMemoryInfo(
-                handle, ctypes.byref(pmc), pmc.cb
-            )
+            ctypes.windll.psapi.GetProcessMemoryInfo(handle, ctypes.byref(pmc), pmc.cb)
         finally:
             ctypes.windll.kernel32.CloseHandle(handle)
     ms = _MEMSTATUS()
@@ -297,9 +295,7 @@ def run_probe(args: argparse.Namespace) -> None:
         for k in range(len(copied) + 1, args.n_seq_max):
             try:
                 backend.seq_copy(0, k)
-                backend.decode(
-                    [BatchEntry(seq_id=k, tokens=burst, start_pos=plen)]
-                )
+                backend.decode([BatchEntry(seq_id=k, tokens=burst, start_pos=plen)])
                 event("capacity_seq_ok", seq=k)
             except RuntimeError as exc:
                 event("capacity_exhausted", seq=k, error=str(exc))
@@ -336,9 +332,7 @@ def run_point(args: argparse.Namespace) -> None:
     # point falls on the same "\n" boundary NativeSession uses, so the
     # token streams are identical — verified by the measured counts).
     full_toks = [
-        backend.tokenize(
-            prefix_text + USER_FMT.format(msg=session_suffix(i)), add_special=True
-        )
+        backend.tokenize(prefix_text + USER_FMT.format(msg=session_suffix(i)), add_special=True)
         for i in range(args.sessions)
     ]
 
@@ -366,13 +360,9 @@ def run_point(args: argparse.Namespace) -> None:
                     t = _now()
                     scheduler.copy_prefix_to_slot(holder, seq, plen)
                     copy_s.append(_now() - t)
-                    scheduler.feed(
-                        seq, suffix_toks[i], max_tokens=args.gen_tokens
-                    )
+                    scheduler.feed(seq, suffix_toks[i], max_tokens=args.gen_tokens)
                 else:
-                    scheduler.feed(
-                        seq, full_toks[i], max_tokens=args.gen_tokens
-                    )
+                    scheduler.feed(seq, full_toks[i], max_tokens=args.gen_tokens)
                 active[seq] = i
             for st in scheduler.step():
                 i = active.get(st.seq_id)
@@ -415,9 +405,7 @@ def run_point(args: argparse.Namespace) -> None:
         "wall_seconds_max": max(walls),
         "ttft_first_session_median": statistics.median(ttft_firsts),
         "ttft_session_median_of_medians": statistics.median(ttft_medians),
-        "warm_seconds_median": statistics.median(
-            [r["warm_seconds"] for r in repeats]
-        ),
+        "warm_seconds_median": statistics.median([r["warm_seconds"] for r in repeats]),
         "copy_seconds_all": [s for r in repeats for s in r["copy_seconds"]],
     }
     env = {

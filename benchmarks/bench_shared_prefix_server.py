@@ -67,17 +67,13 @@ def _peak_rss_mb(pid: int) -> float | None:
         ]
 
     PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
-    handle = ctypes.windll.kernel32.OpenProcess(
-        PROCESS_QUERY_LIMITED_INFORMATION, False, pid
-    )
+    handle = ctypes.windll.kernel32.OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, pid)
     if not handle:
         return None
     try:
         pmc = PMC()
         pmc.cb = ctypes.sizeof(PMC)
-        ok = ctypes.windll.psapi.GetProcessMemoryInfo(
-            handle, ctypes.byref(pmc), pmc.cb
-        )
+        ok = ctypes.windll.psapi.GetProcessMemoryInfo(handle, ctypes.byref(pmc), pmc.cb)
         return pmc.PeakWorkingSetSize / 2**20 if ok else None
     finally:
         ctypes.windll.kernel32.CloseHandle(handle)
@@ -123,9 +119,7 @@ class ServerArm:
             cmd.append("--kv-unified")
         if self.args.cache_reuse:
             cmd += ["--cache-reuse", str(self.args.cache_reuse)]
-        self.proc = subprocess.Popen(
-            cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-        )
+        self.proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         deadline = _now() + 180
         with httpx.Client() as client:
             while _now() < deadline:
@@ -175,9 +169,7 @@ class ServerArm:
 
     # ── one session = one /completion request ─────────────────────────────
 
-    def run_session(
-        self, i: int, prompt: str, t0: float, gen_tokens: int
-    ) -> SessionTiming:
+    def run_session(self, i: int, prompt: str, t0: float, gen_tokens: int) -> SessionTiming:
         payload = {
             "prompt": prompt,
             "n_predict": gen_tokens,
@@ -192,9 +184,7 @@ class ServerArm:
         id_slot = -1
         with (
             httpx.Client() as client,
-            client.stream(
-                "POST", self.base + "/completion", json=payload, timeout=1200
-            ) as resp,
+            client.stream("POST", self.base + "/completion", json=payload, timeout=1200) as resp,
         ):
             resp.raise_for_status()
             for line in resp.iter_lines():
@@ -220,10 +210,7 @@ class ServerArm:
 
 def _prompts(args: argparse.Namespace) -> list[str]:
     prefix = SYSTEM_FMT.format(sp=big_system_prompt(args.prefix_tokens))
-    return [
-        prefix + USER_FMT.format(msg=session_suffix(i))
-        for i in range(args.sessions)
-    ]
+    return [prefix + USER_FMT.format(msg=session_suffix(i)) for i in range(args.sessions)]
 
 
 def run_characterize(args: argparse.Namespace, arm: ServerArm) -> None:
@@ -268,9 +255,7 @@ def run_grid(args: argparse.Namespace, arm: ServerArm) -> None:
         def worker(i: int) -> None:
             results[i] = arm.run_session(i, prompts[i], t0, args.gen_tokens)
 
-        threads = [
-            threading.Thread(target=worker, args=(i,)) for i in range(len(prompts))
-        ]
+        threads = [threading.Thread(target=worker, args=(i,)) for i in range(len(prompts))]
         for t in threads:
             t.start()
         for t in threads:
@@ -334,11 +319,7 @@ def run_grid(args: argparse.Namespace, arm: ServerArm) -> None:
         f"cache reset verified: {cache_reset_verified}"
     )
     print("\nJSON:")
-    print(
-        json.dumps(
-            {"env": env, "summary": summary, "per_repeat": repeats}, indent=2
-        )
-    )
+    print(json.dumps({"env": env, "summary": summary, "per_repeat": repeats}, indent=2))
 
 
 def main() -> None:
