@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Palimpsests — local-first LLM inference with a tamper-evident record</title>
+<meta name="description" content="An Apache-2.0 inference engine for regulated and air-gapped deployments. Runs language models on hardware you control and writes a hash-chained record of every request." />
+
+<!-- ============================================================
+     Discoverability / indexing (Google, Bing, AI agents).
+     PLACEHOLDER DOMAIN: replace every https://palimpsests.dev
+     with your production domain here and in robots.txt,
+     sitemap.xml, llms.txt and site.webmanifest.
+     ============================================================ -->
+<link rel="canonical" href="https://palimpsests.dev/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Assault Consulting" />
+<meta name="theme-color" content="#15151f" />
+
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Palimpsests" />
+<meta property="og:title" content="Palimpsests — local-first LLM inference with a tamper-evident record" />
+<meta property="og:description" content="An Apache-2.0 inference engine for regulated and air-gapped deployments. Runs language models on hardware you control and keeps a tamper-evident, hash-chained record of every request." />
+<meta property="og:url" content="https://palimpsests.dev/" />
+<meta property="og:image" content="https://palimpsests.dev/og-cover.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Palimpsests — layered, fading record lines on a dark tile." />
+<meta property="og:locale" content="en" />
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Palimpsests — local-first LLM inference with a tamper-evident record" />
+<meta name="twitter:description" content="On-prem, air-gapped inference with a hash-chained audit trail. Apache-2.0." />
+<meta name="twitter:image" content="https://palimpsests.dev/og-cover.png" />
+
+<!-- Icons / manifest -->
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/site.webmanifest" />
+
+<!-- Structured data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://palimpsests.dev/#org",
+      "name": "Assault Consulting",
+      "url": "https://palimpsests.dev/",
+      "location": {"@type": "Place", "address": {"@type": "PostalAddress", "addressLocality": "Kyiv", "addressCountry": "UA"}},
+      "sameAs": ["https://github.com/Assault-Consulting"]
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://palimpsests.dev/#website",
+      "url": "https://palimpsests.dev/",
+      "name": "Palimpsests",
+      "inLanguage": "en",
+      "publisher": {"@id": "https://palimpsests.dev/#org"}
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://palimpsests.dev/#software",
+      "name": "Palimpsests",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Linux, macOS, Windows",
+      "description": "A local-first LLM inference engine for regulated and air-gapped deployments. It runs language models entirely on hardware you control and writes a tamper-evident, hash-chained record of every request. It supplies runtime primitives that EU obligations rest on (data residency, record-keeping, supply-chain integrity); it does not by itself make a deployment compliant.",
+      "url": "https://palimpsests.dev/",
+      "downloadUrl": "https://pypi.org/project/palimpsests/",
+      "installUrl": "https://pypi.org/project/palimpsests/",
+      "codeRepository": "https://github.com/Assault-Consulting/Palimpsests",
+      "programmingLanguage": "Python",
+      "license": "https://www.apache.org/licenses/LICENSE-2.0",
+      "isAccessibleForFree": true,
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
+      "author": {"@id": "https://palimpsests.dev/#org"},
+      "publisher": {"@id": "https://palimpsests.dev/#org"}
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --paper:#E8E9E3;
+    --paper-2:#DFE1DA;
+    --plate:#F1F2EC;
+    --ink:#15181A;
+    --slate:#565D5B;
+    --slate-2:#767C79;
+    --patina:#2C6350;
+    --patina-strong:#1F4A3C;
+    --patina-soft:rgba(44,99,80,.10);
+    --rule:rgba(21,24,26,.13);
+    --rule-soft:rgba(21,24,26,.07);
+    --shadow:0 1px 0 rgba(21,24,26,.05), 0 22px 44px -30px rgba(21,24,26,.45);
+    --maxw:1140px;
+    --pad:clamp(20px,5vw,64px);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Archivo",system-ui,-apple-system,sans-serif;
+    font-size:clamp(16px,1.05vw,17.5px);
+    line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  ::selection{background:var(--patina);color:var(--plate)}
+
+  a{color:inherit}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding-inline:var(--pad)}
+
+  .display{
+    font-family:"Archivo Expanded","Archivo",system-ui,sans-serif;
+    font-weight:800;
+    letter-spacing:-.02em;
+    line-height:.99;
+  }
+  .eyebrow{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:.72rem;
+    font-weight:500;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--patina-strong);
+    display:inline-flex;
+    align-items:center;
+    gap:.6em;
+  }
+  .eyebrow::before{content:"";width:26px;height:1px;background:var(--patina)}
+  .mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+  .lede{color:var(--slate);font-size:1.12rem;max-width:56ch}
+
+  /* ---------- nav ---------- */
+  nav{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--paper) 86%, transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--rule-soft)}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:66px}
+  .brand{display:inline-flex;align-items:center;gap:11px;font-family:"Archivo Expanded",sans-serif;font-weight:700;letter-spacing:-.01em;font-size:1.06rem;text-decoration:none}
+  .brand svg{display:block}
+  .brand__mark{width:26px;height:26px;border-radius:6px;overflow:hidden;display:inline-flex;flex:none;box-shadow:inset 0 0 0 1px rgba(230,223,206,.10),0 0 0 1px var(--rule)}
+  .brand__mark svg{width:100%;height:100%}
+  .nav__links{display:flex;align-items:center;gap:28px}
+  .nav__links a{font-size:.86rem;color:var(--slate);text-decoration:none;transition:color .18s}
+  .nav__links a:hover{color:var(--ink)}
+  .btn{
+    display:inline-flex;align-items:center;gap:.5em;
+    font-family:"IBM Plex Mono",monospace;font-size:.82rem;
+    padding:.62em 1em;border-radius:8px;text-decoration:none;
+    border:1px solid var(--patina);color:var(--patina-strong);
+    background:var(--patina-soft);transition:background .18s,color .18s,border-color .18s;
+  }
+  .btn:hover{background:var(--patina);color:var(--plate);border-color:var(--patina)}
+  .btn--solid{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .btn--solid:hover{background:var(--patina-strong);border-color:var(--patina-strong);color:var(--plate)}
+  @media(max-width:720px){.nav__links a.hide-sm{display:none}}
+
+  /* ---------- hero ---------- */
+  .hero{padding-top:clamp(52px,8vw,104px);padding-bottom:clamp(52px,8vw,96px)}
+  .hero__grid{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(36px,5vw,72px);align-items:center}
+  .hero h1{font-size:clamp(2.7rem,6.4vw,5.15rem);margin:.5rem 0 0}
+  .hero h1 .soft{color:var(--slate-2)}
+  .hero__sub{margin-top:1.4rem}
+  .beats{margin-top:1.9rem;display:flex;flex-wrap:wrap;gap:.55rem;align-items:center;font-family:"IBM Plex Mono",monospace;font-size:.83rem;color:var(--ink)}
+  .beats b{font-weight:500}
+  .beats .dot{color:var(--patina)}
+  .hero__cta{margin-top:2.3rem;display:flex;flex-wrap:wrap;gap:12px}
+  @media(max-width:860px){
+    .hero__grid{grid-template-columns:1fr;gap:44px}
+    .hero__figure{order:2}
+  }
+
+  /* ---------- strata signature ---------- */
+  .figure{
+    background:linear-gradient(180deg,var(--plate),var(--paper-2));
+    border:1px solid var(--rule);border-radius:16px;
+    padding:20px 20px 22px;box-shadow:var(--shadow);
+  }
+  .figure__head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+  .figure__head .t{font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--slate)}
+  .figure__head .live{display:inline-flex;align-items:center;gap:.5em;font-family:"IBM Plex Mono",monospace;font-size:.68rem;color:var(--patina-strong)}
+  .figure__head .live i{width:7px;height:7px;border-radius:50%;background:var(--patina);box-shadow:0 0 0 3px var(--patina-soft)}
+
+  .strata{position:relative;min-height:214px;padding-right:126px}
+  .stratum{
+    position:absolute;left:calc(var(--i)*22px);top:calc(var(--i)*30px);
+    width:calc(100% - 126px - (var(--imax) - var(--i))*22px);
+    height:86px;z-index:calc(20 - var(--i));
+    background:var(--plate);border:1px solid var(--rule);border-radius:11px;
+    padding:13px 15px;display:flex;flex-direction:column;justify-content:center;gap:5px;
+    box-shadow:0 12px 26px -22px rgba(21,24,26,.7);
+    opacity:var(--op);
+    transform:translateY(10px);animation:rise .7s cubic-bezier(.2,.7,.2,1) forwards;
+    animation-delay:calc(var(--i)*90ms + 120ms);
+  }
+  @keyframes rise{to{transform:translateY(0)}}
+  .stratum .k{font-family:"IBM Plex Mono",monospace;font-size:.82rem;color:var(--ink)}
+  .stratum .k .role{color:var(--patina-strong)}
+  .stratum .m{font-size:.71rem;color:var(--slate-2)}
+  .stratum--front{border-color:var(--patina);box-shadow:0 18px 34px -22px rgba(31,74,60,.6)}
+
+  .seal{
+    position:absolute;right:0;top:calc(var(--i)*30px + 43px);transform:translateY(-50%);
+    display:flex;align-items:center;gap:9px;z-index:30;opacity:var(--op);
+    animation:fadein .6s ease forwards;animation-delay:calc(var(--i)*90ms + 300ms);
+    opacity:0;
+  }
+  @keyframes fadein{to{opacity:var(--op)}}
+  .seal .h{font-family:"IBM Plex Mono",monospace;font-size:.72rem;color:var(--slate)}
+  .seal .s{width:13px;height:13px;border-radius:3px;border:1.5px solid var(--patina);background:var(--patina-soft);position:relative}
+  .seal--front .s{background:var(--patina)}
+  .spine{position:absolute;right:5.5px;top:43px;bottom:auto;height:calc(var(--imax)*30px);width:1.5px;background:linear-gradient(180deg,var(--patina),rgba(44,99,80,.25));z-index:10}
+  .figure__cap{margin-top:20px;padding-top:15px;border-top:1px solid var(--rule-soft);font-size:.86rem;color:var(--slate);line-height:1.55}
+
+  /* ---------- constraint band ---------- */
+  .band{border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);background:var(--paper-2)}
+  .band__in{padding-block:clamp(46px,6vw,78px);display:grid;grid-template-columns:.85fr 1.15fr;gap:clamp(28px,4vw,56px)}
+  .band h2{font-size:clamp(1.7rem,3.4vw,2.6rem);margin:.4rem 0 0}
+  .band p{color:var(--slate);margin:.2rem 0}
+  .band p + p{margin-top:1rem}
+  .band .roster{display:flex;flex-wrap:wrap;gap:8px;margin-top:1.4rem}
+  .chip{font-family:"IBM Plex Mono",monospace;font-size:.75rem;color:var(--ink);border:1px solid var(--rule);border-radius:999px;padding:.4em .85em;background:var(--plate)}
+  @media(max-width:800px){.band__in{grid-template-columns:1fr;gap:26px}}
+
+  /* ---------- sections ---------- */
+  section.blk{padding-block:clamp(58px,8vw,110px)}
+  .blk__head{max-width:60ch}
+  .blk__head h2{font-size:clamp(1.9rem,4vw,3rem);margin:.6rem 0 0}
+  .blk__head p{color:var(--slate);margin-top:1rem}
+
+  /* capabilities */
+  .caps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:44px}
+  .cap{
+    border:1px solid var(--rule);border-radius:14px;background:var(--plate);
+    padding:26px 24px 28px;position:relative;overflow:hidden;
+    transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease;
+  }
+  .cap:hover{transform:translateY(-3px);border-color:var(--patina);box-shadow:0 20px 40px -30px rgba(31,74,60,.6)}
+  .cap__n{font-family:"IBM Plex Mono",monospace;font-size:.72rem;color:var(--patina-strong);letter-spacing:.12em}
+  .cap h3{font-family:"Archivo Expanded",sans-serif;font-weight:700;font-size:1.24rem;letter-spacing:-.01em;margin:.5rem 0 .1rem}
+  .cap p{color:var(--slate);font-size:.96rem;margin:.6rem 0 0}
+  .cap .tag{display:inline-block;margin-top:1.1rem;font-family:"IBM Plex Mono",monospace;font-size:.7rem;color:var(--slate-2);border-top:1px solid var(--rule-soft);padding-top:.8rem;width:100%}
+  .caps__note{margin-top:26px;font-size:.94rem;color:var(--slate);max-width:74ch;border-left:2px solid var(--patina);padding-left:16px}
+  @media(max-width:820px){.caps{grid-template-columns:1fr}}
+
+  /* record / provenance */
+  .record{background:var(--ink);color:var(--paper)}
+  .record .blk__head h2{color:var(--paper)}
+  .record .blk__head p{color:#B9BEBB}
+  .record .eyebrow{color:#8FBFAF}
+  .record .eyebrow::before{background:#8FBFAF}
+  .prov{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:44px}
+  .prov__item{border:1px solid rgba(232,233,227,.14);border-radius:13px;padding:22px 22px 24px;background:rgba(232,233,227,.03)}
+  .prov__item h4{font-family:"Archivo Expanded",sans-serif;font-weight:600;font-size:1.02rem;margin:0 0 .5rem;letter-spacing:-.01em}
+  .prov__item p{color:#B9BEBB;font-size:.92rem;margin:0}
+  .prov__item .mono{color:#8FBFAF;font-size:.78rem}
+  @media(max-width:760px){.prov{grid-template-columns:1fr}}
+
+  /* eu regulatory fit */
+  .reglist{margin-top:40px;border-top:1px solid var(--rule)}
+  .reg{display:grid;grid-template-columns:minmax(210px,.9fr) 1.4fr;gap:20px 30px;padding:24px 0;border-bottom:1px solid var(--rule);align-items:baseline}
+  .reg__act{display:flex;flex-direction:column;gap:8px}
+  .reg__act a{font-family:"Archivo Expanded",sans-serif;font-weight:600;font-size:1.14rem;letter-spacing:-.01em;text-decoration:none;color:var(--ink);display:inline-flex;align-items:center;gap:.42em;width:fit-content;border-bottom:1.5px solid transparent;padding-bottom:1px;transition:border-color .16s,color .16s}
+  .reg__act a:hover,.reg__act a:focus-visible{color:var(--patina-strong);border-color:var(--patina)}
+  .reg__act a .arr{color:var(--patina);font-size:.82em}
+  .reg__cite{font-family:"IBM Plex Mono",monospace;font-size:.74rem;color:var(--slate-2);letter-spacing:.01em}
+  .reg__note{color:var(--slate);font-size:.98rem;line-height:1.55;margin:0}
+  .reg__note b{color:var(--ink);font-weight:600}
+  @media(max-width:720px){.reg{grid-template-columns:1fr;gap:11px;padding:22px 0}}
+
+  /* boundary */
+  .bound{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:44px;border:1px solid var(--rule);border-radius:16px;overflow:hidden;background:var(--plate)}
+  .bound__col{padding:30px 28px 32px}
+  .bound__col + .bound__col{border-left:1px solid var(--rule)}
+  .bound__col h3{font-family:"IBM Plex Mono",monospace;font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;margin:0 0 20px}
+  .bound__col.give h3{color:var(--patina-strong)}
+  .bound__col.keep h3{color:var(--slate)}
+  .bound__col ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:16px}
+  .bound__col li{display:flex;gap:12px;font-size:.96rem;line-height:1.5}
+  .bound__col li b{font-weight:600}
+  .bound__col li span{color:var(--slate);display:block;font-size:.88rem;margin-top:1px}
+  .mark{flex:none;width:18px;height:18px;margin-top:2px}
+  .bound__foot{margin-top:26px;font-size:.98rem;color:var(--ink);max-width:80ch}
+  .bound__foot b{color:var(--patina-strong)}
+  @media(max-width:760px){
+    .bound{grid-template-columns:1fr}
+    .bound__col + .bound__col{border-left:0;border-top:1px solid var(--rule)}
+  }
+
+  /* start */
+  .start{background:var(--paper-2);border-top:1px solid var(--rule)}
+  .start__grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(30px,4vw,60px);align-items:center}
+  .term{background:var(--ink);border-radius:14px;padding:18px 18px 20px;box-shadow:var(--shadow);font-family:"IBM Plex Mono",monospace;font-size:.9rem;color:var(--paper)}
+  .term__bar{display:flex;gap:7px;margin-bottom:16px}
+  .term__bar i{width:11px;height:11px;border-radius:50%;background:rgba(232,233,227,.25)}
+  .term__bar i:first-child{background:var(--patina)}
+  .term__line{display:flex;align-items:center;gap:10px}
+  .term__line .p{color:#8FBFAF}
+  .term__line .c{color:var(--paper)}
+  .copy{margin-left:auto;background:transparent;border:1px solid rgba(232,233,227,.24);color:#B9BEBB;font-family:inherit;font-size:.72rem;border-radius:6px;padding:.35em .7em;cursor:pointer;transition:.16s}
+  .copy:hover{color:var(--paper);border-color:var(--patina)}
+  .term__hint{margin-top:14px;color:#8A918E;font-size:.76rem}
+  .start__actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
+  @media(max-width:820px){.start__grid{grid-template-columns:1fr;gap:34px}}
+
+  /* footer */
+  footer{border-top:1px solid var(--rule);padding-block:44px;background:var(--paper)}
+  .foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:24px;align-items:flex-start}
+  .foot__links{display:flex;flex-wrap:wrap;gap:24px}
+  .foot__links a{font-size:.86rem;color:var(--slate);text-decoration:none;transition:color .16s}
+  .foot__links a:hover{color:var(--patina-strong)}
+  .foot__meta{font-family:"IBM Plex Mono",monospace;font-size:.74rem;color:var(--slate-2);text-align:right;line-height:1.7}
+
+  :focus-visible{outline:2px solid var(--patina);outline-offset:3px;border-radius:4px}
+
+  [data-reveal]{opacity:0;transform:translateY(16px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
+  [data-reveal].in{opacity:1;transform:none}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important}
+    [data-reveal]{opacity:1 !important;transform:none !important;transition:none}
+    .stratum,.seal{transform:none !important;opacity:var(--op) !important}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav">
+    <a class="brand" href="#top" aria-label="Palimpsests home">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="nav__links">
+      <a class="hide-sm" href="#caps">Capabilities</a>
+      <a class="hide-sm" href="#record">The record</a>
+      <a class="hide-sm" href="#eu-law">EU law</a>
+      <a class="hide-sm" href="#boundary">Boundary</a>
+      <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<header id="top" class="hero">
+  <div class="wrap">
+    <div class="hero__grid">
+      <div class="hero__copy" data-reveal>
+        <span class="eyebrow">Local-first inference engine · Apache-2.0</span>
+        <h1 class="display">Inference that never <span class="soft">leaves the room.</span></h1>
+        <p class="lede hero__sub">Palimpsests runs language models entirely on hardware you control and writes a tamper-evident record of every request — the data residency and the audit trail that regulated and air-gapped deployments depend on, without a byte crossing your boundary.</p>
+        <div class="beats">
+          <b>Run the model</b><span class="dot">·</span><b>keep the record</b><span class="dot">·</span><b>cross no boundary</b>
+        </div>
+        <div class="hero__cta">
+          <a class="btn btn--solid" href="#start">pip install palimpsests</a>
+          <a class="btn" href="https://pypi.org/project/palimpsests/" rel="noopener">View on PyPI ↗</a>
+        </div>
+      </div>
+
+      <div class="hero__figure" data-reveal>
+        <div class="figure" role="img" aria-label="A stack of computation layers — shared prefix, tool call, tool result, assistant — each stamped with a hash and joined into a chain along a fixed provenance spine.">
+          <div class="figure__head">
+            <span class="t">state · provenance</span>
+            <span class="live"><i></i>hash-chained</span>
+          </div>
+          <div class="strata" style="--imax:3">
+            <!-- front (surface / newest) = i0 -->
+            <div class="stratum stratum--front" style="--i:0;--op:1">
+              <span class="k"><span class="role">assistant</span> → response</span>
+              <span class="m">surface layer · current turn</span>
+            </div>
+            <div class="stratum" style="--i:1;--op:.82">
+              <span class="k"><span class="role">tool_result</span> ← fetched</span>
+              <span class="m">appended in place</span>
+            </div>
+            <div class="stratum" style="--i:2;--op:.6">
+              <span class="k"><span class="role">tool_call</span> → dispatched</span>
+              <span class="m">no re-prefill</span>
+            </div>
+            <div class="stratum" style="--i:3;--op:.42">
+              <span class="k"><span class="role">shared prefix</span> · system + context</span>
+              <span class="m">computed once · held warm</span>
+            </div>
+
+            <div class="spine" aria-hidden="true"></div>
+            <div class="seal seal--front" style="--i:0;--op:1"><span class="h">7f2a…e1</span><span class="s"></span></div>
+            <div class="seal" style="--i:1;--op:.82"><span class="h">c4d9…8b</span><span class="s"></span></div>
+            <div class="seal" style="--i:2;--op:.6"><span class="h">19ae…3f</span><span class="s"></span></div>
+            <div class="seal" style="--i:3;--op:.42"><span class="h">a0b6…22</span><span class="s"></span></div>
+          </div>
+          <p class="figure__cap">Every layer is stamped and joined to the one beneath it. The surface changes turn by turn; the record underneath stays recoverable and can’t be quietly rewritten. That is the palimpsest — and the audit trail.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section class="band">
+  <div class="wrap band__in">
+    <div data-reveal>
+      <span class="eyebrow">The constraint</span>
+      <h2 class="display">For data that isn’t allowed to travel.</h2>
+    </div>
+    <div data-reveal>
+      <p>Patient records under GDPR. Positions on a trading desk. Anything inside a classified or air-gapped network. When the data can’t reach a hosted API, neither can your inference.</p>
+      <p>Palimpsests keeps the whole loop — model, attention state, and log — on the machine where the data already sits. Nothing is uploaded, nothing is phoned home, and the only thing you export is a record you can verify without exposing what it recorded.</p>
+      <div class="roster">
+        <span class="chip">on-prem</span>
+        <span class="chip">air-gapped</span>
+        <span class="chip">llama.cpp backend</span>
+        <span class="chip">Python 3.11+</span>
+        <span class="chip">no network egress</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="blk wrap" id="caps">
+  <div class="blk__head" data-reveal>
+    <span class="eyebrow">Capabilities</span>
+    <h2 class="display">Three things the engine keeps in place.</h2>
+    <p>The recurring idea: hold computed state instead of rebuilding it. Each capability is a named lever with an honest note on where it earns its keep.</p>
+  </div>
+
+  <div class="caps">
+    <div class="cap" data-reveal>
+      <span class="cap__n">01 / Shared Prefix</span>
+      <h3>Compute once, reuse everywhere</h3>
+      <p>A system prompt or long shared context is processed a single time and held warm, then reused across every request that shares it — instead of being re-read on each call.</p>
+      <span class="tag">state held across requests</span>
+    </div>
+    <div class="cap" data-reveal>
+      <span class="cap__n">02 / Tool Loop</span>
+      <h3>Many steps, one running state</h3>
+      <p>Multi-step tool calling without rebuilding the conversation at each step. Measured on Intel Arc (Vulkan) across 1.5B and 7B, it holds even with a hand-tuned <span class="mono">llama-server</span> — parity, stated plainly, not a headline number.</p>
+      <span class="tag">measured · parity with a tuned server</span>
+    </div>
+    <div class="cap" data-reveal>
+      <span class="cap__n">03 / KV Persistence</span>
+      <h3>State outlives its process</h3>
+      <p>Attention state is serialized to a validated frame format and restored across sessions and processes. The computed layer survives the process that produced it — and the frame is checked before it’s trusted.</p>
+      <span class="tag">validated frame · restored across runs</span>
+    </div>
+  </div>
+
+  <p class="caps__note" data-reveal>A well-tuned server uses these levers too. Where Palimpsests earns its keep is doing all of it <b>locally, with a record</b>. The concurrency case for Shared Prefix and KV Persistence is still under measurement — it gets reported here when it’s real, and not before.</p>
+</section>
+
+<section class="record blk" id="record">
+  <div class="wrap">
+    <div class="blk__head" data-reveal>
+      <span class="eyebrow">The record</span>
+      <h2 class="display">The record beneath the record.</h2>
+      <p>Every request leaves a tamper-evident entry, chained by hash so the log can’t be silently altered. That’s the record-keeping substrate the EU AI Act’s logging expectations rest on — kept locally, verifiable without revealing what it holds. And the software itself carries the same discipline.</p>
+    </div>
+
+    <div class="prov">
+      <div class="prov__item" data-reveal>
+        <h4>Hash-chained request log</h4>
+        <p>Each entry references the one before it. Remove or edit a layer and the chain breaks — tampering is detectable, not deniable.</p>
+      </div>
+      <div class="prov__item" data-reveal>
+        <h4>Signed releases · <span class="mono">PEP 740</span></h4>
+        <p>Published to PyPI with Sigstore provenance, so a build can be traced back to the source and workflow that produced it.</p>
+      </div>
+      <div class="prov__item" data-reveal>
+        <h4>Bill of materials</h4>
+        <p>An SPDX SBOM ships with the release — the dependency inventory a Cyber Resilience Act review asks for, ready rather than reconstructed.</p>
+      </div>
+      <div class="prov__item" data-reveal>
+        <h4>OSPS Baseline L2 · fuzzed in CI</h4>
+        <p>A self-attested Open Source Project Security baseline, a published threat model, and Atheris fuzzing in the pipeline. Apache-2.0, so you can read all of it.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="blk wrap" id="eu-law">
+  <div class="blk__head" data-reveal>
+    <span class="eyebrow">EU regulatory fit</span>
+    <h2 class="display">Which EU acts this closes — and how far.</h2>
+    <p>Palimpsests doesn’t make you compliant with any of these on its own. It supplies the one runtime primitive each act actually leans on — residency, record-keeping, or supply-chain integrity — and leaves the rest to how you deploy. Every title links to the source text on EUR-Lex.</p>
+  </div>
+
+  <div class="reglist" data-reveal>
+    <div class="reg">
+      <div class="reg__act">
+        <a href="https://eur-lex.europa.eu/eli/reg/2024/1689/oj/eng" rel="noopener">EU AI Act <span class="arr">↗</span></a>
+        <span class="reg__cite">Regulation (EU) 2024/1689 · Art. 12</span>
+      </div>
+      <p class="reg__note">The hash-chained request log is the <b>automatic record-keeping</b> a high-risk system has to keep — held locally, and verifiable without exposing what it recorded.</p>
+    </div>
+
+    <div class="reg">
+      <div class="reg__act">
+        <a href="https://eur-lex.europa.eu/eli/reg/2016/679/oj/eng" rel="noopener">GDPR <span class="arr">↗</span></a>
+        <span class="reg__cite">Regulation (EU) 2016/679 · Art. 5(1)(f), 32</span>
+      </div>
+      <p class="reg__note">Inference runs where the data already sits, so personal data <b>never leaves the controller</b> — no third-country transfer to justify — and the tamper-evident log speaks to integrity of processing.</p>
+    </div>
+
+    <div class="reg">
+      <div class="reg__act">
+        <a href="https://eur-lex.europa.eu/eli/reg/2024/2847/oj/eng" rel="noopener">Cyber Resilience Act <span class="arr">↗</span></a>
+        <span class="reg__cite">Regulation (EU) 2024/2847 · Annex I Pt. II(1)</span>
+      </div>
+      <p class="reg__note">Ships the <b>machine-readable SBOM</b>, signed releases, a published threat model and coordinated vulnerability handling the CRA makes mandatory for products with digital elements.</p>
+    </div>
+
+    <div class="reg">
+      <div class="reg__act">
+        <a href="https://eur-lex.europa.eu/eli/reg/2022/2554/oj/eng" rel="noopener">DORA <span class="arr">↗</span></a>
+        <span class="reg__cite">Regulation (EU) 2022/2554 · Art. 28</span>
+      </div>
+      <p class="reg__note">Running the model in-house takes one <b>ICT third-party dependency</b> off the register, and the log gives financial entities defensible evidence for ICT-incident records. Support, not a full answer.</p>
+    </div>
+
+    <div class="reg">
+      <div class="reg__act">
+        <a href="https://eur-lex.europa.eu/eli/dir/2022/2555/oj/eng" rel="noopener">NIS2 <span class="arr">↗</span></a>
+        <span class="reg__cite">Directive (EU) 2022/2555 · Art. 21, 23</span>
+      </div>
+      <p class="reg__note">Provenance and the SBOM feed <b>supply-chain security</b> measures; the tamper-evident log backs the incident evidence essential and important entities have to produce.</p>
+    </div>
+  </div>
+</section>
+
+<section class="blk wrap" id="boundary">
+  <div class="blk__head" data-reveal>
+    <span class="eyebrow">Where the runtime stops</span>
+    <h2 class="display">What a runtime can — and can’t — do for compliance.</h2>
+    <p>Most landing pages overclaim here. This one draws the line, because for a regulated buyer the line is the credential.</p>
+  </div>
+
+  <div class="bound" data-reveal>
+    <div class="bound__col give">
+      <h3>What Palimpsests provides</h3>
+      <ul>
+        <li>
+          <svg class="mark" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10.5l4 4 8-9" stroke="#2C6350" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div><b>Local execution.</b><span>Data stays on the machine that already holds it — residency by construction.</span></div>
+        </li>
+        <li>
+          <svg class="mark" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10.5l4 4 8-9" stroke="#2C6350" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div><b>A tamper-evident request log.</b><span>Hash-chained, recoverable, hard to rewrite — record-keeping you can hand to an auditor.</span></div>
+        </li>
+        <li>
+          <svg class="mark" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10.5l4 4 8-9" stroke="#2C6350" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div><b>Signed, inventoried builds.</b><span>Sigstore provenance and an SBOM — supply-chain integrity for the runtime itself.</span></div>
+        </li>
+        <li>
+          <svg class="mark" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10.5l4 4 8-9" stroke="#2C6350" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div><b>Auditable in the open.</b><span>Apache-2.0, a published threat model, fuzzed in CI — nothing to take on faith.</span></div>
+        </li>
+      </ul>
+    </div>
+    <div class="bound__col keep">
+      <h3>What stays with you</h3>
+      <ul>
+        <li>
+          <svg class="mark" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="7" stroke="#767C79" stroke-width="1.6"/><path d="M10 6.6v4" stroke="#767C79" stroke-width="1.6" stroke-linecap="round"/><circle cx="10" cy="13.4" r=".5" fill="#767C79"/></svg>
+          <div><b>Human oversight</b><span>of what the model produces and how it’s acted on.</span></div>
+        </li>
+        <li>
+          <svg class="mark" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="7" stroke="#767C79" stroke-width="1.6"/><path d="M10 6.6v4" stroke="#767C79" stroke-width="1.6" stroke-linecap="round"/><circle cx="10" cy="13.4" r=".5" fill="#767C79"/></svg>
+          <div><b>Risk management &amp; conformity assessment</b><span>for the system you build on top.</span></div>
+        </li>
+        <li>
+          <svg class="mark" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="7" stroke="#767C79" stroke-width="1.6"/><path d="M10 6.6v4" stroke="#767C79" stroke-width="1.6" stroke-linecap="round"/><circle cx="10" cy="13.4" r=".5" fill="#767C79"/></svg>
+          <div><b>Transparency</b><span>to the people your system affects.</span></div>
+        </li>
+        <li>
+          <svg class="mark" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="7" stroke="#767C79" stroke-width="1.6"/><path d="M10 6.6v4" stroke="#767C79" stroke-width="1.6" stroke-linecap="round"/><circle cx="10" cy="13.4" r=".5" fill="#767C79"/></svg>
+          <div><b>Lawful basis &amp; data governance</b><span>for the inputs you feed it.</span></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <p class="bound__foot" data-reveal>Palimpsests is <b>regulated-adjacent infrastructure</b>. It carries the runtime obligations — residency, record-keeping, supply-chain integrity — and it does not discharge the ones that belong to how you deploy it.</p>
+</section>
+
+<section class="start" id="start">
+  <div class="wrap blk">
+    <div class="start__grid">
+      <div data-reveal>
+        <span class="eyebrow">Get started</span>
+        <h2 class="display" style="font-size:clamp(1.9rem,4vw,3rem);margin:.6rem 0 1rem">One package. No account.</h2>
+        <p class="lede">It installs from PyPI and runs offline. Point it at a local GGUF model and the log starts writing itself. The quickstart lives in the README.</p>
+        <div class="start__actions">
+          <a class="btn btn--solid" href="https://github.com/Assault-Consulting/Palimpsests#readme" rel="noopener">Read the docs ↗</a>
+          <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">Source ↗</a>
+        </div>
+      </div>
+      <div data-reveal>
+        <div class="term">
+          <div class="term__bar"><i></i><i></i><i></i></div>
+          <div class="term__line">
+            <span class="p">$</span><span class="c" id="cmd">pip install palimpsests</span>
+            <button class="copy" id="copyBtn" aria-label="Copy install command">copy</button>
+          </div>
+          <p class="term__hint"># Apache-2.0 · runs air-gapped · provenance on every release</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="#top" aria-label="Palimpsests">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Scroll reveal, with reduced-motion respected.
+  (function () {
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var els = document.querySelectorAll("[data-reveal]");
+    if (reduce || !("IntersectionObserver" in window)) {
+      els.forEach(function (el) { el.classList.add("in"); });
+    } else {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+        });
+      }, { threshold: 0.14, rootMargin: "0px 0px -8% 0px" });
+      els.forEach(function (el) { io.observe(el); });
+    }
+
+    // Copy install command.
+    var btn = document.getElementById("copyBtn");
+    if (btn && navigator.clipboard) {
+      btn.addEventListener("click", function () {
+        navigator.clipboard.writeText("pip install palimpsests").then(function () {
+          var t = btn.textContent; btn.textContent = "copied";
+          setTimeout(function () { btn.textContent = t; }, 1400);
+        }).catch(function () {});
+      });
+    }
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+# Palimpsests
+
+> Local-first LLM inference engine for regulated and air-gapped deployments. Runs language models entirely on hardware you control and writes a tamper-evident, hash-chained record of every request. Apache-2.0.
+
+Palimpsests is honest about scope: it supplies the runtime primitives that specific EU obligations rest on — data residency, record-keeping, and supply-chain integrity — and it does not by itself make a deployment compliant. It is regulated-adjacent infrastructure that enables obligations rather than discharging them.
+
+## Capabilities
+
+- [Shared Prefix](https://palimpsests.dev/#caps): a shared system prompt or long context is computed once, held warm, and reused across every request that shares it.
+- [Tool Loop](https://palimpsests.dev/#caps): multi-step tool calling without re-prefilling the conversation each step. Measured on Intel Arc (Vulkan) across 1.5B and 7B, it holds at parity with a hand-tuned llama-server — parity, not a speed advantage.
+- [KV Persistence](https://palimpsests.dev/#caps): attention state is serialized to a validated frame format and restored across sessions and processes.
+
+## Compliance and provenance
+
+- [The record](https://palimpsests.dev/#record): a hash-chained request log — tamper-evident, recoverable, and the record-keeping substrate that EU AI Act logging expectations rest on.
+- Signed releases (PEP 740 / Sigstore), an SPDX SBOM per build, a published threat model, OSPS Baseline Level 2 self-attestation, and Atheris fuzzing in CI.
+- [EU regulatory fit](https://palimpsests.dev/#eu-law): the specific runtime primitive each act leans on, linked to source text.
+
+## Links
+
+- [Source (GitHub)](https://github.com/Assault-Consulting/Palimpsests)
+- [PyPI package](https://pypi.org/project/palimpsests/)
+- [License (Apache-2.0)](https://www.apache.org/licenses/LICENSE-2.0)
+- [Security policy](https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md)
+
+## EU acts referenced
+
+- [EU AI Act — Regulation (EU) 2024/1689, Art. 12](https://eur-lex.europa.eu/eli/reg/2024/1689/oj/eng)
+- [GDPR — Regulation (EU) 2016/679, Art. 5(1)(f), 32](https://eur-lex.europa.eu/eli/reg/2016/679/oj/eng)
+- [Cyber Resilience Act — Regulation (EU) 2024/2847, Annex I Pt. II(1)](https://eur-lex.europa.eu/eli/reg/2024/2847/oj/eng)
+- [DORA — Regulation (EU) 2022/2554, Art. 28](https://eur-lex.europa.eu/eli/reg/2022/2554/oj/eng)
+- [NIS2 — Directive (EU) 2022/2555, Art. 21, 23](https://eur-lex.europa.eu/eli/dir/2022/2555/oj/eng)
+
+## Notes for agents
+
+- This is not a compliance product. When summarizing, say it enables obligations; do not state that it makes a system GDPR- or AI-Act-compliant on its own.
+- The only measured performance result is parity with a tuned llama-server on the Tool Loop. Do not cite unmeasured speedups; the concurrency case for Shared Prefix and KV Persistence is still being measured.
+- License is Apache-2.0; the package is free.
