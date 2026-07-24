@@ -306,8 +306,32 @@ def seq_set(backend, seq_id: int, blob: bytes) -> None:
 # ── modes: resume / reprefill (one grid point) ─────────────────────────────
 
 
+def _run_batched(scheduler, seq_ids: list[int], t0: float) -> dict:
+    """Drive the scheduler's batched step loop across seq_ids until every
+    slot's turn finishes; return per-session TTFT (first token, from t0)
+    and completion. This mirrors the server's continuous batching so the
+    M-concurrent walls are comparable — a slot generating alone would make
+    the native arm pay M sequential generations vs the server's one batch.
+    """
+    ttft: dict[int, float] = {}
+    done: dict[int, float] = {}
+    live = set(seq_ids)
+    while live:
+        produced = scheduler.step()
+        for st in produced:
+            if st.seq_id not in ttft:
+                ttft[st.seq_id] = _now() - t0
+            if st.done:
+                done[st.seq_id] = _now() - t0
+                live.discard(st.seq_id)
+    return {
+        "ttft": [ttft[s] for s in seq_ids],
+        "done_at": [done.get(s, -1.0) for s in seq_ids],
+    }
+
+
 def run_point(args: argparse.Namespace) -> None:
-    from palimpsests.providers.native.backend import BatchEntry
+    from palimpsests.providers.native.scheduler import Scheduler
 
     backend = make_backend_for(args)
     mem_snapshot("after_load")
@@ -320,12 +344,12 @@ def run_point(args: argparse.Namespace) -> None:
     blob_paths: list[str] = []
     write_times: list[float] = []
     if args.mode == "resume":
-        # pre-produce one saved blob per session (NOT timed as resume; the
-        # write time is reported separately as the "checkpoint" cost).
+        # Pre-produce one saved blob per session on a scratch scheduler.
+        # NOT timed as resume; write time is the separate "checkpoint" cost.
         for i, toks in enumerate(per_sess_toks):
-            _prefill(backend, i % args.n_seq_max, toks)
-            blob = state_blob(backend, i % args.n_seq_max)
-            backend.seq_remove(i % args.n_seq_max)
+            _prefill(backend, 0, toks)
+            blob = state_blob(backend, 0)
+            backend.seq_remove(0)
             blobs_mem.append(blob)
             path = os.path.join(blob_dir, f"s{i}.bin")
             t = _now()
@@ -337,46 +361,47 @@ def run_point(args: argparse.Namespace) -> None:
             blob_paths.append(path)
 
     def one_repeat_resume() -> dict:
-        read_s, set_s, cont_s = [], [], []
+        scheduler = Scheduler(backend, max_active=args.sessions)
+        read_s, set_s = [], []
         t0 = _now()
-        ttft = {}
+        seq_ids = []
         for i in range(args.sessions):
-            seq = i % args.n_seq_max
+            seq = scheduler.open_slot()
+            seq_ids.append(seq)
             tr = _now()
             blob = blobs_mem[i] if args.resume_path == "memory" else _read_unbuffered(blob_paths[i])
             read_s.append(_now() - tr)
             ts = _now()
-            seq_set(backend, seq, blob)
+            # load_slot_state = backend.state_set + seed_n_past (the product
+            # path). Blobs here are raw backend payloads (no NativeSession
+            # frame), so hand them straight to the scheduler.
+            scheduler.load_slot_state(seq, blob, n_past[i])
             set_s.append(_now() - ts)
-            tc = _now()
-            out = backend.decode(
-                [BatchEntry(seq_id=seq, tokens=cont_first, start_pos=n_past[i], wants_logits=True)]
-            )
-            ttft[i] = _now() - t0
-            _continue(backend, seq, out[seq], n_past[i] + 1, GEN_TOKENS - 1)
-            cont_s.append(_now() - tc)
-            backend.seq_remove(seq)
-        return {
-            "wall": _now() - t0,
-            "read_s": read_s,
-            "set_s": set_s,
-            "cont_s": cont_s,
-            "ttft": [ttft[i] for i in sorted(ttft)],
-        }
+            # Seed generation: feed the continuation token at n_past so the
+            # batched loop produces GEN tokens (state carries no logits).
+            scheduler.feed(seq, cont_first, max_tokens=GEN_TOKENS)
+        batched = _run_batched(scheduler, seq_ids, t0)
+        wall = _now() - t0
+        for seq in seq_ids:
+            scheduler.close_slot(seq)
+        return {"wall": wall, "read_s": read_s, "set_s": set_s, **batched}
 
     def one_repeat_reprefill() -> dict:
+        scheduler = Scheduler(backend, max_active=args.sessions)
         t0 = _now()
-        ttft = {}
-        pre_s = []
+        seq_ids = []
         for i in range(args.sessions):
-            seq = i % args.n_seq_max
-            tp = _now()
-            out = _prefill(backend, seq, per_sess_toks[i])
-            pre_s.append(_now() - tp)
-            ttft[i] = _now() - t0
-            _continue(backend, seq, out[seq], n_past[i], GEN_TOKENS)
-            backend.seq_remove(seq)
-        return {"wall": _now() - t0, "prefill_s": pre_s, "ttft": [ttft[i] for i in sorted(ttft)]}
+            seq = scheduler.open_slot()
+            seq_ids.append(seq)
+            # Feed the full prefix as the turn input: the scheduler prefills
+            # it and generates GEN tokens — prefill(P) is exactly the cost
+            # KV Persistence avoids.
+            scheduler.feed(seq, per_sess_toks[i], max_tokens=GEN_TOKENS)
+        batched = _run_batched(scheduler, seq_ids, t0)
+        wall = _now() - t0
+        for seq in seq_ids:
+            scheduler.close_slot(seq)
+        return {"wall": wall, **batched}
 
     fn = one_repeat_resume if args.mode == "resume" else one_repeat_reprefill
     fn()  # warmup
@@ -428,7 +453,7 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--mode", required=True, choices=["probe", "resume", "reprefill"])
     ap.add_argument("--model", required=True)
-    ap.add_argument("--n-ctx", type=int, default=8192)
+    ap.add_argument("--n-ctx", type=int, default=32768)
     ap.add_argument("--n-seq-max", type=int, default=8)
     ap.add_argument("--n-gpu-layers", type=int, default=999)
     ap.add_argument("--kv-unified", type=int, default=1)

@@ -174,8 +174,142 @@ a blocker for this measurement.
 
 ## 6. Results
 
-(gates, chronometry, grid, break-even — to be filled after the sweep)
+### 6.1 Gates & chronometry
+
+- **Corruption gate (tier-0, blocking):** passed at step 0 (§1 Q1) —
+  token-identical round-trip at every prefix. This IS the cleanliness gate
+  for KV Persistence: unlike Shared Prefix / Tool Loop there is no
+  near-parity control point (resume always skips the prefill, so
+  ours/mech is never ≈ 1 by construction), so the token-identity gate
+  replaces the 0.9–1.2 band as the harness-integrity check.
+- **Harness-decomposition check:** resume-memory vs resume-disk isolate
+  only the disk read — at 500×1 wall 1.226 vs 1.247 (Δ 0.021 s ≈ the
+  0.013 s unbuffered read), confirming the arms differ only where they
+  should.
+- **Chronometry:** heaviest point re-prefill 3000×8 = 36.8 s/repeat →
+  full grid (3 prefixes × 3 M × 4 arms × 5 repeats + warmups + cool-downs)
+  ≈ 2.0 h, well under the 6 h trim / 8 h STOP thresholds; full grid run.
+
+### 6.2 Grid — wall clock (medians of 5), 4 arms
+
+resume-memory = in-memory blob (warm, symmetric to the server's warm
+restore); resume-disk = unbuffered cold read (the honest product number);
+re-prefill = mechanism baseline (recompute the prefix, our scheduler);
+server = tuned llama-server slot restore (honest baseline, §2).
+Mechanism ratio = re-prefill / resume-memory (reuse vs recompute on OUR
+scheduler — never "vs llama-server").
+
+| point | prefix tok | resume-mem | resume-disk | re-prefill | server | **mech ratio** | srv/resmem | srv/resdisk |
+|---|---|---|---|---|---|---|---|---|
+| 500×1 | 382 | 1.226 | 1.247 | 1.595 | 1.478 | 1.30 | 1.205 | 1.186 |
+| 500×4 | 382 | 2.377 | 2.114 | 4.721 | 2.295 | 1.99 | 0.966 | 1.086 |
+| 500×8 | 382 | 4.058 | 4.264 | 8.535 | 5.485 | 2.10 | 1.352 | 1.286 |
+| 1500×1 | 1126 | 1.318 | 1.572 | 2.572 | 1.501 | 1.95 | 1.139 | 0.955 |
+| 1500×4 | 1126 | 3.423 | 3.715 | 10.207 | 3.369 | 2.98 | 0.984 | 0.907 |
+| 1500×8 | 1126 | 5.325 | 5.383 | 18.631 | 5.521 | 3.50 | 1.037 | 1.026 |
+| 3000×1 | 2254 | 1.427 | 1.495 | 5.448 | 1.840 | 3.82 | 1.290 | 1.231 |
+| 3000×4 | 2254 | 4.826 | 5.100 | 19.957 | 3.506 | 4.14 | 0.727 | 0.687 |
+| 3000×8 | 2254 | 6.767 | 8.840 | 36.840 | 5.619 | 5.44 | 0.830 | 0.636 |
+
+### 6.3 Break-even — TTFT isolates the resume cost from the common 64-token generation
+
+TTFT (time to first output token) is the clean break-even signal: it
+is exactly resume-cost (read + state_set + 1 decode) vs prefill-cost, with
+the shared 64-token generation excluded.
+
+| point | resmem TTFT | resdisk TTFT | re-prefill TTFT | server TTFT | read (s) | state_set (s) | write (s) | blob (MB) |
+|---|---|---|---|---|---|---|---|---|
+| 500×1 | 0.025 | 0.038 | 0.385 | 0.275 | 0.013 | 0.004 | 0.010 | 10.5 |
+| 500×8 | 0.118 | 0.251 | 4.321 | 2.204 | 0.016 | 0.007 | 0.012 | 10.5 |
+| 1500×1 | 0.036 | 0.088 | 1.179 | 0.292 | 0.043 | 0.021 | 0.022 | 30.8 |
+| 1500×8 | 0.252 | 0.614 | 13.529 | 2.115 | 0.046 | 0.020 | 0.032 | 30.8 |
+| 3000×1 | 0.050 | 0.122 | 3.837 | 0.483 | 0.078 | 0.024 | 0.040 | 61.7 |
+| 3000×8 | 0.429 | 1.173 | 30.289 | 1.974 | 0.053 | 0.023 | 0.045 | 61.7 |
+
+**Break-even result: there is NO crossover at any measured prefix —
+resume beats re-prefill everywhere.** Re-prefill TTFT / resume-memory
+TTFT grows from **15× (500×1) to 71× (3000×8)**; even the honest
+cold-disk resume (resdisk) beats re-prefill by 10× (500×1) to 26×
+(3000×8). By arithmetic the crossover sits where prefill(P) ≈ read +
+state_set ≈ 17 ms, i.e. **≈ 30–40 tokens** — below any useful prefix.
+
+**The pre-registered "short prefixes lose" expectation is DISAPPOINTED,
+and reported as such:** on this hardware KV Persistence is BOTH a speed
+mechanism AND a capability — moving tens of MB (even cold, unbuffered)
+is cheaper than recomputing the prefix at every measured size. There is
+no regime here where re-prefill is the better choice.
+
+### 6.4 vs the tuned server (honest baseline): parity
+
+srv/resmem RAW spans 0.73–1.35 with no consistent winner (server ahead at
+3000×4/8 via its mature continuous batching, ours ahead at several small
+points) — **mechanism parity with the tuned server's own slot restore**,
+exactly the pre-registered expectation (3). Both arms are real KV-restore
+mechanisms; the server's `restore_ms` scales with blob size (8.6 / 21.0 /
+44.5 ms at 500/1500/3000 ×8) just as our `state_set` does (7 / 20 / 23 ms)
+— symmetric. RAW carries the conclusion directly; the per-run transport
+adjustment is not applied here because it would only move the server
+FASTER (it is already at parity/ahead), so it cannot change the "parity,
+capability is the differentiator" reading — RAW and any adjusted number
+agree a fortiori. srv/resdisk is apples-to-oranges AGAINST us (the server
+restore is served from a warm OS cache at ~0.2–44 ms; our resdisk read is
+unbuffered cold) and even so lands at parity (0.64–1.29).
+
+**The honest differentiator is in-process capability, not raw speed:** the
+in-process resume needs no HTTP round-trip and no separate server process
+— an agent library restores its own session KV — while matching the tuned
+server's slot-restore wall.
+
+### 6.5 Blob metrics, checkpoint cost, memory
+
+- Blob size 28.01 KiB/tok confirmed on the grid (10.5 / 30.8 / 61.7 MB at
+  382 / 1126 / 2254 tokens) — cost model holds.
+- Checkpoint (write) cost, reported separately as it amortizes over many
+  resumes: ours `fsync`'d write 0.010–0.045 s; the server's `save_ms`
+  62.8 / 209.5 / 475.2 ms at 500/1500/3000 ×8 (it serializes the whole
+  slot on save).
+- Memory (real-handle psapi): the in-memory resume path HOLDS M blobs in
+  RAM — peak WS 3363 → 4310 MB (500×1 → 3000×8, +0.5 GB of resident
+  blobs at 3000×8); the disk path and re-prefill stay flat (~3275 MB, no
+  resident blobs); server RSS 3044–3503 MB. The in-memory path trades RAM
+  for the fastest resume; the disk path trades a cold read for flat
+  memory — both reported so the product can choose.
 
 ## 7. Observation
 
-(to be filled)
+Verdict vs the pre-registration: **the mechanism and capability claims are
+confirmed; the "short prefixes lose" half of expectation (1) is
+disappointed and reported plainly; no defect fired.**
+
+1. **Correctness (gate):** round-trip token-identical at every prefix;
+   `state_get`/`state_set` is a faithful KV serialization. Blob size
+   28.01 KiB/tok — cost model exact.
+2. **Composition finding (probe Q2, FULL-LOGICAL):** a Shared-Prefix slot
+   (shared cells) serializes to a self-contained full-logical blob,
+   restorable standalone without the holder — **Shared Prefix and KV
+   Persistence compose.** But the density saving does NOT survive
+   serialization: N shared sessions cost N full blobs on disk. Direct
+   input to Run 7's design (combined workload).
+3. **Break-even: no crossover — resume wins at every measured prefix**
+   (15–71× on TTFT, 1.30–5.44× on wall vs re-prefill). KV Persistence is
+   a speed mechanism AND a capability on this hardware; the pre-registered
+   short-prefix-loss did not occur (crossover ≈ 30–40 tokens, below any
+   useful prefix).
+4. **vs the tuned server (its own slot restore): parity** (srv/resmem
+   0.73–1.35, symmetric mechanism). The differentiator is in-process
+   capability — no HTTP, no separate process — not raw speed, exactly as
+   pre-registered.
+5. **Honest costs recorded:** the in-memory path holds blobs in RAM
+   (+0.5 GB at 3000×8); the cold-disk path (unbuffered, page-cache
+   bypassed) is the product number and still wins everywhere; the NVMe
+   controller cache is the one residual not defeatable from user space,
+   declared not claimed away.
+
+Net framing for consolidation: KV Persistence is a clean win on this
+hardware — resume beats re-prefill at every prefix and reaches parity with
+the tuned server's slot restore while needing no server. Its product value
+is the capability (an agent survives a process restart with its context
+intact); its speed value is real but is measured against re-prefill
+(the mechanism ratio), not against llama-server (parity). The FULL-LOGICAL
+composition result and the `state_set` trust-boundary note (§5) are the
+two forward-looking inputs.
