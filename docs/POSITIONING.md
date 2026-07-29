@@ -7,10 +7,12 @@ project is built on a measurement discipline (see [BENCHMARKING.md](BENCHMARKING
 a number we have not produced on our own hardware is a **target**, not a result,
 and is labeled as such here.
 
-Today there is exactly **one benchmark** we have run ourselves — the tool-loop vs
-re-prefill measurement below, now repeated across three environments. Everything
-else in the performance section remains an external target. Keeping that line
-sharp is the point.
+The 0.5 measurement campaign added two mechanisms measured on our own hardware
+against the honest tuned baseline — the **tool loop** and **KV persistence**
+(both below). **Shared-prefix** was also measured but is gated out of this
+document until the backend ships unified-KV support (see its section). Sleep-time
+compute and the larger-regime numbers remain external targets. Keeping the line
+between *measured* and *target* sharp is the point.
 
 ---
 
@@ -139,6 +141,20 @@ a re-run). Full JSON, environments, and pre-registered expectations:
 `results/report.md` (CPU), `results/report-igpu-vulkan.md` (iGPU 1.5B),
 `results/report-igpu-7b.md` (iGPU 7B). Reproduction: `results/REPRODUCE.md`.
 
+**These ratios are the *mechanism ratio* — treatment vs a stateless
+re-prefill baseline (the value of the tool loop at all), not a comparison
+against a tuned server.** The 0.5 campaign re-ran this measurement on the
+iGPU against the honest tuned baseline — `llama-server` with `cache_prompt`
++ slot reuse — and found that **against a tuned server the adjusted result
+is parity** (0.99–1.09 at 1.5B, 0.89–1.11 at 7B, across the grid; both arms
+avoid re-prefilling the shared prefix, so the server's slot-reuse mechanism
+is symmetric to ours). The honest reading is therefore: the tool loop
+**matches a tuned server without running a server** (and avoids its
+~0.13 s/request HTTP transport), and wins several-fold only against an
+engine that has *no* tool loop. Sources: `results/n5-tool-loop-1p5b-igpu.md`
+(#68), `results/n5-tool-loop-7b-igpu.md` (#69), config-hash
+dd2e395be22675f1.
+
 **Only the two iGPU columns are a controlled comparison.** They share a machine,
 a build, a pinned commit, and a virtualenv; the single changed variable is the
 model. The CPU column is an **earlier run in a different environment** (Docker /
@@ -218,20 +234,43 @@ loop.
 > disappoint us — so these are hypotheses to test, not marketing. (The one
 > exception, now measured by us, is the tool-loop result in the section above.)
 
-### KV persistence — avoiding re-prefill (our N6 / N6b direction)
+### KV persistence — avoiding re-prefill (our N6 / N6b direction) — MEASURED (0.5 campaign)
 
 The mechanism: persist a session's KV state and reload it instead of
-recomputing the prefill. This is the single largest lever in the papers below,
-and it maps directly onto our `save_state` / `load_state` and content-addressed
-store.
+recomputing the prefill. It maps directly onto our `save_state` / `load_state`
+and content-addressed store.
 
-| Reported effect (their hardware) | Setting | Source |
-|---|---|---|
-| TTFT 172 s → 1.3 s (**≈136×**) at 32K context, hot cache | Gemma 3 12B, edge | *Agent Memory Below the Prompt* — Persistent Q4 KV Cache, arXiv 2603.04428 |
-| Context restore 15.7 s → 577 ms at 4K, warm disk | Gemma 3 12B, edge | arXiv 2603.04428 |
-| **1.9×** TTFT reduction in later phases; 23% wall-time saving | 5-phase multi-agent workflow | arXiv 2603.04428 |
-| **24×** TTFT reduction when querying cached experts | 10-expert routing | arXiv 2603.04428 |
-| Capacity: Q4 fits **12** agents vs FP16's **3** at 8K on 24 GB | edge, fixed memory | arXiv 2603.04428 |
+**Now measured on the iGPU (0.5 campaign, `results/kv-persistence-1p5b-igpu.md`
+#76, `results/kv-persistence-7b-igpu.md` #77, config-hash dd2e395be22675f1),
+against the honest tuned baseline — `llama-server`'s own disk-backed slot
+save/restore:**
+
+- **Resume beats re-prefill at every measured prefix — no break-even
+  crossover** ({500,1500,3000}-token contexts, both models). Restoring KV is
+  15–71× faster than re-prefilling on TTFT at 1.5B, 49–154× at 7B; the
+  arithmetic crossover sits below ~30–40 tokens, i.e. below any useful prefix.
+- **The advantage grows with model size** (mechanism ratio 5.44× → 7.58× wall
+  from 1.5B to 7B at 3000×8): the heavier blob adds only tens of milliseconds to
+  read + restore, while the heavier prefill it replaces adds tens of seconds.
+- **Against a tuned server's own slot restore: parity** (a symmetric
+  disk-backed mechanism). The honest differentiator is the **in-process
+  capability** — an agent library restores its own session KV, with no HTTP and
+  no separate server process — not raw speed.
+- The disk-resume number is measured with the OS page cache bypassed
+  (`FILE_FLAG_NO_BUFFERING`), so the win is not an artifact of reading a
+  just-written blob from RAM.
+
+The external results below remain **targets for regimes we have not yet
+measured** — much longer contexts (32K), multi-agent workflows, and
+quantized-capacity ceilings:
+
+| Reported effect (their hardware) | Setting | Source | vs ours |
+|---|---|---|---|
+| TTFT 172 s → 1.3 s (**≈136×**) at 32K context, hot cache | Gemma 3 12B, edge | *Agent Memory Below the Prompt* — Persistent Q4 KV Cache, arXiv 2603.04428 | direction confirmed; 32K still-open (we measured to ~2.3K) |
+| Context restore 15.7 s → 577 ms at 4K, warm disk | Gemma 3 12B, edge | arXiv 2603.04428 | direction confirmed; magnitude context-specific |
+| **1.9×** TTFT reduction in later phases; 23% wall-time saving | 5-phase multi-agent workflow | arXiv 2603.04428 | still-open (different workload) |
+| **24×** TTFT reduction when querying cached experts | 10-expert routing | arXiv 2603.04428 | still-open (different workload) |
+| Capacity: Q4 fits **12** agents vs FP16's **3** at 8K on 24 GB | edge, fixed memory | arXiv 2603.04428 | still-open (Q4-vs-FP16 capacity not measured) |
 
 This paper is the closest external twin to our direction — edge, persistent
 quantized KV, multi-agent — which makes it our strongest reference *and* our
@@ -245,6 +284,15 @@ on cross-platform local hardware.
 
 The mechanism: a system prompt shared across sessions is decoded once and copied,
 not recomputed per session. Our prefix-holder policy implements exactly this.
+
+> **Measured in benchmark, not yet a product property.** The 0.5 campaign
+> measured this mechanism (`results/n4-shared-prefix-*-igpu.md`, #71/#72), but
+> its headline result — a session-density crossing on a fixed KV budget — is
+> only reachable in llama.cpp's **unified-KV** mode, which the backend does not
+> yet expose as a first-class knob (the benchmark set it via a declared wrapper).
+> Until a product PR ships unified-KV support, no shared-prefix number enters
+> this section; the external results below stay **targets**. This is a
+> deliberate gate, not an oversight.
 
 | Reported effect (their hardware) | Setting | Source |
 |---|---|---|
@@ -282,16 +330,24 @@ even more favorable on-device than in the cloud. This is roadmap, not built.
   validated on hardware**. The composition — several serving features over one
   position substrate, under one contract, on cross-platform local hardware —
   exists and is tested; that is the novel part.
-- **What we have measured ourselves:** one benchmark, three runs — the tool loop
-  against a re-prefill baseline, on CPU (1.5B) and an integrated GPU (1.5B and
-  7B). The advantage grows with the prefill cost avoided, the arithmetic accounts
-  for the saved time (*hops × TTFT*), and the control sits at parity. It is a
-  **mechanism check on edge-class hardware**, not a representative discrete-GPU
-  figure, and we do not extend it to server-class deployments.
-- **What is still a target:** the KV-persistence and shared-prefix numbers above.
-  They come from external systems exercising the same mechanisms; reproducing them
-  on our hardware, with a strong baseline (a tuned Ollama), is the continuing
-  point of the benchmarking phase.
+- **What we have measured ourselves:** two mechanisms, on an integrated GPU
+  (1.5B and 7B), each against the honest tuned `llama-server` baseline. **Tool
+  loop:** vs a stateless re-prefill baseline the mechanism ratio grows with the
+  prefill cost avoided (up to ~4×), the arithmetic accounts for the saved time
+  (*hops × TTFT*), and the control sits at parity — but **vs a tuned server the
+  adjusted result is parity** (it matches a tuned server without running one).
+  **KV persistence:** resume beats re-prefill at every measured prefix (no
+  crossover; the advantage grows with model size), at **parity with a tuned
+  server's own slot restore**, the differentiator being in-process capability.
+  Both are **mechanism checks on edge-class hardware**, not representative
+  discrete-GPU figures, and we do not extend them to server-class deployments.
+- **What is still a target:** the shared-prefix numbers above (measured in
+  benchmark, but gated on shipping unified-KV support before any figure enters
+  this document), and the KV-persistence results in regimes we have not measured
+  (32K context, multi-agent workflows, quantized-capacity ceilings). They come
+  from external systems exercising the same mechanisms; reproducing them on our
+  hardware, with a strong baseline, is the continuing point of the benchmarking
+  phase.
 - **What we will not do:** claim a new inference primitive we did not build,
   publish a speedup we have not measured, quote a sanity-check number as a
   headline performance figure, extend a measured claim to hardware we have not
