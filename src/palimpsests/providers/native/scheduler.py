@@ -72,6 +72,17 @@ if TYPE_CHECKING:
     import numpy as np
 
 
+class PrefixHolderInUseError(RuntimeError):
+    """Raised when a prefix holder is released while sessions still share its KV.
+
+    In unified-KV mode a holder's prefix cells are *shared* with every session
+    seeded from it via ``seq_copy``. Removing the holder while a consumer is
+    still live perturbs that consumer's logits (measured, not hypothetical). The
+    scheduler tracks each holder's live consumers and refuses the release rather
+    than corrupt them silently — release the consumers first.
+    """
+
+
 def _argmax(logits: np.ndarray) -> int:
     """Greedy sampling: the highest-logit token id.
 
@@ -179,6 +190,10 @@ class Scheduler:
         # Sequence ids held as frozen prefixes (N4a). Kept apart from the
         # slot pool: a holder occupies a sequence but never generates.
         self._holders: set[int] = set()
+        # Live consumers per holder: slot seq_ids seeded from that holder via
+        # seq_copy. In unified-KV mode those slots SHARE the holder's cells, so
+        # the holder must outlive them; release_prefix_holder enforces it.
+        self._holder_consumers: dict[int, set[int]] = {}
 
     @property
     def max_active(self) -> int:
@@ -211,6 +226,10 @@ class Scheduler:
 
     def _release(self, seq_id: int) -> None:
         """Free a slot and recycle its sequence id, clearing its KV."""
+        # This sequence is no longer a consumer of any holder's shared prefix.
+        # discard is idempotent and a no-op for a slot that never shared one.
+        for consumers in self._holder_consumers.values():
+            consumers.discard(seq_id)
         self._backend.seq_remove(seq_id)
         self._slots.pop(seq_id, None)
         self._free_seq_ids.append(seq_id)
@@ -270,6 +289,14 @@ class Scheduler:
         """Release a session slot and its KV. Idempotent."""
         if seq_id in self._slots:
             self._release(seq_id)
+
+    def active_slots(self) -> list[int]:
+        """The seq_ids of currently open slots (sessions).
+
+        Lets a caller release consumers before their prefix holders at
+        teardown — the ordering the shared-KV guard requires.
+        """
+        return list(self._slots)
 
     # ─── KV persistence (N6) ──────────────────────────────────────────────
 
@@ -342,11 +369,26 @@ class Scheduler:
         if holder_seq not in self._holders:
             raise RuntimeError(f"sequence {holder_seq} is not a prefix holder")
         self._backend.seq_copy(holder_seq, slot_seq)
+        # This slot now shares the holder's prefix cells (unified KV).
+        self._holder_consumers.setdefault(holder_seq, set()).add(slot_seq)
         self.seed_n_past(slot_seq, prefix_len)
 
     def release_prefix_holder(self, holder_seq: int) -> None:
-        """Drop a prefix holder's KV and recycle its sequence. Idempotent."""
+        """Drop a prefix holder's KV and recycle its sequence. Idempotent.
+
+        Refuses with ``PrefixHolderInUseError`` if any session still shares the
+        holder's prefix cells: in unified KV, freeing them under a live consumer
+        corrupts it (measured). Release the consumers first.
+        """
         if holder_seq in self._holders:
+            consumers = self._holder_consumers.get(holder_seq)
+            if consumers:
+                raise PrefixHolderInUseError(
+                    f"prefix holder {holder_seq} has {len(consumers)} live "
+                    f"consumer(s) {sorted(consumers)}; release consumers "
+                    f"before the holder"
+                )
+            self._holder_consumers.pop(holder_seq, None)
             self._backend.seq_remove(holder_seq)
             self._holders.discard(holder_seq)
             self._free_seq_ids.append(holder_seq)
