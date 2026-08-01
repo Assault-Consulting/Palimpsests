@@ -113,6 +113,7 @@ class LlamaCppBackend:
         n_seq_max: int = 4,
         n_threads: int | None = None,
         n_gpu_layers: int = 0,
+        kv_unified: bool = False,
     ) -> None:
         try:
             # The low-level ctypes surface. Kept as ``_lib`` so every call
@@ -156,6 +157,17 @@ class LlamaCppBackend:
         # prefill we can ever pass, which is bounded by n_ctx.
         ctx_params.n_batch = n_ctx
         ctx_params.n_seq_max = n_seq_max
+        # KV layout. False (default) = split / per-sequence KV: each sequence's
+        # cells are private, so slot accounting is exact, but a prefix cannot be
+        # shared across sequences. True = unified KV pool: seq_copy SHARES a
+        # holder's prefix cells with every sequence seeded from it (enables
+        # cross-session prefix reuse / session density), at one cost — a shared
+        # cell is freed only when its LAST referencing sequence is removed, so a
+        # prefix holder must outlive its consumers. Releasing a holder while a
+        # consumer is still live perturbs that consumer's logits (measured); the
+        # scheduler enforces the ordering (see release_prefix_holder). Off by
+        # default; opt in explicitly.
+        ctx_params.kv_unified = kv_unified
         if n_threads is not None:
             ctx_params.n_threads = n_threads
         self._ctx = _lib.llama_new_context_with_model(self._model, ctx_params)
