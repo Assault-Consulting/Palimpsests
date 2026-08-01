@@ -312,10 +312,17 @@ class NativeEngine(BaseInferenceEngine):
     # ─── lifecycle ───────────────────────────────────────────────────────
 
     def close(self) -> None:
-        """Release prefix holders and the backend if one was loaded."""
-        if self._session_scheduler is not None:
+        """Release sessions and prefix holders, then the backend if loaded."""
+        sched = self._session_scheduler
+        if sched is not None:
+            # Release consumer sessions BEFORE their holders. In unified KV a
+            # holder's prefix cells are shared with the sessions seeded from it,
+            # so the holder must outlive them (the scheduler enforces this).
+            # Slots first, holders second.
+            for seq_id in sched.active_slots():
+                sched.close_slot(seq_id)
             for holder in self._holders.values():
-                self._session_scheduler.release_prefix_holder(holder.seq_id)
+                sched.release_prefix_holder(holder.seq_id)
         self._holders.clear()
         self._session_scheduler = None
         if self._backend is not None:
