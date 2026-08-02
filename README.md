@@ -15,12 +15,13 @@
 > retrieval) and an encrypted audit log. Level 3 (pal-native) has its full serving
 > skeleton — streaming, stateful sessions, continuous batching, server-side tool
 > loop, shared-prefix KV, and KV persistence — and the real in-process
-> `LlamaCppBackend` runs a real model on hardware. The Tool Loop is now measured
-> across full three-arm sweeps on 1.5B and 7B (iGPU/Vulkan): in-process it
-> **matches a tuned llama-server without running one**. The performance question
-> that would set Palimpsests apart — Shared Prefix and KV Persistence under
-> concurrency — is still open; the honest method, numbers, and limits are in
-> **[results/](results/)**.
+> `LlamaCppBackend` runs a real model on hardware. All three level-3 mechanisms
+> are now measured on 1.5B and 7B (iGPU/Vulkan), plus a composite run: in-process
+> the Tool Loop and KV Persistence **match a tuned llama-server** on speed
+> (without running a server), Shared Prefix gives an **8.2× session-density**
+> crossing on a fixed KV budget, and with all three enabled the full stack runs
+> **~3.5× over no mechanisms** on a multi-hop agentic workload. Method, numbers,
+> and limits: **[results/](results/)**.
 > **New in v0.5:** audit rows are hash-chained with an out-of-band head anchor, so
 > tampering — including wholesale replacement — is detectable, with a `palimpsests
 > audit verify` command; a reproducible CycloneDX SBOM and a signed GitHub Release;
@@ -323,19 +324,28 @@ the novelty is in this composition and its seams, not in a new inference kernel.
       reproducible CycloneDX SBOM and a signed GitHub Release, and the project's
       governance and a [security assurance case](docs/ASSURANCE-CASE.md) are
       documented.
-- [ ] **Beyond 0.5** — the open differentiation question: **Shared Prefix** and
-      **KV Persistence** measured under concurrency (many sessions, more than the
-      slot count) — where these mechanisms can pay off, if anywhere. Plus
-      sleep-time compute (edge), a disk-backed KV store, speculative decoding.
-      See [docs/ROADMAP.md](docs/ROADMAP.md).
+- [x] **0.5 measurement campaign complete** — Shared Prefix and KV Persistence
+      measured in isolation (1.5B and 7B), then a composite run with all three
+      mechanisms enabled: they **compose without corruption**, are
+      **sub-additive** (Shared Prefix and KV Persistence save prefill for
+      *different* session subsets — cold vs resumed — so they add without
+      multiplying), and the full stack runs **~3.5× over no mechanisms**,
+      dominated by the Tool Loop. Shared Prefix also gives an **8.2×
+      session-density** crossing on a fixed KV budget. Reports:
+      [results/](results/).
+- [ ] **Beyond 0.5** — a discrete-GPU run (the integrated GPU flatters every
+      prefill-saving mechanism, so these ratios compress on fast prefill), a
+      disk-backed KV store, sleep-time compute (edge), speculative decoding. See
+      [docs/ROADMAP.md](docs/ROADMAP.md).
 
 Each level graduates by flipping the corresponding `capabilities` flag from
 `False` to `True`. A flipped flag means the *mechanism* is implemented and
-tested; a *measured* result is a separate step. Those measurements are now in
-(the 1.5B and 7B Tool Loop sweeps), and they set the honest bar: at the level-3
-Tool Loop, Palimpsests matches a tuned `llama-server` rather than beating it —
-the performance case, if there is one, rests on Shared Prefix and KV Persistence
-under concurrency, still to be measured.
+tested; a *measured* result is a separate step. Those measurements are now in —
+all three level-3 mechanisms on 1.5B and 7B, plus a composite — and they set the
+honest bar: on *speed* Palimpsests matches a tuned `llama-server` rather than
+beating it; its edges are **session density** under a shared prefix (8.2× on a
+fixed budget), the **~3.5× full-stack** value of the three mechanisms together on
+a multi-hop agent, and the in-process, no-server, auditable deployment model.
 
 ---
 
