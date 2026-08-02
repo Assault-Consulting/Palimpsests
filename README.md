@@ -20,8 +20,8 @@
 > the Tool Loop and KV Persistence **match a tuned llama-server** on speed
 > (without running a server), Shared Prefix gives an **8.2× session-density**
 > crossing on a fixed KV budget, and with all three enabled the full stack runs
-> **~3.5× over no mechanisms** on a multi-hop agentic workload. Method, numbers,
-> and limits: **[results/](results/)**.
+> **~3.5× over no mechanisms on 1.5B, rising to ~4× on 7B**, on a multi-hop
+> agentic workload. Method, numbers, and limits: **[results/](results/)**.
 > **New in v0.5:** audit rows are hash-chained with an out-of-band head anchor, so
 > tampering — including wholesale replacement — is detectable, with a `palimpsests
 > audit verify` command; a reproducible CycloneDX SBOM and a signed GitHub Release;
@@ -325,11 +325,11 @@ the novelty is in this composition and its seams, not in a new inference kernel.
       governance and a [security assurance case](docs/ASSURANCE-CASE.md) are
       documented.
 - [x] **0.5 measurement campaign complete** — Shared Prefix and KV Persistence
-      measured in isolation (1.5B and 7B), then a composite run with all three
-      mechanisms enabled: they **compose without corruption**, are
+      measured in isolation (1.5B and 7B), then a composite run (also 1.5B and 7B)
+      with all three mechanisms enabled: they **compose without corruption**, are
       **sub-additive** (Shared Prefix and KV Persistence save prefill for
       *different* session subsets — cold vs resumed — so they add without
-      multiplying), and the full stack runs **~3.5× over no mechanisms**,
+      multiplying), and the full stack runs **~3.5× over no mechanisms** (rising to ~4× on 7B),
       dominated by the Tool Loop. Shared Prefix also gives an **8.2×
       session-density** crossing on a fixed KV budget. Reports:
       [results/](results/).
@@ -344,7 +344,7 @@ tested; a *measured* result is a separate step. Those measurements are now in �
 all three level-3 mechanisms on 1.5B and 7B, plus a composite — and they set the
 honest bar: on *speed* Palimpsests matches a tuned `llama-server` rather than
 beating it; its edges are **session density** under a shared prefix (8.2× on a
-fixed budget), the **~3.5× full-stack** value of the three mechanisms together on
+fixed budget), the **~3.5–~4× full-stack** value of the three mechanisms together on
 a multi-hop agent, and the in-process, no-server, auditable deployment model.
 
 ---
