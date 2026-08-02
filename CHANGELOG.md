@@ -6,6 +6,75 @@ aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 once it reaches v1.0. Before v1.0, minor versions may include breaking
 API changes.
 
+## [0.6.0] — 2026-08-02
+
+**The 0.5 measurement campaign is complete, and `kv_unified` ships
+first-class.** This release closes the empirical half of level 3: all three
+serving mechanisms — the Tool Loop, Shared Prefix, and KV Persistence — are
+now measured on real hardware (Intel Arc iGPU / Vulkan) at two model sizes
+(1.5B and 7B), each against a *tuned* `llama-server` baseline, in isolation
+and in a composite run with all three enabled. The honest result reshapes
+the positioning: **on speed the mechanisms reach parity with a tuned
+server, not an edge over it.** The real differentiators are session density
+under a shared prefix (an 8.2× crossing on a fixed KV budget), the ~3.5–4×
+full-stack value of the mechanisms together on a multi-hop agent, and the
+in-process, no-server, auditable deployment model. Full method, numbers,
+and limits: `results/CONSOLIDATION-0.5.md` and `docs/POSITIONING.md`.
+
+### Added
+
+- **`kv_unified` as a first-class `LlamaCppBackend` parameter.** The unified
+  KV pool (which lets a shared prefix be *shared* across sessions rather
+  than copied, enabling the session-density result) is now a supported,
+  tested constructor flag, defaulting to split (per-sequence) KV. Previously
+  it was only reachable by a benchmark wrapper, so the density figure was
+  "demonstrated in a benchmark, not a product property"; it is now a product
+  property.
+- **Prefix-holder release-ordering guard (`PrefixHolderInUseError`).** In
+  unified-KV mode a prefix holder's cells are shared with the sessions
+  seeded from it; releasing the holder while a consumer is still live
+  perturbs that consumer's logits (measured — a partial shift the greedy
+  chain hides). The scheduler now tracks each holder's live consumers and
+  refuses an early release rather than corrupt them silently. The guard is
+  enforced in code, with a CI test on the fake backend and a hardware
+  isolation suite.
+- **Composite benchmark harness** (`benchmarks/bench_composite.py`) — the
+  incremental-cumulative rung driver that attributes the full-stack value to
+  each mechanism and runs the all-mechanisms-enabled corruption gate.
+
+### Fixed
+
+- **Engine teardown order.** `NativeEngine.close()` released prefix holders
+  while consumer sessions were still open — harmless under split KV, a
+  corruption under unified KV. It now releases consumer sessions before
+  their holders (the ordering the guard requires). The guard caught this
+  latent bug before it shipped.
+
+### Changed
+
+- **Positioning reflects the measured campaign.** `docs/POSITIONING.md` now
+  carries the measured results for all three mechanisms and the composite,
+  with the honest framing throughout (mechanism ratio vs re-prefill kept
+  separate from the parity result vs a tuned server; the full-stack number
+  reported as the full stack, never a cherry-picked best; the integrated-GPU
+  disclosure that flatters every prefill-saving mechanism). The shared-prefix
+  density claim, previously held out pending the `kv_unified` product work,
+  now enters as a measured product property.
+- **Roadmap: sleep-time compute deprioritized.** The campaign showed the
+  differentiation is audit/compliance and the deployment model, not raw
+  speed, so sleep-time compute is no longer scheduled. The next direction is
+  a verifiable audit format (a self-describing, byte-level format with test
+  vectors and a reference verifier an independent party can implement
+  without our code). See `docs/ROADMAP.md`.
+
+### Notes
+
+- No public runtime API changed; `kv_unified` is an additive, opt-in
+  parameter. The version is a minor bump for the new capability.
+- Standing gates unchanged: `state_set` gains a MAC before any disk-backed
+  KV store ships, and a discrete-GPU run is owed before any speed ratio is
+  presented as hardware-general.
+
 ## [0.5.0] — 2026-07-11
 
 The audit log becomes **genuinely** tamper-evident. Prior versions
@@ -378,6 +447,7 @@ Initial release.
   from the OS keychain, falling back to an ephemeral key headless.
 - **CLI** — `chat`, `models`, `engine list` / `engine use`.
 
+[0.6.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.6.0
 [0.5.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.5.0
 [0.4.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.4.0
 [0.3.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.3.0
