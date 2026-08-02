@@ -89,3 +89,28 @@ jobs:
 
       - name: Coverage (pytest --cov, fail under 80%)
         run: pytest --cov=palimpsests --cov-report=term-missing --cov-fail-under=80
+
+  pala-vectors:
+    name: pala-1 vectors reproduce
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: "3.12"
+
+      # The committed test vectors must be reproducible from the reference
+      # implementation, byte for byte. If this fails, either the reference
+      # drifted from the vectors or the vectors were edited by hand — both
+      # make the specification unfalsifiable, which is the one property it
+      # cannot lose.
+      - name: Regenerate and compare
+        run: |
+          python -m pip install --upgrade pip
+          pip install cryptography
+          cd docs/specs/pala-1
+          cp test-vectors.json /tmp/committed.json
+          python gen_vectors.py
+          cmp test-vectors.json /tmp/committed.json && echo "vectors reproduce byte-for-byte"

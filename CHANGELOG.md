@@ -6,6 +6,20 @@ aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 once it reaches v1.0. Before v1.0, minor versions may include breaking
 API changes.
 
+## [Unreleased]
+
+### Added (experimental)
+
+- **PALA-1 draft specification and codec.** A self-describing, byte-level
+  audit record format (`docs/specs/pala-1/`, CC0-1.0) with a standalone
+  reference implementation, a deterministic vector generator, and committed
+  test vectors reproduced byte-for-byte in CI; plus a production codec
+  (`palimpsests.audit.pala`) — header/TLV wire codec, RFC 6962 Merkle,
+  and a three-question verifier, all stdlib-only, with AES-256-GCM record
+  bodies behind a new `[pala]` extra. Added *alongside* the existing
+  `AuditLog`; nothing is replaced. The spec is **Draft**: the field set is
+  not yet frozen — no stability promise until spec v1.0.
+
 ## [0.6.0] — 2026-08-02
 
 **The 0.5 measurement campaign is complete, and `kv_unified` ships

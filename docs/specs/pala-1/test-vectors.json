@@ -1,0 +1,211 @@
+{
+  "format": "PALA-1",
+  "note": "Deterministic. Fixed key and derived nonces ON PURPOSE \u2014 never outside vectors.",
+  "aes_key_hex": "000000000000000000000000000000000000000000000000000000000000002a",
+  "key_id": 7,
+  "nonce_rule": "nonce = 4 zero bytes || seq (u64 LE); seq=3 -> 000000000300000000000000",
+  "plaintext_utf8": "clear path ahead, one pedestrian at 12m, static",
+  "records": [
+    {
+      "label": "genesis",
+      "note": "Distinguished type at position 0. prev_hash=0 is necessary but not sufficient.",
+      "seq": 0,
+      "record_type": "0x0001",
+      "header_len": 156,
+      "header_hex": "50414c4101009c00010000000000000000000000b0071d00000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "record_hash": "7fbd428355851ac808bfefba02149629116cb93c669adfa78f8d48edbc359f3a"
+    },
+    {
+      "label": "boot",
+      "note": "wall_clock_ns=0 with time_trust=UNSYNCED: an honest 'I do not know the time'.",
+      "seq": 1,
+      "record_type": "0x0002",
+      "header_len": 156,
+      "header_hex": "50414c4101009c00020000010100000000000000b0071d000000000000000000000000017fbd428355851ac808bfefba02149629116cb93c669adfa78f8d48edbc359f3a0000000000000000000000000000000000000000000000000000000000000000804f120000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "record_hash": "554202850536182b2e95e2b5e62742bc17fedfa7a194edca3feecc4a3972f770"
+    },
+    {
+      "label": "span_start",
+      "note": "Open span. If the process dies now, the unclosed span is the evidence.",
+      "seq": 2,
+      "record_type": "0x0010",
+      "header_len": 165,
+      "header_hex": "50414c410100a500100000030200000000000000b0071d00000000000000000000000001554202850536182b2e95e2b5e62742bc17fedfa7a194edca3feecc4a3972f770111111111111111111111111111111110000000000000000000000000000000000f2052a0100000000004c478c0ac2180000000000000000000000000000000000000000000000000000000000000000000000000000000001000500627261696e",
+      "record_hash": "f029d6b226fced3344d73c884e958e453a389bd486344589dde7b15594b6f225"
+    },
+    {
+      "label": "event_cprime",
+      "note": "AES-256-GCM body. The chain hash never touches it \u2014 only body_digest does.",
+      "seq": 3,
+      "record_type": "0x0012",
+      "header_len": 242,
+      "header_hex": "50414c410100f200120000030300000000000000b0071d00000000000000000000000001f029d6b226fced3344d73c884e958e453a389bd486344589dde7b15594b6f225222222222222222222222222222222221111111111111111111111111111111180889e2a0100000000e4579b8e0ac218070000004b000000ef0c3b2edbea13c42e791a84c663c25fbd440156c0193dc6f4008a08af7b533701000a00657965732e746965723102002000398acd99d6ae966ef0544860740cba683f5a80a54ecbff0691e2418da93b2b72030020000d867f191391c24d79369567f02fa58e21cba3444054791080167062c99605e1",
+      "record_hash": "f65f04a763a1da6fe1d88b87243e4fcf99c756c0d10dc3727157943d8d945271",
+      "body_len": 75,
+      "body_hex": "0000000003000000000000008c3cc508de9d4fc0e9f14a1c0722865354ef0cde154865c9a69e72befce5268ea261c712528f5e631c71d3bd0e8558856f024a6a53faac9292edb35b33c753"
+    },
+    {
+      "label": "merkle",
+      "note": "30 frame digests -> 1 record. Selective disclosure via proof, not bulk reveal.",
+      "seq": 4,
+      "record_type": "0x0020",
+      "header_len": 214,
+      "header_hex": "50414c410100d600200000030400000000000000b0071d00000000000000000000000001f65f04a763a1da6fe1d88b87243e4fcf99c756c0d10dc3727157943d8d945271000000000000000000000000000000000000000000000000000000000000000000bca0650100000000aef2d68e0ac2180000000000000000000000000000000000000000000000000000000000000000000000000000000011002000518f5be5173250f705e3bda029ec1c11ac5c4459115c07dde5bc1021d9f468db120004001e00000001000a00657965732e7469657230",
+      "record_hash": "fc63fb7ba13e043c5c1307464b298a5afb6e33d366f0e1daf2ae01b250946fc2"
+    },
+    {
+      "label": "aggregate",
+      "note": "Cleartext TLV body (key_id=0). Integers only \u2014 no float to disagree about.",
+      "seq": 5,
+      "record_type": "0x0021",
+      "header_len": 170,
+      "header_hex": "50414c410100aa00210000030500000000000000b0071d00000000000000000000000001fc63fb7ba13e043c5c1307464b298a5afb6e33d366f0e1daf2ae01b250946fc2000000000000000000000000000000000000000000000000000000000000000000bca0650100000000aef2d68e0ac218000000002c000000cd424fded54c256f4936a40decf6bc6554d3a3a7b033ebf0cff4c27458d7a8d901000a00657965732e7469657230",
+      "record_hash": "c0a1e84f4915bc38346751a360fac936ba1616ee7332e67debc63419e1dd2a9c",
+      "body_len": 44,
+      "body_hex": "0100080000ca9a3b00000000020004001e000000030004007800000004000400d6100000050004007a030000"
+    },
+    {
+      "label": "safety_divergence",
+      "note": "Written by the safety path, not the audit. The audit only observes it.",
+      "seq": 6,
+      "record_type": "0x0040",
+      "header_len": 177,
+      "header_hex": "50414c410100b100400000030600000000000000b0071d00000000000000000000000001c0a1e84f4915bc38346751a360fac936ba1616ee7332e67debc63419e1dd2a9c2222222222222222222222222222222211111111111111111111111111111111009d966b01000000008fe8dc8e0ac218000000000000000000000000000000000000000000000000000000000000000000000000000000000100110070657263657074696f6e5f6865616c7468",
+      "record_hash": "72a115227edaba47aa2b6ec85149065c137e55ea6d6539b45153b70756e42182"
+    },
+    {
+      "label": "shed_notice",
+      "note": "The gap is bounded, visible and in the chain. Fail-open, not fail-silent.",
+      "seq": 7,
+      "record_type": "0x0030",
+      "header_len": 182,
+      "header_hex": "50414c410100b600300000030700000000000000b0071d0000000000000000000000000172a115227edaba47aa2b6ec85149065c137e55ea6d6539b45153b70756e421820000000000000000000000000000000000000000000000000000000000000000007e8c71010000000070dee28e0ac21800000000000000000000000000000000000000000000000000000000000000000000000000000000200002000100210004009001000022000800007841cb02000000",
+      "record_hash": "4d6c75cdf52510fc7c4ea3a5be141249bc386de9e2565ffeface1dce8e2b9d00"
+    },
+    {
+      "label": "span_end",
+      "note": "Close is a separate record. Duration is derived at read time.",
+      "seq": 8,
+      "record_type": "0x0011",
+      "header_len": 156,
+      "header_hex": "50414c4101009c00110000030800000000000000b0071d000000000000000000000000014d6c75cdf52510fc7c4ea3a5be141249bc386de9e2565ffeface1dce8e2b9d00111111111111111111111111111111110000000000000000000000000000000000216e83010000000013c0f48e0ac21800000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "record_hash": "14434088e5f5866cf0276ba5a9055d8ee0d115a750b2cdf9cc4006d9481b29b4"
+    },
+    {
+      "label": "anchor",
+      "note": "Notes which head went to the anchor store. The store holds it out of band.",
+      "seq": 9,
+      "record_type": "0x0050",
+      "header_len": 192,
+      "header_hex": "50414c410100c000500000030900000000000000b0071d0000000000000000000000000114434088e5f5866cf0276ba5a9055d8ee0d115a750b2cdf9cc4006d9481b29b40000000000000000000000000000000000000000000000000000000000000000000264890100000000f4b5fa8e0ac218000000000000000000000000000000000000000000000000000000000000000000000000000000005000200014434088e5f5866cf0276ba5a9055d8ee0d115a750b2cdf9cc4006d9481b29b4",
+      "record_hash": "059574eab08dd14b01f98b28327a1110f39595995ad2278efb5904b711cca61d"
+    },
+    {
+      "label": "witness",
+      "note": "Tier C is claimed HERE, after the fact \u2014 never in the headers it covers.",
+      "seq": 10,
+      "record_type": "0x0051",
+      "header_len": 222,
+      "header_hex": "50414c410100de00510000030a00000000000000b0071d00000000000000000000000001059574eab08dd14b01f98b28327a1110f39595995ad2278efb5904b711cca61d0000000000000000000000000000000000000000000000000000000000000000001a711802000000000cc3898f0ac2180000000000000000000000000000000000000000000000000000000000000000000000000000000030000200010031000800000000000000000032000800090000000000000033002000f183b5be81e35101e3ba6824c3f90eb499953a37566d1f4f8912fb051ac85667",
+      "record_hash": "5e69e513ee0542d3dd6eca6d4127af52ba932b8539218692358ecbf695163e40"
+    },
+    {
+      "label": "key_shred",
+      "note": "GDPR Art. 17. Key 7 destroyed; seq=3 body unreadable forever; chain intact.",
+      "seq": 11,
+      "record_type": "0x0060",
+      "header_len": 164,
+      "header_hex": "50414c410100a400600000030b00000000000000b0071d000000000000000000000000015e69e513ee0542d3dd6eca6d4127af52ba932b8539218692358ecbf695163e40000000000000000000000000000000000000000000000000000000000000000000046bf41400000000f6bc65a20ac218000000000000000000000000000000000000000000000000000000000000000000000000000000004000040007000000",
+      "record_hash": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813"
+    }
+  ],
+  "chain_head": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+  "anchor_head": "14434088e5f5866cf0276ba5a9055d8ee0d115a750b2cdf9cc4006d9481b29b4",
+  "verify": {
+    "chain_ok": true,
+    "count": 12,
+    "breaks": [],
+    "gaps": [],
+    "violations": [],
+    "complete_to_anchor": true
+  },
+  "merkle": {
+    "tree_hash": "518f5be5173250f705e3bda029ec1c11ac5c4459115c07dde5bc1021d9f468db",
+    "leaf_count": 30,
+    "proof_index": 7,
+    "proof": [
+      [
+        "L",
+        "287dd5d32dbb2b7665f5fc4bc6f04d10c0180ef5fbc3a757ff006cda51290a00"
+      ],
+      [
+        "L",
+        "fc9e67b39ea73dcd64f479405ccab14038688501c2e35514b5a28907101e4709"
+      ],
+      [
+        "L",
+        "5150786fa00276d16e2a460b3bafc25931124e94f8e4dc6d55dbca4c8614448f"
+      ],
+      [
+        "R",
+        "83976cbc071a190b9e03ef4832c44d508db74ccaa3bf1ccfb3ccc81b7b41beb7"
+      ],
+      [
+        "R",
+        "a70eac96ae71b2c5ff377467756c082e1cdef6593ae662d45dd9594ca196d28f"
+      ]
+    ],
+    "proof_verifies": true
+  },
+  "demos": {
+    "body_bitflip": {
+      "detected": true,
+      "chain_still_verifies": true
+    },
+    "unknown_record_type": {
+      "type": "0x7fff",
+      "chain_ok": true,
+      "count": 13,
+      "uninterpretable_seqs": [
+        12
+      ]
+    },
+    "tail_truncation": {
+      "dropped_seq": 11,
+      "chain_ok_without_anchor": true,
+      "complete_to_anchor": false,
+      "anchor_reason": "the anchored head names no record in this chain \u2014 the log was replaced, rolled back, or truncated"
+    },
+    "stale_anchor": {
+      "anchor_names_seq": 8,
+      "chain_ok": true,
+      "complete_to_anchor": false,
+      "anchor_lag": 3,
+      "anchor_reason": "chain extends 3 record(s) beyond the anchored head \u2014 an unanchored tail, not a replacement"
+    },
+    "seq_gap": {
+      "chain_ok": false,
+      "gaps": [
+        99
+      ]
+    },
+    "missing_genesis": {
+      "chain_ok": false,
+      "violations": [
+        [
+          0,
+          "chain does not start with a GENESIS record"
+        ]
+      ]
+    },
+    "unknown_time_with_clock": {
+      "chain_ok": false,
+      "violations": [
+        [
+          12,
+          "time_trust=UNKNOWN requires wall_clock_ns=0"
+        ]
+      ]
+    }
+  }
+}
