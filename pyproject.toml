@@ -83,6 +83,11 @@ native = [
     # dependency is explicit rather than implied.
     "numpy>=1.26",
 ]
+# PALA-1 record-body encryption (AES-256-GCM). Header-only verification
+# is stdlib-only by design and does NOT need this extra.
+pala = [
+    "cryptography>=42.0",
+]
 # Local vector math for block-memory retrieval (cosine over stored
 # embeddings). numpy is the only requirement; the embed source itself is
 # the active engine by default (no model dependency here).
@@ -98,6 +103,9 @@ dev = [
     # numpy is the [embeddings] extra in production; dev pulls it so the
     # BlockMemory retrieval path (cosine over stored vectors) runs in CI.
     "numpy>=1.26",
+    # cryptography so the PALA-1 body tests and the vector-regeneration CI
+    # job run; the codec itself stays stdlib-only outside bodies.
+    "cryptography>=42.0",
 ]
 
 [project.urls]
