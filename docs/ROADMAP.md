@@ -56,7 +56,8 @@ tool-loop advantage — has a first measured result (see below).
   loop avoids, with near-identical TTFT between arms. Measured **CPU-only
   on a 1.5B model** as a mechanism sanity check, **not** a representative
   performance figure; the numbers and full method are in `results/` and
-  `POSITIONING.md`. A GPU / larger-model run is the pending next step.
+  `POSITIONING.md`. (Superseded by the full 0.5 iGPU campaign — see Working
+  order below; all three mechanisms are now measured on 1.5B and 7B.)
 
 **The level-3 skeleton is complete, and the real backend is now
 validated.** All six capability flags — `streaming`, `stateful_sessions`,
@@ -90,7 +91,7 @@ sharper form:
 
 ---
 
-## New direction: sleep-time compute (edge-native)
+## Deferred: sleep-time compute (edge-native) — not scheduled
 
 Verified against Lin et al., "Sleep-time Compute" (arXiv 2504.13171,
 Letta + UC Berkeley). The model, while idle, pre-processes a static
@@ -112,9 +113,13 @@ Why this fits Palimpsests specifically, more than it fits anyone else:
 
 We are not first to the concept (Letta shipped it in MemGPT 2.0). Our
 niche is the *edge-native* framing: free idle compute, local store, no
-cloud. Its benefit is best *measured*, not asserted — which is why it now
-sits **after** the real backend, alongside the first benchmarks, rather
-than as one more fake-backend mechanism.
+cloud. **Deprioritized as of 0.6.** The 0.5 measurement campaign showed the
+level-3 speed mechanisms reach parity with a tuned `llama-server`, not an
+edge over it; the project's differentiation is the audit/compliance story
+and the deployment model, not another edge perf feature. Sleep-time is a
+genuine idea and stays recorded here, but it is **not scheduled** — effort
+goes to the verifiable-audit direction (Working order below) instead. Its
+benefit would still be *measured, not asserted*, if it is ever built.
 
 ---
 
@@ -138,27 +143,40 @@ than as one more fake-backend mechanism.
 ## Working order (subject to revision)
 
 The fake-backend skeleton (N1 → N3a → N3b → N5 → N-pos → N4a → N4b → N6 →
-N6b) is **done**, and the real backend is now **validated on hardware with
-the first tool-loop measurement landed** (0.4). What follows continues to
-need hardware:
+N6b) is **done**; the real backend is **validated on hardware**; and the
+**0.5 measurement campaign is complete** (tagged 0.6.0). What follows is a
+change of direction, not more of the same.
 
-1. ~~**Real `LlamaCppBackend` + run the BENCHMARKING protocol.**~~
-   **Done (0.4).** The ctypes backend runs a real model; the first
-   measurement (tool-loop vs re-prefill, our strongest claimed advantage)
-   is landed — a CPU-only 1.5B sanity check confirming the mechanism and
-   its direction. **Next within this step:** a GPU / larger-model run for
-   representative magnitudes, and the persistence (N6) and shared-prefix
-   (N4) benchmarks against a tuned baseline.
-2. **Sleep-time compute (edge)** — `session.sleep()` → `c'` → BlockMemory,
-   built and measured together, since its value only shows on hardware.
-3. **Disk-backed KV store** — persist the N6b store across process exit,
-   behind the same `KVStore` interface (survive restarts / memory
-   pressure).
-4. **N7 + spec-decode safety interlock** — optional, later.
+1. ~~**Real `LlamaCppBackend` + the measurement campaign.**~~ **Done
+   (0.4 → 0.6.0).** The ctypes backend runs a real model, and all three
+   level-3 mechanisms — Tool Loop, Shared Prefix, KV Persistence — are
+   measured on 1.5B and 7B against a tuned `llama-server`, in isolation and
+   in a composite. The honest result: **on speed the mechanisms reach
+   parity with a tuned server**, not an edge over it; the real
+   differentiators are session density (Shared Prefix, 8.2×), the ~3.5–4×
+   full-stack value of the mechanisms together, and the in-process,
+   no-server, auditable deployment model. `kv_unified` shipped first-class
+   (#81). See `results/CONSOLIDATION-0.5.md` and `docs/POSITIONING.md`.
+2. **Verifiable audit — the format is the deliverable (0.7).** The next
+   direction, chosen because the campaign showed the moat is
+   audit/compliance and the deployment model, not raw speed. Freeze a
+   self-describing, byte-level audit format (envelope + three-question
+   verification + a graded assurance-tier field) with test vectors and a
+   reference verifier an independent party can implement without our code;
+   extract the audit subsystem behind a public API; have the library emit
+   the format and `audit verify` check it.
+3. **Assurance tiers B/C (0.8)** — a hardware root of trust and an external
+   witness (transparency-log / TSA), the stronger-than-local anchors.
+   Gated on the tier open questions (TPM clear semantics, witness
+   longevity).
+4. **Deferred, unscheduled:** a disk-backed KV store (needs `state_set`
+   MAC first — a real trust boundary), a discrete-GPU run (owed before any
+   speed ratio is presented as hardware-general), sleep-time compute
+   (above), N7 + spec-decode interlock.
 
-The priority remains measurement: now that a real backend exists, the
-next numbers to produce are the GPU/larger-model tool-loop run and the
-persistence and shared-prefix cases.
+The priority is no longer speed measurement — that chapter closed with
+0.6.0. It is making the audit trail *independently verifiable*: a format a
+regulator can check without trusting our binary.
 
 ---
 
