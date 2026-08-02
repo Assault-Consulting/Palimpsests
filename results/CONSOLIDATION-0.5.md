@@ -1,12 +1,14 @@
 # Campaign 0.5 — Consolidation
 
-Aggregate of the six measurement runs of the 0.5 iGPU/Vulkan campaign. This
-document produces **no new data**; every number traces to one of the six
-merged run reports in `results/` and to config-hash **dd2e395be22675f1**
-(pin 7745853, llama-cpp-python 0.3.33 Vulkan, pinned llama-server b9874 @
-78d2f5246, Qwen2.5 Q4_K_M 1.5B / 7B, driver 101.8331). Where a run amended
-a convention, the amendment lives in that run's report; this file cites the
-resulting number only.
+Aggregate of the 0.5 iGPU/Vulkan campaign: **six isolated-mechanism runs plus
+the composite**. This document produces **no new data**; every number traces to
+a merged run report in `results/`. The six isolated runs share config-hash
+**dd2e395be22675f1** (pin 7745853, llama-cpp-python 0.3.33 Vulkan, pinned
+llama-server b9874 @ 78d2f5246, Qwen2.5 Q4_K_M 1.5B / 7B, driver 101.8331); the
+composite (#82) is on **50fc841146dfbf6f** — the post-#81 stack, where
+`kv_unified` ships first-class and the prefix-holder release-ordering guard is
+enforced. Where a run amended a convention, the amendment lives in that run's
+report; this file cites the resulting number only.
 
 ## Capability name map (internal → public)
 
@@ -35,9 +37,12 @@ The two are separate columns everywhere below.
 | 4 | #72 | Shared Prefix | 7B | `results/n4-shared-prefix-7b-igpu.md` |
 | 5 | #76 | KV Persistence | 1.5B | `results/kv-persistence-1p5b-igpu.md` |
 | 6 | #77 | KV Persistence | 7B | `results/kv-persistence-7b-igpu.md` |
+| 7 | #82 | Composite (SP+TL+KP) | 1.5B | `results/composite-1p5b.md` |
 
-All six MERGED; branch cut from pin 7745853, `src/palimpsests` verified
-byte-identical to the pin across the campaign.
+All seven MERGED. The six isolated runs cut from pin 7745853 (`src/palimpsests`
+verified byte-identical to the pin across the campaign); the composite cut from
+3419ddb — the post-#81 stack (`kv_unified` first-class + enforced guard), a new
+config-hash by design.
 
 ---
 
@@ -157,7 +162,7 @@ slot-based server matches.
 | feature | verdict | justification (from the numbers) |
 |---|---|---|
 | **Tool Loop** | **KEEP** | Matches a tuned server (adjusted parity, both models) with no server process and avoids ~0.13 s/req transport; worth up to ~4× vs no tool loop. The mechanism is low-complexity (feed-only-the-result) and already the campaign's most-validated path. Cost side is negligible. |
-| **Shared Prefix** | **KEEP-WITH-CAVEAT** | The only feature with a competitive *speed* advantage (3.8–4.4× adjusted within the slot budget) AND a density crossing (8.2×). Caveats that must ship with the claim: within-budget only (erodes at M>P); ~2× (not ~3.8×) vs a workload-tuned P<M server; a 5–8% holder cost at M=1; **and the density is only reachable in unified-KV mode, which is not shipped as a first-class knob (product gate §7).** Keep — but the headline density number is gated on the capability work. |
+| **Shared Prefix** | **KEEP-WITH-CAVEAT** | The only feature with a competitive *speed* advantage (3.8–4.4× adjusted within the slot budget) AND a density crossing (8.2×). Caveats that must ship with the claim: within-budget only (erodes at M>P); ~2× (not ~3.8×) vs a workload-tuned P<M server; a 5–8% holder cost at M=1; **and the density requires unified-KV mode — now shipped first-class in #81 (§7.1 closed), so the density is a product property, no longer gated.** Keep. |
 | **KV Persistence** | **KEEP** | No crossover — resume beats re-prefill at every measured prefix on both models, and the advantage grows with model size (up to 7.58× wall / 154× TTFT). Parity with the tuned server's own slot restore, plus the in-process capability (agent survives a process restart). Complexity is contained (`state_get`/`state_set` + a validated frame). One release gate: `state_set` as a trust boundary once blobs are disk-backed (§7). |
 
 No feature is a **cut** on this profile: each clears its complexity by a
@@ -217,15 +222,16 @@ target).
   The **density crossing (8.2×) and the structural ceilings** are
   memory/arithmetic facts less sensitive to compute speed, but are still
   measured on one machine.
-- **Every number traces to a merged run PR + config-hash
-  dd2e395be22675f1.** No number in this file originates outside the six
-  reports.
+- **Every number traces to a merged run PR + a config-hash.** The six
+  isolated runs are on dd2e395be22675f1; the composite is on
+  50fc841146dfbf6f (the post-#81 stack). No number originates outside the
+  seven reports.
 - **Named limits of this campaign:** single operator, single machine, one
   quant (Q4_K_M), two models (1.5B/7B), integrated GPU only. **No
   discrete-GPU (CUDA) run; no N>1 independent operator; no independent
   replication.** The transport estimator is a per-run TTFT-difference
   bound, flagged where it sinks into prefill noise. The Shared-Prefix
-  density requires unified-KV mode (product gate §7).
+  density requires unified-KV mode, now shipped first-class (§7.1 closed).
 
 ---
 
@@ -234,15 +240,19 @@ target).
 These are separate from measurement. Each blocks a specific public claim
 until a product PR closes it.
 
-1. **Shared-Prefix density (8.2×) requires unified-KV, which is not
-   shipped first-class.** The pinned `LlamaCppBackend` creates contexts in
-   the default split-KV mode, where prefix sharing is architecturally
-   impossible; the campaign measured the density by wrapping the unchanged
-   `__init__` to set `kv_unified=true` (declared in every N4/N6 config
-   block). Until the backend exposes `kv_unified` as a supported knob, the
-   8.2× is **"demonstrated in benchmark, not yet a product property"** —
-   it must carry that disclaimer in any public claim, or wait for the
-   unified-KV product PR.
+1. **Shared-Prefix density (8.2×) requires unified-KV — CLOSED by #81.**
+   Originally a gate: the pinned `LlamaCppBackend` created contexts in the
+   default split-KV mode (where prefix sharing is architecturally
+   impossible), and the isolated runs measured the density by wrapping the
+   unchanged `__init__` to set `kv_unified=true`. **#81 shipped
+   `kv_unified` as a first-class, tested `LlamaCppBackend` parameter**
+   (default split), with a generation-identity check and an isolation
+   suite; the release-ordering constraint the isolation test found
+   (releasing a holder under live consumers perturbs their logits) is now
+   **enforced in code** (`PrefixHolderInUseError`). The 8.2× is therefore a
+   **product property**, no longer a benchmark wrapper, and enters
+   POSITIONING (§8a lifted). The composite (#82) ran on this shipped stack
+   (config-hash 50fc841) with the guard active and never raising.
 2. **`state_set` is a trust boundary once KV blobs are disk-backed.**
    Benchmark blobs are self-produced, so the runs are safe; but a shipped
    disk-backed KV store hands attacker-influenceable bytes to llama.cpp's C
@@ -262,6 +272,11 @@ diff is auditable against them:
 - **(a) The 8.2× density → HOLD.** Not entered into POSITIONING at this
   stage; it waits for the unified-KV product PR (gate §7.1). The
   Shared-Prefix row in POSITIONING stays a target / still-open until then.
+  **→ Update (post-#81/#82): HOLD LIFTED.** The unified-KV product PR
+  merged (#81, §7.1 closed), shipping `kv_unified` first-class with the
+  enforced guard. The 8.2× density now enters POSITIONING as a measured
+  product property, with the §4 caveats (within-budget speed; ~2× vs a
+  P-tuned server; erodes at M>P). See §9.
 - **(b) External targets → REPLACE with measured, but ONLY for Tool Loop
   and KV Persistence** (the features the campaign measured AND decision (a)
   clears for publication). Specifically:
@@ -280,3 +295,39 @@ diff is auditable against them:
 Stage 2 makes the **minimal** POSITIONING diff matching exactly these
 decisions — measured numbers only, with the §6 disclaimers and §7 gates,
 and nothing beyond them.
+
+---
+
+## 9. Composite — do the three mechanisms compose (#82), and this closes the campaign
+
+The six isolated runs each measure one mechanism. The composite (#82, 1.5B, on
+the post-#81 shipped stack, config-hash 50fc841) measures the three **together**
+under one agentic workload — M parallel sessions sharing a system prompt, each
+running multi-hop tool calls, a fraction resumed from persisted KV — asking
+whether they ADD, OVERLAP, or FIGHT. Full report: `results/composite-1p5b.md`.
+
+| finding | number | note |
+|---|---|---|
+| **Corruption gate** | **PASS** (L2 = 0.0, both session types; guard raises = 0) | cold (SP+TL) and resumed (KP+TL) sessions produce first-token logits bit-identical to a stateless reference; the enforced guard never fires under concurrency. Composition is *correct*, not just fast. |
+| **Full-stack value** | **3.37–3.59×** (rung 1 → rung 4) vs the same workload with no mechanisms | the honest deployment number, dominated by the Tool Loop; reported as the full stack, never a cherry-picked isolated best |
+| **Sub-additivity** | KP marginal delta ~0 (no resume) to ~10% (half resumed) | Shared Prefix and KV Persistence **partition by session type** (cold-prefix vs resumed-history) and add WITHOUT multiplying — a persisted blob is full-logical, so neither covers the other's subset. Confirms the Run 5 probe-Q2 prediction. |
+| **Tool Loop dominates** | Δ 14–57 s (rung 3 → rung 4) | removing per-hop conversation re-prefill is the bulk of a multi-hop agent; most of the 3.5× is here |
+| **Pool pressure** | did NOT materialize | M=12 / resume 0.5 uses 13,578 of 32,768 cells (41%), zero admission failures, zero slot exhaustion — the default budget is generous at this scale (honestly reported non-event, not manufactured) |
+
+**Honesty guardrails (as §6):** the vs-tuned-server number (0.53–0.84×) is **not**
+a headline — the native rungs run sessions sequentially for clean rung-delta
+attribution while the server batches, so that gap mixes execution model with
+mechanism; the clean per-mechanism competitive picture is the parity result in
+the isolated runs (§1). The composite's job is delta attribution and the
+full-stack value, both above. No disappointment clause fired; guard raises = 0 at
+every point; ran under the chronometry budget (~2 h); no incidents, no re-runs.
+
+**Net.** The level-3 mechanisms **compose** — correct (gate), sub-additive (they
+cover different session subsets), Tool-Loop-dominated for multi-hop agents. The
+honest deployment headline is **~3.5× over no mechanisms**; the per-mechanism
+competitive numbers (§1: parity with a tuned server; §3: 8.2× density) remain the
+external comparison. **This closes the 0.5 measurement campaign.** What remains is
+not measurement but consolidation into POSITIONING (done) and the standing
+release gate §7.2 (`state_set` MAC before a disk-backed KV store ships); a
+discrete-GPU run (§6) is owed before any speed ratio is presented as
+hardware-general.
