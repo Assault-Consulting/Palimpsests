@@ -129,9 +129,117 @@ carry the M<P vs M>P contrast the pool-pressure question needs). 5 timed
 repeats retained (convention). This is the confirmation-at-scale scope
 (§8), not a mechanism re-establishment.
 
-### 1-6. (rung table, sub-additivity, composite value, pool pressure,
-cross-model 1.5B vs 7B, memory — to be filled after the grid)
+### 1. Corruption gate — PASS (already run, §Step 0.5)
+
+cold SP+TL L2 = 0.0, resumed KP+TL L2 = 0.0, guard raises = 0 at prefix
+1500. The composite is state-control correct on 7B.
+
+### 2. Rung table — wall (medians of 5), prefix 1500, reduced M∈{4,12}
+
+Deltas are mechanism value (our scheduler) — NEVER "vs llama-server".
+
+| M | resume | rung0 srv | rung1 none | rung2 +SP | rung3 +KP | rung4 +TL | Δ SP | Δ KP | Δ TL | value r1/r4 | srv r0/r4 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 4 | 0.0 | 19.3 | 138.2 | 120.2 | 118.2 | 36.5 | 18.00 | **1.99** | 81.66 | 3.78× | 0.53× |
+| 4 | 0.5 | 16.9 | 109.9 | 99.4 | 88.4 | 26.4 | 10.51 | **11.08** | 61.99 | 4.17× | 0.64× |
+| 12 | 0.0 | 60.3 | 410.7 | 351.1 | 350.4 | 112.1 | 59.66 | **0.70** | 238.33 | 3.67× | 0.54× |
+| 12 | 0.5 | 55.3 | 326.3 | 299.2 | 264.8 | 79.2 | 27.15 | **34.38** | 185.55 | 4.12× | 0.70× |
+
+### 3. Sub-additivity — CONFIRMED on 7B, same shape as 1.5B
+
+Δ KP is ~0 at resume 0 (1.99 / 0.70 s at M 4/12 — nothing to resume) and
+grows at resume 0.5 (11.08 / 34.38 s) — but is **11.1 % / 11.5 % of the
+rung-2 wall it acts on**, the same ~11 % fraction as 1.5B (10.5–11 %).
+Shared Prefix and KV Persistence partition by session type on 7B exactly as
+on 1.5B (Δ SP largest at resume 0 where all sessions are cold: 18.0/59.7 s;
+smaller at resume 0.5: 10.5/27.2 s). They ADD across subsets, do NOT
+multiply. Tool Loop dominates (Δ 62–238 s, ~4× the 1.5B Δ — the per-hop
+re-prefill is 4× more expensive on 7B). Pre-registration (1) holds.
+
+### 4. Composite headline — full-stack value HIGHER than 1.5B
+
+Full-stack mechanism value (rung 1 → rung 4): **3.67–4.17×**, above 1.5B's
+3.37–3.59× — the heavier 7B prefill makes each avoided re-prefill worth
+more (pre-registration (2), consistent with Run 6's KP 5.44 → 7.58× lift).
+vs the tuned server (rung 0): 0.53–0.70× — server 1.4–1.9× faster via
+continuous batching (execution-model caveat, same as 1.5B, NOT the
+headline).
+
+### 5. Pool pressure — did NOT fire on 7B either; the CELL pool is model-independent (the run's primary new finding)
+
+The pre-registered worry — that the 2×-heavier 7B cell would push the
+composite into pool pressure where 1.5B had none — did NOT materialize, and
+the reason is clean:
+
+| M | resume | held concurrent | peak KV cells | 1.5B peak cells | admission fails | slot exhaustion | guard |
+|---|---|---|---|---|---|---|---|
+| 12 | 0.5 | 12 | 13,578 | 13,578 | 0 | 0 | 0 |
+| 12 | 0.0 | 12 | 13,284 | 13,284 | 0 | 0 | 0 |
+| 4 | 0.5 | 4 | 4,526 | 4,526 | 0 | 0 | 0 |
+
+**The peak KV cell count is IDENTICAL to 1.5B, cell-for-cell** — because
+the KV pool is allocated in CELLS (n_ctx), and the workload's cell count is
+token-based, hence model-INDEPENDENT. At M=12/resume 0.5 the composite uses
+13,578 of 32,768 cells — the same **41 %** on both models. The 7B cost is
+in BYTES, not cells: the same 41 % of cells is 2× the memory. But even the
+byte footprint fits: peak WS **11.6 GB** at rung 4 M=12 (7B weights 4.36 GB
++ 32768-cell KV 1.75 GB + resident blobs + runtime) — **63 % of the
+18.4 GiB Arc budget**, no device-memory pressure. Server rung-0 RSS 13.9 GB.
+
+**So pool pressure is model-INDEPENDENT for this workload** (cell-based
+admission), and the composite fits the device budget on 7B with headroom.
+The pre-registered feasibility-limit hypothesis is a null result — reported
+as measured, with the mechanistic reason (cell- not byte-based pool).
+
+### 6. Cross-model comparison — 1.5B vs 7B composite
+
+| metric | 1.5B (Run 7) | 7B (this run) | reads as |
+|---|---|---|---|
+| full-stack value r1/r4 | 3.37–3.59× | **3.67–4.17×** | HIGHER on 7B (heavier prefill saved) |
+| Δ KP as % of rung 2 (resume 0.5) | 10.5–11 % | 11.1–11.5 % | same — sub-additive, model-independent |
+| Δ TL (dominant) | 14–57 s | 62–238 s | ~4× — per-hop re-prefill costs more on 7B |
+| peak KV cells @ M12 rf0.5 | 13,578 | 13,578 | IDENTICAL — cell pool is model-independent |
+| peak WS @ rung4 M12 | 3.73 GB | 11.6 GB | 3.1× bytes; both fit the budget |
+| admission / slot failures | 0 | 0 | no pool pressure on either |
+| guard raises | 0 | 0 | release ordering correct on both |
+| corruption gate | PASS | PASS | composition correct on both |
+
+### 7. Guard, memory, incidents
+
+- **guard_raises = 0 at every point** — the enforced guard never fired
+  under the 7B composite.
+- Memory (real-handle psapi): native peak WS 11.6 GB (rung 4 M=12), server
+  RSS 13.9 GB; both within the ~18.4 GiB Arc budget.
+- No incidents; no re-runs. Grid ran ~5.4 h (probe-based projection was
+  ~5 h) — within the 6 h threshold after the §8 reduction to M∈{4,12}.
 
 ## Observation
 
-(to be filled)
+Verdict vs the pre-registration: **confirmed on (1), (2), (4); the pool-
+pressure hypothesis (3) is a NULL result with a clean mechanistic reason;
+no disappointment clause fired.**
+
+1. **Composite shape reproduces on 7B** — corruption gate PASS (guard 0),
+   sub-additive (Δ KP ~0 at resume 0, ~11 % at resume 0.5 — the SAME
+   fraction as 1.5B), Tool Loop dominates. The mechanisms compose at model
+   scale exactly as at 1.5B.
+2. **Full-stack value is HIGHER on 7B (3.67–4.17× vs 3.37–3.59×)** — the
+   heavier prefill makes the avoided re-prefill worth more, as
+   pre-registered and consistent with the isolated Run 6 lift.
+3. **Pool pressure did NOT fire on 7B — the KV pool is cell-based, so
+   utilization is model-independent (identical 13,578 cells, 41 % on both
+   models).** The 2× cell weight doubles the BYTES (peak WS 3.7 → 11.6 GB)
+   but not the cell count, and 11.6 GB fits the 18.4 GiB budget with
+   headroom. The pre-registered feasibility limit is a null result; the
+   composite is not memory-bound on this hardware at M≤12 / prefix 1500.
+   This is the run's primary new finding: composite pool pressure is a
+   function of token counts (cells), not model size (bytes), until the
+   device budget itself is approached — which it is not here.
+4. **vs server: 0.53–0.70× (server faster via continuous batching)** — the
+   execution-model caveat, same as 1.5B; not the headline.
+
+Net for consolidation: the composite is model-size-robust — it composes
+correctly, stays sub-additive (SP/KP partition by session type on both
+models), and is worth MORE at 7B (3.67–4.17×) while its pool cost is
+model-independent (cell-based) and byte-bound only by a budget it does not
+approach. This closes the 0.5 composite axis across both models.
