@@ -38,8 +38,9 @@ The two are separate columns everywhere below.
 | 5 | #76 | KV Persistence | 1.5B | `results/kv-persistence-1p5b-igpu.md` |
 | 6 | #77 | KV Persistence | 7B | `results/kv-persistence-7b-igpu.md` |
 | 7 | #82 | Composite (SP+TL+KP) | 1.5B | `results/composite-1p5b.md` |
+| 8 | #84 | Composite (SP+TL+KP) | 7B | `results/composite-7b.md` |
 
-All seven MERGED. The six isolated runs cut from pin 7745853 (`src/palimpsests`
+All eight MERGED. The six isolated runs cut from pin 7745853 (`src/palimpsests`
 verified byte-identical to the pin across the campaign); the composite cut from
 3419ddb — the post-#81 stack (`kv_unified` first-class + enforced guard), a new
 config-hash by design.
@@ -224,8 +225,8 @@ target).
   measured on one machine.
 - **Every number traces to a merged run PR + a config-hash.** The six
   isolated runs are on dd2e395be22675f1; the composite is on
-  50fc841146dfbf6f (the post-#81 stack). No number originates outside the
-  seven reports.
+  50fc841146dfbf6f (the post-#81 stack, both composite runs). No number
+  originates outside the eight reports.
 - **Named limits of this campaign:** single operator, single machine, one
   quant (Q4_K_M), two models (1.5B/7B), integrated GPU only. **No
   discrete-GPU (CUDA) run; no N>1 independent operator; no independent
@@ -298,21 +299,23 @@ and nothing beyond them.
 
 ---
 
-## 9. Composite — do the three mechanisms compose (#82), and this closes the campaign
+## 9. Composite — do the three mechanisms compose (#82 · #84), and this closes the campaign
 
-The six isolated runs each measure one mechanism. The composite (#82, 1.5B, on
-the post-#81 shipped stack, config-hash 50fc841) measures the three **together**
-under one agentic workload — M parallel sessions sharing a system prompt, each
-running multi-hop tool calls, a fraction resumed from persisted KV — asking
-whether they ADD, OVERLAP, or FIGHT. Full report: `results/composite-1p5b.md`.
+The six isolated runs each measure one mechanism. The composite measures the
+three **together** under one agentic workload — M parallel sessions sharing a
+system prompt, each running multi-hop tool calls, a fraction resumed from
+persisted KV — asking whether they ADD, OVERLAP, or FIGHT, on **both model
+sizes** (#82 · 1.5B, #84 · 7B, same config-hash 50fc841 — `src/palimpsests`
+byte-identical across both, so the two are directly comparable). Full reports:
+`results/composite-1p5b.md`, `results/composite-7b.md`.
 
 | finding | number | note |
 |---|---|---|
 | **Corruption gate** | **PASS** (L2 = 0.0, both session types; guard raises = 0) | cold (SP+TL) and resumed (KP+TL) sessions produce first-token logits bit-identical to a stateless reference; the enforced guard never fires under concurrency. Composition is *correct*, not just fast. |
-| **Full-stack value** | **3.37–3.59×** (rung 1 → rung 4) vs the same workload with no mechanisms | the honest deployment number, dominated by the Tool Loop; reported as the full stack, never a cherry-picked isolated best |
-| **Sub-additivity** | KP marginal delta ~0 (no resume) to ~10% (half resumed) | Shared Prefix and KV Persistence **partition by session type** (cold-prefix vs resumed-history) and add WITHOUT multiplying — a persisted blob is full-logical, so neither covers the other's subset. Confirms the Run 5 probe-Q2 prediction. |
-| **Tool Loop dominates** | Δ 14–57 s (rung 3 → rung 4) | removing per-hop conversation re-prefill is the bulk of a multi-hop agent; most of the 3.5× is here |
-| **Pool pressure** | did NOT materialize | M=12 / resume 0.5 uses 13,578 of 32,768 cells (41%), zero admission failures, zero slot exhaustion — the default budget is generous at this scale (honestly reported non-event, not manufactured) |
+| **Full-stack value** | **3.37–3.59× (1.5B); 3.67–4.17× on 7B** (higher — heavier prefill saved), rung 1 → rung 4, vs the same workload with no mechanisms | the honest deployment number, dominated by the Tool Loop; reported as the full stack, never a cherry-picked isolated best. Grows with model size (consistent with the isolated Run 6 KP lift 5.44 → 7.58×). |
+| **Sub-additivity** | KP marginal delta ~0 (no resume) to ~11% (half resumed) — **the same ~11% fraction on both models** | Shared Prefix and KV Persistence **partition by session type** (cold-prefix vs resumed-history) and add WITHOUT multiplying — a persisted blob is full-logical, so neither covers the other's subset. Confirms the Run 5 probe-Q2 prediction; model-independent. |
+| **Tool Loop dominates** | Δ 14–57 s (1.5B); **62–238 s on 7B** (~4× — per-hop re-prefill costs 4× more) | removing per-hop conversation re-prefill is the bulk of a multi-hop agent; most of the full-stack value is here |
+| **Pool pressure** | did NOT materialize on **either** model | M=12 / resume 0.5 uses 13,578 of 32,768 cells (41%) — **identical cell count on 1.5B and 7B**, because the KV pool is CELL-based (n_ctx) and the workload's cell count is token-based, hence model-independent. The 7B cost is 2× the BYTES (peak WS 3.7 → 11.6 GB) but fits the 18.4 GiB Arc budget with headroom (63%); zero admission failures, zero slot exhaustion on both. |
 
 **Honesty guardrails (as §6):** the vs-tuned-server number (0.53–0.84×) is **not**
 a headline — the native rungs run sessions sequentially for clean rung-delta
@@ -324,9 +327,10 @@ every point; ran under the chronometry budget (~2 h); no incidents, no re-runs.
 
 **Net.** The level-3 mechanisms **compose** — correct (gate), sub-additive (they
 cover different session subsets), Tool-Loop-dominated for multi-hop agents. The
-honest deployment headline is **~3.5× over no mechanisms**; the per-mechanism
-competitive numbers (§1: parity with a tuned server; §3: 8.2× density) remain the
-external comparison. **This closes the 0.5 measurement campaign.** What remains is
+honest deployment headline is **~3.5× over no mechanisms on 1.5B, rising to ~4×
+on 7B**; the per-mechanism competitive numbers (§1: parity with a tuned server;
+§3: 8.2× density) remain the external comparison. **This closes the 0.5
+measurement campaign across both model sizes.** What remains is
 not measurement but consolidation into POSITIONING (done) and the standing
 release gate §7.2 (`state_set` MAC before a disk-backed KV store ships); a
 discrete-GPU run (§6) is owed before any speed ratio is presented as
