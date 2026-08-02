@@ -7,12 +7,14 @@ project is built on a measurement discipline (see [BENCHMARKING.md](BENCHMARKING
 a number we have not produced on our own hardware is a **target**, not a result,
 and is labeled as such here.
 
-The 0.5 measurement campaign added two mechanisms measured on our own hardware
-against the honest tuned baseline — the **tool loop** and **KV persistence**
-(both below). **Shared-prefix** was also measured but is gated out of this
-document until the backend ships unified-KV support (see its section). Sleep-time
-compute and the larger-regime numbers remain external targets. Keeping the line
-between *measured* and *target* sharp is the point.
+The 0.5 measurement campaign measured all three level-3 mechanisms on our own
+hardware against the honest tuned baseline — the **tool loop**, **KV
+persistence**, and **shared-prefix** (all below) — then a **composite** run with
+all three enabled. Shared-prefix's density result is now a product property: the
+backend ships `kv_unified` as a first-class flag (the guard PR), so it is no
+longer gated out of this document. Sleep-time compute and the larger-regime
+numbers remain external targets. Keeping the line between *measured* and *target*
+sharp is the point.
 
 ---
 
@@ -118,8 +120,11 @@ glue.
 
 ## What we have measured ourselves
 
-One benchmark, run three times. It is the one the level's strongest claim rests
-on: **the server-side tool loop (N5) vs a re-prefill baseline.** In an agentic
+The tool loop was the first mechanism we measured, and its writeup below is the
+most detailed — the one the level's strongest claim first rested on: **the
+server-side tool loop (N5) vs a re-prefill baseline.** The 0.5 campaign went on
+to measure the other two mechanisms and a composite (see *Performance* below,
+where each measured subsection is labeled). In an agentic
 `generate → tool → continue` cycle, the tool loop keeps the shared prefix and the
 growing conversation live in KV and feeds only each tool result; a stateless
 engine re-reads (re-prefills) the whole conversation every hop. Both arms decode
@@ -217,22 +222,25 @@ loop.
   at 5 repeats, so its 1.22× is the least firm figure in the set. The same config
   at 7B shows no overlap (18.11–19.38 s vs 23.22–25.64 s), and every other config
   is tight.
-- **One benchmark, not a suite.** The KV-persistence and shared-prefix speedups
-  below remain **targets** until measured the same way.
+- **This detailed writeup is the tool loop only.** KV persistence, shared-prefix,
+  and the composite are measured too (see *Performance* below, each labeled
+  MEASURED); what remains a target is the server-class and larger-regime numbers
+  in the external tables, and a discrete-GPU run.
 
 ---
 
 ## Performance: targets, not yet results
 
-> **Read this first.** None of the numbers below were produced by Palimpsests on
-> our hardware. They are published results from **other** systems and papers that
-> exercise the *same mechanisms* we implement. We list them as **orientation
-> targets** — the ballpark we aim to reproduce as each mechanism is measured on
-> hardware, under the protocol in [BENCHMARKING.md](BENCHMARKING.md). Until then,
-> treat every figure as "someone else achieved this on their setup; our goal is
-> to get into this range on ours." A benchmark is only worth running if it can
-> disappoint us — so these are hypotheses to test, not marketing. (The one
-> exception, now measured by us, is the tool-loop result in the section above.)
+> **Read this first — the sections below are a mix.** Three of them —
+> **KV persistence**, **shared-prefix**, and the **composite** — are now measured
+> by us on our own hardware (each labeled **MEASURED**, with the 0.5 campaign
+> sources). What remains a **target** is the *external* results inside those
+> sections (published numbers from **other** systems and papers exercising the
+> same mechanisms, in regimes we have not yet measured) and the sleep-time
+> compute section. Treat every external figure as "someone else achieved this on
+> their setup; our goal is to get into this range on ours," under the protocol in
+> [BENCHMARKING.md](BENCHMARKING.md). A benchmark is only worth running if it can
+> disappoint us — so the targets are hypotheses to test, not marketing.
 
 ### KV persistence — avoiding re-prefill (our N6 / N6b direction) — MEASURED (0.5 campaign)
 
@@ -285,14 +293,19 @@ on cross-platform local hardware.
 The mechanism: a system prompt shared across sessions is decoded once and copied,
 not recomputed per session. Our prefix-holder policy implements exactly this.
 
-> **Measured in benchmark, not yet a product property.** The 0.5 campaign
-> measured this mechanism (`results/n4-shared-prefix-*-igpu.md`, #71/#72), but
-> its headline result — a session-density crossing on a fixed KV budget — is
-> only reachable in llama.cpp's **unified-KV** mode, which the backend does not
-> yet expose as a first-class knob (the benchmark set it via a declared wrapper).
-> Until a product PR ships unified-KV support, no shared-prefix number enters
-> this section; the external results below stay **targets**. This is a
-> deliberate gate, not an oversight.
+> **MEASURED (0.5 campaign).** `kv_unified` now ships as a first-class
+> `LlamaCppBackend` flag (the guard PR), so the density result is a product
+> property, not a benchmark wrapper. On a fixed **32,768-cell KV budget** the
+> prefix-holder path serves **255 concurrent sessions to a tuned `llama-server`'s
+> 31 — an 8.2× session-density crossing** (`results/n4-shared-prefix-*-igpu.md`,
+> #71/#72), identical on 1.5B and 7B because the ceiling is *structural*
+> (llama.cpp's sequence cap and the server's per-slot context split), not memory.
+> On **speed**, within the slot budget the mechanism runs **3.8–4.4× adjusted**
+> over stateless re-prefill — but the honest caveats ship with the number: it is
+> **~2× (not ~4×) against a workload-tuned P<M server**, it **erodes beyond
+> M≈P** (the server's freed-slot prefix cache catches up), and there is a ~5–8%
+> holder cost at M=1. The differentiator is **density on a fixed budget**, not
+> beating a tuned server on latency.
 
 | Reported effect (their hardware) | Setting | Source |
 |---|---|---|
@@ -304,6 +317,34 @@ The principle underneath all of these: **any change to the start of the context
 invalidates the entire prefix cache from that point** — a single changed token in
 a 5,000-token system prompt forces recomputation of all 5,000. Shared-prefix
 reuse is valuable precisely because it protects the expensive common prefix.
+
+### Composite — all three mechanisms together (0.5 campaign) — MEASURED
+
+The isolated runs above measure one mechanism each. The composite run measures
+them **together** under one agentic workload: M parallel sessions sharing a
+system prompt, each running multi-hop tool calls, a fraction resumed from
+persisted KV (`results/composite-1p5b.md`, #82). Two findings.
+
+- **They compose correctly.** With all three enabled, both session types — cold
+  (Shared Prefix + Tool Loop) and resumed (KV Persistence + Tool Loop) — produce
+  first-token logits **bit-identical** to a stateless reference, and the enforced
+  prefix-holder guard never fires under the concurrent workload. Correct, not
+  just fast: the level-3 stack ships every mechanism on by default because the
+  composition is safe, not merely because each part works alone.
+- **The full-stack value is ~3.5×, and it is sub-additive.** The composite runs
+  **3.37–3.59× faster than the same workload with no mechanisms** — most of it
+  from the Tool Loop, because removing per-hop conversation re-prefill dominates
+  a multi-hop agent. Shared Prefix and KV Persistence **partition by session
+  type** (one saves cold sessions' prefix decode, the other saves resumed
+  sessions' history decode) and **add without multiplying** — a persisted blob
+  is full-logical, so a resumed session gets no benefit from the shared holder
+  and a cold session gets none from persistence. This **3.5× is the honest
+  full-stack deployment number**, *not* the 4.4× shared-prefix-alone figure
+  (which is only 1.1–1.5× at these hop counts, where most of the win is the tool
+  loop and appears only with the full stack). It is a mechanism-attribution
+  result measured on sequential execution — not a vs-server competitive claim
+  (the per-mechanism competitive picture is the parity result in the isolated
+  runs above).
 
 ### Sleep-time compute — using idle cycles (roadmap)
 
@@ -330,22 +371,28 @@ even more favorable on-device than in the cloud. This is roadmap, not built.
   validated on hardware**. The composition — several serving features over one
   position substrate, under one contract, on cross-platform local hardware —
   exists and is tested; that is the novel part.
-- **What we have measured ourselves:** two mechanisms, on an integrated GPU
-  (1.5B and 7B), each against the honest tuned `llama-server` baseline. **Tool
-  loop:** vs a stateless re-prefill baseline the mechanism ratio grows with the
-  prefill cost avoided (up to ~4×), the arithmetic accounts for the saved time
-  (*hops × TTFT*), and the control sits at parity — but **vs a tuned server the
-  adjusted result is parity** (it matches a tuned server without running one).
-  **KV persistence:** resume beats re-prefill at every measured prefix (no
-  crossover; the advantage grows with model size), at **parity with a tuned
-  server's own slot restore**, the differentiator being in-process capability.
-  Both are **mechanism checks on edge-class hardware**, not representative
-  discrete-GPU figures, and we do not extend them to server-class deployments.
-- **What is still a target:** the shared-prefix numbers above (measured in
-  benchmark, but gated on shipping unified-KV support before any figure enters
-  this document), and the KV-persistence results in regimes we have not measured
-  (32K context, multi-agent workflows, quantized-capacity ceilings). They come
-  from external systems exercising the same mechanisms; reproducing them on our
+- **What we have measured ourselves:** all three level-3 mechanisms, on an
+  integrated GPU (1.5B and 7B), each against the honest tuned `llama-server`
+  baseline, plus a composite. **Tool loop:** vs a stateless re-prefill baseline
+  the mechanism ratio grows with the prefill cost avoided (up to ~4×), but **vs a
+  tuned server the adjusted result is parity** (it matches a tuned server without
+  running one). **KV persistence:** resume beats re-prefill at every measured
+  prefix (no crossover; the advantage grows with model size), at **parity with a
+  tuned server's own slot restore**, the differentiator being in-process
+  capability. **Shared prefix:** an **8.2× session-density** crossing on a fixed
+  KV budget (structural, identical on both models), plus 3.8–4.4× adjusted speed
+  within the slot budget — ~2× against a workload-tuned server, eroding beyond
+  M≈P. **Composite:** all three together **compose without corruption** and run
+  **~3.5× over no mechanisms**, sub-additive and Tool-Loop-dominated. All are
+  **mechanism checks on edge-class hardware**, not representative discrete-GPU
+  figures, and we do not extend them to server-class deployments.
+- **What is still a target:** the *server-class* shared-prefix throughput
+  numbers (e.g. LMCache's 15×, a different metric and hardware class than our
+  edge density), the KV-persistence results in regimes we have not measured (32K
+  context, multi-agent workflows, quantized-capacity ceilings), and a
+  **discrete-GPU run** — the integrated GPU flatters every prefill-saving
+  mechanism, so the speed ratios compress on fast prefill. These come from
+  external systems exercising the same mechanisms; reproducing them on our
   hardware, with a strong baseline, is the continuing point of the benchmarking
   phase.
 - **What we will not do:** claim a new inference primitive we did not build,
