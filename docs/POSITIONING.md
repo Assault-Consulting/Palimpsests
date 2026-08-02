@@ -323,16 +323,19 @@ reuse is valuable precisely because it protects the expensive common prefix.
 The isolated runs above measure one mechanism each. The composite run measures
 them **together** under one agentic workload: M parallel sessions sharing a
 system prompt, each running multi-hop tool calls, a fraction resumed from
-persisted KV (`results/composite-1p5b.md`, #82). Two findings.
+persisted KV (`results/composite-1p5b.md`, #82; `results/composite-7b.md`, #84).
+Measured on **both model sizes**. Two findings.
 
 - **They compose correctly.** With all three enabled, both session types — cold
   (Shared Prefix + Tool Loop) and resumed (KV Persistence + Tool Loop) — produce
   first-token logits **bit-identical** to a stateless reference, and the enforced
   prefix-holder guard never fires under the concurrent workload. Correct, not
   just fast: the level-3 stack ships every mechanism on by default because the
-  composition is safe, not merely because each part works alone.
-- **The full-stack value is ~3.5×, and it is sub-additive.** The composite runs
-  **3.37–3.59× faster than the same workload with no mechanisms** — most of it
+  composition is safe, not merely because each part works alone. This holds on **both model sizes** — the gate passes and the guard stays silent on 1.5B and 7B alike.
+- **The full-stack value is ~3.5× (rising to ~4× on 7B), and it is sub-additive.**
+  The composite runs **3.37–3.59× faster than the same workload with no mechanisms
+  on 1.5B, and 3.67–4.17× on 7B** (the heavier prefill makes each avoided
+  re-prefill worth more) — most of it
   from the Tool Loop, because removing per-hop conversation re-prefill dominates
   a multi-hop agent. Shared Prefix and KV Persistence **partition by session
   type** (one saves cold sessions' prefix decode, the other saves resumed
@@ -344,7 +347,9 @@ persisted KV (`results/composite-1p5b.md`, #82). Two findings.
   loop and appears only with the full stack). It is a mechanism-attribution
   result measured on sequential execution — not a vs-server competitive claim
   (the per-mechanism competitive picture is the parity result in the isolated
-  runs above).
+  runs above). The pool cost is **model-independent** (cell-based): the composite
+  uses the same cell count on both models, so the 7B footprint is 2× the bytes
+  but fits the device budget with headroom — no pool pressure on either.
 
 ### Sleep-time compute — using idle cycles (roadmap)
 
@@ -383,9 +388,10 @@ even more favorable on-device than in the cloud. This is roadmap, not built.
   KV budget (structural, identical on both models), plus 3.8–4.4× adjusted speed
   within the slot budget — ~2× against a workload-tuned server, eroding beyond
   M≈P. **Composite:** all three together **compose without corruption** and run
-  **~3.5× over no mechanisms**, sub-additive and Tool-Loop-dominated. All are
-  **mechanism checks on edge-class hardware**, not representative discrete-GPU
-  figures, and we do not extend them to server-class deployments.
+  **~3.5× over no mechanisms** (rising to ~4× on 7B), sub-additive and
+  Tool-Loop-dominated. All are **mechanism checks on edge-class hardware**, not
+  representative discrete-GPU figures, and we do not extend them to server-class
+  deployments.
 - **What is still a target:** the *server-class* shared-prefix throughput
   numbers (e.g. LMCache's 15×, a different metric and hardware class than our
   edge density), the KV-persistence results in regimes we have not measured (32K
