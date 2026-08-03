@@ -5,13 +5,16 @@ local AI systems: encrypted bodies, cleartext headers, out-of-band anchoring,
 and header-only verification that needs no key. This document is normative
 for the format and self-contained: the rationale for each decision is in §1,
 and an independent verifier is implementable from this text plus the test
-vectors alongside it.
+vectors alongside it. This document is the profile-independent **core**:
+record-**body** semantics beyond it are defined by companion **profiles**
+(§3.4), and the envelope, chain and verification rules below hold under
+every profile.
 
 | | |
 |---|---|
 | **Format identifier** | `PALA`, version 1 |
 | **Status** | **Draft.** The field set is *not yet frozen* — do not implement against this before the specification reaches v1.0. |
-| **Date** | 2026-08-02 |
+| **Date** | 2026-08-03 |
 | **Licence** | This specification and its test vectors: CC0-1.0. Reference code alongside them: Apache-2.0. |
 
 ## The test this document must pass
@@ -48,6 +51,7 @@ wrong.
 | **Hash over raw bytes, never over parsed structure** | A verifier that cannot interpret a record can still verify it. §7.5 |
 | **Assurance tier is data, not a promise** | §6 |
 | **Integers only, never floats** | §1.1 applies inside bodies too. §3.2 |
+| **Envelope in the core, body semantics in profiles** | The chain must outlive any one domain. §3.4 |
 
 ### 1.1 Why not RFC 8785 (JCS)
 
@@ -81,9 +85,10 @@ The body is bound into the chain through `body_digest`, which sits inside the
 header. Three consequences, all load-bearing:
 
 1. **Chain verification needs no key and touches no bodies.** A verifier reads
-   headers and reports *"1.2M records, no breaks"* — having seen no faces, no
-   `c'`, no personal data. This is what lets one artefact serve both a regulator
-   and GDPR minimisation.
+   headers and reports *"1.2M records, no breaks"* — having seen none of the
+   bodies' content: no personal data, no model output, nothing a profile puts
+   there. This is what lets one artefact serve both a regulator and GDPR
+   minimisation.
 2. **Crypto-shredding leaves the chain intact.** Destroy the key, the body
    becomes noise, `body_digest` remains, the chain still verifies. Erasure and
    immutability stop being in conflict.
@@ -136,7 +141,7 @@ possible.
 
 | Type | Name | Value |
 |---|---|---|
-| 0x0001 | `ORIGIN_ROLE` | UTF-8, e.g. `eyes.tier1` |
+| 0x0001 | `ORIGIN_ROLE` | UTF-8 role of the emitting component, e.g. `planner.main`; vocabularies are profile-defined (§3.4) |
 | 0x0002 | `ORIGIN_MODEL_DIGEST` | 32 bytes |
 | 0x0003 | `ORIGIN_CONFIG_DIGEST` | 32 bytes |
 | 0x0011 | `MERKLE_TREE_HASH` | 32 bytes |
@@ -203,9 +208,9 @@ exactly as it continues across boots.
 | 0x0002 | `BOOT` | never-shed | New boot. Its `prev_hash` **is** the cross-boot link. |
 | 0x0010 | `SPAN_START` | normal | Opens a span |
 | 0x0011 | `SPAN_END` | normal | Closes it. §3.1 |
-| 0x0012 | `EVENT` | normal | Point event. `c'` writes live here. |
-| 0x0020 | `MERKLE` | sheddable | One second of frame/audio digests. §4.3 |
-| 0x0021 | `AGGREGATE` | sheddable | Tier 0 statistics for one second. §3.2 |
+| 0x0012 | `EVENT` | normal | Point event. Payload semantics are profile-defined (§3.4). |
+| 0x0020 | `MERKLE` | sheddable | Digest aggregation over a window. §4.3 |
+| 0x0021 | `AGGREGATE` | sheddable | Tier 0 statistics over a window. §3.2 |
 | 0x0030 | `SHED` | **never-shed** | Records that records were dropped. §3.3 |
 | 0x0040 | `SAFETY` | **never-shed** | Written by the safety path; the audit only observes |
 | 0x0050 | `ANCHOR` | never-shed | Local anchor written. §7.2 |
@@ -233,24 +238,34 @@ cleartext (`key_id = 0`). Encrypting it would only make the post-market
 monitoring export useless to the party entitled to read it.
 
 The body is a TLV sequence, encoded exactly as §2.2, in its **own type
-namespace**:
+namespace**. The core defines the window framing; the measured quantities are
+profile-defined:
 
 | Type | Name | Value |
 |---|---|---|
-| 0x0001 | `AGG_WINDOW_NS` | u64 — length of the aggregation window |
-| 0x0002 | `AGG_SAMPLE_COUNT` | u32 — samples folded into this record |
-| 0x0003 | `AGG_FLOW_MIN_MILLI` | u32 — milli-pixels per frame |
-| 0x0004 | `AGG_FLOW_MAX_MILLI` | u32 |
-| 0x0005 | `AGG_FLOW_MEAN_MILLI` | u32 |
+| 0x0001 | `AGG_WINDOW_NS` | u64 — length of the aggregation window. **Core.** |
+| 0x0002 | `AGG_SAMPLE_COUNT` | u32 — samples folded into this record. **Core.** |
+| 0x0003+ | *profile-defined* | Allocated upward from 0x0003 by the chain's profile (§3.4) |
 
-**Milli-units, not floats.** A float in a body reintroduces exactly the
-cross-implementation disagreement §1.1 rejects JSON for — and it would do so in
-the one record type whose whole purpose is being comparable across versions and
-vendors. Fixed-point integers cost nothing and disagree with nobody.
+A reader treats body tags it does not know as opaque — reported, never
+rejected — the same posture §7.6 takes for the header. Because one chain
+follows exactly one profile (§3.4), profile allocations cannot collide
+within a chain.
 
-This schema is defined here rather than left to implementations because
-`AGGREGATE` is the PMM instrument: an undefined body means two conformant
-implementations produce incomparable exports, which defeats the record type.
+**Milli-units, not floats — a constraint on profiles.** A float in a body
+reintroduces exactly the cross-implementation disagreement §1.1 rejects JSON
+for — and it would do so in the one record type whose whole purpose is being
+comparable across versions and vendors. A profile MUST express fractional
+quantities as fixed-point integers (milli-, micro-). Fixed-point integers
+cost nothing and disagree with nobody.
+
+The framing is defined here rather than left to implementations because
+`AGGREGATE` is the PMM instrument: a wholly undefined body means two
+conformant implementations produce incomparable exports, which defeats the
+record type. The core fixes the window; each profile fixes the quantities —
+so two implementations of the *same profile* are comparable. The robotics
+profile (`profiles/robotics.md`) defines optical-flow statistics at
+0x0003–0x0005.
 
 ### 3.3 `SHED` is in the never-shed class
 
@@ -260,6 +275,36 @@ under saturation, and **which** records is a design decision, not an accident.
 A dropped record is survivable. A **silently** dropped record is a log that lies
 by omission, which is worse than no log. `SHED` carries class, count and window,
 and it is never itself shed.
+
+### 3.4 Profiles
+
+The envelope must outlive any one domain, so the split is structural: this
+document defines everything a verifier needs — layout, chain, tiers, time,
+crypto, the three questions — and **profiles** define what the records are
+*about*. A profile is a companion document that fixes, for one domain:
+
+- **`EVENT` payload semantics** — what lives in the bodies;
+- **`AGGREGATE` quantities** — body tags from 0x0003 upward (§3.2);
+- **`MERKLE` leaf source** — what the aggregated digests are digests *of*,
+  and at what rate (§4.3);
+- **`ORIGIN_ROLE` vocabulary** — the component names that appear in headers.
+
+**One chain follows exactly one profile.** Which profile is a property of
+the deployment, stated by the emitting system's documentation; the format
+does not carry a profile identifier in version 1 (a chain's `ORIGIN_ROLE`
+vocabulary makes it evident in practice, and adding a field is a v1.0
+freeze decision, not a retrofit). Mixing profiles within one chain is out
+of scope.
+
+**Verification is profile-independent.** Every check in §7 reads the
+envelope only; a verifier needs no profile knowledge to answer the three
+questions, and profile content it does not understand is opaque bytes —
+reported, never rejected (§3.2, §7.6).
+
+Profiles so far: **robotics** (`profiles/robotics.md`) — the first profile,
+and the one the committed test vectors follow; an **inference** profile
+(KV operations, model loads, token counts) is planned as the first
+dogfooding target — the emitting library audits its own serving loop.
 
 ---
 
@@ -298,8 +343,11 @@ partly.
 
 ### 4.3 Merkle aggregation
 
-Frame and audio digests are aggregated per second into one `MERKLE` record.
-30 Hz of digests becomes 1 record/s.
+High-rate digests are aggregated per window into one `MERKLE` record — the
+digest **source** and rate are profile-defined (§3.4): the robotics profile
+folds a second of sensor-frame digests into one record; an inference
+profile might fold a batch of token or KV-operation digests. The tree is
+the same either way.
 
 RFC 6962 tree hash, domain-separated:
 
@@ -318,8 +366,9 @@ recursively, splitting at the largest power of two below `n`; the iterative
 bottom-up form that promotes an unpaired node yields the same root. Either may
 be implemented.
 
-This buys **selective disclosure**: prove one frame with ~log₂(n) hashes without
-revealing the other 29. *"Show me this moment"* without *"show me everything"*.
+This buys **selective disclosure**: prove one leaf with ~log₂(n) hashes without
+revealing the other n−1. *"Show me this moment"* without *"show me
+everything"*.
 
 ### 4.4 Bodies, encryption and crypto-shredding
 
@@ -348,8 +397,10 @@ The AAD binds the ciphertext to its position in the chain: bodies cannot be
 swapped between records.
 
 **The nonce is derived from `seq`, not random.** A random 96-bit nonce is not
-safe past ~2³² records under one key, and a robot at 30 Hz reaches that in
-months. A `seq`-derived nonce is unique per record by construction — `seq` never
+safe past ~2³² records under one key — a horizon a sustained high-rate writer
+actually reaches within the ten-year lifetime this format must survive (a
+30 Hz emitter crosses it in under five years; higher rates get there
+sooner). A `seq`-derived nonce is unique per record by construction — `seq` never
 repeats within a chain (§4.1) — and its only leak is the record's position,
 which the cleartext header states anyway. A key MUST NOT be reused across chains
 with independent `seq` spaces.
@@ -367,7 +418,7 @@ not a format one.** Per subject, per session, per day — the format only requir
 that `key_id` exists and that destroying a key breaks nothing structural.
 
 **`key_id` scope is one device.** 2³² keys is ample per device and ambiguous
-across a fleet: two robots may both use `key_id = 7` for unrelated keys. A fleet
+across a fleet: two devices may both use `key_id = 7` for unrelated keys. A fleet
 key-management layer MUST qualify `key_id` with a device identity of its own;
 the format does not carry one.
 
@@ -549,6 +600,11 @@ Generated by `palaudit_ref.py`; full set in `test-vectors.json`. Deterministic:
 fixed key, derived nonces, fixed IDs — real crypto, fake entropy. **Never do this
 outside a test vector.**
 
+The vector chain's record bodies and narrative follow the **robotics
+profile** (`profiles/robotics.md`), the first profile and the one the
+reference implementation emits. Every property demonstrated below is an
+**envelope** property and holds under any profile.
+
 The chain is a plausible ten seconds: genesis, boot with no clock, a brain span,
 a `c'` write with an encrypted body, a second of frames, a second of Tier 0
 statistics, a divergence event, a shed notice, span close, a local anchor, an
@@ -608,11 +664,11 @@ Seven properties the vectors demonstrate rather than assert:
 Stated here rather than discovered later.
 
 1. **It does not make the log true.** The chain proves *this is what the system
-   recorded, unmodified*. Not *this is what happened*. A hallucinated `c'` is
-   preserved faithfully.
+   recorded, unmodified*. Not *this is what happened*. A hallucinated model
+   output is preserved faithfully.
 2. **It does not defend against the owner at tier A.** Key and anchor are both
    theirs. Tier A is self-diagnostics. §6 is the only path out and it is partial.
-3. **It does not bind to hardware.** *"This is the same robot"* needs tier B+.
+3. **It does not bind to hardware.** *"This is the same device"* needs tier B+.
 4. **A digest without its frame proves nothing about content.** Commitment
    defeats fabrication; it does not reconstruct.
 5. **Cleartext headers are metadata, and metadata discloses.** The span graph,
@@ -631,7 +687,7 @@ Still open:
 | # | Issue |
 |---|---|
 | 1 | **Endianness of the wire vs network convention.** Little-endian chosen for native cost. Reconsider only with a reason better than tradition. |
-| 2 | **`seq` per chain — but is there one chain or several?** Currently one global chain with Merkle aggregation removing the 30 Hz pressure. If parallel writers still serialise badly under measurement, per-origin chains with cross-links return, and `seq` semantics change. **Unmeasured.** |
+| 2 | **`seq` per chain — but is there one chain or several?** Currently one global chain with Merkle aggregation removing the high-rate pressure. If parallel writers still serialise badly under measurement, per-origin chains with cross-links return, and `seq` semantics change. **Unmeasured.** |
 | 3 | **Witness durability.** A tier-C claim lives exactly as long as its witness. Rekor, a TSA, or self-hosted — each has a ten-year question, and self-hosted reintroduces *"trust us"*. |
 | 4 | **TPM clear semantics.** Does a TPM clear reset NV counters? If yes, tier B+ is weaker than stated in §6 and that table is wrong. **Unverified.** |
 | 5 | **Anchor store binding.** §7.2 requires an anchor from outside the log but does not say what holds it, or how a reader on a different machine obtains it. This is the same question as `AuditReader`: class or protocol. |
