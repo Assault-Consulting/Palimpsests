@@ -12,14 +12,22 @@ Commands:
     palimpsests engine use <id>     switch the active engine
     palimpsests chat <model>        one-shot chat (prompt via -m/stdin)
     palimpsests audit verify        check the audit log's hash chain
+    palimpsests pala verify <file>  verify a PALA-1 stream (experimental)
 """
 from __future__ import annotations
 
 import json
+import struct
 import sys
 import typer
 from dataclasses import asdict
 from palimpsests.audit import AuditIntegrityError
+from palimpsests.audit.pala import (
+    MalformedRecord,
+    body_digest_of,
+    iter_records,
+    verify_headers,
+)
 from palimpsests.core import (
     AUDIT_DB_NAME,
     AppContext,
@@ -32,6 +40,7 @@ from palimpsests.core import (
     select_engine,
 )
 from palimpsests.providers import EngineError
+from pathlib import Path
 
 app = typer.Typer(
     name="palimpsests",
@@ -45,6 +54,12 @@ app.add_typer(engine_app, name="engine")
 
 audit_app = typer.Typer(help="Inspect and verify the audit log.", no_args_is_help=True)
 app.add_typer(audit_app, name="audit")
+
+pala_app = typer.Typer(
+    help="Work with PALA-1 audit streams (experimental; the spec is a draft).",
+    no_args_is_help=True,
+)
+app.add_typer(pala_app, name="pala")
 
 
 def _ctx() -> AppContext:
@@ -204,6 +219,196 @@ def _fail(json_out: bool, code: int, message: str) -> None:
         typer.echo(json.dumps({"ok": False, "reason": message, "exit_code": code}))
     else:
         typer.secho(f"error: {message}", fg=typer.colors.RED, err=True)
+    raise typer.Exit(code=code)
+
+
+
+# ─── pala (experimental) ─────────────────────────────────────────────────
+
+# WITNESS is read from the frozen header fields directly (§7.6): a stream
+# may carry record versions this build cannot fully interpret, and those
+# must still be walked and reported, not rejected — so the scan below must
+# not go through ``Header.decode``, which claims full interpretation.
+_RT_WITNESS = 0x0051
+
+
+@pala_app.command("verify")
+def pala_verify_cmd(
+    file: str = typer.Argument(
+        ..., help="A PALA-1 file container: records concatenated back-to-back (§2.4)."
+    ),
+    anchor: str = typer.Option(
+        None,
+        "--anchor",
+        help=(
+            "Expected chain head, 64 hex chars, obtained OUTSIDE the file — "
+            "an anchor store, or the head covered by the newest witness "
+            "receipt. Without it, completeness (tail truncation, wholesale "
+            "replacement) is NOT checked."
+        ),
+    ),
+    json_out: bool = typer.Option(
+        False, "--json", help="Emit the verification result as JSON."
+    ),
+) -> None:
+    """Verify a PALA-1 stream — the three questions, answered separately.
+
+    Read-only and header-only: no decryption key is needed or used.
+    Encrypted bodies are checked against the digest bound into their
+    header, never opened.
+
+    \b
+      consistency  — do the records chain, with no gaps, no violated
+                     MUSTs, and every body matching its header digest?
+      completeness — does the chain head match the anchor you supplied?
+      witness      — which records claim external witness receipts?
+                     (verifying a receipt follows the witness's own
+                     protocol — Rekor proof, RFC 3161 — not this tool)
+
+    Exit codes (the same contract as `palimpsests audit verify`):
+
+    \b
+      0  verified   — chain intact and head matches --anchor
+      1  TAMPERED   — a break, gap, violated MUST, body-digest mismatch,
+                      malformed container, or an anchor mismatch
+      2  PARTIAL    — chain intact, but no --anchor was supplied, so
+                      truncation or replacement would not have been
+                      detected
+      3  UNREADABLE — the file could not be read, or --anchor is invalid
+    """
+    expected: bytes | None = None
+    if anchor is not None:
+        try:
+            expected = bytes.fromhex(anchor)
+        except ValueError:
+            _fail(json_out, EXIT_UNREADABLE, "--anchor is not valid hex")
+        if len(expected) != 32:
+            _fail(json_out, EXIT_UNREADABLE, "--anchor must be 32 bytes (64 hex chars)")
+
+    path = Path(file)
+    try:
+        data = path.read_bytes()
+    except OSError as e:
+        _fail(json_out, EXIT_UNREADABLE, f"cannot read {path}: {e}")
+
+    headers: list[bytes] = []
+    body_mismatches: list[int] = []
+    witness_seqs: list[int] = []
+    malformed: str | None = None
+    try:
+        for hb, body in iter_records(data):
+            headers.append(hb)
+            (rtype,) = struct.unpack_from("<H", hb, 8)
+            (seq,) = struct.unpack_from("<Q", hb, 12)
+            if rtype == _RT_WITNESS:
+                witness_seqs.append(seq)
+            if body and body_digest_of(body) != hb[124:156]:
+                body_mismatches.append(seq)
+    except MalformedRecord as e:
+        # A container defect (§2.4): boundaries cannot be trusted past this
+        # point. Everything walked before it is still verified below.
+        malformed = str(e)
+
+    result = verify_headers(headers, expected_head=expected)
+
+    consistent = result.chain_ok and not body_mismatches and malformed is None
+    if not consistent:
+        code = EXIT_TAMPERED
+    elif expected is not None and not result.complete_to_anchor:
+        code = EXIT_TAMPERED
+    elif expected is None:
+        code = EXIT_PARTIAL
+    else:
+        code = EXIT_VERIFIED
+
+    if json_out:
+        payload = {
+            "file": str(path),
+            "records": result.count,
+            "head": result.head.hex(),
+            "consistency": {
+                "ok": consistent,
+                "breaks": result.breaks,
+                "gaps": result.gaps,
+                "violations": result.violations,
+                "body_digest_mismatches": body_mismatches,
+                "uninterpretable": result.uninterpretable,
+                "malformed_container": malformed,
+            },
+            "completeness": {
+                "checked": expected is not None,
+                "ok": result.complete_to_anchor,
+                "anchor_lag": result.anchor_lag,
+                "reason": result.anchor_reason,
+            },
+            "witness": {
+                "records": witness_seqs,
+                "note": "receipts are not verified by this tool",
+            },
+            "exit_code": code,
+        }
+        typer.echo(json.dumps(payload, indent=2))
+        raise typer.Exit(code=code)
+
+    if consistent:
+        extra = (
+            f", {len(result.uninterpretable)} uninterpretable record(s) "
+            "(chain-checked, not rejected)"
+            if result.uninterpretable
+            else ""
+        )
+        typer.secho(
+            f"consistency: {result.count} records, chain intact{extra}",
+            fg=typer.colors.GREEN,
+        )
+    else:
+        parts: list[str] = []
+        if malformed:
+            parts.append(f"malformed container: {malformed}")
+        if result.breaks:
+            parts.append(f"chain breaks at seq {result.breaks}")
+        if result.gaps:
+            parts.append(f"sequence gaps at seq {result.gaps}")
+        if result.violations:
+            parts.append(f"violated MUSTs: {result.violations}")
+        if body_mismatches:
+            parts.append(f"body digest mismatch at seq {body_mismatches}")
+        typer.secho(
+            "consistency: BROKEN — " + "; ".join(parts),
+            fg=typer.colors.RED,
+            err=True,
+        )
+
+    if expected is None:
+        typer.secho(
+            "completeness: NOT CHECKED — no --anchor supplied, so tail "
+            "truncation or wholesale replacement would not have been detected",
+            fg=typer.colors.YELLOW,
+            err=True,
+        )
+    elif result.complete_to_anchor:
+        typer.secho(
+            "completeness: chain head matches the supplied anchor",
+            fg=typer.colors.GREEN,
+        )
+    else:
+        typer.secho(
+            f"completeness: FAILED — {result.anchor_reason}",
+            fg=typer.colors.RED,
+            err=True,
+        )
+
+    if witness_seqs:
+        typer.echo(
+            f"witness: {len(witness_seqs)} WITNESS record(s) at seq "
+            f"{witness_seqs} — receipts are not verified by this tool"
+        )
+    else:
+        typer.echo(
+            "witness: no WITNESS records — existence at a point in time "
+            "is not attested"
+        )
+
     raise typer.Exit(code=code)
 
 

@@ -19,6 +19,16 @@ API changes.
   bodies behind a new `[pala]` extra. Added *alongside* the existing
   `AuditLog`; nothing is replaced. The spec is **Draft**: the field set is
   not yet frozen — no stability promise until spec v1.0.
+- **`palimpsests pala verify <file> [--anchor HEX] [--json]`.** A
+  header-only, key-free verifier for §2.4 file containers. It answers
+  the three questions separately: consistency (chain links, sequence
+  gaps, violated MUSTs, every body checked against the digest bound into
+  its header — never opened), completeness (only against a
+  caller-supplied anchor, reported as NOT CHECKED otherwise — never as
+  passing), and witness coverage (reported, not verified — receipts
+  follow the witness's own protocol). Exit codes carry the same 0/1/2/3
+  contract as `palimpsests audit verify`, and a stale anchor is
+  diagnosed as an unanchored tail, distinct from a replacement.
 
 ## [0.6.0] — 2026-08-02
 
