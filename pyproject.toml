@@ -123,6 +123,16 @@ packages = ["src/palimpsests"]
 line-length = 100
 target-version = "py311"
 src = ["src", "tests"]
+# Independent-verification runs (docs/specs/pala-1/independent-runs/) are
+# evidence, not maintained source: each is a from-the-spec-alone verifier
+# written by someone who deliberately did NOT read this repo's code or its
+# tooling config (see docs/specs/pala-1/INDEPENDENT-VERIFICATION.md). Holding
+# that artifact to our own style — line length, import order — would
+# contradict what makes it independent, and future runs may not even be
+# Python. They are preserved exactly as their authors produced them; their
+# correctness is established by reproducing the published PALA-1 hashes, not
+# by our linter.
+extend-exclude = ["docs/specs/pala-1/independent-runs"]
 
 [tool.ruff.lint]
 # E/F: pyflakes+pycodestyle, I: isort, B: bugbear, UP: pyupgrade.
