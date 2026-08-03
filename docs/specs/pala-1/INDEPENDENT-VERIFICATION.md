@@ -86,8 +86,9 @@ promises, but the pass bar is the Expected-results block.
 
 | | |
 |---|---|
-| Date | — |
-| Spec commit tested | — |
-| Verifier (link) | — |
-| Result | — |
-| Ambiguities logged | — |
+| Run | #1 — first independent run |
+| Date | 2026-08-03 |
+| Spec commit tested | `776aa15a` |
+| Verifier (link) | [`independent-runs/oleksandr/verify.py`](independent-runs/oleksandr/verify.py) (Python, stdlib + `hashlib`; written from the spec text and vectors alone — see [`independent-runs/oleksandr/README.md`](independent-runs/oleksandr/README.md)) |
+| Result | **PASS** (chain/completeness axes: 12 record hashes, `chain_head`, completeness, `anchor_head`, 7/7 mutation demos reproduced independently) · **BLOCKED** (Merkle axis: vectors incomplete, leaf digests absent, `body_len = 0`) · 2 defects filed. The chain and completeness axes are self-sufficient; the Merkle axis cannot be reproduced from the allowed files — `merkle_tree_hash` is only echoable from the record's own embedded TLV (tautology), and the leaf-7 inclusion proof is unverifiable without the leaf. |
+| Ambiguities logged | **2** — see [`independent-runs/oleksandr/ambiguity-log.md`](independent-runs/oleksandr/ambiguity-log.md). **(1)** Merkle leaf digests absent from spec + vectors → §8 `merkle_tree_hash` / leaf-7 proof unreproducible independently; leaf capture-point itself undefined (robotics profile §6 issue 1); requires vector completion before freeze. **(2)** `break`-vs-`violation` contradiction: §4.2 and §7.1 pseudocode classify a chain whose first record is not `GENESIS` as a *break*, but §8 and `demos.missing_genesis` classify it as a *violation* (the §8 row even cross-references §4.2 while contradicting it); resolve to *violation*, align the prose before freeze. |
