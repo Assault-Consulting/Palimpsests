@@ -29,6 +29,16 @@ API changes.
   follow the witness's own protocol). Exit codes carry the same 0/1/2/3
   contract as `palimpsests audit verify`, and a stale anchor is
   diagnosed as an unanchored tail, distinct from a replacement.
+- **PALA-1 inference profile**
+  (`docs/specs/pala-1/profiles/inference.md`, CC0-1.0) — the dogfooding
+  contract for the Phase 3 writer: session spans, model/KV operation
+  `EVENT` bodies (metadata-only, with the 200-byte detail clip carried
+  over from the audit-row rule), guard refusals recorded as `SAFETY`,
+  and serving-statistics `AGGREGATE` tags including `AGG_PREFILL_SAVED`,
+  which turns the library's avoided-re-prefill value into an auditable
+  time series. `MERKLE` is deferred until the profile defines a leaf
+  source. The second profile: the format's width claim now rests on two,
+  pending actual emission by the writer.
 
 ### Changed (experimental)
 
