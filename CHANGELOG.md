@@ -30,6 +30,22 @@ API changes.
   contract as `palimpsests audit verify`, and a stale anchor is
   diagnosed as an unanchored tail, distinct from a replacement.
 
+### Changed (experimental)
+
+- **PALA-1 restructured into a profile-independent core plus a robotics
+  profile.** Robotics-specific body semantics that sat in the core draft —
+  the optical-flow `AGGREGATE` fields, frame/audio `MERKLE` leaves, the
+  `eyes.tier1` role vocabulary, the 30 Hz framing — moved unchanged (same
+  tag values, same units) to `docs/specs/pala-1/profiles/robotics.md`. The
+  core now carries the envelope, chain, tiers, time, crypto and
+  verification, a generic `AGGREGATE` frame (window + sample count are
+  core; quantities are profile-allocated from 0x0003 upward; one chain
+  follows one profile), and a new §3.4 defining profiles. The committed
+  test vectors are unchanged byte-for-byte and now explicitly labeled as
+  robotics-profile vectors; an inference profile (KV operations, model
+  loads, token counts) is the planned 0.7 dogfooding target. Envelope,
+  codec and verifier are untouched.
+
 ## [0.6.0] — 2026-08-02
 
 **The 0.5 measurement campaign is complete, and `kv_unified` ships
