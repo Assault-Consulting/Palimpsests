@@ -9,27 +9,32 @@
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13534/badge)](https://www.bestpractices.dev/projects/13534)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Assault-Consulting/Palimpsests/badge)](https://scorecard.dev/viewer/?uri=github.com/Assault-Consulting/Palimpsests)
 
-> **Status: v0.5 — the audit log is now genuinely tamper-evident, and releases are
-> supply-chain verifiable.** Levels 1 (Ollama) and 2 (llama.cpp) work behind one
+> **Status: v0.6 — the measurement campaign is complete, and `kv_unified` ships
+> first-class.** Levels 1 (Ollama) and 2 (llama.cpp) work behind one
 > abstraction, with the context-memory layer (window manager + block-memory
-> retrieval) and an encrypted audit log. Level 3 (pal-native) has its full serving
+> retrieval) and a genuinely tamper-evident audit log — hash-chained rows with
+> an out-of-band head anchor and a `palimpsests audit verify` command — plus
+> supply-chain verifiable releases (reproducible CycloneDX SBOM, signed GitHub
+> Release, coverage-guided fuzzing). Level 3 (pal-native) has its full serving
 > skeleton — streaming, stateful sessions, continuous batching, server-side tool
 > loop, shared-prefix KV, and KV persistence — and the real in-process
 > `LlamaCppBackend` runs a real model on hardware. All three level-3 mechanisms
-> are now measured on 1.5B and 7B (iGPU/Vulkan), plus a composite run: in-process
+> are measured on 1.5B and 7B (iGPU/Vulkan), plus a composite run: in-process
 > the Tool Loop and KV Persistence **match a tuned llama-server** on speed
 > (without running a server), Shared Prefix gives an **8.2× session-density**
 > crossing on a fixed KV budget, and with all three enabled the full stack runs
 > **~3.5× over no mechanisms on 1.5B, rising to ~4× on 7B**, on a multi-hop
 > agentic workload. Method, numbers, and limits: **[results/](results/)**.
-> **New in v0.5:** audit rows are hash-chained with an out-of-band head anchor, so
-> tampering — including wholesale replacement — is detectable, with a `palimpsests
-> audit verify` command; a reproducible CycloneDX SBOM and a signed GitHub Release;
-> coverage-guided fuzzing of the KV-state validator; and a documented governance
-> model and a security assurance case. Numbers and their limits are in
-> **[docs/POSITIONING.md](docs/POSITIONING.md)**; the integrity story is in
-> **[SECURITY.md](SECURITY.md)** and **[docs/ASSURANCE-CASE.md](docs/ASSURANCE-CASE.md)**.
-> APIs may change before v1.0.
+> **New in v0.6:** `kv_unified` as a first-class backend parameter — the unified
+> KV pool behind the session-density result is now a product property, not a
+> benchmark artifact — with a release-ordering guard (`PrefixHolderInUseError`)
+> that refuses to corrupt a live consumer. **Next: v0.7 — verifiable audit**:
+> the [PALA-1 draft](docs/specs/pala-1/PALA-1.md) format with byte-exact test
+> vectors and a `palimpsests pala verify` CLI is already in main, experimental.
+> Numbers and their limits are in **[docs/POSITIONING.md](docs/POSITIONING.md)**;
+> the integrity story is in **[SECURITY.md](SECURITY.md)** and
+> **[docs/ASSURANCE-CASE.md](docs/ASSURANCE-CASE.md)**. APIs may change before
+> v1.0.
 
 ---
 
@@ -333,9 +338,27 @@ the novelty is in this composition and its seams, not in a new inference kernel.
       dominated by the Tool Loop. Shared Prefix also gives an **8.2×
       session-density** crossing on a fixed KV budget. Reports:
       [results/](results/).
-- [ ] **Beyond 0.5** — a discrete-GPU run (the integrated GPU flatters every
-      prefill-saving mechanism, so these ratios compress on fast prefill), a
-      disk-backed KV store, sleep-time compute (edge), speculative decoding. See
+- [x] **v0.6 — campaign consolidated + `kv_unified` first-class** — the
+      unified KV pool ships as a supported, tested backend parameter, turning
+      the 8.2× session-density crossing from a benchmark demonstration into a
+      product property, guarded by `PrefixHolderInUseError` against a
+      release-ordering corruption the greedy chain would have hidden.
+      Positioning and the roadmap now carry the measured campaign; sleep-time
+      compute is deprioritized — the differentiation is audit/compliance and
+      the deployment model, not raw speed.
+- [ ] **v0.7 — verifiable audit: the format is the deliverable** — freeze
+      [PALA-1](docs/specs/pala-1/PALA-1.md), a self-describing, byte-level
+      audit format with byte-exact test vectors, a CC0 reference
+      implementation an independent party can build a verifier from without
+      our code, a stdlib-only production codec, and the three-question
+      `palimpsests pala verify` CLI (draft + codec + CLI already in main,
+      experimental); then the writer, and the audit subsystem behind a public
+      API. See [docs/ROADMAP.md](docs/ROADMAP.md).
+- [ ] **Later** — assurance tiers B/C (hardware root of trust, external
+      witness); a discrete-GPU run (the integrated GPU flatters every
+      prefill-saving mechanism, so these ratios compress on fast prefill); a
+      disk-backed KV store (gated on a `state_set` MAC); speculative decoding.
+      Sleep-time compute is not scheduled. See
       [docs/ROADMAP.md](docs/ROADMAP.md).
 
 Each level graduates by flipping the corresponding `capabilities` flag from
