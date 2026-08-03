@@ -302,9 +302,10 @@ questions, and profile content it does not understand is opaque bytes —
 reported, never rejected (§3.2, §7.6).
 
 Profiles so far: **robotics** (`profiles/robotics.md`) — the first profile,
-and the one the committed test vectors follow; an **inference** profile
-(KV operations, model loads, token counts) is planned as the first
-dogfooding target — the emitting library audits its own serving loop.
+and the one the committed test vectors follow; and **inference**
+(`profiles/inference.md`) — the dogfooding profile: the emitting library
+audits its own serving loop, with `MERKLE` deferred until that profile
+defines a leaf source.
 
 ---
 
