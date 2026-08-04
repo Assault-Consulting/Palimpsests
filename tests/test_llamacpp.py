@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Tests for the llama.cpp level-2 adapter.
 
 Three angles, none of which needs a real llama.cpp or a GPU:

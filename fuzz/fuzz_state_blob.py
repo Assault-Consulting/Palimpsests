@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Atheris harness for the KV state-blob validator.
 
 What this fuzzes

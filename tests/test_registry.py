@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Tests for the engine registry (radio active-selection)."""
 from __future__ import annotations
 

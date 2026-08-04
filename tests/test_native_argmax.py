@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Token-identity checks for the greedy sampler (``_argmax``).
 
 Bench Run 0.1 traced ~30% of the per-token cost to boxing the full logits

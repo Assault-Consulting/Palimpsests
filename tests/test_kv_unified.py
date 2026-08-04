@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Generation-identity for the `kv_unified` backend flag (hardware-gated).
 
 Threading `kv_unified` into `LlamaCppBackend` must not change what the model

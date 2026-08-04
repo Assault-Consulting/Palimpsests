@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Stateful inference session — the level-3 contract.
 
 A session holds live KV state on the server across multiple turns. It

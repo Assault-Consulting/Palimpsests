@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Engine registry — which inference engines exist and which one is active.
 
 Two distinct concepts, deliberately not conflated:

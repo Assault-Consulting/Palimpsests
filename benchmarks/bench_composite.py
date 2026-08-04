@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Composite benchmark — do the three level-3 mechanisms COMPOSE (Run 7).
 
 Public names: Shared Prefix (SP), Tool Loop (TL), KV Persistence (KP).

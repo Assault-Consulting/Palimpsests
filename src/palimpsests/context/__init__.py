@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Context-memory — orchestration above the engine, at the text level.
 
 Works identically on all engine levels because it operates on the

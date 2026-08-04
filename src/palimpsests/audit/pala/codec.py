@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """PALA-1 wire codec: header layout, TLV extensions, and the file container.
 
 This module and its siblings (``merkle``, ``verify``) are deliberately

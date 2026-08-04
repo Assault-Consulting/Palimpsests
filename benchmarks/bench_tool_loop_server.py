@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """N5 honest-baseline arm: the tool loop against llama-server slot reuse.
 
 This drives the SAME workload as ``bench_tool_loop.py`` (imported from

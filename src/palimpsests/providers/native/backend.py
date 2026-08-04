@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """The backend interface the level-3 scheduler is written against.
 
 This is the seam established by ADR-0002: the scheduler, the session

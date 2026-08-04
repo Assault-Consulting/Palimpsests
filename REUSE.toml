@@ -27,3 +27,14 @@ path = ["docs/specs/pala-1/PALA-1.md", "docs/specs/pala-1/test-vectors.json", "d
 precedence = "override"
 SPDX-FileCopyrightText = "Assault Consulting"
 SPDX-License-Identifier = "CC0-1.0"
+
+# The two PALA-1 reference implementations carry the same public-domain
+# dedication as the spec they accompany, so a third party implementing the
+# format independently is not bound by Apache terms. Their in-file SPDX headers
+# say CC0-1.0; this override keeps the Apache catch-all above from also applying
+# (without it the aggregate precedence records them as Apache-2.0 AND CC0-1.0).
+[[annotations]]
+path = ["docs/specs/pala-1/gen_vectors.py", "docs/specs/pala-1/palaudit_ref.py"]
+precedence = "override"
+SPDX-FileCopyrightText = "Assault Consulting"
+SPDX-License-Identifier = "CC0-1.0"

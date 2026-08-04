@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Encryption key management for the audit log.
 
 The audit log is encrypted at rest. This module owns the single

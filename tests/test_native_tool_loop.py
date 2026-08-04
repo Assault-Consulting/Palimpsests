@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Tests for the server-side tool loop (N5).
 
 The point of N5: after an external tool runs, append_tool_result feeds

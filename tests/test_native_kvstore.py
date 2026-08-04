@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Tests for the content-addressed KV store (N6b).
 
 Two layers of proof. First, the store in isolation: identical token

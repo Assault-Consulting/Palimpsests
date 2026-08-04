@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Benchmark: server-side tool loop (L3/N5) vs re-prefill baseline.
 
 **Status: on the shelf, NOT yet run on hardware.** This exercises the

@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Token counting — deliberately approximate, honestly so.
 
 At level 1 (Ollama) we don't know the model's tokenizer: Qwen, Llama,

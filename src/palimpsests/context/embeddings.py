@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Embedder interface for block-memory retrieval.
 
 BlockMemory turns evicted text into vectors so it can retrieve relevant

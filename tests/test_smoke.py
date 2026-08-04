@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Smoke test: the package imports and exposes a version.
 
 Keeps CI green on the bootstrap skeleton. Real contract tests land in

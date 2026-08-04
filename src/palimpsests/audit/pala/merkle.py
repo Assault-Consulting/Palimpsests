@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """RFC 6962 Merkle tree hash for PALA-1 aggregation records (§4.3).
 
 Domain-separated (0x00 for leaves, 0x01 for interior nodes) and with the

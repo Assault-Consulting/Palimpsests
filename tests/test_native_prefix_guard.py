@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Release-ordering guard for prefix holders under shared KV (N4a).
 
 In unified-KV mode a holder's prefix cells are shared with every session

@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Command-line interface — a thin typer shell over ``core``.
 
 Deliberately thin: every command resolves app state and delegates to a

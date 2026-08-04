@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Tests for the engine-level shared-prefix policy (N4b).
 
 Proves the policy over the N4a mechanism: with share_prefixes on, two

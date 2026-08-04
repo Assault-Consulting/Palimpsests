@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """The real level-3 backend: a thin ctypes mapping onto llama.cpp.
 
 **Status: written on the shelf, NOT yet run on hardware.** This module

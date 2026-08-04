@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Tests for the level-3 stateful session.
 
 Exercises NativeSession end to end with a fake backend: the session holds

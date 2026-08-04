@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Engine adapters — concrete backends behind the InferenceEngine contract.
 
 - ``OllamaEngine``    — level 1, thin HTTP client to an external daemon.

@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Tests for the CLI shell.
 
 The CLI is thin, so these tests mostly confirm wiring: commands resolve

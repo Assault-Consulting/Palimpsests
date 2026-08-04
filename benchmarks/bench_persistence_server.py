@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """KV Persistence honest-baseline arm: llama-server slot save/restore.
 
 Strong-opponent result (step 0.5, verified on the pinned b9874): the

@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Tests for per-slot KV position tracking (N-pos).
 
 Proves the scheduler tells the backend the right ``start_pos`` for every

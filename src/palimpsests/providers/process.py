@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Subprocess lifecycle for a managed llama-server.
 
 Level 2 owns the process. That is what makes it a *control* level rather

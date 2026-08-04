@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Tests for the inert engine contract.
 
 Nothing here talks to a backend — these lock down the shape and the

@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """BlockMemory — retrieval of evicted context.
 
 The other half of the palimpsest image: ContextWindowManager scrapes

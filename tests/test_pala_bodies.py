@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Tests for PALA-1 body sealing/opening — need the [pala] extra."""
 from __future__ import annotations
 

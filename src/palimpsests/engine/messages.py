@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Data types shared across all engine levels.
 
 These are plain immutable carriers. They intentionally contain no

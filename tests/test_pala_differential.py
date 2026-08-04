@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Differential tests: the production codec against the reference one.
 
 The reference implementation in docs/specs/pala-1/ is standalone on

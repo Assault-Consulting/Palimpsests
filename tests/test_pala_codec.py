@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Tests for the PALA-1 codec — stdlib-only surface.
 
 Everything here runs WITHOUT the [pala] extra: that is itself an assertion
