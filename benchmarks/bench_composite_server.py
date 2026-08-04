@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Composite rung-0 arm: the tuned llama-server doing the full agentic
 workload — the external competitive anchor for Run 7.
 

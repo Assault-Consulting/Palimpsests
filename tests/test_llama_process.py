@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Tests for the llama-server subprocess lifecycle.
 
 No real llama-server: Popen and the health poll are mocked, so we

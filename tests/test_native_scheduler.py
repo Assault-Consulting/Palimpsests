@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Tests for the level-3 scheduler, driven by a fake backend.
 
 The whole point of the ADR-0002 seam: the scheduler is exercised end to

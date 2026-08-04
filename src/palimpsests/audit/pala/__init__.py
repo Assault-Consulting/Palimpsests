@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """PALA-1 audit wire format — codec, Merkle aggregation, verification.
 
 **Experimental.** The normative specification lives at

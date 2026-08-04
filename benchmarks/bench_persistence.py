@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """KV Persistence benchmark — probe + native arms (resume / re-prefill).
 
 Internal capability map: KV Persistence = N6 (save_state / load_state ->

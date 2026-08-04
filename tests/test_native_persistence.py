@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Tests for session KV persistence (N6).
 
 Proves save_state / load_state on the fake backend: save returns a

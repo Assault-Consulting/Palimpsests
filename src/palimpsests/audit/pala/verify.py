@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """PALA-1 chain verification — the three questions of §7, kept separate.
 
 Verification answers three different questions with three different inputs,

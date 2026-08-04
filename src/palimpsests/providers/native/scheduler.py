@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """The level-3 scheduler — a batch-ready decode loop.
 
 This is the core of the level-3 server: the loop that turns queued work

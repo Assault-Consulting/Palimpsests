@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Shared tool-loop workload content — single source of truth for both arms.
 
 Extracted from ``bench_tool_loop.py`` (0.4 harness) so that the llama-server

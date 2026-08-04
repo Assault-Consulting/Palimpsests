@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """llama.cpp adapter — level 2 (embedded engine via a managed subprocess).
 
 Level 2 is the first *control* level. Unlike level 1, where the daemon

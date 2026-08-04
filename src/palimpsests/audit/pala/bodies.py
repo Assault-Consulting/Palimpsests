@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """PALA-1 record bodies: AES-256-GCM sealing and opening (§4.4).
 
 This is the **only** module in the codec that needs a third-party package —

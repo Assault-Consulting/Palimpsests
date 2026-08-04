@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Context window management — StreamingLLM's principle at message level.
 
 The research finding behind this: the first few tokens of a sequence

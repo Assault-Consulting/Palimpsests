@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Primitive-level validation of the native backend (RUNBOOK Step 3).
 
 Runs the backend primitives one at a time, cheapest first, so a failure is

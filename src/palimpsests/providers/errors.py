@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Engine error taxonomy — shared across all adapters.
 
 These are backend-agnostic on purpose. The orchestration layer catches

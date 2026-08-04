@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Ollama adapter — level 1 (thin HTTP client to an external daemon).
 
 Level 1 is maximum compatibility, zero control: we speak Ollama's HTTP

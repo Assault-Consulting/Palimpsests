@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Tests for prefix holder primitives (N4a).
 
 Proves the shared-prefix mechanism on the fake backend: a prefix is

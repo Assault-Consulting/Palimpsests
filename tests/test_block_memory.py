@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Tests for BlockMemory and the embedder interface.
 
 Retrieval logic is tested with a deterministic fake embedder (no

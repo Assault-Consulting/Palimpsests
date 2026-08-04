@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Palimpsests — a layered local-LLM inference engine."""
 
 __version__ = "0.6.0"

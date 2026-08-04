@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Audit subsystem — encrypted, append-only, tamper-evident operation log.
 
 Public surface:

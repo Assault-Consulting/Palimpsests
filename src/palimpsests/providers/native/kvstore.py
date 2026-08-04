@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Content-addressed KV store — reuse saved states by their content (N6b).
 
 N6 gave a session ``save_state`` / ``load_state``: a self-contained blob

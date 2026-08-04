@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Tests for the pal-native level-3 engine (stateless + session entry).
 
 Exercises the engine path — prompt rendering, tokenize, scheduler,

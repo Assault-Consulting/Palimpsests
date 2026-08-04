@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Tests for the orchestration layer.
 
 These exercise core without the CLI: build an AppContext against tmp

@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """pal-native adapter — level 3 (our own in-process serving loop).
 
 This is the level where we stop wrapping someone else's engine and run

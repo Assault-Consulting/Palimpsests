@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Shared test fixtures.
 
 Every global singleton gets a reset fixture so no test bleeds into

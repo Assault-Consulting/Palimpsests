@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """The level-3 stateful session — live KV held across turns.
 
 ``NativeSession`` implements the ``InferenceSession`` protocol on top of

@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """N4 shared-prefix benchmark — native arms (ours + mechanism) and memory probe.
 
 Three things live here, selected by ``--mode``:

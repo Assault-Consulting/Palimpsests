@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Tests for concurrent session batching (N3b).
 
 The point of N3b: several sessions advance together in ONE decode per

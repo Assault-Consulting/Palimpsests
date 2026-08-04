@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Tests for the pal-native engine's registration-facing behavior.
 
 The detailed engine behavior (streaming, the scheduler path, backend

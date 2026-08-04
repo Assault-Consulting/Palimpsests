@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Engine capabilities and memory configuration — behavior via data.
 
 The orchestration layer must never branch on an engine's concrete type

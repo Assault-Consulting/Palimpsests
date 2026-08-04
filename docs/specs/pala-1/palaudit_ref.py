@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: CC0-1.0
+
 """Reference encoder/verifier for the PALA-1 audit wire format.
 
 This is NOT production code. It exists to generate the test vectors in the

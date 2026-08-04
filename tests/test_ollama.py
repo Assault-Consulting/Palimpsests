@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Tests for the Ollama level-1 adapter.
 
 Wire-level: pytest-httpx mocks Ollama's HTTP responses so we exercise

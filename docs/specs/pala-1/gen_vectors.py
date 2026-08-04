@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: CC0-1.0
+
 """Generate the test vectors alongside PALA-1.md.
 
 Everything is deterministic: fixed key, derived nonces, fixed IDs. Real crypto,

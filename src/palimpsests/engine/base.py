@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """The InferenceEngine contract and its base implementation.
 
 ``InferenceEngine`` is the single abstraction every level hides behind.

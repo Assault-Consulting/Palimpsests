@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
 """Orchestration — wires registry, audit, context, and engines together.
 
 This is the layer the CLI (and any downstream embedder) calls. It owns
