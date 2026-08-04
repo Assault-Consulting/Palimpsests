@@ -1,7 +1,13 @@
-# Independent PALA-1 verification run — oleksandr, 2026-08-03
+# Independent PALA-1 verification runs — oleksandr
 
-The §11 exit test, run per `../../INDEPENDENT-VERIFICATION.md`. This directory
-is the archived evidence of one run; the result row is in that document's §5.
+The §11 exit test, run per `../../INDEPENDENT-VERIFICATION.md`. This directory is
+the archived evidence; the result rows are in that document's §5.
+
+- **Run #1** (spec `776aa15a`, 2026-08-03): chain/anchor axes reproduced
+  independently; Merkle axis blocked (leaves absent); 2 spec defects filed.
+- **Run #2** (spec `ce877e4`, 2026-08-04): Merkle axis reproduced independently
+  after the maintainer published the leaves; both run-#1 defects confirmed
+  resolved. Both axes now pass — PALA-1 meets the §11 exit criterion.
 
 ## Contents
 
@@ -14,18 +20,21 @@ is the archived evidence of one run; the result row is in that document's §5.
   §-citations. Per the protocol (§2/§4) every logged item is a spec text fix
   before v1.0 freeze.
 
-## Result (summary; full row in §5)
+## Result (summary; full rows in §5)
 
-- **Core envelope §8 reproduced independently, byte-for-byte:** all 12
+- **Core envelope §8 reproduced independently, byte-for-byte** (run #1): all 12
   `record_hash` values, `chain_head`, `chain_ok`/`record_count`/empty
   `breaks`–`gaps`–`violations`, `complete_to_anchor`, `anchor_head`,
   `merkle_leaf_count`, and all seven §8 mutation demos.
-- **Merkle axis NOT independently verifiable:** the `MERKLE` record carries
-  `body_len = 0`, so the 30 leaf digests are absent from the container and from
-  every allowed file. `merkle_tree_hash` can only be echoed from the record's
-  own embedded TLV (a tautology, not a verification) and the leaf-7 inclusion
-  proof cannot be checked. See defect 1.
-- **Two spec defects filed** (see `ambiguity-log.md`).
+- **Merkle axis reproduced independently** (run #2): `merkle_tree_hash`
+  recomputed from the 30 published leaf digests (`merkle.leaves`) per §4.3,
+  matching the §8 value byte-for-byte and the record's own `MERKLE_TREE_HASH`
+  TLV; the leaf-7 proof (depth 5) folds to that root. In run #1 this was blocked
+  — the `MERKLE` record carries `body_len = 0` and the leaves were absent from
+  every allowed file, so the root could only be echoed (a tautology). The
+  maintainer then published the leaves.
+- **Both run-#1 defects resolved** (see `ambiguity-log.md`): leaves published
+  (Finding 1) and the `break`→`violation` prose aligned (Finding 2).
 
 ## Running
 

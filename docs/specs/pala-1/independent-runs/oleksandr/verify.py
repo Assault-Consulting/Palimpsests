@@ -205,9 +205,13 @@ def completeness(anchor: bytes, headers: list[bytes]) -> dict:
 
 
 # ── §4.3 Merkle (RFC 6962, promotion of unpaired node) ──────────────────────
-# Implemented so that IF leaf digests are available they can be used. The tree
-# is computed from the LEAVES (frame digests), which the profile (robotics §3)
-# defines but the vectors do NOT provide (see Finding 1).
+# The tree is computed from the LEAVES (frame digests). Run #1: the vectors did
+# NOT carry them (body_len=0) so this was unusable (Finding 1). Run #2 (spec
+# ce877e4): the maintainer published them in test-vectors.json (merkle.leaves),
+# so the tree is now recomputed independently. These functions are UNCHANGED
+# since run #1 — written from §4.3 before the leaves existed, hence not fitted
+# to the published values. leaf_count is u32 little-endian (§2.1); an unpaired
+# node is PROMOTED, never duplicated (§4.3, CVE-2012-2459).
 
 
 def mth(leaves: list[bytes]) -> bytes:
@@ -326,38 +330,40 @@ def main():
     line(f"  [cross-check] seq-9 ANCHOR_HEAD TLV == anchor_head: "
          f"{anchor_tlv is not None and anchor_tlv.hex() == data['anchor_head']}")
 
-    # ── Merkle (§4.3) — honest category split (Finding 1) ──────────────────
+    # ── Merkle (§4.3) — run #2: recomputed from published leaves ───────────
     line("")
-    line("Merkle (§4.3) — Finding 1 category check:")
+    line("Merkle (§4.3) — run #2 (leaves now published in merkle.leaves):")
     seq4 = parse_header(headers[4])
     seq4_tlvs, _ = parse_tlvs(headers[4])
-    line(f"  MERKLE record (seq 4) body_len = {seq4['body_len']}  "
-         f"(has body_hex in vectors: {4 in bodies})")
     leaf_count_tlv = tlv_get(seq4_tlvs, TLV_MERKLE_LEAF_COUNT)
     tree_hash_tlv = tlv_get(seq4_tlvs, TLV_MERKLE_TREE_HASH)
-    lc = int.from_bytes(leaf_count_tlv, "little") if leaf_count_tlv else None
-    a9 = cat("merkle_leaf_count (from LEAF_COUNT TLV)", lc, data["merkle"]["leaf_count"])
-    # Do the leaves exist anywhere in the container?
-    leaves_present = (seq4["body_len"] > 0) or (4 in bodies)
-    line(f"  30 leaf digests present in container?  {leaves_present}")
-    if leaves_present:
-        line("  -> leaves available: could recompute tree_hash from them (weaker "
-             "than 'from frames' but NOT tautology).")
-    else:
-        line("  -> LEAVES ABSENT. merkle_tree_hash can only be echoed from the "
-             "embedded MERKLE_TREE_HASH TLV, which is TAUTOLOGY, not verification.")
-    # tautology echo (reported as TAUTOLOGY, never PASS):
-    echo = tree_hash_tlv.hex() if tree_hash_tlv else None
-    tautology_match = echo == data["merkle"]["tree_hash"]
-    line(f"  [TAUTOLOGY] tree_hash TLV embedded in record == published tree_hash: "
-         f"{tautology_match}  (NOT a verification — the record carries its own claimed root)")
-    # inclusion proof:
+    lc_tlv = int.from_bytes(leaf_count_tlv, "little") if leaf_count_tlv else None
+    line(f"  MERKLE record (seq 4) body_len = {seq4['body_len']}  "
+         f"-> leaves come from merkle.leaves, not the record")
+
+    leaves = [bytes.fromhex(x) for x in data["merkle"]["leaves"]]
+    # leaf_count: computed from leaves == published == record TLV
+    a9 = cat("merkle_leaf_count", len(leaves), data["merkle"]["leaf_count"])
+    line(f"    (record LEAF_COUNT TLV, u32 LE = {lc_tlv}: "
+         f"{'MATCH' if lc_tlv == len(leaves) else 'MISMATCH'})")
+
+    # tree hash RECOMPUTED from the 30 published leaves (no longer a tautology)
+    computed_root = mth(leaves)
+    a_tree = cat("merkle_tree_hash (recomputed from 30 leaves)",
+                 computed_root.hex(), data["merkle"]["tree_hash"])
+    # §8 additionally requires it to match the record's own embedded TLV
+    tlv_match = tree_hash_tlv is not None and computed_root == tree_hash_tlv
+    line(f"    (also == record MERKLE_TREE_HASH TLV: {tlv_match} — §8 wants both)")
+    a_tree = a_tree and tlv_match
+
+    # inclusion proof for leaf 7 folds through the published siblings to the root
     proof = [(s, bytes.fromhex(hx)) for s, hx in data["merkle"]["proof"]]
-    line(f"  [REPRODUCED] proof_len == 5: {len(proof) == 5}  (structural: "
-         f"consistent with a 30-leaf tree)")
-    line("  [UNVERIFIABLE] inclusion proof for leaf 7: leaf-7 frame digest is "
-         "NOT in the allowed files, so the fold-to-root cannot be checked. "
-         "Any 'PASS' here would assume the leaf that makes it work (circular).")
+    idx = data["merkle"]["proof_index"]
+    a_len = cat("proof_len", len(proof), 5)
+    folded = verify_inclusion(leaves[idx], idx, proof, bytes.fromhex(data["merkle"]["tree_hash"]))
+    a_proof = a_len and folded
+    line(f"  [REPRODUCED] inclusion proof leaf {idx}: folds to root = {folded} "
+         f"(vectors proof_verifies = {data['merkle']['proof_verifies']})")
 
     # ── mutation demos (§8) ────────────────────────────────────────────────
     line("")
@@ -428,8 +434,10 @@ def main():
     core_ok = all([a1, a2, a3, a4, a5, a6, a7, a8, a9])
     line(f"CORE §8 REPRODUCED (chain_head, chain_ok, count, breaks, gaps, "
          f"violations, completeness, anchor_head, leaf_count): {core_ok}")
-    line("merkle_tree_hash: NOT independently reproduced (leaves absent) — "
-         "TAUTOLOGY echo only. inclusion proof: UNVERIFIABLE. See ambiguity-log.")
+    merkle_ok = all([a_tree, a_proof])
+    line(f"MERKLE §8 REPRODUCED (tree_hash recomputed from 30 leaves = §8 value "
+         f"AND record TLV; leaf-7 proof folds to root): {merkle_ok}")
+    line(f"BOTH AXES INDEPENDENTLY REPRODUCED: {core_ok and merkle_ok}")
     line("=" * 72)
 
 
