@@ -10,8 +10,8 @@ project applies to benchmarks (`docs/BENCHMARKING.md`, Rule 0).
 | | |
 |---|---|
 | **Tests** | `PALA-1.md` at the commit recorded in §5 below |
-| **Status** | **Registered, not yet run.** §5 is filled in when it is. |
-| **Implementer** | The co-maintainer, who attests to the eligibility condition in §1. Merging pull requests without reading the changed files' contents does not disqualify. |
+| **Status** | **Run #1 (2026-08-03) and Run #2 (2026-08-04) complete — see §5.** Both axes were reproduced from an independent implementation and both run-#1 defects were closed at `ce877e4`, so the §11 exit criterion is met. This does **not** lift Draft: Draft lifts at v1.0, tested against the freeze candidate (§4), for which a fresh external run (§6) is the strongest evidence. |
+| **Implementer** | Runs #1–#2: the co-maintainer, who attests to the eligibility condition in §1 (merging pull requests without reading the changed files' contents does not disqualify). A future run by an unaffiliated external implementer follows §6. |
 
 ## 1. Eligibility and the contamination boundary
 
@@ -101,3 +101,51 @@ promises, but the pass bar is the Expected-results block.
 | Verifier (link) | [`independent-runs/oleksandr/verify.py`](independent-runs/oleksandr/verify.py) — Merkle section now recomputes from the published leaves (`mth` / `verify_inclusion` unchanged since run #1, written before the leaves existed). |
 | Result | **Merkle axis PASS.** `merkle_tree_hash` **independently recomputed** from the 30 published leaf digests (`merkle.leaves`), matching the §8 value `518f5be5…d9f468db` byte-for-byte **and** the record's own `MERKLE_TREE_HASH` TLV (§8 requires both). The leaf-7 inclusion proof (depth 5) folds through the five published siblings to that independently computed root — verifies. `merkle_leaf_count = 30` matches (computed = vectors = record TLV). §4.3 is self-sufficient: domain bytes `0x00` (leaf) / `0x01` (node) explicit; unpaired node **promoted, never duplicated** (CVE-2012-2459); `MERKLE_LEAF_COUNT` is u32 **little-endian** (§2.1) — all read from the spec, none assumed. **0 new ambiguities.** Closes the Merkle **BLOCKED** from run #1 — the vectors were completed by the maintainer (`merkle.leaves` / `merkle.proof`), so the axis is now independently verifiable. |
 | Defect status | Both run-#1 defects **resolved** at `ce877e4` (confirmed from the allowed `PALA-1.md` only). **(1)** Merkle leaves now published (Finding 1). **(2)** `break`→`violation` prose aligned in §4.2 ("MUST report as a violation…") and the §7.1 pseudocode ("…else violation"), matching §8 (Finding 2). With both axes now reproduced independently (chain/anchor run #1, Merkle run #2) and both defects closed, PALA-1 meets the §11 exit criterion. |
+
+## 6. Conducting an external run
+
+The runs on record are the co-maintainer's, which the §11 exit criterion
+accepts. The strongest evidence for lifting Draft at freeze, though, is a
+run by someone with **no association to the project** — it removes the
+maintainer-in-the-loop question entirely. This section is only the
+logistics of receiving such a run. It adds nothing to the task (§3) or the
+boundary (§1–§2); it describes how an outsider is given the inputs and how
+their result comes back.
+
+1. **Eligibility (external).** As §1, applied to someone outside the
+   project: they must not have seen the reference implementations, the
+   codec, the tests, the verifiers from the runs already recorded, or any
+   discussion quoting them. An outsider has no reason to have seen those,
+   so the condition is easy to attest — and the package they receive
+   (below) is assembled so they *cannot* reach them.
+
+2. **The sealed input package — what they receive.** Only the allowed
+   inputs of §2, copied out of the repository into a standalone folder:
+   `PALA-1.md`, everything under `profiles/`, and `test-vectors.json`.
+   Nothing else from the repository travels with them — not the reference
+   implementations, not `src/`, not the tests, not the repository history.
+   Extracting the inputs rather than granting repository access is the
+   point: the boundary is enforced by what they hold, not by their
+   restraint.
+
+3. **What they must not be given.** No access to the source tree, the
+   reference verifiers, the vector generator, or any channel where those
+   are quoted. Treat the runs already recorded under `independent-runs/`
+   as reference material for this purpose: a fresh run that reads an
+   earlier verifier is testing that file, not the specification.
+
+4. **The task and the ambiguity rule are unchanged.** They carry out §3
+   and follow the §2 rule — questions are logged, not answered. The
+   project does not clarify the text out of band for them either; a run
+   that needed a private clarification would show only that the
+   conversation was followable, which is not what is being tested.
+
+5. **What they return.** Their verifier (in any language), the values they
+   reproduced, and their ambiguity log — the same three things §5 records
+   — together with their attestation of the eligibility condition above.
+   Nothing about their internal method has to resemble ours; only the
+   reproduced values have to agree.
+
+6. **Recording it.** The submission lands as a new run row in §5 and a
+   folder under `independent-runs/<name>/` beside the existing ones. From
+   that point it, too, is off-limits to the next external run.
