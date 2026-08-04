@@ -56,6 +56,26 @@ API changes.
   loads, token counts) is the planned 0.7 dogfooding target. Envelope,
   codec and verifier are untouched.
 
+### Fixed (experimental)
+
+- **Two PALA-1 exit-test defects, found by the independent-verification
+  run** (protocol §5 record; run against `776aa15a`, findings cited in
+  `docs/specs/pala-1/independent-runs/oleksandr/ambiguity-log.md`).
+  (1) The 30 Merkle leaf digests and the index-7 audit path are now
+  published in `test-vectors.json` (`merkle.leaves`, `merkle.proof`) —
+  previously they existed only inside the reference generator, a file
+  the exit test forbids reading, which made the Merkle axis of the §11
+  test unpassable by construction: `merkle_tree_hash` could only be
+  echoed from the record's own TLV. Record bytes and every published
+  hash are unchanged; the fix was validated end-to-end with the run's
+  own spec-only implementation (root recomputed from the published
+  leaves, leaf-7 proof folded). (2) A first record that is not `GENESIS`
+  is now uniformly a *violation*: §4.2 and the §7.1 pseudocode said
+  *break* while §8 and the vectors said *violation* — and both the
+  reference and the production verifier silently reported *both*.
+  Prose, both implementations, and the demo (which now asserts
+  `breaks = []` explicitly) agree.
+
 ## [0.6.0] — 2026-08-02
 
 **The 0.5 measurement campaign is complete, and `kv_unified` ships
