@@ -330,9 +330,11 @@ hashes will chain and only the gap betrays it.
 - `GENESIS` has `prev_hash` = 32 zero bytes **and** `record_type = GENESIS`.
   A distinguished type is required so that *"no predecessor"* and *"predecessor
   removed"* are distinguishable. `prev_hash = 0` alone is not sufficient.
-- A verifier MUST reject as a break any chain whose first record is not a
-  `GENESIS`, and MUST report a `GENESIS` at any position other than the first
-  as a violation. Defining the type and then not checking it buys nothing.
+- A verifier MUST report as a **violation** any chain whose first record is
+  not a `GENESIS` (the record is the wrong kind; the links around it may be
+  perfectly sound), and MUST report a `GENESIS` at any position other than
+  the first as a violation. Defining the type and then not checking it buys
+  nothing.
 - **A `BOOT` record's `prev_hash` is the previous boot's head.** The chain is
   continuous across power cycles; a deleted segment leaves a head nothing
   references.
@@ -503,7 +505,7 @@ for index, header h in file order:
     MUST h.magic == "PALA"                         else break, stop
     MUST h.header_len == actual header bytes       else violation
     if index == 0:
-        MUST h.record_type == GENESIS              else break
+        MUST h.record_type == GENESIS              else violation
         MUST h.prev_hash == 32 zero bytes          else violation
     else:
         MUST h.record_type != GENESIS              else violation
@@ -631,6 +633,18 @@ body plaintext (seq 3) = "clear path ahead, one pedestrian at 12m, static"
 | 9 | `ANCHOR` | carries the head anchored at seq 8 |
 | 10 | `WITNESS` | transparency log, covers seq 0–9 |
 | 11 | `KEY_SHRED` | key 7 destroyed → seq 3 body unreadable |
+
+The `MERKLE` record commits to its leaves without carrying them
+(`body_len = 0`), so the 30 leaf digests and the index-7 audit path are
+published in `test-vectors.json` (`merkle.leaves`, `merkle.proof`) — the
+tree is *recomputable*, not merely echoed. Reproducing `merkle_tree_hash`
+means computing it from the published leaves and matching both the
+published value and the record's own `MERKLE_TREE_HASH` TLV; the leaf-7
+proof folds the published leaf through the five published siblings to
+that root. (Publication added by the independent-verification run,
+Finding 1: the leaves previously existed only inside the reference
+generator — a forbidden file — which made the Merkle axis of the §11
+test unpassable by construction.)
 
 **Expected results — an implementation that disagrees with any of these is
 wrong, or this specification is:**
