@@ -15,6 +15,35 @@ output); both defects sit in the Merkle axis and in one prose/table contradictio
 
 ---
 
+## Run #2 update — both findings resolved at spec `ce877e4` (0 new ambiguities)
+
+Run #2 (spec commit `ce877e4f940a8089af1dec03110c624a292c7d98`) re-verified the
+Merkle axis after the maintainer acted on both findings below. Outcome:
+
+- **Finding 1 — RESOLVED.** The 30 leaf digests and the index-7 audit path are
+  now published in `test-vectors.json` (`merkle.leaves`, `merkle.proof`). The
+  `MERKLE` record still carries `body_len = 0` (the wire format was not changed —
+  correctly, the record commits to its leaves without carrying them); the leaves
+  live in the vectors, an allowed file. `verify.py` now **recomputes**
+  `merkle_tree_hash` from those 30 leaves (RFC 6962 per §4.3, `leaf = SHA-256(0x00
+  ‖ d)`, `node = SHA-256(0x01 ‖ l ‖ r)`, unpaired node promoted) and it matches
+  the §8 value `518f5be5…d9f468db` byte-for-byte **and** the record's own
+  `MERKLE_TREE_HASH` TLV; the leaf-7 proof (length 5) folds to the same root.
+  The §4.3 construction reproduced the published hash on the first, faithful
+  reading — no domain convention was guessed, so **no new ambiguity** arose.
+
+- **Finding 2 — RESOLVED.** §4.2 and the §7.1 pseudocode now classify a chain
+  whose first record is not `GENESIS` as a **violation** (§4.2: "MUST report as a
+  violation any chain whose first record is not a `GENESIS`"; §7.1: "MUST
+  h.record_type == GENESIS else violation"), matching §8 and
+  `demos.missing_genesis`. The prose/table contradiction is gone.
+
+With both findings closed, both axes of the §11 exit test — chain/anchor (run #1)
+and Merkle (run #2) — are reproduced independently from the spec text and vectors
+alone. The two entries below are retained as the record of what run #1 found.
+
+---
+
 ## Finding 1 — Merkle tree hash and inclusion proof cannot be reproduced from the allowed files (leaves absent)
 
 **Category: incompleteness of the vectors — strikes the exit criterion directly.**
