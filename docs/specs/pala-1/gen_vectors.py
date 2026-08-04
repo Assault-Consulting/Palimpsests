@@ -371,6 +371,7 @@ out = {
         "complete_to_anchor": res.complete_to_anchor,
     },
     "merkle": {
+        "leaves": [h(x) for x in frames],
         "tree_hash": h(root),
         "leaf_count": len(frames),
         "proof_index": 7,
@@ -407,6 +408,7 @@ out = {
         },
         "missing_genesis": {
             "chain_ok": res_no_gen.chain_ok,
+            "breaks": res_no_gen.breaks,
             "violations": res_no_gen.violations,
         },
         "unknown_time_with_clock": {

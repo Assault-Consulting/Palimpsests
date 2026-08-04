@@ -369,7 +369,8 @@ def verify_chain(
         # distinguishable, which is the entire reason GENESIS is a type.
         if index == 0:
             if rtype != RT_GENESIS:
-                breaks.append(seq)
+                # §4.2 / §8: a violation, not a break — fixed by the
+                # independent-verification run, Finding 2.
                 violations.append((seq, "chain does not start with a GENESIS record"))
             if hb[36:68] != ZERO32:
                 violations.append((seq, "GENESIS must have prev_hash = 32 zero bytes"))

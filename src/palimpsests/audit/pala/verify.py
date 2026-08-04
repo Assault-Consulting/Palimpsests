@@ -49,8 +49,7 @@ class VerifyResult:
     chain_ok: bool
     count: int
     head: bytes
-    #: Seqs where prev_hash does not name the preceding record (§4.1), or
-    #: where the chain's start rule is violated (§4.2).
+    #: Seqs where prev_hash does not name the preceding record (§4.1).
     breaks: list[int] = field(default_factory=list)
     #: Seqs where the sequence number jumped. A gap is a break whether or
     #: not the hashes link (§4.1) — a keyholder can rebuild a shorter,
@@ -149,7 +148,10 @@ def verify_headers(
         # and a rule that is not checked buys nothing.
         if index == 0:
             if rtype != RT_GENESIS:
-                breaks.append(seq)
+                # §4.2 / §8: a first record that is not GENESIS is a
+                # *violation* (the record is the wrong kind), not a break
+                # (the links around it may be perfectly sound). Fixed by the
+                # independent-verification run, Finding 2.
                 violations.append((seq, "chain does not start with a GENESIS record"))
             if hb[36:68] != ZERO32:
                 violations.append((seq, "GENESIS must have prev_hash = 32 zero bytes"))
