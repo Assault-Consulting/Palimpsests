@@ -245,8 +245,10 @@ prev = emit(
     "Close is a separate record. Duration is derived at read time.",
 )
 
-# 9 — ANCHOR: the head that was written to the local anchor store. This is what
-# a verifier compares against; without it, tail truncation is invisible.
+# 9 — ANCHOR: notes a head that was written to the local anchor store at this
+# point. Per §7.2 a completeness check compares against the store's CURRENT head
+# (here the tip, published as anchor_head); this in-chain note records an earlier
+# store write and may lag — the stale_anchor demo below exercises that lag.
 anchored_head = prev
 prev = emit(
     "anchor",
@@ -364,7 +366,7 @@ out = {
     "plaintext_utf8": plaintext.decode(),
     "records": records,
     "chain_head": h(FINAL_HEAD),
-    "anchor_head": h(anchored_head),
+    "anchor_head": h(FINAL_HEAD),
     "verify": {
         "chain_ok": res.chain_ok,
         "count": res.count,
@@ -427,7 +429,8 @@ with open("test-vectors.json", "w") as f:
 
 print("records:", len(records))
 print("chain head:", h(FINAL_HEAD))
-print("anchor head:", h(anchored_head))
+print("anchor head (in-chain ANCHOR note, may lag):", h(anchored_head))
+print("published anchor_head (current store, = tip):", h(FINAL_HEAD))
 print("merkle tree hash:", h(root))
 print("chain_ok:", res.chain_ok, "| complete_to_anchor:", res.complete_to_anchor)
 print("proof len:", len(proof), "verifies:", proof_ok)
