@@ -76,12 +76,14 @@ def test_verified_against_published_head(stream):
 
 
 def test_stale_anchor_diagnosed_as_lag_not_replacement(stream):
-    # The vectors' anchor_head names the head as of the ANCHOR record —
-    # two records before the chain head. That is an unanchored tail, and
-    # the diagnosis (not just the failure) is the contract.
+    # The ANCHOR record (seq 9) noted the head as of seq 8, three records
+    # before the tip. anchor_head is now the store's current head (the tip);
+    # the earlier noted head is the unanchored-tail case, and the diagnosis
+    # (not just the failure) is the contract.
     p, _, _, vec = stream
+    stale = vec["records"][8]["record_hash"]
     result = runner.invoke(
-        app, ["pala", "verify", str(p), "--anchor", vec["anchor_head"]]
+        app, ["pala", "verify", str(p), "--anchor", stale]
     )
     assert result.exit_code == 1
     assert "unanchored tail" in result.output

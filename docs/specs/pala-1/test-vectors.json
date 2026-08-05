@@ -120,7 +120,7 @@
     }
   ],
   "chain_head": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
-  "anchor_head": "14434088e5f5866cf0276ba5a9055d8ee0d115a750b2cdf9cc4006d9481b29b4",
+  "anchor_head": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
   "verify": {
     "chain_ok": true,
     "count": 12,

@@ -526,9 +526,13 @@ report: count, breaks, gaps, violations, uninterpretable, head = prev
 ### 7.2 Completeness against an anchor
 
 The anchor is the head this chain is supposed to have, obtained from **outside
-the log**: the local anchor store (an OS keychain entry, noted in-chain by an
-`ANCHOR` record and its `ANCHOR_HEAD` TLV), or the head covered by the newest
-`WITNESS` receipt.
+the log**: the *current* head held in the local anchor store (an OS keychain
+entry), or the head covered by the newest `WITNESS` receipt. An in-chain
+`ANCHOR` record with its `ANCHOR_HEAD` TLV **records a store write at the time
+it occurred** — a historical note, not the anchor itself. Because a writer may
+append records after a store write, the newest `ANCHOR` record's head can lag
+the store's current head; a completeness check therefore uses the **store's
+current head**, not any in-chain `ANCHOR` record's TLV.
 
 Given an anchor `A` and a computed head `H`:
 
@@ -650,14 +654,20 @@ test unpassable by construction.)
 wrong, or this specification is:**
 
 ```
-chain_head       = 3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813
-chain_ok         = true      record_count = 12   breaks = []   gaps = []   violations = []
-complete_to_anchor = true    (anchor = chain_head)
+chain_head          = 3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813
+chain_ok            = true      record_count = 12   breaks = []   gaps = []   violations = []
+complete_to_anchor  = true      (the anchor is the store's current head = the tip)
+anchor_head         = 3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813   (== chain_head)
 
-anchor_head (seq 8) = 14434088e5f5866cf0276ba5a9055d8ee0d115a750b2cdf9cc4006d9481b29b4
 merkle_tree_hash    = 518f5be5173250f705e3bda029ec1c11ac5c4459115c07dde5bc1021d9f468db
-merkle_leaf_count   = 30     proof(index 7) verifies   proof_len = 5
+merkle_leaf_count   = 30         proof(index 7) verifies   proof_len = 5
 ```
+
+The `ANCHOR` record at seq 9 carries, in its `ANCHOR_HEAD` TLV, the head as of
+seq 8 (`14434088e5f5866cf0276ba5a9055d8ee0d115a750b2cdf9cc4006d9481b29b4`) — a
+historical store write that lags the tip by 3. It is **not** the completeness
+anchor (which is the store's current head, `anchor_head` above); the
+`stale_anchor` demonstration below checks against it deliberately.
 
 Seven properties the vectors demonstrate rather than assert:
 
