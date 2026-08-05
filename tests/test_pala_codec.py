@@ -87,8 +87,13 @@ def test_vector_merkle_root_and_proof() -> None:
 def test_stale_anchor_diagnosed_as_lag() -> None:
     """§7.2: an anchor naming a record inside the chain is an unanchored
     tail with a lag count — not a replacement."""
+    # The ANCHOR record (seq 9) noted the head as of seq 8, three records
+    # before the tip — a lagging store write. anchor_head is the store's
+    # current head (the tip); this uses the earlier noted head to exercise
+    # the unanchored-tail diagnosis.
+    stale = VECTORS["records"][8]["record_hash"]
     res = verify_headers(
-        _vector_headers(), expected_head=bytes.fromhex(VECTORS["anchor_head"])
+        _vector_headers(), expected_head=bytes.fromhex(stale)
     )
     assert res.chain_ok  # internal consistency is a separate question
     assert res.complete_to_anchor is False
