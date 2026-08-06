@@ -373,6 +373,16 @@ This buys **selective disclosure**: prove one leaf with ~log₂(n) hashes withou
 revealing the other n−1. *"Show me this moment"* without *"show me
 everything"*.
 
+**The count is a commitment, verified against the leaves — never in the
+header.** `MERKLE_LEAF_COUNT` states how many leaves the root covers. Because the
+`MERKLE` record does not carry the leaves, only a party that has them — checking
+a disclosure, or holding the full set — can confirm it, and such a verifier
+SHOULD check that the number of leaves equals `MERKLE_LEAF_COUNT` and reject a
+disclosure whose count disagrees. A mismatch is a defect of that disclosure, not
+a chain violation: the header and its chain are intact; what was revealed is
+inconsistent with what was committed. A header-only verifier (§7.1) neither has
+the leaves nor checks the count.
+
 ### 4.4 Bodies, encryption and crypto-shredding
 
 A body is one of two shapes, and `key_id` says which:
@@ -559,7 +569,13 @@ separately (§6).
 
 ### 7.4 Semantic checks
 
-On records whose version and type are known:
+On records whose version and type are known — **`GENESIS` and `BOOT` included**.
+The position checks §7.1 makes at index 0 (the record is a `GENESIS`, its
+`prev_hash` is zero) are *in addition to* these, not in place of them: a
+`GENESIS` with `time_trust = UNKNOWN` and a non-zero `wall_clock_ns` is as much
+a violation as any other record.
+
+The checks:
 
 - `time_trust == UNKNOWN` ⟹ `wall_clock_ns == 0` (§5)
 - `time_trust <= 3` (§5)
@@ -569,6 +585,12 @@ On records whose version and type are known:
 
 These are violations, not breaks: the record is defective, the chain around it
 may be sound. They MUST be reported distinctly.
+
+`MERKLE_LEAF_COUNT` is deliberately **not** among these checks. A `MERKLE`
+record carries the root and the count but never the leaves (`body_len = 0`,
+§4.3), so a header-only verifier does not have the leaves to count and does not
+treat the field as verifiable here — it is a commitment, checked only when the
+leaves are disclosed. §4.3 says how.
 
 ### 7.5 Body verification (needs the key)
 
@@ -725,8 +747,13 @@ The prose is normative; `palaudit_ref.py` alongside this document is a
 reference implementation, subordinate to it — where they disagree, the
 implementation is wrong.
 
-This format remains a **draft**, not a specification, until the test at the
-top of this document has actually been run: a second implementation, written
-by someone who has not read the reference code, reproduces the §8 hashes
-from this text and the vectors alone. Until then the field set may change,
-and nothing should be built against it that cannot afford to re-encode.
+The test at the top of this document **has been run** — three independent
+implementations, one of them external and unaffiliated, reproduce the §8 hashes
+from this text and the vectors alone (`INDEPENDENT-VERIFICATION.md`). Between
+them they found and closed three defects, which is what the exercise is for.
+
+The format nonetheless remains a **draft**, not a specification, and nothing
+should be built against it that cannot afford to re-encode: the field set may
+still change to meet the writer's needs, and Draft lifts at v1.0 only after a
+final independent run against that freeze candidate. Passing the exit test shows
+the document is *implementable*; it is not the freeze.
