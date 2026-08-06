@@ -10,8 +10,8 @@ project applies to benchmarks (`docs/BENCHMARKING.md`, Rule 0).
 | | |
 |---|---|
 | **Tests** | `PALA-1.md` at the commit recorded in §5 below |
-| **Status** | **Run #1 (2026-08-03) and Run #2 (2026-08-04) complete — see §5.** Both axes were reproduced from an independent implementation and both run-#1 defects were closed at `ce877e4`, so the §11 exit criterion is met. This does **not** lift Draft: Draft lifts at v1.0, tested against the freeze candidate (§4), for which a fresh external run (§6) is the strongest evidence. |
-| **Implementer** | Runs #1–#2: the co-maintainer, who attests to the eligibility condition in §1 (merging pull requests without reading the changed files' contents does not disqualify). A future run by an unaffiliated external implementer follows §6. |
+| **Status** | **Runs #1–#3 complete — see §5.** Runs #1–#2 (co-maintainer) reproduced both axes and closed two defects; **Run #3 (first external, unaffiliated)** reproduced them independently and exposed a third — a `complete_to_anchor` vector defect — which was fixed and confirmed by the same external verifier at `1294bd0`. The §11 exit criterion is now met, by **three independent implementations, one of them external**. This does **not** lift Draft: Draft lifts at v1.0, tested against the freeze candidate (§4); a fresh external run against that candidate is the strongest evidence and is not yet done. |
+| **Implementer** | Runs #1–#2: the co-maintainer, who attests to the eligibility condition in §1 (merging pull requests without reading the changed files' contents does not disqualify). Run #3: an unaffiliated external implementer, per §6. |
 
 ## 1. Eligibility and the contamination boundary
 
@@ -101,6 +101,25 @@ promises, but the pass bar is the Expected-results block.
 | Verifier (link) | [`independent-runs/oleksandr/verify.py`](independent-runs/oleksandr/verify.py) — Merkle section now recomputes from the published leaves (`mth` / `verify_inclusion` unchanged since run #1, written before the leaves existed). |
 | Result | **Merkle axis PASS.** `merkle_tree_hash` **independently recomputed** from the 30 published leaf digests (`merkle.leaves`), matching the §8 value `518f5be5…d9f468db` byte-for-byte **and** the record's own `MERKLE_TREE_HASH` TLV (§8 requires both). The leaf-7 inclusion proof (depth 5) folds through the five published siblings to that independently computed root — verifies. `merkle_leaf_count = 30` matches (computed = vectors = record TLV). §4.3 is self-sufficient: domain bytes `0x00` (leaf) / `0x01` (node) explicit; unpaired node **promoted, never duplicated** (CVE-2012-2459); `MERKLE_LEAF_COUNT` is u32 **little-endian** (§2.1) — all read from the spec, none assumed. **0 new ambiguities.** Closes the Merkle **BLOCKED** from run #1 — the vectors were completed by the maintainer (`merkle.leaves` / `merkle.proof`), so the axis is now independently verifiable. |
 | Defect status | Both run-#1 defects **resolved** at `ce877e4` (confirmed from the allowed `PALA-1.md` only). **(1)** Merkle leaves now published (Finding 1). **(2)** `break`→`violation` prose aligned in §4.2 ("MUST report as a violation…") and the §7.1 pseudocode ("…else violation"), matching §8 (Finding 2). With both axes now reproduced independently (chain/anchor run #1, Merkle run #2) and both defects closed, PALA-1 meets the §11 exit criterion. |
+
+| | |
+|---|---|
+| Run | #3 — first **external** run (unaffiliated implementer) |
+| Date | 2026-08-05 |
+| Spec commit tested | `c8e8247` — the sealed package as sent, before the anchor fix |
+| Implementer | Rodion Bakaev (@Bakaev-Rodion) — no association with the project or Assault Consulting; attests to §1 eligibility (did not read the reference code, tests, or the earlier runs' verifiers). Verifier: `pala1_verifier.py`, Python stdlib, written from `PALA-1.md` + `profiles/` + `test-vectors.json` alone. |
+| Result | **8 of 9 §8 values reproduced blind** — `chain_head`, `record_count`, empty `breaks`/`gaps`/`violations`, `merkle_tree_hash`, `merkle_leaf_count`, and the leaf-7 proof — plus four mutation demos. **1 divergence:** `complete_to_anchor` computed **`false`** where the vectors published `true`. The verifier read the published `anchor_head`, found it named a record three back from the tip, and reported an unanchored tail — exactly what §7.2 mandates. |
+| Defect found | **Vector defect #3.** The verifier was right; the vectors were internally inconsistent — `verify.complete_to_anchor` was computed against `FINAL_HEAD` (the tip → `true`) while the published `anchor_head` was the in-chain `ANCHOR` record's noted head (seq 8, lag 3), which the vectors' own `stale_anchor` demo encodes as `false`. Runs #1–#2 had masked it (they checked completeness against `chain_head`, trivially `A == H`). An external run exercised the anchor exactly as §7.2 directs and caught what two prior runs did not. |
+| Ambiguities logged | **5** — most minor and resolved by reading (byte order → §2.1; Merkle node promotion → RFC 6962). Item **(4)**, anchor provenance, was the root of the divergence, resolved by the §7.2 clarification. Two remained as *"the spec should say"* items, since closed by clarification: **(3)** whether `GENESIS` is subject to the §7.4 semantic checks (the implementer applied them to all records — which §7.1 already implies); **(5)** whether `MERKLE_LEAF_COUNT` must be validated against the actual leaf count (the implementer treated it as metadata). |
+
+| | |
+|---|---|
+| Run | #3 re-run — confirmation against the fixed vectors |
+| Date | 2026-08-05 |
+| Spec commit tested | `1294bd0` — the merged anchor fix (PR #99) |
+| Verifier (link) | `pala1_verifier.py` — **unchanged** from the run-#3 verifier; the change from `false` to `true` is the vector fix, not the verifier. |
+| Result | **All §8 values match**, including `complete_to_anchor = true` (`anchor_head == chain_head` after the fix). Independently re-run by the maintainer against the merged vectors — every value the external verifier reports is correct. The `stale_anchor` demo still exercises the lagging case (`false`, `anchor_lag = 3`); the two stale-anchor tests were re-pointed at the seq-8 head accordingly. |
+| Defect status | **Vector defect #3 resolved at `1294bd0`** (§7.2 clarified, §8 aligned, `anchor_head` = the store's current head). Ambiguity items (3) and (5) closed by §7.4 / §4.3 clarifications in the same cycle. The exit test is now satisfied by **three independent implementations** — two co-maintainer, one external — agreeing on every §8 value. Draft remains held (§4): the freeze re-run against the eventual freeze candidate is still owed. |
 
 ## 6. Conducting an external run
 
