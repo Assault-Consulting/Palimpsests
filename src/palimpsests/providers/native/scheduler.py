@@ -73,6 +73,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     import numpy as np
+    from palimpsests.providers.native.audit import NativeAudit
 
 
 class PrefixHolderInUseError(RuntimeError):
@@ -183,8 +184,18 @@ class Scheduler:
     batched ``step`` via ``run_batch``.
     """
 
-    def __init__(self, backend: NativeBackend, *, max_active: int = 1) -> None:
+    def __init__(
+        self,
+        backend: NativeBackend,
+        *,
+        max_active: int = 1,
+        audit: NativeAudit | None = None,
+    ) -> None:
         self._backend = backend
+        # PALA-1 emission seam (optional). The scheduler emits exactly one
+        # thing: the prefix-release guard refusal, at the point it fires.
+        # Nothing in the decode path (step/run/feed) touches this.
+        self._audit = audit
         # Never admit more than the context can hold, even if asked to.
         self._max_active = min(max_active, backend.n_seq_max())
         self._queue: deque[GenerationRequest] = deque()
@@ -386,6 +397,11 @@ class Scheduler:
         if holder_seq in self._holders:
             consumers = self._holder_consumers.get(holder_seq)
             if consumers:
+                if self._audit is not None:
+                    # The audit observes the guard; it does not implement it
+                    # (profile §4). Recorded before the raise so a caller that
+                    # swallows the exception cannot hide the refusal.
+                    self._audit.prefix_release_refused(holder_seq, len(consumers))
                 raise PrefixHolderInUseError(
                     f"prefix holder {holder_seq} has {len(consumers)} live "
                     f"consumer(s) {sorted(consumers)}; release consumers "

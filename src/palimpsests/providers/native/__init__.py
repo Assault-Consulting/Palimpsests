@@ -39,7 +39,9 @@ is validated on hardware, never in CI. A caller without it gets a clear
 """
 from __future__ import annotations
 
+import os
 from collections.abc import Iterator, Sequence
+from palimpsests.audit.pala_writer import PalaWriter, canonical_config_digest
 from palimpsests.engine import (
     BaseInferenceEngine,
     ChatChunk,
@@ -50,6 +52,11 @@ from palimpsests.engine import (
     ModelInfo,
 )
 from palimpsests.providers.errors import EngineUnavailable
+from palimpsests.providers.native.audit import (
+    NativeAudit,
+    file_digest,
+    injected_backend_digest,
+)
 from palimpsests.providers.native.backend import NativeBackend, Token
 from palimpsests.providers.native.scheduler import GenerationRequest, Scheduler
 from palimpsests.providers.native.session import NativeSession
@@ -109,12 +116,21 @@ class NativeEngine(BaseInferenceEngine):
         max_tokens: int = 512,
         max_sessions: int = _DEFAULT_MAX_SESSIONS,
         share_prefixes: bool = False,
+        audit: PalaWriter | None = None,
     ) -> None:
         self._backend = backend
         self._model_path = model_path
         self._max_tokens = max_tokens
         self._max_sessions = max_sessions
         self._share_prefixes = share_prefixes
+        # PALA-1 wiring (Phase 3). Passing a writer makes the engine emit
+        # the inference profile about its own serving: chain opened here
+        # (GENESIS/BOOT), then model loads, session spans, KV boundary
+        # events, prefix sharing, and guard refusals at their real points.
+        # The engine borrows the writer — the caller owns its lifecycle —
+        # and with audit=None every emission site is a single None check.
+        self._audit = NativeAudit(audit) if audit is not None else None
+        self._model_announced = False
         # One shared scheduler for all sessions, so concurrent sessions
         # occupy slots in the same batch. Built lazily on first session.
         self._session_scheduler: Scheduler | None = None
@@ -154,6 +170,7 @@ class NativeEngine(BaseInferenceEngine):
         extra isn't installed or no model is configured.
         """
         if self._backend is not None:
+            self._announce_model(self._backend)
             return self._backend
         try:
             from palimpsests.providers.native.llamacpp_backend import (
@@ -169,7 +186,40 @@ class NativeEngine(BaseInferenceEngine):
                 f"no model configured for the native engine; set {_MODEL_ENV}"
             )
         self._backend = LlamaCppBackend(model_path=self._model_path)
+        self._announce_model(self._backend)
         return self._backend
+
+    def _announce_model(self, backend: NativeBackend) -> None:
+        """Emit MODEL_LOAD (origin triple) once per loaded backend.
+
+        The model digest is the GGUF file's streaming SHA-256 when a model
+        path exists — computed only with audit on, a one-time cost dwarfed
+        by the load itself. An injected backend has no artefact, so its
+        digest derives from the backend's importable identity and the
+        detail says ``injected:`` — a reader cannot mistake one for a file
+        digest. The config digest canonicalizes the engine parameters that
+        shape memory/serving behaviour, so a config change is a visibly
+        different origin.
+        """
+        if self._audit is None or self._model_announced:
+            return
+        self._model_announced = True
+        if self._model_path and os.path.isfile(self._model_path):
+            model_digest = file_digest(self._model_path)
+            detail = f"gguf:{os.path.basename(self._model_path)}"
+        else:
+            model_digest = injected_backend_digest(backend)
+            detail = f"injected:{type(backend).__qualname__}"
+        config_digest = canonical_config_digest(
+            {
+                "engine": ENGINE_ID,
+                "model_path": self._model_path or "",
+                "max_tokens": self._max_tokens,
+                "max_sessions": self._max_sessions,
+                "share_prefixes": self._share_prefixes,
+            }
+        )
+        self._audit.model_loaded(model_digest, config_digest, detail=detail)
 
     def is_available(self) -> bool:
         """True only if a backend can actually be obtained.
@@ -221,7 +271,7 @@ class NativeEngine(BaseInferenceEngine):
         prompt = _render_prompt(messages)
         prompt_tokens = backend.tokenize(prompt, add_special=True)
 
-        scheduler = Scheduler(backend, max_active=1)
+        scheduler = Scheduler(backend, max_active=1, audit=self._audit)
         request = GenerationRequest(
             prompt_tokens=prompt_tokens,
             max_tokens=self._max_tokens,
@@ -243,7 +293,7 @@ class NativeEngine(BaseInferenceEngine):
         if self._session_scheduler is None:
             backend = self._load_backend()
             self._session_scheduler = Scheduler(
-                backend, max_active=self._max_sessions
+                backend, max_active=self._max_sessions, audit=self._audit
             )
         return self._session_scheduler
 
@@ -270,6 +320,8 @@ class NativeEngine(BaseInferenceEngine):
             prefix_len = scheduler.warm_prefix(seq_id, list(key))
             holder = _Holder(seq_id=seq_id, prefix_len=prefix_len)
             self._holders[key] = holder
+            if self._audit is not None:
+                self._audit.prefix_warmed(prefix_len)
         return holder
 
     def open_session(
@@ -289,6 +341,7 @@ class NativeEngine(BaseInferenceEngine):
         """
         scheduler = self._get_session_scheduler()
         backend = self._load_backend()
+        span = self._audit.session_opened() if self._audit is not None else None
 
         if self._share_prefixes and system_prompt:
             holder = self._holder_for(scheduler, backend, system_prompt)
@@ -298,11 +351,15 @@ class NativeEngine(BaseInferenceEngine):
                 system_prompt=system_prompt,
                 max_tokens=self._max_tokens,
                 prefix_already_seeded=True,
+                audit=self._audit,
+                audit_span=span,
             )
             scheduler.copy_prefix_to_slot(
                 holder.seq_id, session.seq_id, holder.prefix_len
             )
             holder.refcount += 1
+            if self._audit is not None and span is not None:
+                self._audit.prefix_copied(holder.prefix_len, span)
             return session
 
         return NativeSession(
@@ -310,6 +367,8 @@ class NativeEngine(BaseInferenceEngine):
             scheduler,
             system_prompt=system_prompt,
             max_tokens=self._max_tokens,
+            audit=self._audit,
+            audit_span=span,
         )
 
     # ─── lifecycle ───────────────────────────────────────────────────────
@@ -331,3 +390,14 @@ class NativeEngine(BaseInferenceEngine):
         if self._backend is not None:
             self._backend.close()
             self._backend = None
+        if self._audit is not None:
+            # Slots force-closed above bypass NativeSession.close, so their
+            # spans stay open in the chain — deliberately: the owner never
+            # ended them, and the record says so. Unload if we announced a
+            # load, then anchor the tip so a completeness check has a head
+            # to hold. The writer is NOT closed here: the engine borrows
+            # it, the caller owns it.
+            if self._model_announced:
+                self._audit.model_unloaded()
+                self._model_announced = False
+            self._audit.anchor()
