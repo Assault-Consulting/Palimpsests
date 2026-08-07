@@ -329,10 +329,19 @@ class PalaWriter:
         body = self._event_body(KIND_GUARD_PREFIX_RELEASE, detail=detail)
         return self._emit(RT_SAFETY, tlvs=self._origin(ROLE_SCHEDULER), body=body, span_id=span_id)
 
-    def guard_state_reject(self, *, detail: str | None = None) -> bytes:
-        """A persisted KV blob failed validation before reaching the C parser."""
+    def guard_state_reject(
+        self, *, detail: str | None = None, span_id: bytes = ZERO16
+    ) -> bytes:
+        """A persisted KV blob failed validation before reaching the C parser.
+
+        Takes a ``span_id`` because the reject happens at a session's
+        ``load_state`` boundary — the refusal belongs to that session's
+        span (surfaced by wiring the writer into the engine).
+        """
         body = self._event_body(KIND_GUARD_STATE_REJECT, detail=detail)
-        return self._emit(RT_SAFETY, tlvs=self._origin(ROLE_KV_STORE), body=body)
+        return self._emit(
+            RT_SAFETY, tlvs=self._origin(ROLE_KV_STORE), body=body, span_id=span_id
+        )
 
     # ─── §5 aggregate: serving statistics over a window ─────────────────────
 
