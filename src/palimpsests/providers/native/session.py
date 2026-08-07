@@ -72,6 +72,10 @@ from collections.abc import Iterator, Sequence
 from palimpsests.engine.messages import ChatChunk
 from palimpsests.providers.native.backend import NativeBackend, Token
 from palimpsests.providers.native.scheduler import Scheduler, TurnRequest
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from palimpsests.providers.native.audit import NativeAudit
 
 # Default per-turn generation cap, mirroring the engine's stateless path.
 _DEFAULT_MAX_TOKENS = 512
@@ -135,11 +139,18 @@ class NativeSession:
         max_tokens: int = _DEFAULT_MAX_TOKENS,
         stop_tokens: tuple[Token, ...] = (),
         prefix_already_seeded: bool = False,
+        audit: NativeAudit | None = None,
+        audit_span: bytes | None = None,
     ) -> None:
         self._backend = backend
         self._scheduler = scheduler
         self._max_tokens = max_tokens
         self._stop_tokens = stop_tokens
+        # PALA-1 emission seam (optional): the engine opens the session span
+        # and hands both down; the session emits its KV boundary events and
+        # the span end. Turn streaming emits nothing (hot path untouched).
+        self._audit = audit
+        self._audit_span = audit_span
         self._closed = False
         self._seq_id = scheduler.open_slot()
         # The system prefix is tokenized once and prepended only on the
@@ -242,7 +253,7 @@ class NativeSession:
         self._ensure_open()
         n_past = self._scheduler.slot_n_past(self._seq_id)
         payload = self._scheduler.save_slot_state(self._seq_id)
-        return b"".join(
+        blob = b"".join(
             (
                 _MAGIC,
                 _FORMAT_VERSION.to_bytes(_VERSION_LEN, "big"),
@@ -251,9 +262,32 @@ class NativeSession:
                 payload,
             )
         )
+        if self._audit is not None:
+            # Record the blob's digest (never the blob) so a later restore
+            # is checkable against exactly what was saved.
+            self._audit.kv_saved(blob, self._audit_span)
+        return blob
 
     def load_state(self, state: bytes) -> None:
         """Restore this session's KV from bytes produced by ``save_state``.
+
+        With audit wired, a frame rejection is recorded as a SAFETY record
+        (the guard fired) *and* still raised — the record observes the
+        refusal, it never replaces it. A successful restore records the
+        incoming blob's digest, comparable against the KV_SAVE that
+        produced it.
+        """
+        try:
+            self._load_state_checked(state)
+        except StateBlobError as e:
+            if self._audit is not None:
+                self._audit.state_rejected(str(e), self._audit_span)
+            raise
+        if self._audit is not None:
+            self._audit.kv_restored(state, self._audit_span)
+
+    def _load_state_checked(self, state: bytes) -> None:
+        """The frame validation and restore behind ``load_state``.
 
         Validates the frame, then restores the backend KV and sets the
         slot's position so the next turn resumes without re-prefilling the
@@ -315,10 +349,18 @@ class NativeSession:
         self._scheduler.load_slot_state(self._seq_id, state[cursor:], n_past)
 
     def close(self) -> None:
-        """Release the held slot and its KV. Idempotent."""
+        """Release the held slot and its KV. Idempotent.
+
+        Closes the session's audit span. A session that is never closed by
+        its owner leaves a visibly unclosed span in the chain — including
+        one force-released by the engine's shutdown — which is the honest
+        record: the owner did not end it.
+        """
         if not self._closed:
             self._scheduler.close_slot(self._seq_id)
             self._closed = True
+            if self._audit is not None and self._audit_span is not None:
+                self._audit.session_closed(self._audit_span)
 
     # ─── internals ────────────────────────────────────────────────────────
 
