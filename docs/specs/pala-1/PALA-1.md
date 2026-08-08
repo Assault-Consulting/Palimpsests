@@ -363,6 +363,14 @@ empty          = SHA-256("")
 **An unpaired node is PROMOTED, never duplicated.** Duplicating the last node is
 the CVE-2012-2459 mistake: two distinct leaf sets collapse to the same root.
 
+An **inclusion proof** for a leaf is the list of sibling hashes on the path
+from that leaf to the root, each tagged with the side the sibling occupies:
+an entry `["L", s]` means the sibling is the **left** operand of `node()` —
+the step computes `node(s, h)` — and `["R", s]` computes `node(h, s)`.
+Folding the leaf's `leaf()` hash through the entries in order MUST
+reproduce the tree hash. This is the encoding `test-vectors.json` publishes
+in `merkle.proof`.
+
 Two constructions are in circulation and they agree, which is worth stating so
 an implementer does not go looking for a discrepancy: RFC 6962 defines the tree
 recursively, splitting at the largest power of two below `n`; the iterative
@@ -509,17 +517,18 @@ with a different head and no other trace.
 Requires no key. Touches no bodies.
 
 ```
-prev     := 32 zero bytes
+prev     := unset                                  # no link expectation yet
 expected := unset
 for index, header h in file order:
     MUST h.magic == "PALA"                         else break, stop
     MUST h.header_len == actual header bytes       else violation
     if index == 0:
         MUST h.record_type == GENESIS              else violation
-        MUST h.prev_hash == 32 zero bytes          else violation
+        if h.record_type == GENESIS:
+            MUST h.prev_hash == 32 zero bytes      else violation
     else:
         MUST h.record_type != GENESIS              else violation
-    if h.prev_hash != prev:  report break at h.seq
+    if prev is set and h.prev_hash != prev:  report break at h.seq
     if expected is set and h.seq != expected:  report gap at h.seq
     expected := h.seq + 1
     if h.format_version unknown or h.record_type unknown:
@@ -532,6 +541,23 @@ report: count, breaks, gaps, violations, uninterpretable, head = prev
 
 `chain_ok` is true iff `breaks`, `gaps` and `violations` are all empty. It means
 **internally consistent**, nothing more.
+
+A chain whose first record is not a `GENESIS` yields exactly **one**
+violation — the wrong *kind* of first record. Per §4.2, the links around it
+may be perfectly sound: the zero-`prev_hash` requirement applies only when
+the first record *is* a `GENESIS`, and the break check compares only records
+that have a predecessor in the file. (Aligned at the freeze-candidate run:
+read literally, the earlier pseudocode produced two violations and a
+spurious break on this case, contradicting this section's own prose above
+and §4.2. The published `missing_genesis` demo had not discriminated the
+two readings — its input satisfied both — until the freeze-candidate run
+constructed the discriminating case; the demo input was strengthened
+accordingly, with its published outputs unchanged.)
+
+`breaks` and `gaps` are reported at the record's `seq`. Violations from
+per-record checks are likewise keyed by `seq`; the
+chain-does-not-start-with-`GENESIS` violation is reported at position `0`,
+because it is a property of the chain, not of any record's `seq`.
 
 ### 7.2 Completeness against an anchor
 
