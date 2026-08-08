@@ -343,12 +343,14 @@ gap_hdr = R.Header(
 )
 res_gap = R.verify_chain(chain + [gap_hdr.encode()])
 
-# --- demo: a chain that never had a GENESIS (§4.2)
-no_gen = R.Header(
-    record_type=R.RT_EVENT, seq=0, boot_id=BOOT_ID, prev_hash=R.ZERO32,
-    time_trust=R.TIME_NTP_SYNCED,
-)
-res_no_gen = R.verify_chain([no_gen.encode()])
+# --- demo: the chain with its GENESIS removed (§4.2)
+# The discriminating input (freeze-candidate run, run #4): the real chain
+# minus record 0, so the first record carries a non-zero prev_hash. The
+# earlier synthetic input (a single seq-0, zero-prev record) sat in the
+# zone where the literal §7.1 pseudocode and the §4.2 prose agree, and
+# masked their divergence. The published outputs are unchanged: exactly
+# one violation at position 0, no breaks.
+res_no_gen = R.verify_chain(chain[1:])
 
 # --- demo: UNKNOWN time trust with a confident timestamp (§5)
 bad_time = R.Header(

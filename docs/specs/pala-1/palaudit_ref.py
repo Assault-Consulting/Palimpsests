@@ -372,13 +372,17 @@ def verify_chain(
         # distinguishable, which is the entire reason GENESIS is a type.
         if index == 0:
             if rtype != RT_GENESIS:
-                # §4.2 / §8: a violation, not a break — fixed by the
-                # independent-verification run, Finding 2.
-                violations.append((seq, "chain does not start with a GENESIS record"))
-            if hb[36:68] != ZERO32:
+                # §4.2 / §8: exactly ONE violation, keyed at position 0 (a
+                # property of the chain, not of the record's seq); no break
+                # and no zero-prev demand — the links around it may be
+                # perfectly sound. Aligned at the freeze-candidate run
+                # (run #4): the literal §7.1 pseudocode had produced two
+                # violations and a spurious break here.
+                violations.append((0, "chain does not start with a GENESIS record"))
+            elif hb[36:68] != ZERO32:
                 violations.append((seq, "GENESIS must have prev_hash = 32 zero bytes"))
-
-        if hb[36:68] != prev:
+        elif hb[36:68] != prev:
+            # Only records with a predecessor in the file are link-checked.
             breaks.append(seq)
         # §4.1 — a gap in seq is a break, whether or not the hashes link.
         if expected_seq is not None and seq != expected_seq:
