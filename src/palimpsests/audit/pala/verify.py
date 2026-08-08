@@ -151,15 +151,20 @@ def verify_headers(
         # and a rule that is not checked buys nothing.
         if index == 0:
             if rtype != RT_GENESIS:
-                # §4.2 / §8: a first record that is not GENESIS is a
-                # *violation* (the record is the wrong kind), not a break
-                # (the links around it may be perfectly sound). Fixed by the
-                # independent-verification run, Finding 2.
-                violations.append((seq, "chain does not start with a GENESIS record"))
-            if hb[36:68] != ZERO32:
+                # §4.2 / §8: a first record that is not GENESIS is exactly ONE
+                # *violation* (the record is the wrong kind), reported at
+                # position 0 — a property of the chain, not of the record's
+                # seq. The links around it may be perfectly sound: no break,
+                # and no zero-prev_hash demand on a record that is not a
+                # GENESIS. Surfaced by the freeze-candidate run (run #4): the
+                # literal §7.1 pseudocode had produced two violations and a
+                # spurious break here.
+                violations.append((0, "chain does not start with a GENESIS record"))
+            elif hb[36:68] != ZERO32:
                 violations.append((seq, "GENESIS must have prev_hash = 32 zero bytes"))
-
-        if hb[36:68] != prev:
+        elif hb[36:68] != prev:
+            # The link check compares only records that have a predecessor
+            # in the file (§7.1 as aligned at the freeze-candidate run).
             breaks.append(seq)
         # §4.1 — a gap in seq is a break, whether or not the hashes link.
         if expected_seq is not None and seq != expected_seq:
