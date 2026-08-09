@@ -25,12 +25,21 @@ import sys
 import typer
 from dataclasses import asdict
 from palimpsests.audit import AuditIntegrityError
+from palimpsests.audit.anchors import (
+    AnchorAttempt,
+    AnchorSourceError,
+    ChainedAnchorSource,
+    FileAnchor,
+    ManualAnchor,
+)
 from palimpsests.audit.pala import (
+    KNOWN_RECORD_TYPES,
     MalformedRecord,
     body_digest_of,
     iter_records,
     verify_headers,
 )
+from palimpsests.audit.pala.incremental import IncrementalVerifier
 from palimpsests.core import (
     AUDIT_DB_NAME,
     AppContext,
@@ -250,6 +259,15 @@ def pala_verify_cmd(
             "replacement) is NOT checked."
         ),
     ),
+    anchor_file: str = typer.Option(
+        None,
+        "--anchor-file",
+        help=(
+            "Read the expected head from a file (a single lowercase-hex line, "
+            "'# comment' lines tolerated). Combined with --anchor, the two are "
+            "tried in the order given (first that answers wins)."
+        ),
+    ),
     json_out: bool = typer.Option(
         False, "--json", help="Emit the verification result as JSON."
     ),
@@ -279,14 +297,53 @@ def pala_verify_cmd(
                       detected
       3  UNREADABLE — the file could not be read, or --anchor is invalid
     """
-    expected: bytes | None = None
+    # Build anchor sources in the order given; the first that answers wins.
+    # --anchor keeps its exact validation and messages so its behaviour is
+    # unchanged; --anchor-file adds a file source through the same seam.
+    sources = []
     if anchor is not None:
         try:
-            expected = bytes.fromhex(anchor)
+            raw = bytes.fromhex(anchor)
         except ValueError:
             _fail(json_out, EXIT_UNREADABLE, "--anchor is not valid hex")
-        if len(expected) != 32:
+        if len(raw) != 32:
             _fail(json_out, EXIT_UNREADABLE, "--anchor must be 32 bytes (64 hex chars)")
+        sources.append(ManualAnchor(anchor))
+    if anchor_file is not None:
+        sources.append(FileAnchor(anchor_file))
+
+    anchor_source = None
+    if len(sources) == 1:
+        anchor_source = sources[0]
+    elif len(sources) > 1:
+        anchor_source = ChainedAnchorSource(sources)
+
+    expected: bytes | None = None
+    anchor_reading = None
+    anchor_attempts: list[AnchorAttempt] = []
+    if anchor_source is not None:
+        try:
+            anchor_reading = anchor_source.current_head()
+        except AnchorSourceError as e:
+            anchor_attempts = [
+                AnchorAttempt(e.source_kind, e.source_detail, "error", str(e))
+            ]
+        else:
+            trace = getattr(anchor_source, "last_attempts", None)
+            if trace is not None:
+                anchor_attempts = list(trace)
+            else:
+                outcome = "answered" if anchor_reading is not None else "absent"
+                anchor_attempts = [
+                    AnchorAttempt(
+                        anchor_source.source_kind,
+                        anchor_source.source_detail,
+                        outcome,
+                        None,
+                    )
+                ]
+        if anchor_reading is not None:
+            expected = anchor_reading.head
 
     path = Path(file)
     try:
@@ -313,6 +370,11 @@ def pala_verify_cmd(
         malformed = str(e)
 
     result = verify_headers(headers, expected_head=expected)
+
+    adv = IncrementalVerifier(known_types=KNOWN_RECORD_TYPES)
+    for hb in headers:
+        adv.step(hb)
+    advisory_items = adv.advisory().items
 
     consistent = result.chain_ok and not body_mismatches and malformed is None
     if not consistent:
@@ -348,6 +410,24 @@ def pala_verify_cmd(
                 "records": witness_seqs,
                 "note": "receipts are not verified by this tool",
             },
+            "anchor_attempts": [
+                {
+                    "source_kind": a.source_kind,
+                    "source_detail": a.source_detail,
+                    "outcome": a.outcome,
+                    "error": a.error,
+                }
+                for a in anchor_attempts
+            ],
+            "advisory": [
+                {
+                    "code": i.code,
+                    "at_seq": i.at_seq,
+                    "boot_id": i.boot_id.hex() if i.boot_id is not None else None,
+                    "detail": i.detail,
+                }
+                for i in advisory_items
+            ],
             "exit_code": code,
         }
         typer.echo(json.dumps(payload, indent=2))
@@ -382,6 +462,12 @@ def pala_verify_cmd(
             err=True,
         )
 
+    if anchor_reading is not None:
+        origin = anchor_reading.source_kind
+        if anchor_reading.source_detail:
+            origin = f"{origin} {anchor_reading.source_detail}"
+        typer.echo(f"anchor: {anchor_reading.head.hex()[:8]}… from {origin}")
+
     if expected is None:
         typer.secho(
             "completeness: NOT CHECKED — no --anchor supplied, so tail "
@@ -410,6 +496,14 @@ def pala_verify_cmd(
         typer.echo(
             "witness: no WITNESS records — existence at a point in time "
             "is not attested"
+        )
+
+    if advisory_items:
+        codes = ", ".join(sorted({i.code for i in advisory_items}))
+        typer.secho(
+            f"advisory: {len(advisory_items)} note(s) — {codes} "
+            "(signals, not a verdict; they do not affect the exit code)",
+            fg=typer.colors.YELLOW,
         )
 
     raise typer.Exit(code=code)
