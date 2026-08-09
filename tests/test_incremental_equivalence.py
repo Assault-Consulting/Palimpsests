@@ -18,8 +18,6 @@ pass unchanged.
 from __future__ import annotations
 
 import json
-from pathlib import Path
-
 from palimpsests.audit.pala import iter_records, verify_headers
 from palimpsests.audit.pala.codec import (
     KNOWN_RECORD_TYPES,
@@ -35,6 +33,7 @@ from palimpsests.audit.pala.codec import (
 )
 from palimpsests.audit.pala.incremental import IncrementalVerifier
 from palimpsests.audit.pala_writer import PalaWriter
+from pathlib import Path
 
 VECTORS_PATH = Path(__file__).parent.parent / "docs/specs/pala-1/test-vectors.json"
 
