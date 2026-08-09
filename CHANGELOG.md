@@ -6,7 +6,21 @@ aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 once it reaches v1.0. Before v1.0, minor versions may include breaking
 API changes.
 
-## [Unreleased]
+## [0.7.0] — 2026-08-09
+
+**The format is the deliverable — and it is frozen.** PALA-1 ships at
+v1.0: an append-only, hash-chained, selectively-disclosable audit wire
+format whose freeze was *earned*, not declared — four independent
+verifier implementations, two of them external and unaffiliated,
+reproduce every published §8 value from the specification text and test
+vectors alone; the freeze-candidate run passed blind on its verifier's
+first execution; and the exercise is now permanently self-service
+(`docs/specs/pala-1/verification-kit/`). The library emits the format
+end-to-end: the writer records the inference profile with cross-boot
+resume, and `palimpsests pala verify` answers the three questions from
+the file alone. The audit subsystem's public API (`AuditReader`) follows
+in v0.8 — the lean tag is deliberate: the format needed no more code to
+be finished.
 
 ### Changed
 
@@ -546,6 +560,7 @@ Initial release.
   from the OS keychain, falling back to an ephemeral key headless.
 - **CLI** — `chat`, `models`, `engine list` / `engine use`.
 
+[0.7.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.7.0
 [0.6.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.6.0
 [0.5.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.5.0
 [0.4.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.4.0

@@ -9,8 +9,8 @@
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13534/badge)](https://www.bestpractices.dev/projects/13534)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Assault-Consulting/Palimpsests/badge)](https://scorecard.dev/viewer/?uri=github.com/Assault-Consulting/Palimpsests)
 
-> **Status: v0.6 — the measurement campaign is complete, and `kv_unified` ships
-> first-class.** Levels 1 (Ollama) and 2 (llama.cpp) work behind one
+> **Status: v0.7 — verifiable audit: PALA-1 is frozen at v1.0, with
+> independent verification on record.** Levels 1 (Ollama) and 2 (llama.cpp) work behind one
 > abstraction, with the context-memory layer (window manager + block-memory
 > retrieval) and a genuinely tamper-evident audit log — hash-chained rows with
 > an out-of-band head anchor and a `palimpsests audit verify` command — plus
@@ -28,7 +28,7 @@
 > **New in v0.6:** `kv_unified` as a first-class backend parameter — the unified
 > KV pool behind the session-density result is now a product property, not a
 > benchmark artifact — with a release-ordering guard (`PrefixHolderInUseError`)
-> that refuses to corrupt a live consumer. **Next: v0.7 — verifiable audit**:
+> that refuses to corrupt a live consumer. **New in v0.7 — verifiable audit**:
 > the [PALA-1 format, **frozen at v1.0**](docs/specs/pala-1/PALA-1.md) — byte-exact
 > test vectors, four independent verifier implementations (two external) — with
 > a `palimpsests pala verify` CLI in main; the writer APIs remain experimental.
@@ -348,14 +348,21 @@ the novelty is in this composition and its seams, not in a new inference kernel.
       Positioning and the roadmap now carry the measured campaign; sleep-time
       compute is deprioritized — the differentiation is audit/compliance and
       the deployment model, not raw speed.
-- [ ] **v0.7 — verifiable audit: the format is the deliverable** —
+- [x] **v0.7 — verifiable audit: the format is the deliverable** —
       [PALA-1](docs/specs/pala-1/PALA-1.md) is **frozen at v1.0**: a
       self-describing, byte-level audit format with byte-exact test vectors,
       a CC0 reference implementation, a stdlib-only production codec, the
       three-question `palimpsests pala verify` CLI, and four independent
       verifier implementations (two external) on record; the writer emits it
-      end-to-end with cross-boot resume. Remaining for the tag: the audit
-      subsystem behind a public API. See [docs/ROADMAP.md](docs/ROADMAP.md).
+      end-to-end with cross-boot resume, plus a self-service
+      [verification kit](docs/specs/pala-1/verification-kit/README.md). The
+      lean tag is deliberate: the format needed no more code to be finished.
+- [ ] **v0.8 — audit semantics + public API** — incident/oversight record
+      kinds (`INCIDENT_CANDIDATE`, `ACK` with a pseudonymous operator id,
+      documented erasure), additive in the frozen profile; verifier
+      advisories (referential integrity, boot-scoped monotonic drift);
+      JSONL export; the `AuditReader` public API; retention guidance. See
+      [docs/ROADMAP.md](docs/ROADMAP.md).
 - [ ] **Later** — assurance tiers B/C (hardware root of trust, external
       witness); a discrete-GPU run (the integrated GPU flatters every
       prefill-saving mechanism, so these ratios compress on fast prefill); a
