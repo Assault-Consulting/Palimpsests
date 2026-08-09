@@ -10,9 +10,8 @@ a silent one.
 """
 from __future__ import annotations
 
-import struct
-
 import pytest
+import struct
 from palimpsests.audit.pala import decode_tlvs, iter_records, verify_headers
 from palimpsests.audit.pala.codec import (
     FIXED_HEADER_LEN,
