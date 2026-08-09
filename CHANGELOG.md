@@ -10,6 +10,14 @@ API changes.
 
 ### Added (experimental)
 
+- **Writer cross-boot resume.** `PalaWriter.open_existing()` resumes an
+  existing chain across process restarts: adopts the tail head and seq
+  and requires `BOOT` as the first record (the cross-boot link, core
+  §4.2). A torn trailing record left by a crash is truncated and the
+  recovery is itself recorded (`RECOVERY_TRUNCATED_TAIL`, profile §3
+  kind 7) right after `BOOT`; mid-stream damage is refused, not
+  auto-repaired. A fresh `PalaWriter()` on a non-empty file now raises
+  instead of silently corrupting the chain with a second GENESIS.
 - **PALA-1 draft specification and codec.** A self-describing, byte-level
   audit record format (`docs/specs/pala-1/`, CC0-1.0) with a standalone
   reference implementation, a deterministic vector generator, and committed
