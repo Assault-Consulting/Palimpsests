@@ -80,6 +80,7 @@ __all__ = [
     "SpanView",
     "BootView",
     "OriginView",
+    "decode_record",
 ]
 
 _TYPE_NAMES = {
@@ -393,36 +394,9 @@ class AuditReader:
         return self._decoded
 
     def _decode(self, index: int, hb: bytes) -> DecodedRecord:
-        try:
-            header = Header.decode(hb)
-        except MalformedRecord:
-            rtype = struct.unpack_from("<H", hb, 8)[0]
-            (seq,) = struct.unpack_from("<Q", hb, 12)
-            return DecodedRecord(seq, index, rtype, None, None, None, None, None)
-
-        rtype = header.record_type
-        type_name = _TYPE_NAMES.get(rtype)
-        body_tlvs: list[tuple[int, bytes]] | None = None
-        kind: int | None = None
-        kind_name: str | None = None
-
         start, end = self._body_spans[index]
-        if header.key_id == 0 and end > start:
-            body = bytes(self._data[start:end])
-            try:
-                body_tlvs = decode_tlvs(body)
-            except MalformedRecord:
-                body_tlvs = None
-            if body_tlvs is not None and rtype in _KIND_BEARING:
-                for t, v in body_tlvs:
-                    if t == EVT_KIND and len(v) >= 2:
-                        kind = struct.unpack_from("<H", v, 0)[0]
-                        kind_name = _KIND_NAMES.get(kind)
-                        break
-
-        return DecodedRecord(
-            header.seq, index, rtype, type_name, header, body_tlvs, kind, kind_name
-        )
+        body = bytes(self._data[start:end]) if end > start else b""
+        return decode_record(index, hb, body)
 
     def records(self) -> Iterator[DecodedRecord]:
         yield from self._decoded_records()
@@ -504,6 +478,44 @@ class AuditReader:
             elif dr.kind == KIND_MODEL_LOAD or _has_model_digest(dr.header):
                 current = _origin_of(dr)
         return current
+
+
+def decode_record(index: int, hb: bytes, body: bytes) -> DecodedRecord:
+    """Decode one record from its header bytes and (already-sliced) body.
+
+    Shared by the batch facade and the tailing reader so both interpret a
+    record identically. An undecodable header (unknown version) yields a
+    minimal record — reported, never rejected (§7.6). Kind is resolved only
+    for EVENT/SAFETY bodies (§10.5) and only when the body is cleartext.
+    """
+    try:
+        header = Header.decode(hb)
+    except MalformedRecord:
+        rtype = struct.unpack_from("<H", hb, 8)[0]
+        (seq,) = struct.unpack_from("<Q", hb, 12)
+        return DecodedRecord(seq, index, rtype, None, None, None, None, None)
+
+    rtype = header.record_type
+    type_name = _TYPE_NAMES.get(rtype)
+    body_tlvs: list[tuple[int, bytes]] | None = None
+    kind: int | None = None
+    kind_name: str | None = None
+
+    if header.key_id == 0 and body:
+        try:
+            body_tlvs = decode_tlvs(body)
+        except MalformedRecord:
+            body_tlvs = None
+        if body_tlvs is not None and rtype in _KIND_BEARING:
+            for t, v in body_tlvs:
+                if t == EVT_KIND and len(v) >= 2:
+                    kind = struct.unpack_from("<H", v, 0)[0]
+                    kind_name = _KIND_NAMES.get(kind)
+                    break
+
+    return DecodedRecord(
+        header.seq, index, rtype, type_name, header, body_tlvs, kind, kind_name
+    )
 
 
 def _origin_tlv(header: Header, tag: int) -> bytes | None:
