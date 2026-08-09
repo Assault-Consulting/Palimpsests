@@ -280,7 +280,9 @@ Notably, Article 12 does not use the word *tamper-proof* — but a log that can 
 silently altered, and whose integrity you cannot demonstrate on demand, has
 little evidentiary value in an audit. The hash chain and head anchor described
 above are aimed squarely at that gap: they let a deployer *demonstrate* integrity
-on demand rather than assert it.
+on demand rather than assert it. A requirement-by-requirement breakdown of what
+ships today and what is planned is in
+[docs/compliance/EU-AI-ACT-MAPPING.md](docs/compliance/EU-AI-ACT-MAPPING.md).
 
 A few honest caveats on the regulatory picture, current as of mid-2026:
 
