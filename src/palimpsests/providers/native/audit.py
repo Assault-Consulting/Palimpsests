@@ -15,8 +15,10 @@ Design points:
 - **Chain lifecycle.** Constructing the adapter opens the chain: GENESIS
   if the writer has emitted nothing yet, then BOOT. A second adapter over
   the same live writer emits only BOOT — the cross-boot link (core §4.2)
-  at instance granularity. Resuming a chain across *processes* needs
-  reader-side head recovery and is out of scope here.
+  at instance granularity. Resuming a chain across *processes* is the
+  writer's :meth:`PalaWriter.open_existing`: the adapter then emits BOOT
+  over the adopted head — and, when the resume truncated a torn tail,
+  records the recovery immediately after it (profile §3, kind 7).
 - **Digest, not content.** ``kv_saved`` / ``kv_restored`` take the blob
   and record its SHA-256 — the blob itself never reaches the chain
   (profile discipline: metadata only).
@@ -73,6 +75,10 @@ class NativeAudit:
         if writer.seq == 0:
             writer.genesis()
         writer.boot()
+        if writer.recovered_tail_bytes:
+            # The resume truncated a torn trailing record (a crash mid-write);
+            # the removal goes on the record right after the cross-boot link.
+            writer.recovery_truncated_tail()
 
     @property
     def writer(self) -> PalaWriter:
