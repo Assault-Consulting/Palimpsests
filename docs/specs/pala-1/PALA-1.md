@@ -13,8 +13,8 @@ every profile.
 | | |
 |---|---|
 | **Format identifier** | `PALA`, version 1 |
-| **Status** | **Draft.** The field set is *not yet frozen* — do not implement against this before the specification reaches v1.0. |
-| **Date** | 2026-08-03 |
+| **Status** | **Frozen — v1.0** (2026-08-09). The field set is frozen: a change to the wire is a new format version negotiated through `format_version`, never an edit to this one. The §7.6 fields are frozen for all future versions. |
+| **Date** | 2026-08-09 (frozen; first draft 2026-08-03) |
 | **Licence** | This specification and its test vectors: CC0-1.0. Reference code alongside them: Apache-2.0. |
 
 ## The test this document must pass
@@ -773,13 +773,23 @@ The prose is normative; `palaudit_ref.py` alongside this document is a
 reference implementation, subordinate to it — where they disagree, the
 implementation is wrong.
 
-The test at the top of this document **has been run** — three independent
-implementations, one of them external and unaffiliated, reproduce the §8 hashes
-from this text and the vectors alone (`INDEPENDENT-VERIFICATION.md`). Between
-them they found and closed three defects, which is what the exercise is for.
+**This specification is frozen at v1.0** (2026-08-09). The test at the top
+of this document has been run to completion: **four independent
+implementations — two of them external and unaffiliated — reproduce every
+§8 value from this text and the vectors alone**
+(`INDEPENDENT-VERIFICATION.md`). Between them they found and closed four
+defects, the last a common-mode implementation defect that the
+freeze-candidate run exposed and the differential test structurally could
+not see — which is what the exercise is for. The freeze-candidate run
+(run #4) reproduced all eleven §8 values blind on its verifier's first
+execution; its findings were resolved as text clarifications with the
+vectors byte-identical, and the implementer confirmed on record that the
+aligned text matches the semantics his verifier already implements.
 
-The format nonetheless remains a **draft**, not a specification, and nothing
-should be built against it that cannot afford to re-encode: the field set may
-still change to meet the writer's needs, and Draft lifts at v1.0 only after a
-final independent run against that freeze candidate. Passing the exit test shows
-the document is *implementable*; it is not the freeze.
+**Frozen means:** the wire — every field, offset, rule and vector in this
+document — no longer changes. A change to the wire is a new format
+version negotiated through `format_version`, never an edit to this one,
+and the §7.6 fields are frozen for all future versions. Profile documents
+(§3.4) may continue to allocate **additively** within their own body
+namespaces (new `EVT_KIND` values, new `AGGREGATE` tags) in profile
+revisions: additions never renumber and never touch an envelope byte.
