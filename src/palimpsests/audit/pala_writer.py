@@ -41,6 +41,8 @@ import time
 from collections.abc import Mapping
 from hashlib import sha256
 from palimpsests.audit.pala.codec import (
+    FIXED_HEADER_LEN,
+    MAGIC,
     RT_AGGREGATE,
     RT_ANCHOR,
     RT_BOOT,
@@ -91,6 +93,7 @@ KIND_KV_SAVE = 3
 KIND_KV_RESTORE = 4
 KIND_PREFIX_COPY = 5
 KIND_PREFIX_WARM = 6
+KIND_RECOVERY_TRUNCATED_TAIL = 7
 # EVT_KIND values — guard refusals (profile §4), from 100 upward
 KIND_GUARD_PREFIX_RELEASE = 100
 KIND_GUARD_STATE_REJECT = 101
@@ -171,7 +174,118 @@ class PalaWriter:
         self._seq = 0
         self._head = ZERO32
         self._started = False
+        self._resume_boot_pending = False
+        self._recovered_tail_bytes = 0
+        self._recovered_tail_offset = 0
+        if os.path.exists(path) and os.path.getsize(path) > 0:
+            # A fresh writer on a non-empty file would append a second GENESIS
+            # and corrupt the chain silently. Refuse; resuming is explicit.
+            raise ValueError(
+                "path already holds records — use PalaWriter.open_existing() "
+                "to resume the chain (core §4.2: BOOT is the cross-boot link)"
+            )
         self._fh = open(path, "ab", buffering=0)  # noqa: SIM115 — closed in close()
+
+    @classmethod
+    def open_existing(
+        cls,
+        path: str | os.PathLike[str],
+        *,
+        boot_id: bytes | None = None,
+        time_trust: int = TIME_UNSYNCED,
+        assurance_tier: int = TIER_A,
+        recover_torn_tail: bool = True,
+    ) -> PalaWriter:
+        """Resume an existing chain: adopt its tail head and seq (core §4.2).
+
+        Walks the container to the last **complete** record, adopts
+        ``head = record_hash`` of that record and ``seq = last + 1``, and
+        returns a writer whose first record MUST be ``BOOT`` — the
+        cross-boot link. A new ``boot_id`` is generated (it is a new boot).
+
+        **Torn tail.** A crash mid-write can leave a partial record after
+        the last complete one. Such bytes never entered the chain — their
+        header never hashed into a link — so with ``recover_torn_tail``
+        (the default) they are truncated away and the writer remembers the
+        fact; the adapter records it as a ``RECOVERY_TRUNCATED_TAIL`` event
+        right after ``BOOT`` (profile §3, kind 7). Append-only is not
+        contradicted: what it demands is that the removal be *on the
+        record*, not that bytes which never became a record be kept.
+
+        **What is refused.** An empty file (start fresh instead), a file
+        with no complete record at all, and — deliberately — a file whose
+        bytes *after* the first unparseable point contain further record
+        magic: that is mid-stream damage, not a torn tail, and truncating
+        it would destroy evidence. Such a file is an incident to
+        investigate with the verifier, not to auto-repair.
+
+        The walk is O(file); resume happens once per boot. It performs no
+        chain verification — that is the reader's job (§7); resume needs
+        only the mechanical tail state.
+        """
+        size = os.path.getsize(path)
+        if size == 0:
+            raise ValueError("file is empty — use PalaWriter(path) to start a new chain")
+        last_header: bytes | None = None
+        last_seq = 0
+        last_end = 0
+        off = 0
+        with open(path, "rb") as fh:
+            while off < size:
+                if size - off < FIXED_HEADER_LEN:
+                    break  # not even a fixed header — torn
+                fixed = fh.read(FIXED_HEADER_LEN)
+                if fixed[:4] != MAGIC:
+                    break  # unparseable from this offset on
+                (hlen,) = struct.unpack_from("<H", fixed, 6)
+                (seq,) = struct.unpack_from("<Q", fixed, 12)
+                (body_len,) = struct.unpack_from("<I", fixed, 120)
+                if hlen < FIXED_HEADER_LEN or off + hlen + body_len > size:
+                    break  # header or body overruns the file — torn
+                rest = fh.read(hlen - FIXED_HEADER_LEN)
+                fh.seek(body_len, os.SEEK_CUR)
+                last_header = fixed + rest
+                last_seq = seq
+                off += hlen + body_len
+                last_end = off
+            if last_header is None:
+                raise ValueError(
+                    "no complete record found — this is not a resumable chain"
+                )
+            torn = size - last_end
+            if torn:
+                fh.seek(last_end)
+                tail_region = fh.read(torn)
+                if MAGIC in tail_region[1:]:
+                    raise ValueError(
+                        f"damage at offset {last_end} is followed by further "
+                        "record magic — mid-stream damage, not a torn tail; "
+                        "refusing to truncate (investigate with the verifier)"
+                    )
+                if not recover_torn_tail:
+                    raise ValueError(
+                        f"{torn} torn byte(s) after the last complete record "
+                        f"at offset {last_end}; pass recover_torn_tail=True "
+                        "to truncate and record the recovery"
+                    )
+        if torn:
+            os.truncate(path, last_end)
+
+        w = cls.__new__(cls)
+        if boot_id is not None and len(boot_id) != 16:
+            raise ValueError("boot_id must be 16 bytes")
+        w._boot_id = boot_id if boot_id is not None else os.urandom(16)
+        w._time_trust = time_trust
+        w._tier = assurance_tier
+        w._lock = threading.Lock()
+        w._seq = last_seq + 1
+        w._head = record_hash(last_header)
+        w._started = True
+        w._resume_boot_pending = True
+        w._recovered_tail_bytes = torn
+        w._recovered_tail_offset = last_end
+        w._fh = open(path, "ab", buffering=0)  # noqa: SIM115 — closed in close()
+        return w
 
     # ─── the one place a record is written ──────────────────────────────────
 
@@ -191,6 +305,13 @@ class PalaWriter:
                 self._started = True
             elif record_type == RT_GENESIS:
                 raise RuntimeError("GENESIS may only be the first record")
+            if self._resume_boot_pending:
+                if record_type != RT_BOOT:
+                    raise RuntimeError(
+                        "the first record after a resume MUST be BOOT — "
+                        "the cross-boot link (core §4.2)"
+                    )
+                self._resume_boot_pending = False
 
             wall = time.time_ns() if self._time_trust != TIME_UNKNOWN else 0
             header = Header(
@@ -313,6 +434,24 @@ class PalaWriter:
         body = self._event_body(KIND_PREFIX_WARM, token_count=token_count)
         return self._emit(RT_EVENT, tlvs=self._origin(ROLE_SCHEDULER), body=body)
 
+    def recovery_truncated_tail(self, *, role: str = ROLE_NATIVE) -> bytes:
+        """Record that resume removed a torn trailing record (profile §3, kind 7).
+
+        Only meaningful on a writer produced by :meth:`open_existing` that
+        actually truncated bytes; calling it otherwise raises — a recovery
+        note about nothing would itself be a lie on the record.
+        """
+        if not self._recovered_tail_bytes:
+            raise RuntimeError("no torn tail was recovered by this writer")
+        body = self._event_body(
+            KIND_RECOVERY_TRUNCATED_TAIL,
+            detail=(
+                f"resume truncated {self._recovered_tail_bytes} torn tail "
+                f"byte(s) at offset {self._recovered_tail_offset}"
+            ),
+        )
+        return self._emit(RT_EVENT, tlvs=self._origin(role), body=body)
+
     # ─── §4 safety: guard refusals (the audit observes, does not implement) ──
 
     def guard_prefix_release(
@@ -415,6 +554,11 @@ class PalaWriter:
     def seq(self) -> int:
         """The sequence number the next record will receive."""
         return self._seq
+
+    @property
+    def recovered_tail_bytes(self) -> int:
+        """Bytes removed as a torn tail by :meth:`open_existing` (0 if none)."""
+        return self._recovered_tail_bytes
 
     @property
     def boot_id(self) -> bytes:

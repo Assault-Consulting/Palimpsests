@@ -79,6 +79,18 @@ own type namespace:
 | 4 | `KV_RESTORE` — session state restored (`EVT_BLOB_DIGEST` present) |
 | 5 | `PREFIX_COPY` — a shared prefix copied into a session slot (`EVT_TOKEN_COUNT` = prefix length) |
 | 6 | `PREFIX_WARM` — a prefix holder decoded a prefix for sharing |
+| 7 | `RECOVERY_TRUNCATED_TAIL` — on resume, the writer removed a torn (never-complete) trailing record left by a crash; `EVT_DETAIL` carries the byte count and offset |
+
+A `RECOVERY_TRUNCATED_TAIL` event is written by a resumed writer as the
+first record after `BOOT`, when opening the chain truncated a torn
+trailing record — bytes a crashed process wrote only partially. A torn
+record never entered the chain (its header never hashed into a link), so
+removing it does not contradict append-only; what append-only demands is
+that the removal be **on the record**, and this kind is that record. A
+writer MUST NOT truncate anything beyond the torn region, and MUST
+refuse auto-recovery when the bytes after the damage contain further
+record magic — that is mid-stream damage for the verifier to diagnose,
+not a torn tail.
 
 Operation metadata is not personal data, so an inference `EVENT` body
 SHOULD be cleartext (`key_id = 0`) — the same reasoning the core applies
