@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import struct
 from dataclasses import dataclass, field
+
 from palimpsests.audit.pala.codec import (
     FIXED_HEADER_LEN,
     FORMAT_VERSION,
