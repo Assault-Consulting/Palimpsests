@@ -12,8 +12,8 @@ questions.
 | | |
 |---|---|
 | **Profile of** | PALA-1, version 1 |
-| **Status** | **Draft.** Frozen together with the core at spec v1.0; do not implement against it before then. This profile's first consumer is the Palimpsests writer (roadmap Phase 3), and the writer is expected to change it. |
-| **Date** | 2026-08-03 |
+| **Status** | **Frozen — v1.0** (2026-08-09, with the core). Existing tag and kind allocations are permanent; the `EVT_KIND` and `AGG_*` spaces grow **additively** in profile revisions (§6.3) — additions never renumber and never touch the envelope. The profile is emitted by the Palimpsests writer (Phase 3, wired). |
+| **Date** | 2026-08-09 (frozen; first draft 2026-08-03) |
 | **Licence** | CC0-1.0, like the core specification and its test vectors. |
 
 **Metadata-only discipline.** The emitting library's existing audit log

@@ -11,8 +11,8 @@ core's three questions.
 | | |
 |---|---|
 | **Profile of** | PALA-1, version 1 |
-| **Status** | **Draft.** Frozen together with the core at spec v1.0; do not implement against it before then. |
-| **Date** | 2026-08-03 |
+| **Status** | **Frozen — v1.0** (2026-08-09, with the core). Existing tag allocations are permanent; the profile's body namespaces grow additively in profile revisions — additions never renumber and never touch the envelope. |
+| **Date** | 2026-08-09 (frozen; first draft 2026-08-03) |
 | **Licence** | CC0-1.0, like the core specification and its test vectors. |
 
 **History.** The content of this profile sat inside the core draft dated

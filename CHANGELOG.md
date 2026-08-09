@@ -8,8 +8,29 @@ API changes.
 
 ## [Unreleased]
 
+### Changed
+
+- **PALA-1 specification frozen at v1.0** (`docs/specs/pala-1/`, core and
+  both profiles together). The freeze gate: four independent
+  implementations — two of them external and unaffiliated — reproduce
+  every §8 value from the text and vectors alone; the freeze-candidate
+  run (run #4) passed blind on its verifier's first execution, its
+  findings were resolved as text clarifications with `test-vectors.json`
+  byte-identical, and the implementer's alignment confirmation is on
+  record (`INDEPENDENT-VERIFICATION.md` §5). Frozen means the wire no
+  longer changes — a wire change is a new `format_version`; profile
+  kind/tag spaces continue to grow additively without touching an
+  envelope byte. The `[pala]` codec, writer and CLI remain experimental
+  as APIs; the *format* they emit is now stable.
+
 ### Added (experimental)
 
+- **PALA-1 verification kit** (`docs/specs/pala-1/verification-kit/`):
+  self-service independent verification for anyone, on the same terms as
+  the recorded runs — the boundary rules, the task, a sealed-input fetch
+  script with digests pinned at the freeze, and the run-record template.
+  Submitted runs are recorded in `INDEPENDENT-VERIFICATION.md` §5 and
+  archived byte-exact under `independent-runs/`.
 - **Writer cross-boot resume.** `PalaWriter.open_existing()` resumes an
   existing chain across process restarts: adopts the tail head and seq
   and requires `BOOT` as the first record (the cross-boot link, core

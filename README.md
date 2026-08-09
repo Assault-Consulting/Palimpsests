@@ -29,8 +29,10 @@
 > KV pool behind the session-density result is now a product property, not a
 > benchmark artifact — with a release-ordering guard (`PrefixHolderInUseError`)
 > that refuses to corrupt a live consumer. **Next: v0.7 — verifiable audit**:
-> the [PALA-1 draft](docs/specs/pala-1/PALA-1.md) format with byte-exact test
-> vectors and a `palimpsests pala verify` CLI is already in main, experimental.
+> the [PALA-1 format, **frozen at v1.0**](docs/specs/pala-1/PALA-1.md) — byte-exact
+> test vectors, four independent verifier implementations (two external) — with
+> a `palimpsests pala verify` CLI in main; the writer APIs remain experimental.
+> Verify it yourself: [docs/specs/pala-1/verification-kit/](docs/specs/pala-1/verification-kit/README.md).
 > Numbers and their limits are in **[docs/POSITIONING.md](docs/POSITIONING.md)**;
 > the integrity story is in **[SECURITY.md](SECURITY.md)** and
 > **[docs/ASSURANCE-CASE.md](docs/ASSURANCE-CASE.md)**. APIs may change before
@@ -346,14 +348,14 @@ the novelty is in this composition and its seams, not in a new inference kernel.
       Positioning and the roadmap now carry the measured campaign; sleep-time
       compute is deprioritized — the differentiation is audit/compliance and
       the deployment model, not raw speed.
-- [ ] **v0.7 — verifiable audit: the format is the deliverable** — freeze
-      [PALA-1](docs/specs/pala-1/PALA-1.md), a self-describing, byte-level
-      audit format with byte-exact test vectors, a CC0 reference
-      implementation an independent party can build a verifier from without
-      our code, a stdlib-only production codec, and the three-question
-      `palimpsests pala verify` CLI (draft + codec + CLI already in main,
-      experimental); then the writer, and the audit subsystem behind a public
-      API. See [docs/ROADMAP.md](docs/ROADMAP.md).
+- [ ] **v0.7 — verifiable audit: the format is the deliverable** —
+      [PALA-1](docs/specs/pala-1/PALA-1.md) is **frozen at v1.0**: a
+      self-describing, byte-level audit format with byte-exact test vectors,
+      a CC0 reference implementation, a stdlib-only production codec, the
+      three-question `palimpsests pala verify` CLI, and four independent
+      verifier implementations (two external) on record; the writer emits it
+      end-to-end with cross-boot resume. Remaining for the tag: the audit
+      subsystem behind a public API. See [docs/ROADMAP.md](docs/ROADMAP.md).
 - [ ] **Later** — assurance tiers B/C (hardware root of trust, external
       witness); a discrete-GPU run (the integrated GPU flatters every
       prefill-saving mechanism, so these ratios compress on fast prefill); a
