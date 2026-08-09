@@ -28,7 +28,6 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass, field
-
 from palimpsests.audit.pala.codec import KNOWN_RECORD_TYPES
 from palimpsests.audit.pala.incremental import IncrementalVerifier
 
