@@ -239,7 +239,9 @@ makes automatic, lifetime event logging a legal requirement for high-risk system
 autonomous tool-calling agent is a strong candidate for the high-risk (Annex III)
 classification. Article 12 does not say *tamper-proof*, but a silently-alterable
 log has little evidentiary value in an audit; a tamper-evident trail targets that
-gap.
+gap. The **[Article 12 mapping](docs/compliance/EU-AI-ACT-MAPPING.md)** sets out,
+requirement by requirement, which properties ship in v0.7 and which are planned —
+in the claim form *"enables a provider/deployer to meet,"* not *"is compliant."*
 
 **This is not a compliance claim.** The project is not certified, the audit log's
 implementation has not been independently pen-tested, and the AI Act's own

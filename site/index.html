@@ -469,13 +469,13 @@
     <div class="blk__head" data-reveal>
       <span class="eyebrow">The record</span>
       <h2 class="display">The record beneath the record.</h2>
-      <p>Every request leaves a tamper-evident entry, chained by hash so the log can’t be silently altered. That’s the record-keeping substrate the EU AI Act’s logging expectations rest on — kept locally, verifiable without revealing what it holds. And the software itself carries the same discipline.</p>
+      <p>Every request leaves a tamper-evident entry, chained by hash so the log can’t be silently altered — written in a published, frozen wire format, <span class="mono">PALA-1 v1.0</span>, not an internal detail. Four independent implementations, two of them outside the project, reproduce it from the spec and test vectors alone. That’s the record-keeping substrate the EU AI Act’s logging expectations rest on — kept locally, verifiable without revealing what it holds. And the software itself carries the same discipline.</p>
     </div>
 
     <div class="prov">
       <div class="prov__item" data-reveal>
-        <h4>Hash-chained request log</h4>
-        <p>Each entry references the one before it. Remove or edit a layer and the chain breaks — tampering is detectable, not deniable.</p>
+        <h4>Hash-chained log · <span class="mono">PALA-1 v1.0</span></h4>
+        <p>Each entry references the one before it; remove or edit a layer and the chain breaks. The wire format is frozen and independently verified — <a href="https://github.com/Assault-Consulting/Palimpsests/tree/main/docs/specs/pala-1/verification-kit" rel="noopener">reproduce it yourself ↗</a> from the spec and test vectors alone.</p>
       </div>
       <div class="prov__item" data-reveal>
         <h4>Signed releases · <span class="mono">PEP 740</span></h4>
@@ -506,7 +506,7 @@
         <a href="https://eur-lex.europa.eu/eli/reg/2024/1689/oj/eng" rel="noopener">EU AI Act <span class="arr">↗</span></a>
         <span class="reg__cite">Regulation (EU) 2024/1689 · Art. 12</span>
       </div>
-      <p class="reg__note">The hash-chained request log is the <b>automatic record-keeping</b> a high-risk system has to keep — held locally, and verifiable without exposing what it recorded.</p>
+      <p class="reg__note">The hash-chained request log is the <b>automatic record-keeping</b> a high-risk system has to keep — held locally, and verifiable without exposing what it recorded. The <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/compliance/EU-AI-ACT-MAPPING.md" rel="noopener">Article 12 mapping ↗</a> sets out, requirement by requirement, what ships today and what is on the roadmap.</p>
     </div>
 
     <div class="reg">
