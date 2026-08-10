@@ -157,8 +157,10 @@ addopts = "--import-mode=importlib"
 
 [tool.coverage.run]
 source = ["src/palimpsests"]
-# Statement coverage (not branch) — this is what the OpenSSF Silver
-# test_statement_coverage80 criterion asks for.
+# Branch coverage on: the OpenSSF Gold test_branch_coverage80 criterion
+# needs it, and the CI gate enforces statement >= 90 and branch >= 80
+# together (see .github/workflows/ci.yml).
+branch = true
 
 [tool.coverage.report]
 show_missing = true
@@ -171,4 +173,4 @@ exclude_also = [
 # because it can only run with the [native] extra and a real GGUF model
 # on hardware, so CI cannot exercise it — it is validated on hardware per
 # benchmarks/RUNBOOK.md. It is counted, not omitted: overall statement
-# coverage clears the 80% gate with it included.
+# coverage clears the gate with it included.

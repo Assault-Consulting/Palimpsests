@@ -67,13 +67,17 @@ jobs:
         run: pytest -q
 
   coverage:
-    name: coverage (statement >= 80%)
+    name: coverage
     runs-on: ubuntu-latest
-    # Measured on one target, not the full OS x version matrix: statement
-    # coverage does not vary by platform, and this is a gate, not a
-    # portability check. The one deliberately-uncovered module is the
-    # hardware-only ctypes backend (see pyproject [tool.coverage.report]);
-    # overall coverage clears 80% with it counted.
+    # The job name is deliberately just "coverage" — stable — so the
+    # branch-protection required-check never has to be re-pointed when the
+    # thresholds change. The actual bars live in the step names and in
+    # scripts/coverage_gate.py: OpenSSF Gold, statement >= 90 and branch
+    # >= 80, enforced together. Measured on one target, not the full OS x
+    # version matrix: coverage does not vary by platform, and this is a
+    # gate, not a portability check. The one deliberately-uncovered module
+    # is the hardware-only ctypes backend (see pyproject
+    # [tool.coverage.report]); it is counted, not omitted.
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
@@ -87,8 +91,35 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
-      - name: Coverage (pytest --cov, fail under 80%)
-        run: pytest --cov=palimpsests --cov-report=term-missing --cov-fail-under=80
+      - name: Coverage (statement + branch)
+        run: pytest --cov=palimpsests --cov-report=term-missing --cov-report=json
+
+      - name: Gold coverage gate (statement >= 90, branch >= 80)
+        run: python scripts/coverage_gate.py
+
+  reproducible-build:
+    name: reproducible-build
+    runs-on: ubuntu-latest
+    # OpenSSF Gold build_reproducible: prove the sdist and wheel are a pure
+    # function of the source by building twice and requiring bit-for-bit
+    # identical bytes. SOURCE_DATE_EPOCH is pinned to the commit date (in
+    # the script) so any rebuild from the same commit reproduces the
+    # artifacts. Reproduction recipe: docs/REPRODUCIBLE-BUILD.md.
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Install build
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build
+
+      - name: Verify reproducible build (build twice, diff hashes)
+        run: bash scripts/check_reproducible_build.sh
 
   pala-vectors:
     name: pala-1 vectors reproduce
@@ -114,3 +145,12 @@ jobs:
           cp test-vectors.json /tmp/committed.json
           python gen_vectors.py
           cmp test-vectors.json /tmp/committed.json && echo "vectors reproduce byte-for-byte"
+      # The r2 companion vectors carry their own gate; the frozen core
+      # vectors above are untouched by them by construction, and the cmp
+      # above would catch any drift regardless.
+      - name: Regenerate and compare (inference profile r2)
+        working-directory: docs/specs/pala-1/profiles
+        run: |
+          cp inference-vectors.json /tmp/committed-r2.json
+          python gen_inference_vectors.py
+          cmp inference-vectors.json /tmp/committed-r2.json && echo "r2 companion vectors reproduce byte-for-byte"

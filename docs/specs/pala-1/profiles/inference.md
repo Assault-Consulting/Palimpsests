@@ -14,6 +14,7 @@ questions.
 | **Profile of** | PALA-1, version 1 |
 | **Status** | **Frozen — v1.0** (2026-08-09, with the core). Existing tag and kind allocations are permanent; the `EVT_KIND` and `AGG_*` spaces grow **additively** in profile revisions (§6.3) — additions never renumber and never touch the envelope. The profile is emitted by the Palimpsests writer (Phase 3, wired). |
 | **Date** | 2026-08-09 (frozen; first draft 2026-08-03) |
+| **Revision** | **r2** (2026-08-10) — additive only; see §9 for the revision history. r1 is the freeze. |
 | **Licence** | CC0-1.0, like the core specification and its test vectors. |
 
 **Metadata-only discipline.** The emitting library's existing audit log
@@ -70,6 +71,13 @@ own type namespace:
 | 0x0002 | `EVT_BLOB_DIGEST` | 32 bytes — digest of the KV state blob saved or restored |
 | 0x0003 | `EVT_TOKEN_COUNT` | u32 — tokens involved in the operation (e.g. prefix length copied) |
 | 0x0004 | `EVT_DETAIL` | UTF-8, ≤ 200 bytes — clipped, metadata only, never request content |
+| 0x0005 | `EVT_CATEGORY` | u16 — incident category (§4, kind 102). *(r2)* |
+| 0x0006 | `EVT_SEVERITY` | u16 — 1 low, 2 medium, 3 high. *(r2)* |
+| 0x0007 | `EVT_RECOVERABLE` | u8 — 0 no, 1 yes. *(r2)* |
+| 0x0008 | `EVT_REF_SEQ` | u64 — `seq` of the record this one refers to. *(r2)* |
+| 0x0009 | `EVT_REF_HASH` | 32 bytes — `record_hash` of the referenced record; binds the reference past any `seq` ambiguity. *(r2)* |
+| 0x000A | `EVT_OPERATOR_ID` | 16 bytes — pseudonymous operator identifier (§4, kind 103). *(r2)* |
+| 0x000B | `EVT_DISPOSITION` | u16 — 0 acknowledged, 1 dismissed, 2 escalated. *(r2)* |
 
 | `EVT_KIND` | Meaning |
 |---|---|
@@ -92,6 +100,14 @@ refuse auto-recovery when the bytes after the damage contain further
 record magic — that is mid-stream damage for the verifier to diagnose,
 not a torn tail.
 
+**Unknown kinds — the reader rule** *(r2)*. A reader encountering an
+`EVT_KIND` it does not know MUST treat the body as opaque, MUST report
+the kind as unknown, and MUST NOT reject the record or the chain — core
+§7.6, mirrored one layer up. This binds *readers*; the envelope verifier
+never reads kinds at all (core §7 is body-blind by construction), so an
+addition to this enum cannot affect chain verification in any
+implementation. Additions never renumber.
+
 Operation metadata is not personal data, so an inference `EVENT` body
 SHOULD be cleartext (`key_id = 0`) — the same reasoning the core applies
 to `AGGREGATE`. The `EVT_DETAIL` clip at 200 bytes carries over the
@@ -113,6 +129,37 @@ values from 100 upward:
 |---|---|
 | 100 | `GUARD_PREFIX_RELEASE` — a prefix-holder release was refused while consumers were live |
 | 101 | `GUARD_STATE_REJECT` — a persisted KV blob failed validation before reaching the C parser |
+| 102 | `INCIDENT_CANDIDATE` — the library observed a pattern worth a human look (Art. 12(2)(a) support). *(r2)* |
+| 103 | `OVERSIGHT_ACK` — a human (or delegated service) recorded a disposition for a candidate (Art. 14 support). *(r2)* |
+
+**`INCIDENT_CANDIDATE` (102)** *(r2)*. Not an incident determination —
+that is a legal judgment the log must not fake — but a recorded,
+never-shed observation that a documented trigger fired. The body MUST
+carry `EVT_CATEGORY` and `EVT_SEVERITY`, SHOULD carry
+`EVT_RECOVERABLE`, and MAY carry `EVT_REF_SEQ` + `EVT_REF_HASH` naming
+the source record, plus `EVT_DETAIL`. Categories in r2:
+
+| `EVT_CATEGORY` | Trigger (pre-registered; thresholds are deployment-tunable) |
+|---|---|
+| 1 | `GUARD_ESCALATION` — guard refusals exceeded a threshold within a window |
+| 2 | `SELF_CHECK_FAILED` — the library's own chain self-verification reported a failure |
+| 3 | `ANCHOR_ANOMALY` — anchor-store writes failed repeatedly |
+
+The category enum grows additively like every enum in this profile.
+`SAFETY` records are never shed (core §3): dropping incident evidence
+under load is the one shed no deployment may configure.
+
+**`OVERSIGHT_ACK` (103)** *(r2)*. The oversight loop's closing record.
+The body MUST carry `EVT_REF_SEQ` **and** `EVT_REF_HASH` of the
+candidate being answered (the hash binds the reference), MUST carry
+`EVT_DISPOSITION`, and MUST carry `EVT_OPERATOR_ID`. The operator id is
+**pseudonymous by construction**: 16 opaque bytes whose mapping to a
+person lives with the deployer, outside the log — no name, no account,
+no PII ever enters a record. A writer validates the *format* of these
+fields only; whether the reference names a real candidate is the
+reader's referential-integrity check, reported as an advisory, never a
+chain violation (the chain is sound either way — the semantics may not
+be).
 
 ## 5. `AGGREGATE` body — serving statistics
 
@@ -144,7 +191,7 @@ per-second convention of the robotics profile does not carry over.
 |---|---|
 | 1 | **`MERKLE` leaf source — deferred.** Version 1 of this profile defines no leaf source, and an inference chain SHOULD NOT emit `MERKLE` records until a revision defines one. Candidates: per-request metadata digests (selective disclosure of one request's existence) vs per-token-batch digests (finer, heavier). The choice changes what a disclosed leaf proves and is not needed for the first writer. |
 | 2 | **Canonical config encoding for `ORIGIN_CONFIG_DIGEST`.** Must be byte-deterministic across versions of the emitting library, or the same config produces different origins. Fixed by the writer; recorded here when it is. |
-| 3 | **`EVT_KIND` completeness.** The enum will grow under Phase 3–4 instrumentation (shed classes, engine switches, context-memory events). Additions before freeze are expected; renumbering is not. |
+| 3 | **`EVT_KIND` completeness.** The enum will grow under Phase 3–4 instrumentation (shed classes, engine switches, context-memory events). Additions before freeze are expected; renumbering is not. *r2 exercised exactly this path: kinds 102–103 and tags 0x0005–0x000B arrived additively with the envelope untouched.* |
 
 ---
 
@@ -157,3 +204,33 @@ and the definition of done is the library verifying its own log:
 `palimpsests pala verify` green on a stream this profile describes. The
 first non-robotics chain in existence is the point: the format proves its
 width by having two emitted profiles, not one dressed in generality.
+
+## 8. `KEY_SHRED` bodies — documented erasure *(r2)*
+
+The core already makes erasure and immutability compatible: destroy
+`K[key_id]`, note it with a `KEY_SHRED` record, the chain stays intact
+(core §4.4). What the core record does not carry is *why* — and an
+erasure a deployer cannot document is half an answer to GDPR Art. 17.
+This profile therefore defines a TLV body for `KEY_SHRED` records, in
+its **own** type namespace (it is not an `EVENT` body):
+
+| Type | Name | Value |
+|---|---|---|
+| 0x0001 | `SHRED_REASON` | u16 — 0 unspecified, 1 legal_erasure, 2 retention_expiry, 3 policy |
+| 0x0002 | `SHRED_TARGET_SEQS` | concatenated u64 LE array (`length / 8` = count) — the record seqs whose bodies this key protected; optional |
+| 0x0003 | `SHRED_DETAIL` | UTF-8, ≤ 200 bytes — ticket/request reference, metadata only; optional |
+
+One record, one operation: the note rides the same `KEY_SHRED` record
+that documents the destruction — never a second record type, never a
+second event. The body MUST be cleartext (`key_id = 0`): an erasure
+note encrypted under some other key would need its own erasure story,
+and the note must outlive every key by design. Whether
+`SHRED_TARGET_SEQS` names records that exist and carried that
+`key_id` is a reader advisory, like every referential check in r2.
+
+## 9. Revision history
+
+| Rev | Date | Changes |
+|---|---|---|
+| r1 | 2026-08-09 | The freeze (with core v1.0). Tags 0x0001–0x0004; kinds 1–7, 100–101; `AGG_*` 0x0003–0x0007. |
+| r2 | 2026-08-10 | Additive only: `EVT` tags 0x0005–0x000B; `SAFETY` kinds 102 (`INCIDENT_CANDIDATE`, category enum 1–3) and 103 (`OVERSIGHT_ACK`); the `KEY_SHRED` body schema (§8); the unknown-kind reader rule (§3). No envelope byte, no core text, and no byte of `test-vectors.json` changed; the new semantics ship with their own companion vectors (`inference-vectors.json`, generated by `gen_inference_vectors.py` beside it). |
