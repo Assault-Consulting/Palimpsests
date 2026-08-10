@@ -1,0 +1,128 @@
+{
+  "$comment": "Inference-profile companion vectors (r2). Deterministic; real crypto, fake entropy \u2014 never derive keys or ids like this outside a test vector. ../test-vectors.json is frozen with the core and is deliberately untouched by these.",
+  "profile": "inference",
+  "profile_revision": "r2",
+  "generator": "gen_inference_vectors.py",
+  "boot_id": "b0071d000000000000000000000000a2",
+  "encryption": {
+    "key_id": 9,
+    "key_hex": "0000000000000000000000000000000000000000000000000000000000000009",
+    "nonce_rule": "4 zero bytes || seq (u64 LE), per core \u00a74.4",
+    "seq3_plaintext": "deployment-content example: session checkpoint note"
+  },
+  "records": [
+    {
+      "label": "genesis",
+      "note": "Chain origin. Envelope rules are the core's; nothing r2 changes them.",
+      "seq": 0,
+      "record_type": "0x0001",
+      "header_len": 156,
+      "header_hex": "50414c4101009c00010000000000000000000000b0071d000000000000000000000000a200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001a711802000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "record_hash": "4c0245a44e6c9e7c300ab7f4971f814fd98acac5606f7d044d917c14f7d8c0a2"
+    },
+    {
+      "label": "boot",
+      "note": "Boot; prev_hash is the cross-boot link (core \u00a74.2).",
+      "seq": 1,
+      "record_type": "0x0002",
+      "header_len": 156,
+      "header_hex": "50414c4101009c00020000010100000000000000b0071d000000000000000000000000a24c0245a44e6c9e7c300ab7f4971f814fd98acac5606f7d044d917c14f7d8c0a20000000000000000000000000000000000000000000000000000000000000000405c801802000000402ad28fa30ac21800000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "record_hash": "7126c1aa4f5395a65c9d49d093b84adbc96c5032c243580197e91d9e2a502b3b"
+    },
+    {
+      "label": "guard_refusal",
+      "note": "A guard refusal (kind 100, r1) \u2014 the source record the incident candidate references.",
+      "seq": 2,
+      "record_type": "0x0040",
+      "header_len": 169,
+      "header_hex": "50414c410100a900400000030200000000000000b0071d000000000000000000000000a27126c1aa4f5395a65c9d49d093b84adbc96c5032c243580197e91d9e2a502b3b3131313131313131313131313131313100000000000000000000000000000000809e8f1802000000806ce18fa30ac2180000000026000000f95cedc9e3a5be619c7a093a097410ed4ba131d254c75fcf0b601509fe27b9e0010009007363686564756c6572",
+      "record_hash": "25fcc118041d45714ee8d4012ba9c4c86080c0cb81062b497f7bd5354a9443b0",
+      "body_len": 38,
+      "body_hex": "01000200640004001c00686f6c64657220353a2032206c69766520636f6e73756d6572287329"
+    },
+    {
+      "label": "encrypted_content_event",
+      "note": "A deployment that logs content MUST encrypt it (profile header note); this is such a body, under key_id 9 \u2014 the shred target.",
+      "seq": 3,
+      "record_type": "0x0012",
+      "header_len": 173,
+      "header_hex": "50414c410100ad00120000030300000000000000b0071d000000000000000000000000a225fcc118041d45714ee8d4012ba9c4c86080c0cb81062b497f7bd5354a9443b03131313131313131313131313131313100000000000000000000000000000000c0e09e1802000000c0aef08fa30ac218090000004f000000fb0df57b5e28706f0a5b38108ae054b96457b481ecf1ff3c4ae2125afaf41e5b01000d00656e67696e652e6e6174697665",
+      "record_hash": "ebb63181a8fdbc8b24b73e5094e55fc930269a8a30c7fcff18ca80681d030796",
+      "body_len": 79,
+      "body_hex": "0000000003000000000000005c54d06537a68d2ea218f282885a6c798def77c573986309dd8dca2f55cfdcc5b0d80e91e508f774381425617e4ca399f52878c76d9cc0c421c3b820d6e92bd944e580"
+    },
+    {
+      "label": "incident_candidate",
+      "note": "INCIDENT_CANDIDATE (kind 102): a documented trigger fired \u2014 an observation for a human, never an incident determination. Never shed.",
+      "seq": 4,
+      "record_type": "0x0040",
+      "header_len": 173,
+      "header_hex": "50414c410100ad00400000030400000000000000b0071d000000000000000000000000a2ebb63181a8fdbc8b24b73e5094e55fc930269a8a30c7fcff18ca80681d03079600000000000000000000000000000000000000000000000000000000000000000023ae180200000000f1ff8fa30ac218000000007600000026f3ce7e9bcfcba18f5c3098eafeb45cc3340271bf911cb53c7737eecb1dc46801000d00656e67696e652e6e6174697665",
+      "record_hash": "66e3279e8559b3b092b98807334fd95f03a2fc4238b4e3c071049fa1d45c5d4f",
+      "body_len": 118,
+      "body_hex": "01000200660005000200010006000200020007000100010800080002000000000000000900200025fcc118041d45714ee8d4012ba9c4c86080c0cb81062b497f7bd5354a9443b004002b006775617264207265667573616c73206578636565646564207468726573686f6c6420696e2077696e646f77"
+    },
+    {
+      "label": "oversight_ack",
+      "note": "OVERSIGHT_ACK (kind 103): disposition 0 (acknowledged) by a pseudonymous operator; the hash binds the reference.",
+      "seq": 5,
+      "record_type": "0x0040",
+      "header_len": 173,
+      "header_hex": "50414c410100ad00400000030500000000000000b0071d000000000000000000000000a266e3279e8559b3b092b98807334fd95f03a2fc4238b4e3c071049fa1d45c5d4f00000000000000000000000000000000000000000000000000000000000000004065bd180200000040330f90a30ac21800000000500000003d2126ea71deaed0a7d38ca8b8561aa7f963d551ce0f366606cf17c38cca62c501000d00656e67696e652e6e6174697665",
+      "record_hash": "8b1f2dc492ef4a95da54adcc4a5434badd2bcd1f2381663c69f95235bef3e89c",
+      "body_len": 80,
+      "body_hex": "0100020067000800080004000000000000000900200066e3279e8559b3b092b98807334fd95f03a2fc4238b4e3c071049fa1d45c5d4f0b00020000000a0010000e5a70120e5a70120e5a70120e5a7012"
+    },
+    {
+      "label": "key_shred_documented",
+      "note": "KEY_SHRED with the \u00a78 erasure body: reason, targets, ticket \u2014 one record, one operation. The seq-3 body is noise from here; the chain is untouched (core \u00a74.4).",
+      "seq": 6,
+      "record_type": "0x0060",
+      "header_len": 164,
+      "header_hex": "50414c410100a400600000030600000000000000b0071d000000000000000000000000a28b1f2dc492ef4a95da54adcc4a5434badd2bcd1f2381663c69f95235bef3e89c000000000000000000000000000000000000000000000000000000000000000080a7cc180200000080751e90a30ac218000000002a000000ac830046c3591521491c64176dc6c6738fe21ab872d6d3b60243fd153cccdffa4000040009000000",
+      "record_hash": "10ae1ab4dc7c9b7627c85520999e28d89287d91073420ebecbfbe65d7d81f610",
+      "body_len": 42,
+      "body_hex": "0100020001000200080003000000000000000300140065726173757265207265717565737420452d3137"
+    },
+    {
+      "label": "anchor",
+      "note": "Anchor; the completeness anchor below is the store's current head (the tip), per core \u00a77.2.",
+      "seq": 7,
+      "record_type": "0x0050",
+      "header_len": 192,
+      "header_hex": "50414c410100c000500000030700000000000000b0071d000000000000000000000000a210ae1ab4dc7c9b7627c85520999e28d89287d91073420ebecbfbe65d7d81f6100000000000000000000000000000000000000000000000000000000000000000c0e9db1802000000c0b72d90a30ac218000000000000000000000000000000000000000000000000000000000000000000000000000000005000200010ae1ab4dc7c9b7627c85520999e28d89287d91073420ebecbfbe65d7d81f610",
+      "record_hash": "7c33012ea92b5724f8442890513348aadb95b27273f678bce23c34bef851dec0"
+    }
+  ],
+  "chain_head": "7c33012ea92b5724f8442890513348aadb95b27273f678bce23c34bef851dec0",
+  "anchor_head": "7c33012ea92b5724f8442890513348aadb95b27273f678bce23c34bef851dec0",
+  "semantics": {
+    "$comment": "Decoded r2 body expectations, so a profile-aware reader can check its tag/kind resolution \u2014 the envelope answers above are checkable with any core verifier.",
+    "4": {
+      "kind": 102,
+      "kind_name": "INCIDENT_CANDIDATE",
+      "category": 1,
+      "severity": 2,
+      "recoverable": 1,
+      "ref_seq": 2,
+      "ref_hash": "25fcc118041d45714ee8d4012ba9c4c86080c0cb81062b497f7bd5354a9443b0",
+      "detail": "guard refusals exceeded threshold in window"
+    },
+    "5": {
+      "kind": 103,
+      "kind_name": "OVERSIGHT_ACK",
+      "ref_seq": 4,
+      "ref_hash": "66e3279e8559b3b092b98807334fd95f03a2fc4238b4e3c071049fa1d45c5d4f",
+      "disposition": 0,
+      "operator_id": "0e5a70120e5a70120e5a70120e5a7012"
+    },
+    "6": {
+      "record_type": "KEY_SHRED",
+      "reason": 1,
+      "target_seqs": [
+        3
+      ],
+      "detail": "erasure request E-17"
+    }
+  }
+}
