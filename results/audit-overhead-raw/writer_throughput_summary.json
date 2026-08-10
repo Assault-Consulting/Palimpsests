@@ -1,0 +1,10 @@
+{
+  "records_per_run": 20000,
+  "runs_kept": 6,
+  "records_per_s_median": 116666.4,
+  "records_per_s_stdev": 5297.1,
+  "records_per_s_min": 106086.1,
+  "records_per_s_max": 120092.9,
+  "bytes_per_s_median": 21116790.4,
+  "MB_per_s_median": 21.12
+}

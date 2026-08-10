@@ -1,0 +1,33 @@
+{
+  "per_kind_bytes": {
+    "GENESIS": 156,
+    "BOOT": 156,
+    "SPAN_START": 173,
+    "SPAN_END": 156,
+    "EVENT_model_load": 251,
+    "KV_SAVE": 210,
+    "KV_RESTORE": 210,
+    "SAFETY_guard": 186,
+    "ANCHOR": 192,
+    "PREFIX_WARM": 183,
+    "PREFIX_COPY": 183,
+    "MODEL_UNLOAD": 179
+  },
+  "session_mix_counts": {
+    "GENESIS": 1,
+    "BOOT": 1,
+    "EVENT_model_load": 1,
+    "SPAN_START": 10,
+    "PREFIX_WARM": 1,
+    "PREFIX_COPY": 10,
+    "KV_SAVE": 8,
+    "SPAN_END": 10,
+    "KV_RESTORE": 1,
+    "SAFETY_guard": 1,
+    "MODEL_UNLOAD": 1,
+    "ANCHOR": 2
+  },
+  "session_total_records": 47,
+  "session_total_bytes": 8505,
+  "weighted_bytes_per_record": 180.96
+}

@@ -1,0 +1,63 @@
+{
+  "sizes": [
+    {
+      "label": "0.01GB",
+      "target_gb": 0.01,
+      "actual_bytes": 10737483,
+      "records_approx": 59323,
+      "warm_median_s": 0.035,
+      "warm_stdev_s": 0.0008,
+      "warm_min_s": 0.0338,
+      "warm_max_s": 0.0361,
+      "cold_approx_s": 0.0343,
+      "warm_MB_per_s": 306.5
+    },
+    {
+      "label": "0.1GB",
+      "target_gb": 0.1,
+      "actual_bytes": 107374288,
+      "records_approx": 593228,
+      "warm_median_s": 0.3655,
+      "warm_stdev_s": 0.0029,
+      "warm_min_s": 0.3628,
+      "warm_max_s": 0.3712,
+      "cold_approx_s": 0.376,
+      "warm_MB_per_s": 293.8
+    },
+    {
+      "label": "0.5GB",
+      "target_gb": 0.5,
+      "actual_bytes": 536870998,
+      "records_approx": 2966138,
+      "warm_median_s": 1.9458,
+      "warm_stdev_s": 0.0418,
+      "warm_min_s": 1.8715,
+      "warm_max_s": 1.9883,
+      "cold_approx_s": 1.8471,
+      "warm_MB_per_s": 275.9
+    },
+    {
+      "label": "1GB",
+      "target_gb": 1.0,
+      "actual_bytes": 1073742338,
+      "records_approx": 5932278,
+      "warm_median_s": 3.9824,
+      "warm_stdev_s": 0.0354,
+      "warm_min_s": 3.9452,
+      "warm_max_s": 4.05,
+      "cold_approx_s": 3.8624,
+      "warm_MB_per_s": 269.6
+    }
+  ],
+  "linear_fit": {
+    "slope_s_per_GB": 3.9944,
+    "intercept_s": -0.02559,
+    "residuals_s": [
+      0.02064,
+      -0.00836,
+      -0.02583,
+      0.01355
+    ],
+    "ns_per_byte": 3.7201
+  }
+}
