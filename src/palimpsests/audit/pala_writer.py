@@ -48,6 +48,7 @@ from palimpsests.audit.pala.codec import (
     RT_BOOT,
     RT_EVENT,
     RT_GENESIS,
+    RT_KEY_SHRED,
     RT_SAFETY,
     RT_SHED,
     RT_SPAN_END,
@@ -62,6 +63,7 @@ from palimpsests.audit.pala.codec import (
     TLV_SHED_CLASS,
     TLV_SHED_COUNT,
     TLV_SHED_WINDOW_NS,
+    TLV_SHRED_KEY_ID,
     ZERO16,
     ZERO32,
     Header,
@@ -85,6 +87,13 @@ EVT_KIND = 0x0001  # u16, MUST be present, first
 EVT_BLOB_DIGEST = 0x0002  # 32 bytes — KV state blob digest
 EVT_TOKEN_COUNT = 0x0003  # u32 — tokens involved (e.g. prefix length)
 EVT_DETAIL = 0x0004  # UTF-8, <= 200 bytes, metadata only
+EVT_CATEGORY = 0x0005  # u16 — incident category (profile r2)
+EVT_SEVERITY = 0x0006  # u16 — 1 low, 2 medium, 3 high (r2)
+EVT_RECOVERABLE = 0x0007  # u8 — 0 no, 1 yes (r2)
+EVT_REF_SEQ = 0x0008  # u64 — seq of the referenced record (r2)
+EVT_REF_HASH = 0x0009  # 32 bytes — record_hash of the referenced record (r2)
+EVT_OPERATOR_ID = 0x000A  # 16 bytes — pseudonymous operator id (r2)
+EVT_DISPOSITION = 0x000B  # u16 — 0 ack, 1 dismissed, 2 escalated (r2)
 
 # EVT_KIND values — operations (profile §3)
 KIND_MODEL_LOAD = 1
@@ -97,6 +106,29 @@ KIND_RECOVERY_TRUNCATED_TAIL = 7
 # EVT_KIND values — guard refusals (profile §4), from 100 upward
 KIND_GUARD_PREFIX_RELEASE = 100
 KIND_GUARD_STATE_REJECT = 101
+KIND_INCIDENT_CANDIDATE = 102  # r2 — never-shed observation, not a determination
+KIND_OVERSIGHT_ACK = 103  # r2 — the oversight loop's closing record
+
+# r2 incident categories (profile §4, kind 102) — grows additively
+CAT_GUARD_ESCALATION = 1
+CAT_SELF_CHECK_FAILED = 2
+CAT_ANCHOR_ANOMALY = 3
+
+# r2 dispositions (profile §4, kind 103)
+DISP_ACKNOWLEDGED = 0
+DISP_DISMISSED = 1
+DISP_ESCALATED = 2
+
+# r2 KEY_SHRED body — its OWN namespace (profile §8), not EVT tags
+SHRED_REASON = 0x0001  # u16
+SHRED_TARGET_SEQS = 0x0002  # concatenated u64 LE array
+SHRED_DETAIL = 0x0003  # UTF-8, <= 200 bytes
+
+# r2 shred reasons (profile §8)
+REASON_UNSPECIFIED = 0
+REASON_LEGAL_ERASURE = 1
+REASON_RETENTION_EXPIRY = 2
+REASON_POLICY = 3
 
 # ─── profile §5: AGGREGATE body tags (0x0001–0x0002 are the core's) ─────────
 
@@ -480,6 +512,114 @@ class PalaWriter:
         body = self._event_body(KIND_GUARD_STATE_REJECT, detail=detail)
         return self._emit(
             RT_SAFETY, tlvs=self._origin(ROLE_KV_STORE), body=body, span_id=span_id
+        )
+
+    # ─── r2: the oversight loop (profile §4, kinds 102/103) ─────────────────
+
+    def incident_candidate(
+        self,
+        category: int,
+        severity: int,
+        *,
+        recoverable: bool | None = None,
+        ref_seq: int | None = None,
+        ref_hash: bytes | None = None,
+        detail: str | None = None,
+        role: str = ROLE_NATIVE,
+    ) -> bytes:
+        """Record that a pre-registered trigger fired (SAFETY kind 102).
+
+        Deliberately not an incident *determination* — that is a legal
+        judgment the log must not fake — but a never-shed observation for
+        a human. ``ref_seq``/``ref_hash`` MAY name the source record and
+        MUST be given together: the hash is what binds the reference past
+        any seq ambiguity (profile r2).
+        """
+        if (ref_seq is None) != (ref_hash is None):
+            raise ValueError("ref_seq and ref_hash must be given together")
+        if ref_hash is not None and len(ref_hash) != 32:
+            raise ValueError("ref_hash must be 32 bytes")
+        tlvs: list[tuple[int, bytes]] = [
+            (EVT_KIND, struct.pack("<H", KIND_INCIDENT_CANDIDATE)),
+            (EVT_CATEGORY, struct.pack("<H", category)),
+            (EVT_SEVERITY, struct.pack("<H", severity)),
+        ]
+        if recoverable is not None:
+            tlvs.append((EVT_RECOVERABLE, b"\x01" if recoverable else b"\x00"))
+        if ref_seq is not None and ref_hash is not None:
+            tlvs.append((EVT_REF_SEQ, struct.pack("<Q", ref_seq)))
+            tlvs.append((EVT_REF_HASH, ref_hash))
+        if detail is not None:
+            tlvs.append((EVT_DETAIL, _detail(detail)))
+        return self._emit(RT_SAFETY, tlvs=self._origin(role), body=encode_tlvs(tlvs))
+
+    def oversight_ack(
+        self,
+        candidate_seq: int,
+        candidate_hash: bytes,
+        disposition: int,
+        operator_id: bytes,
+        *,
+        role: str = ROLE_NATIVE,
+    ) -> bytes:
+        """Record a disposition for a candidate (SAFETY kind 103).
+
+        The writer is deliberately dumb here: it validates the *format* of
+        every field and nothing about existence — whether
+        ``candidate_seq``/``candidate_hash`` name a real candidate is the
+        reader's referential-integrity check, reported as an advisory,
+        never a chain violation (profile r2). ``operator_id`` is 16 opaque
+        bytes, pseudonymous by construction: the mapping to a person lives
+        with the deployer, outside the log.
+        """
+        if len(candidate_hash) != 32:
+            raise ValueError("candidate_hash must be 32 bytes")
+        if len(operator_id) != 16:
+            raise ValueError("operator_id must be 16 bytes (pseudonymous)")
+        if disposition not in (DISP_ACKNOWLEDGED, DISP_DISMISSED, DISP_ESCALATED):
+            raise ValueError("disposition must be 0, 1 or 2")
+        body = encode_tlvs(
+            [
+                (EVT_KIND, struct.pack("<H", KIND_OVERSIGHT_ACK)),
+                (EVT_REF_SEQ, struct.pack("<Q", candidate_seq)),
+                (EVT_REF_HASH, candidate_hash),
+                (EVT_DISPOSITION, struct.pack("<H", disposition)),
+                (EVT_OPERATOR_ID, operator_id),
+            ]
+        )
+        return self._emit(RT_SAFETY, tlvs=self._origin(role), body=body)
+
+    # ─── r2: documented erasure (profile §8) ────────────────────────────────
+
+    def key_shred(
+        self,
+        key_id: int,
+        reason: int = REASON_UNSPECIFIED,
+        *,
+        target_seqs: list[int] | None = None,
+        detail: str | None = None,
+    ) -> bytes:
+        """Note a key's destruction, with the erasure documented (§8).
+
+        One record, one operation: the reason/targets/ticket ride the same
+        ``KEY_SHRED`` record that documents the destruction. The body is
+        cleartext by MUST — the note has to outlive every key. This method
+        only *records*; destroying ``K[key_id]`` is the caller's key-store
+        operation, and callers should emit this record inside that
+        operation so the two cannot drift apart. Whether ``target_seqs``
+        name real records under that key is a reader advisory.
+        """
+        tlvs: list[tuple[int, bytes]] = [(SHRED_REASON, struct.pack("<H", reason))]
+        if target_seqs:
+            tlvs.append(
+                (SHRED_TARGET_SEQS, b"".join(struct.pack("<Q", t) for t in target_seqs))
+            )
+        if detail is not None:
+            tlvs.append((SHRED_DETAIL, _detail(detail)))
+        return self._emit(
+            RT_KEY_SHRED,
+            tlvs=[(TLV_SHRED_KEY_ID, struct.pack("<I", key_id))],
+            body=encode_tlvs(tlvs),
         )
 
     # ─── §5 aggregate: serving statistics over a window ─────────────────────
