@@ -67,14 +67,17 @@ jobs:
         run: pytest -q
 
   coverage:
-    name: coverage (statement >= 90%, branch >= 80%)
+    name: coverage
     runs-on: ubuntu-latest
-    # Measured on one target, not the full OS x version matrix: coverage
-    # does not vary by platform, and this is a gate, not a portability
-    # check. The one deliberately-uncovered module is the hardware-only
-    # ctypes backend (see pyproject [tool.coverage.report]); the gate below
-    # enforces the OpenSSF Gold bars — statement >= 90 and branch >= 80,
-    # together — with that module counted.
+    # The job name is deliberately just "coverage" — stable — so the
+    # branch-protection required-check never has to be re-pointed when the
+    # thresholds change. The actual bars live in the step names and in
+    # scripts/coverage_gate.py: OpenSSF Gold, statement >= 90 and branch
+    # >= 80, enforced together. Measured on one target, not the full OS x
+    # version matrix: coverage does not vary by platform, and this is a
+    # gate, not a portability check. The one deliberately-uncovered module
+    # is the hardware-only ctypes backend (see pyproject
+    # [tool.coverage.report]); it is counted, not omitted.
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
