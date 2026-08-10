@@ -216,6 +216,7 @@ class PalaWriter:
                 "path already holds records — use PalaWriter.open_existing() "
                 "to resume the chain (core §4.2: BOOT is the cross-boot link)"
             )
+        self._path = os.fspath(path)
         self._fh = open(path, "ab", buffering=0)  # noqa: SIM115 — closed in close()
 
     @classmethod
@@ -316,6 +317,7 @@ class PalaWriter:
         w._resume_boot_pending = True
         w._recovered_tail_bytes = torn
         w._recovered_tail_offset = last_end
+        w._path = os.fspath(path)
         w._fh = open(path, "ab", buffering=0)  # noqa: SIM115 — closed in close()
         return w
 
@@ -703,6 +705,11 @@ class PalaWriter:
     @property
     def boot_id(self) -> bytes:
         return self._boot_id
+
+    @property
+    def path(self) -> str:
+        """The container's filesystem path (for self-verification readers)."""
+        return self._path
 
     def close(self) -> None:
         with self._lock:
