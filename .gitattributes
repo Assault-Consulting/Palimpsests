@@ -1,0 +1,13 @@
+# Byte-exact specification artifacts. Their published SHA-256 digests are
+# load-bearing: four recorded independent-verification runs, the
+# verification kit's pinned fetch manifest, the CI regeneration gates,
+# and the in-repo digest-pin test all compare exact bytes. A checkout
+# that converts line endings (Windows runners default to autocrlf=true)
+# is corruption of the artifact, so conversion is disabled for them.
+docs/specs/pala-1/PALA-1.md -text
+docs/specs/pala-1/profiles/robotics.md -text
+docs/specs/pala-1/profiles/inference.md -text
+docs/specs/pala-1/test-vectors.json -text
+docs/specs/pala-1/profiles/inference-vectors.json -text
+# POSIX shell must stay LF to execute at all.
+docs/specs/pala-1/verification-kit/fetch-inputs.sh -text
