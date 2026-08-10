@@ -1,0 +1,34 @@
+{
+  "per_arm_kept": 7,
+  "on": {
+    "n": 7,
+    "median_tok_s": 32.365757985549095,
+    "q1": 32.31031184315093,
+    "q3": 32.438041447515005,
+    "min": 31.530670504804306,
+    "max": 32.538832008137604,
+    "stdev": 0.3117920773762433,
+    "median_wall_s": 37.848642400000244,
+    "token_counts": [
+      1225
+    ]
+  },
+  "off": {
+    "n": 7,
+    "median_tok_s": 32.54473983833156,
+    "q1": 32.36611073323023,
+    "q3": 32.64023408286219,
+    "min": 31.829691351901584,
+    "max": 32.679923124978984,
+    "stdev": 0.2689068481216137,
+    "median_wall_s": 37.64049140000134,
+    "token_counts": [
+      1225
+    ]
+  },
+  "overhead_pct_median": 0.55,
+  "ranges_overlap": true,
+  "iqr_overlap": true,
+  "determinism_ok": true,
+  "verdict": "indistinguishable from noise"
+}

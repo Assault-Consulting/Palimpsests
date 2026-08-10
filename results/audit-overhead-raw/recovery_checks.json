@@ -1,0 +1,29 @@
+{
+  "torn_tail": {
+    "good_size": 108363,
+    "torn_added_bytes": 9,
+    "recovered_tail_bytes": 9,
+    "recovered_matches_torn": true,
+    "resumed_head": "28ce7cc39a3c25c24f0beb07f08390a4563c89eeced05cb59df2f81476cecafb",
+    "resumed_seq": 605,
+    "new_records_after_resume": [
+      [
+        "0x2",
+        null
+      ],
+      [
+        "0x12",
+        7
+      ]
+    ],
+    "recovery_event_present": true
+  },
+  "mid_stream": {
+    "flipped_record_index": 301,
+    "flipped_at": 54097,
+    "records_after_damage": 301,
+    "rejected": true,
+    "exception_type": "ValueError",
+    "exception_msg": "damage at offset 54097 is followed by further record magic \u2014 mid-stream damage, not a torn tail; refusing to truncate (investigate with the verifier)"
+  }
+}
