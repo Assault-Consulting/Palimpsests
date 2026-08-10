@@ -51,25 +51,32 @@ from palimpsests.audit.pala.codec import (
     TLV_ORIGIN_CONFIG_DIGEST,
     TLV_ORIGIN_MODEL_DIGEST,
     TLV_ORIGIN_ROLE,
+    TLV_SHRED_KEY_ID,
     ZERO16,
     Header,
     MalformedRecord,
     decode_tlvs,
 )
-from palimpsests.audit.pala.incremental import Advisory, IncrementalVerifier
+from palimpsests.audit.pala.codec import record_hash as _record_hash
+from palimpsests.audit.pala.incremental import Advisory, AdvisoryItem, IncrementalVerifier
 from palimpsests.audit.pala.verify import VerifyResult, verify_headers
 from palimpsests.audit.pala_writer import (
     EVT_DETAIL,
     EVT_KIND,
+    EVT_REF_HASH,
+    EVT_REF_SEQ,
     KIND_GUARD_PREFIX_RELEASE,
     KIND_GUARD_STATE_REJECT,
+    KIND_INCIDENT_CANDIDATE,
     KIND_KV_RESTORE,
     KIND_KV_SAVE,
     KIND_MODEL_LOAD,
     KIND_MODEL_UNLOAD,
+    KIND_OVERSIGHT_ACK,
     KIND_PREFIX_COPY,
     KIND_PREFIX_WARM,
     KIND_RECOVERY_TRUNCATED_TAIL,
+    SHRED_TARGET_SEQS,
 )
 
 __all__ = [
@@ -110,6 +117,8 @@ _KIND_NAMES = {
     KIND_RECOVERY_TRUNCATED_TAIL: "RECOVERY_TRUNCATED_TAIL",
     KIND_GUARD_PREFIX_RELEASE: "GUARD_PREFIX_RELEASE",
     KIND_GUARD_STATE_REJECT: "GUARD_STATE_REJECT",
+    KIND_INCIDENT_CANDIDATE: "INCIDENT_CANDIDATE",
+    KIND_OVERSIGHT_ACK: "OVERSIGHT_ACK",
 }
 
 # Only these record types carry the profile EVT_KIND scheme in their body;
@@ -279,7 +288,9 @@ class AuditReader:
 
         expected = anchor_reading.head if anchor_reading is not None else None
         chain = verify_headers(self._headers, expected_head=expected)
-        advisory = self._compute_advisory()
+        advisory = Advisory(
+            items=self._compute_advisory().items + self._referential_advisories()
+        )
         diagnosis = self._derive_diagnosis(chain)
 
         self._verification = Verification(
@@ -322,6 +333,125 @@ class AuditReader:
         for hb in self._headers:
             v.step(hb)
         return v.advisory()
+
+    def _referential_advisories(self) -> list[AdvisoryItem]:
+        """Body-level referential integrity — advisory, never a violation.
+
+        The r2 semantics reference other records (an ack names its
+        candidate, an erasure note names its targets); whether those
+        references resolve is *semantic* integrity, so a failure is an
+        :class:`AdvisoryItem`, never a chain violation — the chain is
+        sound either way (profile r2). Header-only verification (§7.1)
+        cannot see any of this by design; it lives here, in the reader.
+
+        Cross-boot references resolve naturally: the map is seq-indexed
+        over the whole chain, and the r2 loop is explicitly allowed to
+        close across a resume.
+        """
+        by_seq: dict[int, tuple[DecodedRecord, bytes]] = {}
+        for dr, hb in zip(self._decoded_records(), self._headers, strict=True):
+            by_seq[dr.seq] = (dr, hb)
+
+        items: list[AdvisoryItem] = []
+        for dr, _hb in by_seq.values():
+            if dr.kind in (KIND_INCIDENT_CANDIDATE, KIND_OVERSIGHT_ACK):
+                items.extend(self._check_reference(dr, by_seq))
+            elif dr.record_type == RT_KEY_SHRED and dr.body_tlvs is not None:
+                items.extend(self._check_shred_targets(dr, by_seq))
+        return items
+
+    def _check_reference(
+        self,
+        dr: DecodedRecord,
+        by_seq: dict[int, tuple[DecodedRecord, bytes]],
+    ) -> list[AdvisoryItem]:
+        tlvs = dict(dr.body_tlvs or [])
+        raw_seq = tlvs.get(EVT_REF_SEQ)
+        raw_hash = tlvs.get(EVT_REF_HASH)
+        if raw_seq is None or len(raw_seq) != 8 or raw_hash is None:
+            return []  # a candidate MAY omit the reference; nothing to resolve
+        (ref_seq,) = struct.unpack("<Q", raw_seq)
+        boot = dr.header.boot_id if dr.header is not None else None
+        who = dr.kind_name or f"kind {dr.kind}"
+        target = by_seq.get(ref_seq)
+        if target is None:
+            return [
+                AdvisoryItem(
+                    "reference_unresolved",
+                    dr.seq,
+                    boot,
+                    f"{who} at seq {dr.seq} references seq {ref_seq}, "
+                    "which is not in the chain",
+                )
+            ]
+        target_dr, target_hb = target
+        if _record_hash(target_hb) != raw_hash:
+            return [
+                AdvisoryItem(
+                    "reference_hash_mismatch",
+                    dr.seq,
+                    boot,
+                    f"{who} at seq {dr.seq} references seq {ref_seq}, but the "
+                    "referenced record's hash differs from the bound EVT_REF_HASH",
+                )
+            ]
+        if dr.kind == KIND_OVERSIGHT_ACK and target_dr.kind != KIND_INCIDENT_CANDIDATE:
+            return [
+                AdvisoryItem(
+                    "ack_target_not_a_candidate",
+                    dr.seq,
+                    boot,
+                    f"OVERSIGHT_ACK at seq {dr.seq} resolves (hash-bound) to seq "
+                    f"{ref_seq}, which is not an INCIDENT_CANDIDATE",
+                )
+            ]
+        return []
+
+    def _check_shred_targets(
+        self,
+        dr: DecodedRecord,
+        by_seq: dict[int, tuple[DecodedRecord, bytes]],
+    ) -> list[AdvisoryItem]:
+        tlvs = dict(dr.body_tlvs or [])
+        raw = tlvs.get(SHRED_TARGET_SEQS)
+        if raw is None or len(raw) % 8 != 0:
+            return []  # targets are optional (profile §8)
+        shred_key = None
+        if dr.header is not None:
+            kid = _origin_tlv(dr.header, TLV_SHRED_KEY_ID)
+            if kid is not None and len(kid) == 4:
+                (shred_key,) = struct.unpack("<I", kid)
+        boot = dr.header.boot_id if dr.header is not None else None
+        items: list[AdvisoryItem] = []
+        for i in range(0, len(raw), 8):
+            (t_seq,) = struct.unpack_from("<Q", raw, i)
+            target = by_seq.get(t_seq)
+            if target is None:
+                items.append(
+                    AdvisoryItem(
+                        "shred_target_unresolved",
+                        dr.seq,
+                        boot,
+                        f"KEY_SHRED at seq {dr.seq} names target seq {t_seq}, "
+                        "which is not in the chain",
+                    )
+                )
+                continue
+            target_dr, _ = target
+            target_key = target_dr.header.key_id if target_dr.header is not None else None
+            if shred_key is not None and target_key != shred_key:
+                items.append(
+                    AdvisoryItem(
+                        "shred_target_key_mismatch",
+                        dr.seq,
+                        boot,
+                        f"KEY_SHRED at seq {dr.seq} shreds key {shred_key}, but "
+                        f"target seq {t_seq} carries key_id "
+                        f"{target_key if target_key is not None else '?'} — that "
+                        "body was not protected by the destroyed key",
+                    )
+                )
+        return items
 
     def _derive_diagnosis(self, chain: VerifyResult) -> Diagnosis | None:
         if self._truncated:
