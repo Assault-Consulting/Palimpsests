@@ -61,7 +61,7 @@ not block the passing badge).
 | build_floss_tools | Met | Entire build chain is FLOSS. |
 | test | Met | pytest suite; run steps in CONTRIBUTING.md and CI. |
 | test_invocation | Met | `python -m pytest` (standard Python). |
-| test_most | Met | 87% statement coverage measured in CI (pytest-cov `coverage` job, gated at 80%). The one low module is the hardware-only ctypes backend (`llamacpp_backend.py`), validated on hardware per benchmarks/RUNBOOK.md, not CI. Branch coverage not yet gated. |
+| test_most | Met | 90.3% statement + 82.4% branch coverage measured in CI (pytest-cov `coverage` job, gated at 90/80 — the OpenSSF Gold bars). The one low module is the hardware-only ctypes backend (`llamacpp_backend.py`), validated on hardware per benchmarks/RUNBOOK.md, not CI. |
 | test_continuous_integration | Met | CI on push/PR, 3 OS × py3.11/3.12. |
 | test_policy | Met | CONTRIBUTING.md: tests ship with every behavioral change. |
 | tests_are_added | Met | Each L3 feature landed with its own tests/test_native_*.py. |
@@ -132,7 +132,7 @@ is authoritative.*
 
 | Criterion | Status | Basis |
 |---|---|---|
-| test_statement_coverage80 | Met | 87% statement coverage, gated at 80% in CI. (90% is a **Gold** criterion, not Silver — see Silver notes.) |
+| test_statement_coverage80 | Met | 90.3% statement coverage, gated in CI. This clears both the Silver bar (80%) and the **Gold** `test_statement_coverage90` bar; branch coverage (82.4%) clears Gold `test_branch_coverage80` too. See Silver notes. |
 | test_policy_mandated | Met | CONTRIBUTING.md mandates tests with every behavioral change. |
 | tests_documented_added | Met | Each feature landed with its own tests; visible in per-PR history. |
 | two_person_review | Met | `main` is branch-protected: one **non-author** approval + green checks required before merge (GOVERNANCE.md) — genuine with two maintainers. |
@@ -157,11 +157,12 @@ is authoritative.*
 
 ### Silver notes
 
-- **Gold, not Silver — not claimed here.** Three criteria people associate with
-  "high assurance" are **Gold**, and are deliberately not asserted: 90%
-  statement coverage (Silver requires 80%; the project is at 87%), 80% **branch**
-  coverage (only statement coverage is measured today), and reproducible builds.
-  These are tracked for a later Gold pass rather than stretched now.
+- **Gold, not Silver — coverage now met, one engineering item left.** Of the
+  three criteria people associate with "high assurance", two are now satisfied
+  in CI: 90% statement coverage (at 90.3%) and 80% **branch** coverage (at
+  82.4%), both gated by the `coverage` job. The remaining Gold engineering
+  criterion — `reproducible_build` — is tracked for the Gold pass, not stretched
+  here.
 - **`contributors_unassociated`** is the one criterion a single-entity project
   usually cannot meet. It is met honestly here by two independent co-owners, not
   stretched. Were that ever to change, Silver would wait for a genuinely
