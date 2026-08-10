@@ -106,20 +106,18 @@ not block the passing badge).
 
 ## Silver
 
-*Silver builds on the passing badge (which must be earned first) and adds the
-criteria below; the same legend applies. Passing is answered in full above; the
-one procedural item outstanding is `achieve_passing` — submit on
-bestpractices.dev (project 13534) to obtain the passing badge, then complete the
-Silver questionnaire. This section drafts those answers; the live questionnaire
-is authoritative.*
+*Silver builds on the passing badge (earned first) and adds the criteria
+below; the same legend applies. **Passing and Silver are both earned**
+(bestpractices.dev project 13534). This section records those answers; the
+live questionnaire is authoritative.*
 
 ### Prerequisite and project oversight
 
 | Criterion | Status | Basis |
 |---|---|---|
-| achieve_passing | Pending | All passing criteria answered above; submit to obtain the badge before Silver can be granted. |
+| achieve_passing | Met | Passing badge earned (bestpractices.dev project 13534); Silver earned on top of it. |
 | dco | Met | CONTRIBUTING.md requires a DCO `Signed-off-by` on every commit (`git commit -s`), with amend/rebase recovery documented. |
-| governance | Met | docs/GOVERNANCE.md — roles, merge rights, decision process. |
+| governance | Met | GOVERNANCE.md — roles, merge rights, decision process. |
 | code_of_conduct | Met | CODE_OF_CONDUCT.md in the repo root. |
 | roles_responsibilities | Met | GOVERNANCE.md names maintainers and their responsibilities. |
 | access_continuity | Met | Two maintainers with repository admin; continuity documented in GOVERNANCE.md. |
@@ -152,22 +150,44 @@ is authoritative.*
 | warnings_strict | Met | ruff gate; strict lint on every change. |
 | vulnerability_report_credit | Met | SECURITY.md commits to crediting reporters in release notes (opt-out). |
 | signed_releases | Met | Sigstore keyless signing + PEP 740 attestations on PyPI; SLSA Build L2 provenance. |
-| hardened_site | Met | The project site (palimpsests.dev) is served over HTTPS. |
+| hardened_site | Met | Repo + download site on GitHub (known to meet this). Project site palimpsests.dev sets the key hardening headers — CSP, HSTS, X-Content-Type-Options `nosniff`, X-Frame-Options — via `site/vercel.json`; confirm on securityheaders.com after deploy. |
 | require_2FA | Met | Both maintainers have GitHub 2FA enabled. *(Account-level setting — confirm in GitHub account/org settings before submitting.)* |
 
 ### Silver notes
 
-- **Gold, not Silver — coverage now met, one engineering item left.** Of the
-  three criteria people associate with "high assurance", two are now satisfied
-  in CI: 90% statement coverage (at 90.3%) and 80% **branch** coverage (at
-  82.4%), both gated by the `coverage` job. The remaining Gold engineering
-  criterion — `reproducible_build` — is tracked for the Gold pass, not stretched
-  here.
+- **Gold coverage and reproducible build now met.** The three criteria people
+  associate with "high assurance" are satisfied in CI: 90% statement coverage
+  (at 90.3%) and 80% **branch** coverage (at 82.4%), both gated by the
+  `coverage` job, and a reproducible build gated by the `reproducible-build`
+  job (see the Gold section).
 - **`contributors_unassociated`** is the one criterion a single-entity project
   usually cannot meet. It is met honestly here by two independent co-owners, not
   stretched. Were that ever to change, Silver would wait for a genuinely
   independent significant contributor — the external PALA-1 verification runs
   (docs/specs/pala-1/INDEPENDENT-VERIFICATION.md) are a natural channel for one.
+
+## Gold
+
+*Gold builds on Silver (earned). The prerequisite `achieve_silver` is met.
+Many Gold criteria are already answered in the sections above (per-file
+copyright/license, CI, two-person review, security review, hardening,
+TLS 1.2, bus factor, unassociated contributors); this section records the
+Gold-specific deltas and their evidence. Honest status — pending items name
+their owner rather than being stretched.*
+
+| Criterion | Status | Basis |
+|---|---|---|
+| achieve_silver | Met | Passing + Silver earned (bestpractices.dev project 13534). |
+| test_statement_coverage90 | Met | 90.3% statement coverage, gated in CI (`coverage` job / scripts/coverage_gate.py). |
+| test_branch_coverage80 | Met | 82.4% branch coverage, gated in CI alongside statement. |
+| build_reproducible | Met | sdist + wheel are bit-for-bit reproducible; the CI `reproducible-build` job builds twice and diffs on every change; `SOURCE_DATE_EPOCH`-pinned release. URL: docs/REPRODUCIBLE-BUILD.md. |
+| code_review_standards | Met | docs/REVIEW.md documents what a reviewer checks and what "acceptable" means (non-author approval, tests-with-behavior, ruff clean, dependency justification, security-path scrutiny, byte-verification, reproducibility). |
+| crypto_used_network | Met | The software's only inbound network use is loopback HTTP to a **user-run local** `llama-server` (L2), a documented accepted risk on single-user hosts (SECURITY.md); it exposes no remote service. Outbound calls use HTTPS via httpx (TLS 1.2+). No insecure remote protocol is enabled by default. |
+| hardened_site | Met | See the Silver-section row: GitHub covers repo/download; palimpsests.dev sets CSP/HSTS/X-Content-Type-Options/X-Frame-Options via `site/vercel.json`. Confirm on securityheaders.com after deploy. |
+| dynamic_analysis | Met | Atheris coverage-guided fuzzing before release **and** an automated suite with ≥80% branch coverage — either satisfies the Gold criterion. |
+| require_2FA / secure_2FA | Met | Both maintainers use GitHub 2FA with TOTP/security keys (not SMS). Confirm the org "require 2FA" setting before submitting. |
+| two_person_review | Met | ≥50% of modifications reviewed by a non-author, monotonically rising (every PR is reviewed). To source the exact number, document the date required-approvals were enabled on `main`. |
+| small_tasks | **Pending** | *Owner: maintainers.* Create a set of 5–8 `good first issue`-labelled issues (doc fixes, CLI polish, extra test cases) and record the label URL. The only Gold criterion not yet satisfiable by a committed artifact. |
 
 ## Notes
 
