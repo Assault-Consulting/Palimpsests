@@ -1,58 +1,48 @@
 # <img src="assets/icon-dark.svg" alt="" height="30" align="center"> Palimpsests
 
-**Local-first LLM inference with a tamper-evident audit trail — capable inference that runs entirely on hardware you control, built for regulated and air-gapped deployments under the EU AI Act.**
+**Local-first LLM inference with a tamper-evident, independently-verifiable audit trail — built for regulated and air-gapped deployments under the EU AI Act. The audit format is frozen; the inference is measured.**
 
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![CI](https://github.com/Assault-Consulting/Palimpsests/actions/workflows/ci.yml/badge.svg)](https://github.com/Assault-Consulting/Palimpsests/actions/workflows/ci.yml)
-[![PyPI](https://img.shields.io/pypi/v/palimpsests.svg)](https://pypi.org/project/palimpsests/)
-[![Python](https://img.shields.io/pypi/pyversions/palimpsests.svg)](https://pypi.org/project/palimpsests/)
-[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13534/badge)](https://www.bestpractices.dev/projects/13534)
-[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Assault-Consulting/Palimpsests/badge)](https://scorecard.dev/viewer/?uri=github.com/Assault-Consulting/Palimpsests)
-
-> **Status: v0.7 — verifiable audit: PALA-1 is frozen at v1.0, with
-> independent verification on record.** Levels 1 (Ollama) and 2 (llama.cpp) work behind one
-> abstraction, with the context-memory layer (window manager + block-memory
-> retrieval) and a genuinely tamper-evident audit log — hash-chained rows with
-> an out-of-band head anchor and a `palimpsests audit verify` command — plus
-> supply-chain verifiable releases (reproducible CycloneDX SBOM, signed GitHub
-> Release, coverage-guided fuzzing). Level 3 (pal-native) has its full serving
-> skeleton — streaming, stateful sessions, continuous batching, server-side tool
-> loop, shared-prefix KV, and KV persistence — and the real in-process
-> `LlamaCppBackend` runs a real model on hardware. All three level-3 mechanisms
-> are measured on 1.5B and 7B (iGPU/Vulkan), plus a composite run: in-process
-> the Tool Loop and KV Persistence **match a tuned llama-server** on speed
-> (without running a server), Shared Prefix gives an **8.2× session-density**
-> crossing on a fixed KV budget, and with all three enabled the full stack runs
-> **~3.5× over no mechanisms on 1.5B, rising to ~4× on 7B**, on a multi-hop
-> agentic workload. Method, numbers, and limits: **[results/](results/)**.
-> **New in v0.6:** `kv_unified` as a first-class backend parameter — the unified
-> KV pool behind the session-density result is now a product property, not a
-> benchmark artifact — with a release-ordering guard (`PrefixHolderInUseError`)
-> that refuses to corrupt a live consumer. **New in v0.7 — verifiable audit**:
-> the [PALA-1 format, **frozen at v1.0**](docs/specs/pala-1/PALA-1.md) — byte-exact
-> test vectors, four independent verifier implementations (two external) — with
-> a `palimpsests pala verify` CLI in main; the writer APIs remain experimental.
-> Verify it yourself: [docs/specs/pala-1/verification-kit/](docs/specs/pala-1/verification-kit/README.md).
-> Numbers and their limits are in **[docs/POSITIONING.md](docs/POSITIONING.md)**;
-> the integrity story is in **[SECURITY.md](SECURITY.md)** and
-> **[docs/ASSURANCE-CASE.md](docs/ASSURANCE-CASE.md)**. APIs may change before
-> v1.0.
+> **Status: v0.7 — the audit format is the deliverable.** The **[PALA-1
+> format](docs/specs/pala-1/PALA-1.md)** is **frozen at v1.0**: a
+> self-describing, byte-level audit format with byte-exact test vectors, a CC0
+> reference implementation, a stdlib-only production codec, and the
+> three-question `palimpsests pala verify` CLI — with **four independent
+> verifier implementations (two external) on record** and a self-service
+> [verification kit](docs/specs/pala-1/verification-kit/README.md). The writer
+> emits it end-to-end with cross-boot resume; the writer APIs remain
+> experimental and may change before v1.0. Verify it yourself; do not take our
+> word for it.
+>
+> Underneath sits a real local inference engine: Levels 1 (Ollama) and 2
+> (llama.cpp) behind one abstraction, a context-memory layer, and a level-3
+> native serving loop. That engine is **measured, not asserted** — on a
+> multi-hop agentic workload the full stack runs **~3.5× over no mechanisms on
+> 1.5B, rising to ~4× on 7B**, with an **8.2× session-density** crossing under a
+> shared prefix, matching a tuned `llama-server` in-process without running a
+> server. Method, numbers, and limits: **[Agentic serving](#agentic-serving-level-3)**
+> below and **[results/](results/)**.
+>
+> The integrity story is in **[SECURITY.md](SECURITY.md)** and
+> **[docs/ASSURANCE-CASE.md](docs/ASSURANCE-CASE.md)**; the honest
+> target-vs-measured performance picture is in
+> **[docs/POSITIONING.md](docs/POSITIONING.md)**.
 
 ---
 
 ## What this is
 
-Ollama and llama.cpp are optimized for one question: *how fast can I answer a
-single request?* A growing class of workloads has a different shape — **agentic
-workloads**: a process that makes hundreds of calls in a loop, shares one system
-prompt across calls, retries, branches, and invokes tools. That is a different
-profile than single-request throughput, and the tools tuned for single requests
-leave the agentic-specific wins — reusing a shared prefix, not re-prefilling
-across a tool loop, persisting KV between sessions — on the table.
+Palimpsests is a **local-first inference engine whose distinguishing property is
+its audit trail** — a tamper-evident, independently-verifiable log of what the
+system did, in a format (**PALA-1**) that is **frozen at v1.0** and specified
+byte-for-byte, so anyone can re-verify a log without trusting this software. That
+is the sharp edge for **regulated and air-gapped deployments** — finance,
+defense, healthcare, public sector — where *whether the audit trail can be
+trusted* matters as much as raw speed.
 
-Palimpsests gives you **three levels of control** over local inference behind a
-**single `InferenceEngine` abstraction**, plus a **context-memory layer** that
-works the same on all three levels.
+The inference engine under that audit trail is a real one. Palimpsests gives you
+**three levels of control** over local inference behind a **single
+`InferenceEngine` abstraction**, plus a **context-memory layer** that works the
+same on all three:
 
 ```
 Level 1  ·  ollama       →  thin HTTP client to an external daemon
@@ -75,8 +65,70 @@ retrieval. At level 3 the same image applies to KV state.
 
 ---
 
+## Regulated & air-gapped deployments
+
+The audit trail is not a feature bolted onto an inference library; it is the
+reason the project leads with it. Palimpsests is aimed at teams for whom *where
+inference runs* and *whether the log can be trusted* are first-order concerns.
+
+- **Local-first / air-gap capable** — no request content leaves the host; no
+  third-party call is needed to answer a request. Data residency on hardware you
+  control.
+- **Frozen, independently-verifiable format** — PALA-1 is **frozen at v1.0**,
+  specified byte-for-byte with test vectors, a CC0 reference implementation, and
+  four independent verifiers (two external). A log is evidence anyone can check
+  from the spec alone; it does not depend on trusting this codebase.
+- **Encrypted, tamper-evident audit log** — every model and KV operation is
+  recorded to an encrypted store (SQLCipher, key in the OS keychain). Each row is
+  chained to its predecessor by SHA-256, and the chain's head is anchored outside
+  the database, so **editing, deleting, reordering, or wholesale-replacing the
+  log is detectable** — `palimpsests pala verify` reports the first row that
+  fails. Encryption gives confidentiality; the chain gives integrity; the anchor
+  gives completeness.
+
+  The boundary is stated plainly rather than implied: an attacker holding *both*
+  the encryption key and write access to the keychain can forge the chain and its
+  anchor together. Catching that would need a commitment outside the host's trust
+  boundary (a remote append-only log, a notary, a transparency log), which
+  Palimpsests does not provide. The full threat model, including which attacker
+  capabilities are and are not detected, is in **[SECURITY.md](SECURITY.md)**.
+
+These map onto real obligations. The **EU AI Act** (Regulation (EU) 2024/1689)
+makes automatic, lifetime event logging a legal requirement for high-risk systems
+(**Article 12**) with a **six-month minimum retention** (Article 26(6)) — and an
+autonomous tool-calling agent is a strong candidate for the high-risk (Annex III)
+classification. Article 12 does not say *tamper-proof*, but a silently-alterable
+log has little evidentiary value in an audit; a tamper-evident trail targets that
+gap. The **[Article 12 mapping](docs/compliance/EU-AI-ACT-MAPPING.md)** sets out,
+requirement by requirement, which properties ship and which are planned — in the
+claim form *"enables a provider/deployer to meet,"* not *"is compliant."* A
+companion **[ISO/IEC 24970 mapping](docs/compliance/24970-MAPPING.md)** covers the
+AI-logging standard (and its Annex Z presumption of conformity), and
+**[docs/RETENTION.md](docs/RETENTION.md)** gives the measured storage math for the
+six-month duty.
+
+**This is not a compliance claim.** The project is not certified, the audit log's
+implementation has not been independently pen-tested, and the AI Act's own
+technical standards are not yet final. Full references, caveats, and the moving
+timeline are in **[SECURITY.md](SECURITY.md)**; the honest target-vs-measured
+performance picture is in **[docs/POSITIONING.md](docs/POSITIONING.md)**. The
+structured argument that the project delivers these properties — claims, evidence,
+and the explicit residuals and defeaters — is the
+**[assurance case](docs/ASSURANCE-CASE.md)**.
+
+For where the project stands against external frameworks — a self-attested
+**OSPS Baseline Level 2** and **SLSA Build Level 2** release provenance, each
+with its limits — see **[Standards posture](SECURITY.md#standards-posture)**.
+
+---
+
 ## What it does
 
+- **Local-first, air-gap capable, auditable.** Inference runs on-host; nothing
+  leaves the machine to answer a request. Every model and KV operation is
+  recorded to an encrypted, **hash-chained** audit log, so alteration or deletion
+  is detectable rather than silent — see **[Regulated & air-gapped
+  deployments](#regulated--air-gapped-deployments)** above.
 - **Long context on small models without OOM.** The context-memory layer keeps a
   stable *sink* (system prompt + first turns) and a recent *window*, evicts the
   middle to disk, and retrieves relevant blocks back on demand. A 7B model with
@@ -86,17 +138,9 @@ retrieval. At level 3 the same image applies to KV state.
   llama.cpp, run the native service — the calling code above the engine does not
   change. The same context-memory layer runs identically on all three.
 - **Agentic-workload serving at level 3.** Continuous batching plus the three
-  levers a tuned server also uses, behind one API: **Shared Prefix** (decode a
-  shared system prompt once, copy it across sessions instead of recomputing it),
-  **Tool Loop** (continue in place without re-prefilling the conversation between
-  tool calls), and **KV Persistence** (freeze and restore a session's KV state).
-  These are what matter when a process makes hundreds of calls in a loop, not one.
-- **Local-first, air-gap capable, auditable.** Inference runs on-host; nothing
-  leaves the machine to answer a request. Every model and KV operation is
-  recorded to an encrypted audit log whose rows are **hash-chained**, so
-  alteration or deletion is detectable rather than silent. This is the sharp edge
-  for **regulated and sensitive deployments** — see **[Regulated / air-gapped
-  deployments](#regulated--air-gapped-deployments)** below.
+  levers a tuned server also uses, behind one API: **Shared Prefix**, **Tool
+  Loop**, and **KV Persistence** — measured, not asserted (see [Agentic
+  serving](#agentic-serving-level-3)).
 - **Memory mechanisms, exposed not reinvented.** KV-cache quantization, flash
   attention, GPU offload, mmap trade-offs — surfaced as declared capabilities
   per engine, validated (e.g. KV-quant requires flash attention).
@@ -203,6 +247,44 @@ timeouts, `EngineMemoryConfig`), the Python API, and troubleshooting.
 
 ---
 
+## Agentic serving (level 3)
+
+Ollama and llama.cpp are optimized for one question: *how fast can I answer a
+single request?* Agentic workloads have a different shape — a process that makes
+hundreds of calls in a loop, shares one system prompt across calls, retries,
+branches, and invokes tools — and the agentic-specific wins (reusing a shared
+prefix, not re-prefilling across a tool loop, persisting KV between sessions) are
+left on the table by single-request tools.
+
+Level 3 (`pal-native`) is Palimpsests' own serving loop: continuous batching plus
+the three levers a tuned server also uses, behind one API —
+
+- **Shared Prefix** — decode a shared system prompt once, copy it across sessions
+  instead of recomputing it.
+- **Tool Loop** — continue in place without re-prefilling the conversation
+  between tool calls.
+- **KV Persistence** — freeze and restore a session's KV state.
+
+These are **measured, not asserted**, on 1.5B and 7B (iGPU/Vulkan):
+
+- In-process, the **Tool Loop** and **KV Persistence** *match a tuned
+  `llama-server`* on speed — without running a server.
+- **Shared Prefix** gives an **8.2× session-density** crossing on a fixed KV
+  budget; the unified KV pool behind it (`kv_unified`) ships as a first-class,
+  tested backend parameter (v0.6), guarded by `PrefixHolderInUseError` against a
+  release-ordering corruption a greedy chain would have hidden.
+- With all three enabled the full stack runs **~3.5× over no mechanisms on 1.5B,
+  rising to ~4× on 7B**, on a multi-hop agentic workload — sub-additive and
+  composing without corruption.
+
+The honest bar: on *speed* Palimpsests matches a tuned `llama-server` rather than
+beating it; its edges are **session density** under a shared prefix, the
+**~3.5–~4× full-stack** value of the three mechanisms together, and the
+in-process, no-server, auditable deployment model. Method, numbers, and limits:
+**[results/](results/)** and **[docs/POSITIONING.md](docs/POSITIONING.md)**.
+
+---
+
 ## Architecture in one screen
 
 - **`engine/`** — the `InferenceEngine` Protocol, `InferenceSession` (level-3
@@ -219,54 +301,6 @@ timeouts, `EngineMemoryConfig`), the Python API, and troubleshooting.
 
 Full design: **[ARCHITECTURE.md](ARCHITECTURE.md)**. Positioning, audiences, and
 performance targets: **[docs/POSITIONING.md](docs/POSITIONING.md)**.
-
----
-
-## Regulated / air-gapped deployments
-
-Palimpsests is aimed, in part, at teams for whom *where inference runs* and
-*whether the audit trail can be trusted* matter as much as raw speed — finance,
-defense, healthcare, public sector.
-
-- **Local-first / air-gap capable** — no request content leaves the host; no
-  third-party call is needed to answer a request. Data residency on hardware you
-  control.
-- **Encrypted, tamper-evident audit log** — every model and KV operation is
-  recorded to an encrypted store (SQLCipher, key in the OS keychain). Each row is
-  chained to its predecessor by SHA-256, and the chain's head is anchored outside
-  the database, so **editing, deleting, reordering, or wholesale-replacing the
-  log is detectable** — `AuditLog.verify()` reports the first row that fails.
-  Encryption gives confidentiality; the chain gives integrity.
-
-  The boundary is stated plainly rather than implied: an attacker holding *both*
-  the encryption key and write access to the keychain can forge the chain and its
-  anchor together. Catching that would need a commitment outside the host's trust
-  boundary (a remote append-only log, a notary, a transparency log), which
-  Palimpsests does not provide. The full threat model, including which attacker
-  capabilities are and are not detected, is in **[SECURITY.md](SECURITY.md)**.
-
-These map onto real obligations. The **EU AI Act** (Regulation (EU) 2024/1689)
-makes automatic, lifetime event logging a legal requirement for high-risk systems
-(**Article 12**) with a **six-month minimum retention** (Article 26(6)) — and an
-autonomous tool-calling agent is a strong candidate for the high-risk (Annex III)
-classification. Article 12 does not say *tamper-proof*, but a silently-alterable
-log has little evidentiary value in an audit; a tamper-evident trail targets that
-gap. The **[Article 12 mapping](docs/compliance/EU-AI-ACT-MAPPING.md)** sets out,
-requirement by requirement, which properties ship in v0.7 and which are planned —
-in the claim form *"enables a provider/deployer to meet,"* not *"is compliant."*
-
-**This is not a compliance claim.** The project is not certified, the audit log's
-implementation has not been independently pen-tested, and the AI Act's own
-technical standards are not yet final. Full references, caveats, and the moving
-timeline are in **[SECURITY.md](SECURITY.md)**; the honest target-vs-measured
-performance picture is in **[docs/POSITIONING.md](docs/POSITIONING.md)**. The
-structured argument that the project delivers these properties — claims, evidence,
-and the explicit residuals and defeaters — is the
-**[assurance case](docs/ASSURANCE-CASE.md)**.
-
-For where the project stands against external frameworks — a self-attested
-**OSPS Baseline Level 2** and **SLSA Build Level 2** release provenance, each
-with its limits — see **[Standards posture](SECURITY.md#standards-posture)**.
 
 ---
 
