@@ -168,7 +168,19 @@ palimpsests models
 # inspect engines (control level, installed, * = active) and switch
 palimpsests engine list
 palimpsests engine use llamacpp
+
+# verify a PALA-1 audit stream (three questions, header-only, no key needed)
+palimpsests pala verify serving.pala --anchor <64-hex-head>
+
+# export it as JSONL for inspection — the pala2json converter (spec §1.1)
+palimpsests pala export serving.pala -o serving.jsonl
 ```
+
+The export is **derived, never authoritative**: it carries no signature and
+enters no hash — the binary PALA-1 log is the evidence, and every exported
+line names its record by `seq` and `record_hash` so any claim can be taken
+back to the record and re-verified there. Deterministic by design: same
+container bytes, same export bytes.
 
 Or drive the same orchestration from Python, without the terminal:
 
