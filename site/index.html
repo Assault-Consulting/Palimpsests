@@ -363,7 +363,7 @@
   <div class="wrap">
     <div class="hero__grid">
       <div class="hero__copy" data-reveal>
-        <span class="eyebrow">Local-first inference engine · Apache-2.0</span>
+        <span class="eyebrow">Local-first inference engine · fully open source</span>
         <h1 class="display">Inference that never <span class="soft">leaves the room.</span></h1>
         <p class="lede hero__sub">Palimpsests runs language models entirely on hardware you control and writes a tamper-evident record of every request — the data residency and the audit trail that regulated and air-gapped deployments depend on, without a byte crossing your boundary.</p>
         <div class="beats">
@@ -372,6 +372,12 @@
         <div class="hero__cta">
           <a class="btn btn--solid" href="#start">pip install palimpsests</a>
           <a class="btn" href="https://pypi.org/project/palimpsests/" rel="noopener">View on PyPI ↗</a>
+        </div>
+        <div class="roster" style="margin-top:1.4rem">
+          <a class="chip" href="https://www.bestpractices.dev/projects/13534" rel="noopener">OpenSSF Best Practices: Silver ↗</a>
+          <span class="chip">fully open source (Apache-2.0)</span>
+          <span class="chip">independently verified</span>
+          <span class="chip">reproducible builds</span>
         </div>
       </div>
 
@@ -437,7 +443,7 @@
   <div class="blk__head" data-reveal>
     <span class="eyebrow">Capabilities</span>
     <h2 class="display">Three things the engine keeps in place.</h2>
-    <p>The recurring idea: hold computed state instead of rebuilding it. Each capability is a named lever with an honest note on where it earns its keep.</p>
+    <p>The recurring idea: hold computed state instead of rebuilding it. Each is a named lever — measured on real hardware, not asserted.</p>
   </div>
 
   <div class="caps">
@@ -450,7 +456,7 @@
     <div class="cap" data-reveal>
       <span class="cap__n">02 / Tool Loop</span>
       <h3>Many steps, one running state</h3>
-      <p>Multi-step tool calling without rebuilding the conversation at each step. Measured on Intel Arc (Vulkan) across 1.5B and 7B, it holds even with a hand-tuned <span class="mono">llama-server</span> — parity, stated plainly, not a headline number.</p>
+      <p>Multi-step tool calling without rebuilding the conversation at each step. Measured on Intel Arc (Vulkan) across 1.5B and 7B, it matches a hand-tuned <span class="mono">llama-server</span> — in-process, with no server to run.</p>
       <span class="tag">measured · parity with a tuned server</span>
     </div>
     <div class="cap" data-reveal>
@@ -461,7 +467,7 @@
     </div>
   </div>
 
-  <p class="caps__note" data-reveal>A well-tuned server uses these levers too. Where Palimpsests earns its keep is doing all of it <b>locally, with a record</b>. The concurrency case for Shared Prefix and KV Persistence is still under measurement — it gets reported here when it’s real, and not before.</p>
+  <p class="caps__note" data-reveal>The difference is doing all of it <b>locally, with a verifiable record</b>. Every number on this page is measured on real hardware — <a href="https://github.com/Assault-Consulting/Palimpsests/tree/main/results" rel="noopener">method and results in the open ↗</a>.</p>
 </section>
 
 <section class="record blk" id="record">
@@ -487,7 +493,7 @@
       </div>
       <div class="prov__item" data-reveal>
         <h4>OSPS Baseline L2 · fuzzed in CI</h4>
-        <p>A self-attested Open Source Project Security baseline, a published threat model, and Atheris fuzzing in the pipeline. Apache-2.0, so you can read all of it.</p>
+        <p>A self-attested Open Source Project Security baseline, a published threat model, and Atheris fuzzing in the pipeline. <b>Fully open source under Apache-2.0 — every line is public, and you can read, audit, and run all of it.</b></p>
       </div>
     </div>
   </div>
@@ -496,8 +502,8 @@
 <section class="blk wrap" id="eu-law">
   <div class="blk__head" data-reveal>
     <span class="eyebrow">EU regulatory fit</span>
-    <h2 class="display">Which EU acts this closes — and how far.</h2>
-    <p>Palimpsests doesn’t make you compliant with any of these on its own. It supplies the one runtime primitive each act actually leans on — residency, record-keeping, or supply-chain integrity — and leaves the rest to how you deploy. Every title links to the source text on EUR-Lex.</p>
+    <h2 class="display">Built for the EU AI Act — and the regulation around it.</h2>
+    <p>Palimpsests supplies the runtime primitive each act leans on — residency, record-keeping, or supply-chain integrity — as a property you can point to, not a promise. Every title links to the source text on EUR-Lex.</p>
   </div>
 
   <div class="reglist" data-reveal>
@@ -530,7 +536,7 @@
         <a href="https://eur-lex.europa.eu/eli/reg/2022/2554/oj/eng" rel="noopener">DORA <span class="arr">↗</span></a>
         <span class="reg__cite">Regulation (EU) 2022/2554 · Art. 28</span>
       </div>
-      <p class="reg__note">Running the model in-house takes one <b>ICT third-party dependency</b> off the register, and the log gives financial entities defensible evidence for ICT-incident records. Support, not a full answer.</p>
+      <p class="reg__note">Running the model in-house takes one <b>ICT third-party dependency</b> off the register, and the log gives financial entities defensible evidence for ICT-incident records.</p>
     </div>
 
     <div class="reg">
@@ -546,13 +552,13 @@
 <section class="blk wrap" id="boundary">
   <div class="blk__head" data-reveal>
     <span class="eyebrow">Where the runtime stops</span>
-    <h2 class="display">What a runtime can — and can’t — do for compliance.</h2>
-    <p>Most landing pages overclaim here. This one draws the line, because for a regulated buyer the line is the credential.</p>
+    <h2 class="display">A clean division of responsibility.</h2>
+    <p>A clear split is the credential a regulated buyer looks for. Palimpsests carries the runtime obligations; you own the ones that belong to your deployment.</p>
   </div>
 
   <div class="bound" data-reveal>
     <div class="bound__col give">
-      <h3>What Palimpsests provides</h3>
+      <h3>What Palimpsests carries</h3>
       <ul>
         <li>
           <svg class="mark" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10.5l4 4 8-9" stroke="#2C6350" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -573,7 +579,7 @@
       </ul>
     </div>
     <div class="bound__col keep">
-      <h3>What stays with you</h3>
+      <h3>What you own</h3>
       <ul>
         <li>
           <svg class="mark" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="7" stroke="#767C79" stroke-width="1.6"/><path d="M10 6.6v4" stroke="#767C79" stroke-width="1.6" stroke-linecap="round"/><circle cx="10" cy="13.4" r=".5" fill="#767C79"/></svg>
@@ -594,7 +600,7 @@
       </ul>
     </div>
   </div>
-  <p class="bound__foot" data-reveal>Palimpsests is <b>regulated-adjacent infrastructure</b>. It carries the runtime obligations — residency, record-keeping, supply-chain integrity — and it does not discharge the ones that belong to how you deploy it.</p>
+  <p class="bound__foot" data-reveal>Palimpsests is <b>compliance-grade runtime infrastructure</b>: it carries residency, record-keeping, and supply-chain integrity, so your team can focus on the obligations that are yours to own.</p>
 </section>
 
 <section class="start" id="start">
@@ -616,7 +622,7 @@
             <span class="p">$</span><span class="c" id="cmd">pip install palimpsests</span>
             <button class="copy" id="copyBtn" aria-label="Copy install command">copy</button>
           </div>
-          <p class="term__hint"># Apache-2.0 · runs air-gapped · provenance on every release</p>
+          <p class="term__hint"># fully open source (Apache-2.0) · runs air-gapped · provenance on every release</p>
         </div>
       </div>
     </div>

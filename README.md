@@ -2,7 +2,14 @@
 
 **Local-first LLM inference with a tamper-evident, independently-verifiable audit trail — built for regulated and air-gapped deployments under the EU AI Act. The audit format is frozen; the inference is measured.**
 
-> **Status: v0.7 — the audit format is the deliverable.** The **[PALA-1
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![CI](https://github.com/Assault-Consulting/Palimpsests/actions/workflows/ci.yml/badge.svg)](https://github.com/Assault-Consulting/Palimpsests/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/palimpsests.svg)](https://pypi.org/project/palimpsests/)
+[![Python](https://img.shields.io/pypi/pyversions/palimpsests.svg)](https://pypi.org/project/palimpsests/)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13534/badge)](https://www.bestpractices.dev/projects/13534)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Assault-Consulting/Palimpsests/badge)](https://scorecard.dev/viewer/?uri=github.com/Assault-Consulting/Palimpsests)
+
+> **Status: v0.8 — the audit format is the deliverable.** The **[PALA-1
 > format](docs/specs/pala-1/PALA-1.md)** is **frozen at v1.0**: a
 > self-describing, byte-level audit format with byte-exact test vectors, a CC0
 > reference implementation, a stdlib-only production codec, and the
@@ -405,8 +412,8 @@ the novelty is in this composition and its seams, not in a new inference kernel.
       end-to-end with cross-boot resume, plus a self-service
       [verification kit](docs/specs/pala-1/verification-kit/README.md). The
       lean tag is deliberate: the format needed no more code to be finished.
-- [ ] **v0.8 — audit semantics + public API** — incident/oversight record
-      kinds (`INCIDENT_CANDIDATE`, `ACK` with a pseudonymous operator id,
+- [x] **v0.8 — audit semantics + public API** — incident/oversight record
+      kinds (`INCIDENT_CANDIDATE`, `OVERSIGHT_ACK` with a pseudonymous operator id,
       documented erasure), additive in the frozen profile; verifier
       advisories (referential integrity, boot-scoped monotonic drift);
       JSONL export; the `AuditReader` public API; retention guidance. See
