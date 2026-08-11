@@ -6,6 +6,48 @@ aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 once it reaches v1.0. Before v1.0, minor versions may include breaking
 API changes.
 
+## [0.8.0] — 2026-08-11
+
+**Additive only — the PALA-1 wire format is unchanged (frozen at v1.0).** No
+envelope byte changes and no `format_version` bump; the profile kind/tag spaces
+grow additively, and the `pala1-v1.0` freeze and `test-vectors.json` are
+untouched. This release adds the r2 oversight loop (writer + reader sides), a
+JSON export converter, the `AuditReader` public reading API, and retention
+guidance.
+
+### Added (experimental)
+
+- **Incident / oversight emit paths (r2).** `PalaWriter.incident_candidate()`
+  (`KIND_INCIDENT_CANDIDATE`, a never-shed *observation*, not a determination) and
+  `PalaWriter.oversight_ack()` (`KIND_OVERSIGHT_ACK`, the oversight loop's closing
+  record), the latter carrying a **pseudonymous `operator_id`** (`EVT_OPERATOR_ID`,
+  16 bytes). Writer-level API only — no wire change, frozen vectors untouched.
+  `KEY_SHRED` gains a documented crypto-erasure note (the erasure path is the key,
+  not the record). (#117)
+- **Referential-integrity advisories** in the reader — the verification side of the
+  r2 loop, additive to the advisory channel. Header-only §7.1 verification is
+  unchanged: by design it cannot see bodies, so these body-referencing checks live
+  in the reader and feed the same `Advisory` surface. (#119)
+- **`AuditReader` public API** — the reading-side facade: verify a whole file, then
+  view its records, spans, boots, and origins; the advisory channel surfaces
+  non-verdict signals (referential integrity, boot-scoped monotonic/clock drift).
+  Import path as shipped: **`palimpsests.audit.reader.AuditReader`** (not re-exported
+  at the `palimpsests.audit` top level). See `docs/audit/reader.md`.
+- **`pala export jsonl`** — a deterministic JSONL converter (the `pala2json` tool
+  the spec promises in §1.1). It is **derived, never authoritative**: JSON is
+  outside the hashing contract, so the export is for inspection only and always
+  re-verifiable against the binary it came from. `audit/export.py` +
+  `palimpsests pala export` CLI. (#123)
+- **Retention guidance (WS5).** `docs/RETENTION.md` — storage math from the measured
+  per-kind footprint, archival/pruning at segment boundaries, and resume-cost
+  guidance, wired into the ISO/IEC 24970 mapping. (#124)
+
+### Notes
+
+- **Audit emission overhead is indistinguishable from noise** — measured upper
+  bound ~1.5 % tokens/s, best estimate ≈ 0 % (lifecycle-level emission against a
+  ~10⁵× writer headroom). See `results/audit-overhead-footprint-v0.7.0.md`.
+
 ## [0.7.0] — 2026-08-09
 
 **The format is the deliverable — and it is frozen.** PALA-1 ships at
