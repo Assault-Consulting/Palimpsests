@@ -16,6 +16,7 @@ Commands:
     palimpsests chat <model>        one-shot chat (prompt via -m/stdin)
     palimpsests audit verify        check the audit log's hash chain
     palimpsests pala verify <file>  verify a PALA-1 stream (experimental)
+    palimpsests pala export <file>  export a PALA-1 stream as JSONL (pala2json)
 """
 from __future__ import annotations
 
@@ -32,6 +33,7 @@ from palimpsests.audit.anchors import (
     FileAnchor,
     ManualAnchor,
 )
+from palimpsests.audit.export import export_jsonl
 from palimpsests.audit.pala import (
     KNOWN_RECORD_TYPES,
     MalformedRecord,
@@ -507,6 +509,54 @@ def pala_verify_cmd(
         )
 
     raise typer.Exit(code=code)
+
+
+@pala_app.command("export")
+def pala_export_cmd(
+    file: str = typer.Argument(
+        ..., help="A PALA-1 file container: records concatenated back-to-back (§2.4)."
+    ),
+    out: str = typer.Option(
+        None,
+        "--out",
+        "-o",
+        help="Write the export here (default: stdout).",
+    ),
+) -> None:
+    """Export a PALA-1 stream as JSONL — the pala2json converter (§1.1).
+
+    One JSON line per record, in chain order, then one summary line
+    (record count, chain head, chain_ok, source digest, tool version).
+    The export is DERIVED and carries no signature: the binary log is
+    authoritative, and every line names its record by seq and
+    record_hash so any claim can be re-verified against the record it
+    came from. Deterministic: same container bytes, same export bytes.
+
+    Damaged chains export too — the summary reports what verification
+    found; inspecting broken evidence is half the point. Read-only and
+    header-only: encrypted bodies export as present-but-opaque.
+
+    \b
+    Exit codes:
+      0  exported
+      3  UNREADABLE — the file (or the output path) could not be used
+    """
+    path = Path(file)
+    try:
+        data = path.read_bytes()
+    except OSError as e:
+        typer.echo(f"UNREADABLE: cannot read {path}: {e}", err=True)
+        raise typer.Exit(EXIT_UNREADABLE) from e
+    try:
+        if out is None:
+            export_jsonl(data, sys.stdout)
+        else:
+            with open(out, "w", encoding="utf-8", newline="\n") as fh:
+                count = export_jsonl(data, fh)
+            typer.echo(f"exported {count} record(s) to {out}", err=True)
+    except OSError as e:
+        typer.echo(f"UNREADABLE: cannot write {out}: {e}", err=True)
+        raise typer.Exit(EXIT_UNREADABLE) from e
 
 
 # ─── chat ────────────────────────────────────────────────────────────────
