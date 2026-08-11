@@ -22,11 +22,12 @@ frozen at PALA-1 v1.0; the EVT_KIND space grows without any change to
 framing or the hash contract); `Planned (post-0.8)` — on the roadmap,
 not yet scheduled.
 
-**Provenance.** Verified against the `v0.7.0` tag (`7940dc3`). PALA-1
+**Provenance.** Verified against the `v0.7.0` tag (`7940dc3`); rows
+marked `Shipped (v0.8)` are verified against the v0.8.0 release. PALA-1
 core and both profiles are frozen at v1.0 (tag `pala1-v1.0`);
 `test-vectors.json` digest `476c05ce…8193`, byte-identical since the
 freeze. Capability claims below were checked against the source at
-this tag.
+these tags.
 
 ---
 
@@ -47,8 +48,8 @@ this tag.
 |---|---|---|
 | Model/weights/configuration change as a first-class event | `MODEL_LOAD` / `MODEL_UNLOAD` events carrying the origin triple: SHA-256 digest of the weights file itself and a canonical configuration digest (order-independent, deterministic) | Shipped (v0.7) |
 | Safety-relevant rejections recorded | `SAFETY` class events for guard rejections, written before the exception propagates | Shipped (v0.7) |
-| Automatic incident candidates with documented, pre-registered trigger criteria | `INCIDENT_CANDIDATE` record kind | Planned (v0.8) |
-| Recorded acknowledgement chain for incident handling | `ACK` record kind referencing the candidate | Planned (v0.8) |
+| Automatic incident candidates with documented, pre-registered trigger criteria | `INCIDENT_CANDIDATE` record kind (`PalaWriter.incident_candidate()`) | Shipped (v0.8) |
+| Recorded acknowledgement chain for incident handling | `OVERSIGHT_ACK` record kind (`PalaWriter.oversight_ack()`) | Shipped (v0.8) |
 
 ### (b) Facilitating post-market monitoring (Art. 72)
 
@@ -57,7 +58,7 @@ this tag.
 | Header-only verifiability (no keys, no payload content) | The chain and Merkle verification consume record headers only; payload bodies are never needed to verify integrity (spec §1.2) | Shipped (v0.7) |
 | Packaged header-only export bundle | Export tooling in the audit package | Planned (v0.8) |
 | Incident timeline reconstruction (supports Art. 73 reporting) | Proved ordering via sequence numbers; session spans (a crash leaves a visibly unclosed span); monotonic deltas per record | Shipped (v0.7) |
-| Aggregation-friendly export (JSONL; each line carries sequence, record hash, and anchor reference so integrity is reconstructable from an archive) | Export tooling in the audit package | Planned (v0.8) |
+| Aggregation-friendly export (JSONL; each line carries sequence, record hash, and anchor reference so integrity is reconstructable from an archive) | `pala export jsonl` — deterministic, derived, never authoritative | Shipped (v0.8) |
 | Syslog / CSV derived exports (explicitly non-authoritative) | Export tooling in the audit package | Planned (v0.8, stretch) |
 
 ### (c) Monitoring of operation by deployers (Art. 26(5))
@@ -76,15 +77,15 @@ the Act and map to it deliberately.
 
 | 12(3) item | Mechanism | Status |
 |---|---|---|
-| (a) Period of each use (start/end) | `SPAN_START` / `SPAN_END`; `wall_clock_ns` (Unix epoch, UTC) qualified by an explicit `time_trust` field; per-record `monotonic_ns` | Shipped (v0.7); verifier-side advisory monotonicity drift-check Planned (v0.8) |
+| (a) Period of each use (start/end) | `SPAN_START` / `SPAN_END`; `wall_clock_ns` (Unix epoch, UTC) qualified by an explicit `time_trust` field; per-record `monotonic_ns`; verifier-side boot-scoped monotonic/clock drift advisories | Shipped (v0.8) |
 | (b) Reference data identification | Stronger than an identifier: SHA-256 digest of the weights file plus configuration digest | Shipped (v0.7) |
 | (c) Input data | Hash-by-default design: bodies in the inference profile are metadata-only; `body_digest` always present; raw payloads are never written by default. Retention of raw payloads, where required, is a deployer-side policy outside the log. Encrypted-payload profiles support cryptographic erasure (§4.4). The design position is stated in docs/RETENTION.md §5 | Shipped (v0.7) |
-| (d) Identification of natural persons involved in verification (Art. 14(5)) | Pseudonymous `operator_id` on `ACK` records; the mapping from identifier to person remains with the deployer — no PII enters the log | Planned (v0.8) |
+| (d) Identification of natural persons involved in verification (Art. 14(5)) | Pseudonymous `operator_id` (`EVT_OPERATOR_ID`, 16 bytes) on `OVERSIGHT_ACK` records; the mapping from identifier to person remains with the deployer — no PII enters the log | Shipped (v0.8) |
 
 ## Article 14 — human oversight (related, not an Art. 12 requirement)
 
-Oversight actions become part of the tamper-evident record via `ACK`
-(with pseudonymous `operator_id`) — Planned (v0.8). This mapping
+Oversight actions become part of the tamper-evident record via
+`OVERSIGHT_ACK` (with pseudonymous `operator_id`) — Shipped (v0.8). This mapping
 claims event recording only; it makes no claims about oversight user
 interfaces.
 
@@ -112,7 +113,7 @@ positioned as such:
 - **Documented erasure**: an erasure note — reason code plus the
   target sequence references — recorded on the `KEY_SHRED` record
   itself, so an erasure is not only performed but accounted for in
-  the log — Planned (v0.8); supports GDPR Art. 17 record-keeping.
+  the log — Shipped (v0.8); supports GDPR Art. 17 record-keeping.
 - **Independent verifiability**: byte-exact test vectors and a
   verification protocol exercised by external implementers against
   real releases, and packaged as a self-service verification kit.
