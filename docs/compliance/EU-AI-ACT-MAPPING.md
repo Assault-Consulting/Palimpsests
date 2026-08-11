@@ -78,7 +78,7 @@ the Act and map to it deliberately.
 |---|---|---|
 | (a) Period of each use (start/end) | `SPAN_START` / `SPAN_END`; `wall_clock_ns` (Unix epoch, UTC) qualified by an explicit `time_trust` field; per-record `monotonic_ns` | Shipped (v0.7); verifier-side advisory monotonicity drift-check Planned (v0.8) |
 | (b) Reference data identification | Stronger than an identifier: SHA-256 digest of the weights file plus configuration digest | Shipped (v0.7) |
-| (c) Input data | Hash-by-default design: bodies in the inference profile are metadata-only; `body_digest` always present; raw payloads are never written by default. Retention of raw payloads, where required, is a deployer-side policy outside the log. Encrypted-payload profiles support cryptographic erasure (§4.4) | Shipped (v0.7); explicit design-position wording in the spec Planned (v0.8) |
+| (c) Input data | Hash-by-default design: bodies in the inference profile are metadata-only; `body_digest` always present; raw payloads are never written by default. Retention of raw payloads, where required, is a deployer-side policy outside the log. Encrypted-payload profiles support cryptographic erasure (§4.4). The design position is stated in docs/RETENTION.md §5 | Shipped (v0.7) |
 | (d) Identification of natural persons involved in verification (Art. 14(5)) | Pseudonymous `operator_id` on `ACK` records; the mapping from identifier to person remains with the deployer — no PII enters the log | Planned (v0.8) |
 
 ## Article 14 — human oversight (related, not an Art. 12 requirement)
@@ -94,7 +94,7 @@ interfaces.
 |---|---|---|
 | Archival of whole segments without loss of verifiability | Spec §2.4; verification consumes the file sequence | Shipped (v0.7) |
 | Bounded, explicit degradation when a prefix is absent | Verifying a chain whose prefix is absent — e.g. an archived-away head — reports exactly one explicit violation at position 0 (missing genesis) and verifies the remainder as sound; the loss is visible, never silent. (A truncated *tail* is a different case: it is invisible to the §7.1 chain check and is caught by the anchor, not by a position-0 violation.) | Shipped (v0.7) |
-| Retention guidance for providers (≥ 6 months context) and deployers, with storage estimates from measured bytes/record | Documentation | Planned (v0.8) |
+| Retention guidance for providers (≥ 6 months context) and deployers, with storage math from measured bytes/record | docs/RETENTION.md — measured per-kind footprint (~181 B/record weighted, results/audit-overhead-footprint-v0.7.0.md), archival/pruning at segment boundaries, ~4 s/GB resume cost | Shipped (v0.8) |
 | Formal prefix-consistency proofs for pruning | Merkle consistency proofs across pruned prefixes | Planned (post-0.8) |
 
 ## Beyond the requirements
@@ -118,6 +118,12 @@ positioned as such:
   real releases, and packaged as a self-service verification kit.
 
 ## Other frameworks
+
+A companion mapping to **ISO/IEC 24970** (*Artificial intelligence — AI
+system logging*) is in `24970-MAPPING.md`: it places PALA-1 as the
+verifiable logging substrate under the standard's information model and
+traceability requirements, and the EN adoption's Annex Z carries the
+presumption of conformity under Regulation (EU) 2024/1689.
 
 Condensed mappings to SOC 2 (CC6.1, CC7.2, CC8.1), ISO/IEC 42001
 (6.1.2, 8.4, 9.1), and PCI DSS v4 (Req. 10) follow the same claim
