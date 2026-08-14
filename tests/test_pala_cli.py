@@ -163,8 +163,18 @@ def test_json_output_shape(stream):
     assert result.exit_code == 0
     payload = json.loads(result.output)
     assert payload["exit_code"] == 0
+    assert payload["verdict"] == "sound"
     assert payload["records"] == len(vec["records"])
     assert payload["head"] == vec["chain_head"]
+    assert payload["first_violation"] is None
+    assert payload["counts"] == {
+        "records": len(vec["records"]),
+        "breaks": 0,
+        "gaps": 0,
+        "violations": 0,
+        "body_digest_mismatches": 0,
+        "uninterpretable": 0,
+    }
     assert payload["consistency"]["ok"] is True
     assert payload["completeness"] == {
         "checked": True,
@@ -185,5 +195,18 @@ def test_json_output_on_tamper_is_still_json(stream):
     assert result.exit_code == 1
     payload = json.loads(result.output)
     assert payload["exit_code"] == 1
+    assert payload["verdict"] == "violation"
+    assert payload["first_violation"] is not None
+    assert payload["counts"]["breaks"] > 0
     assert payload["consistency"]["ok"] is False
     assert payload["consistency"]["breaks"]
+
+
+def test_json_output_partial_without_anchor(stream):
+    p, _, _, _ = stream
+    result = runner.invoke(app, ["pala", "verify", str(p), "--json"])
+    assert result.exit_code == 2
+    payload = json.loads(result.output)
+    assert payload["verdict"] == "partial"
+    assert payload["completeness"]["checked"] is False
+    assert payload["exit_code"] == 2
