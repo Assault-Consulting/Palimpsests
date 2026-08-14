@@ -226,3 +226,16 @@ def test_audit_verify_does_not_disturb_the_anchor(tmp_path, _isolated_keychain):
     # A second run must reach the same verdict, not a laundered one.
     assert runner.invoke(app, ["audit", "verify"]).exit_code == 1
     assert _isolated_keychain["anchor"] == anchored
+
+
+def test_version_flag_main():
+    result = runner.invoke(app, ["--version"])
+    assert result.exit_code == 0
+    assert "palimpsests 0.7.0 (PALA-1 core spec Frozen v1.0, inference-profile r2)" in result.output
+
+
+def test_version_flag_pala():
+    result = runner.invoke(app, ["pala", "--version"])
+    assert result.exit_code == 0
+    assert "palimpsests 0.7.0 (PALA-1 core spec Frozen v1.0, inference-profile r2)" in result.output
+

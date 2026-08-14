@@ -53,6 +53,7 @@ from palimpsests.core import (
     open_audit_log,
     select_engine,
 )
+from palimpsests import __version__
 from palimpsests.providers import EngineError
 from pathlib import Path
 
@@ -76,9 +77,46 @@ pala_app = typer.Typer(
 app.add_typer(pala_app, name="pala")
 
 
+def version_callback(value: bool) -> None:
+    if value:
+        typer.echo(f"palimpsests {__version__} (PALA-1 core spec Frozen v1.0, inference-profile r2)")
+        raise typer.Exit()
+
+
+@app.callback()
+def main_callback(
+    version: bool = typer.Option(
+        None,
+        "--version",
+        "-v",
+        help="Show package and spec versions and exit.",
+        callback=version_callback,
+        is_eager=True,
+    ),
+) -> None:
+    """A layered local-LLM inference engine."""
+    pass
+
+
+@pala_app.callback()
+def pala_callback(
+    version: bool = typer.Option(
+        None,
+        "--version",
+        "-v",
+        help="Show package and spec versions and exit.",
+        callback=version_callback,
+        is_eager=True,
+    ),
+) -> None:
+    """Work with PALA-1 audit streams (experimental; the spec is a draft)."""
+    pass
+
+
 def _ctx() -> AppContext:
     """Build the app context, turning engine errors into clean exits."""
     return init_app()
+
 
 
 # ─── models ──────────────────────────────────────────────────────────────
