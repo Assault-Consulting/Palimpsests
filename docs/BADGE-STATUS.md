@@ -150,7 +150,7 @@ live questionnaire is authoritative.*
 | warnings_strict | Met | ruff gate; strict lint on every change. |
 | vulnerability_report_credit | Met | SECURITY.md commits to crediting reporters in release notes (opt-out). |
 | signed_releases | Met | Sigstore keyless signing + PEP 740 attestations on PyPI; SLSA Build L2 provenance. |
-| hardened_site | Met | Repo + download site on GitHub (known to meet this). Project site palimpsests.dev sets the key hardening headers — CSP, HSTS, X-Content-Type-Options `nosniff`, X-Frame-Options — via `site/vercel.json`; confirm on securityheaders.com after deploy. |
+| hardened_site | Met | Repo + download site on GitHub (known to meet this). Project site palimpsests.dev sets the key hardening headers — CSP, HSTS (2-year max-age, includeSubDomains, preload), Permissions-Policy, Referrer-Policy, X-Content-Type-Options `nosniff`, X-Frame-Options `DENY` — via `site/vercel.json`. Confirmed by external scan: securityheaders.com, 2026-08-14, grade **A** (capped by `unsafe-inline` in script-src; removal tracked as a site improvement). |
 | require_2FA | Met | Both maintainers have GitHub 2FA enabled. *(Account-level setting — confirm in GitHub account/org settings before submitting.)* |
 
 ### Silver notes
@@ -183,7 +183,7 @@ their owner rather than being stretched.*
 | build_reproducible | Met | sdist + wheel are bit-for-bit reproducible; the CI `reproducible-build` job builds twice and diffs on every change; `SOURCE_DATE_EPOCH`-pinned release. URL: docs/REPRODUCIBLE-BUILD.md. |
 | code_review_standards | Met | docs/REVIEW.md documents what a reviewer checks and what "acceptable" means (non-author approval, tests-with-behavior, ruff clean, dependency justification, security-path scrutiny, byte-verification, reproducibility). |
 | crypto_used_network | Met | The software's only inbound network use is loopback HTTP to a **user-run local** `llama-server` (L2), a documented accepted risk on single-user hosts (SECURITY.md); it exposes no remote service. Outbound calls use HTTPS via httpx (TLS 1.2+). No insecure remote protocol is enabled by default. |
-| hardened_site | Met | See the Silver-section row: GitHub covers repo/download; palimpsests.dev sets CSP/HSTS/X-Content-Type-Options/X-Frame-Options via `site/vercel.json`. Confirm on securityheaders.com after deploy. |
+| hardened_site | Met | See the Silver-section row: palimpsests.dev headers confirmed by external scan — securityheaders.com, 2026-08-14, grade **A**, all six key headers present. |
 | dynamic_analysis | Met | Atheris coverage-guided fuzzing before release **and** an automated suite with ≥80% branch coverage — either satisfies the Gold criterion. |
 | require_2FA / secure_2FA | Met | Both maintainers use GitHub 2FA with TOTP/security keys (not SMS). Confirm the org "require 2FA" setting before submitting. |
 | two_person_review | Met | ≥50% of modifications reviewed by a non-author, monotonically rising (every PR is reviewed). Measurement anchor: required non-author approvals have been enforced on `main` since **2026-07-11** (GOVERNANCE.md, *Members and access*), so every merge from that date forward counts toward the figure. |
