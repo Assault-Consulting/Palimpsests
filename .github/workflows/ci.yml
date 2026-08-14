@@ -154,3 +154,33 @@ jobs:
           cp inference-vectors.json /tmp/committed-r2.json
           python gen_inference_vectors.py
           cmp inference-vectors.json /tmp/committed-r2.json && echo "r2 companion vectors reproduce byte-for-byte"
+
+  ci-complete:
+    name: ci-complete
+    # The single fan-in context for branch protection. Requiring individual
+    # jobs is brittle in two ways: matrix job names ("test (ubuntu-latest,
+    # py3.12)") change when the matrix changes, and a required context that
+    # stops being reported leaves every PR stuck on "Expected — waiting for
+    # status" with no failure to debug. Protect THIS job instead: it runs
+    # unconditionally (if: always()), depends on every other CI job, and
+    # fails unless all of them succeeded — one stable name, reported on
+    # every PR, immune to renames above it.
+    if: always()
+    needs: [lint, test, coverage, reproducible-build, pala-vectors]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify all CI jobs succeeded
+        run: |
+          echo "lint:               ${{ needs.lint.result }}"
+          echo "test:               ${{ needs.test.result }}"
+          echo "coverage:           ${{ needs.coverage.result }}"
+          echo "reproducible-build: ${{ needs['reproducible-build'].result }}"
+          echo "pala-vectors:       ${{ needs['pala-vectors'].result }}"
+          if [ "${{ needs.lint.result }}" != "success" ] \
+             || [ "${{ needs.test.result }}" != "success" ] \
+             || [ "${{ needs.coverage.result }}" != "success" ] \
+             || [ "${{ needs['reproducible-build'].result }}" != "success" ] \
+             || [ "${{ needs['pala-vectors'].result }}" != "success" ]; then
+            echo "one or more required CI jobs did not succeed"
+            exit 1
+          fi

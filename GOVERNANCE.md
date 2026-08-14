@@ -47,10 +47,20 @@ repository administration, merge rights, and releases:
 
 The `main` branch is protected: direct pushes are blocked, and every change —
 **including documentation** — requires a pull request with at least one approval
-from someone other than the author, plus passing status checks (lint, tests,
-coverage), before it can be merged. This is what makes the review described in
-[How decisions are made](#how-decisions-are-made) an enforced control rather than
-a convention.
+from someone other than the author, plus passing status checks, before it can
+be merged. These protections have been in force since **2026-07-11**, the date
+this document was introduced (the members-and-access list followed on
+2026-07-12); that date is the measurement anchor for the review-coverage
+figure reported under the OpenSSF `two_person_review` criterion. The canonical
+required status context is the single fan-in check **`ci-complete`**, which
+aggregates lint, the full test matrix, the coverage gate (statement ≥ 90,
+branch ≥ 80), the reproducible-build check, and PALA-1 vector reproduction.
+Protection points at that one stable context rather than at individual job
+names, which can be renamed or (in a matrix) multiply — the failure mode that
+previously left pull requests stuck on a required check that was no longer
+being reported. This is what makes the review described in
+[How decisions are made](#how-decisions-are-made) an enforced control rather
+than a convention.
 
 ## Becoming a maintainer
 
