@@ -158,6 +158,7 @@ def test_missing_genesis_discriminating_input_matches_the_demo():
     blind spot the differential test could not see). Asserts the §8 demo
     triple exactly, strictly.
     """
+    import json
     from palimpsests.audit.pala import iter_records, verify_headers
     from pathlib import Path
 
@@ -187,6 +188,7 @@ def test_first_record_genesis_with_nonzero_prev_is_still_a_violation():
     """The zero-prev demand applies exactly when the first record IS a
     GENESIS (§7.1 as aligned): a forged GENESIS pointing at a predecessor
     must still be caught."""
+    import json
     from palimpsests.audit.pala import Header, iter_records, verify_headers
     from pathlib import Path
 
