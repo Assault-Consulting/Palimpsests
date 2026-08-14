@@ -6,7 +6,6 @@ plus edge-case vectors: empty log and single-record log (issue #131)."""
 
 from __future__ import annotations
 
-import json
 from palimpsests.audit.pala import iter_records, verify_headers
 from palimpsests.audit.pala.codec import ZERO32
 from palimpsests.audit.pala_writer import PalaWriter
