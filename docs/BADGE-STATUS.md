@@ -186,8 +186,8 @@ their owner rather than being stretched.*
 | hardened_site | Met | See the Silver-section row: GitHub covers repo/download; palimpsests.dev sets CSP/HSTS/X-Content-Type-Options/X-Frame-Options via `site/vercel.json`. Confirm on securityheaders.com after deploy. |
 | dynamic_analysis | Met | Atheris coverage-guided fuzzing before release **and** an automated suite with ≥80% branch coverage — either satisfies the Gold criterion. |
 | require_2FA / secure_2FA | Met | Both maintainers use GitHub 2FA with TOTP/security keys (not SMS). Confirm the org "require 2FA" setting before submitting. |
-| two_person_review | Met | ≥50% of modifications reviewed by a non-author, monotonically rising (every PR is reviewed). To source the exact number, document the date required-approvals were enabled on `main`. |
-| small_tasks | **Pending** | *Owner: maintainers.* Create a set of 5–8 `good first issue`-labelled issues (doc fixes, CLI polish, extra test cases) and record the label URL. The only Gold criterion not yet satisfiable by a committed artifact. |
+| two_person_review | Met | ≥50% of modifications reviewed by a non-author, monotonically rising (every PR is reviewed). Measurement anchor: required non-author approvals have been enforced on `main` since **2026-07-11** (GOVERNANCE.md, *Members and access*), so every merge from that date forward counts toward the figure. |
+| small_tasks | Met | Curated `good first issue` label with starter tasks (docs, CLI polish, extra test cases), created 2026-08-14. Label URL: <https://github.com/Assault-Consulting/Palimpsests/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22>. |
 
 ## Notes
 
