@@ -389,10 +389,37 @@ def pala_verify_cmd(
         code = EXIT_VERIFIED
 
     if json_out:
+        # Compute verdict: "sound", "violation", or "partial"
+        if not consistent or (expected is not None and not result.complete_to_anchor):
+            verdict = "violation"
+        elif expected is None:
+            verdict = "partial"
+        else:
+            verdict = "sound"
+
+        # Compute counts
+        violation_seqs = [v[0] for v in result.violations]
+        all_issues = (
+            result.breaks + result.gaps + violation_seqs + body_mismatches
+        )
+        first_violation = min(all_issues) if all_issues else None
+
+        counts = {
+            "records": result.count,
+            "breaks": len(result.breaks),
+            "gaps": len(result.gaps),
+            "violations": len(result.violations),
+            "body_digest_mismatches": len(body_mismatches),
+            "uninterpretable": len(result.uninterpretable),
+        }
+
         payload = {
             "file": str(path),
+            "verdict": verdict,
             "records": result.count,
             "head": result.head.hex(),
+            "counts": counts,
+            "first_violation": first_violation,
             "consistency": {
                 "ok": consistent,
                 "breaks": result.breaks,
