@@ -522,6 +522,16 @@ def pala_export_cmd(
         "-o",
         help="Write the export here (default: stdout).",
     ),
+    from_seq: int = typer.Option(
+        None,
+        "--from-seq",
+        help="Inclusive lower bound: only export records with seq >= this value.",
+    ),
+    to_seq: int = typer.Option(
+        None,
+        "--to-seq",
+        help="Inclusive upper bound: only export records with seq <= this value.",
+    ),
 ) -> None:
     """Export a PALA-1 stream as JSONL — the pala2json converter (§1.1).
 
@@ -536,6 +546,10 @@ def pala_export_cmd(
     found; inspecting broken evidence is half the point. Read-only and
     header-only: encrypted bodies export as present-but-opaque.
 
+    Use --from-seq and --to-seq to restrict the export to an inclusive
+    seq range.  Both flags are optional; when omitted the full log is
+    exported.
+
     \b
     Exit codes:
       0  exported
@@ -548,11 +562,16 @@ def pala_export_cmd(
         typer.echo(f"UNREADABLE: cannot read {path}: {e}", err=True)
         raise typer.Exit(EXIT_UNREADABLE) from e
     try:
+        range_kw: dict[str, int] = {}
+        if from_seq is not None:
+            range_kw["from_seq"] = from_seq
+        if to_seq is not None:
+            range_kw["to_seq"] = to_seq
         if out is None:
-            export_jsonl(data, sys.stdout)
+            export_jsonl(data, sys.stdout, **range_kw)
         else:
             with open(out, "w", encoding="utf-8", newline="\n") as fh:
-                count = export_jsonl(data, fh)
+                count = export_jsonl(data, fh, **range_kw)
             typer.echo(f"exported {count} record(s) to {out}", err=True)
     except OSError as e:
         typer.echo(f"UNREADABLE: cannot write {out}: {e}", err=True)
