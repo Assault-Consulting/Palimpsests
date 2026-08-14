@@ -54,13 +54,24 @@ def _tlv_list(tlvs: list[tuple[int, bytes]]) -> list[dict[str, str]]:
     return [{"tag": f"0x{t:04x}", "value_hex": v.hex()} for t, v in tlvs]
 
 
-def export_jsonl(data: bytes, out: TextIO) -> int:
+def export_jsonl(
+    data: bytes,
+    out: TextIO,
+    *,
+    from_seq: int | None = None,
+    to_seq: int | None = None,
+) -> int:
     """Write the JSONL export of one container; return the record count.
 
     One line per record, in chain order, then one summary line. Never
     raises on a damaged chain: the summary carries ``chain_ok`` and the
     per-record lines carry whatever decoded — the tool's job is to show
     the evidence, not to gate it.
+
+    *from_seq* and *to_seq* are inclusive bounds: only records whose
+    ``seq`` satisfies ``from_seq <= seq <= to_seq`` are emitted.  When
+    omitted the full log is exported (the default).  The summary line is
+    always emitted regardless of range filtering.
     """
     headers: list[bytes] = []
     decoded = []
@@ -68,7 +79,12 @@ def export_jsonl(data: bytes, out: TextIO) -> int:
         headers.append(hb)
         decoded.append((decode_record(index, hb, body), hb, len(body)))
 
+    exported = 0
     for dr, hb, body_len in decoded:
+        if from_seq is not None and dr.seq < from_seq:
+            continue
+        if to_seq is not None and dr.seq > to_seq:
+            continue
         line: dict[str, object] = {
             "seq": dr.seq,
             "record_hash": record_hash(hb).hex(),
@@ -102,6 +118,7 @@ def export_jsonl(data: bytes, out: TextIO) -> int:
                 # Encrypted (key_id != 0) or undecodable: present, opaque.
                 line["body_opaque"] = True
         out.write(json.dumps(line, separators=(",", ":")) + "\n")
+        exported += 1
 
     res = verify_headers(headers)
     summary: dict[str, object] = {
@@ -117,5 +134,9 @@ def export_jsonl(data: bytes, out: TextIO) -> int:
         "tool": f"palimpsests {__version__}",
         "note": _AUTHORITATIVE_NOTE,
     }
+    if from_seq is not None:
+        summary["from_seq"] = from_seq
+    if to_seq is not None:
+        summary["to_seq"] = to_seq
     out.write(json.dumps(summary, separators=(",", ":")) + "\n")
-    return res.count
+    return exported

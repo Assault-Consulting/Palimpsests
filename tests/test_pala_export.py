@@ -128,3 +128,100 @@ def test_cli_export_writes_the_file_and_exits_zero(tmp_path):
 def test_cli_export_unreadable_file_exits_three(tmp_path):
     result = runner.invoke(app, ["pala", "export", str(tmp_path / "missing.pala")])
     assert result.exit_code == 3
+
+
+# ── seq-range tests ──────────────────────────────────────────────────
+
+
+def test_from_seq_inclusive_lower_bound():
+    blob, _ = _vectors_blob()
+    out = io.StringIO()
+    count = export_jsonl(blob, out, from_seq=3)
+    lines = [json.loads(line) for line in out.getvalue().splitlines()]
+    records = [line for line in lines if "summary" not in line]
+    assert len(records) == count
+    assert all(r["seq"] >= 3 for r in records)
+    assert records[0]["seq"] == 3  # inclusive
+
+
+def test_to_seq_inclusive_upper_bound():
+    blob, _ = _vectors_blob()
+    out = io.StringIO()
+    count = export_jsonl(blob, out, to_seq=4)
+    lines = [json.loads(line) for line in out.getvalue().splitlines()]
+    records = [line for line in lines if "summary" not in line]
+    assert len(records) == count
+    assert all(r["seq"] <= 4 for r in records)
+    assert records[-1]["seq"] == 4  # inclusive
+
+
+def test_from_seq_and_to_seq_range():
+    blob, _ = _vectors_blob()
+    out = io.StringIO()
+    count = export_jsonl(blob, out, from_seq=2, to_seq=5)
+    lines = [json.loads(line) for line in out.getvalue().splitlines()]
+    records = [line for line in lines if "summary" not in line]
+    assert len(records) == count
+    assert [r["seq"] for r in records] == [2, 3, 4, 5]
+
+
+def test_range_empty_when_no_records_match():
+    blob, _ = _vectors_blob()
+    out = io.StringIO()
+    count = export_jsonl(blob, out, from_seq=100, to_seq=200)
+    assert count == 0
+    lines = [json.loads(line) for line in out.getvalue().splitlines()]
+    records = [line for line in lines if "summary" not in line]
+    assert records == []
+    summary = lines[-1]
+    assert summary["summary"] is True
+    assert summary["records"] == 8  # full chain count still reported
+
+
+def test_range_summary_includes_bounds():
+    blob, _ = _vectors_blob()
+    out = io.StringIO()
+    export_jsonl(blob, out, from_seq=2, to_seq=5)
+    summary = [json.loads(line) for line in out.getvalue().splitlines()][-1]
+    assert summary["from_seq"] == 2
+    assert summary["to_seq"] == 5
+
+
+def test_no_range_summary_omits_bounds():
+    blob, _ = _vectors_blob()
+    out = io.StringIO()
+    export_jsonl(blob, out)
+    summary = [json.loads(line) for line in out.getvalue().splitlines()][-1]
+    assert "from_seq" not in summary
+    assert "to_seq" not in summary
+
+
+def test_range_still_carries_record_hash_and_header_fields():
+    blob, _ = _vectors_blob()
+    out = io.StringIO()
+    export_jsonl(blob, out, from_seq=3, to_seq=5)
+    records = [
+        json.loads(line)
+        for line in out.getvalue().splitlines()
+        if "summary" not in json.loads(line)
+    ]
+    for r in records:
+        assert "record_hash" in r
+        assert "seq" in r
+        if r.get("header_undecoded") is not True:
+            assert "boot_id" in r
+            assert "header_tlvs" in r
+
+
+def test_cli_export_with_range_flags(tmp_path):
+    blob, v = _vectors_blob()
+    src = tmp_path / "chain.pala"
+    src.write_bytes(blob)
+    dst = tmp_path / "filtered.jsonl"
+    result = runner.invoke(
+        app, ["pala", "export", str(src), "-o", str(dst), "--from-seq", "2", "--to-seq", "5"]
+    )
+    assert result.exit_code == 0
+    lines = dst.read_text(encoding="utf-8").splitlines()
+    records = [json.loads(line) for line in lines if "summary" not in json.loads(line)]
+    assert [r["seq"] for r in records] == [2, 3, 4, 5]
