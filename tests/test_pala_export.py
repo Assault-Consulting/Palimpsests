@@ -138,7 +138,7 @@ def test_from_seq_inclusive_lower_bound():
     out = io.StringIO()
     count = export_jsonl(blob, out, from_seq=3)
     lines = [json.loads(line) for line in out.getvalue().splitlines()]
-    records = [l for l in lines if "summary" not in l]
+    records = [line for line in lines if "summary" not in line]
     assert len(records) == count
     assert all(r["seq"] >= 3 for r in records)
     assert records[0]["seq"] == 3  # inclusive
@@ -149,7 +149,7 @@ def test_to_seq_inclusive_upper_bound():
     out = io.StringIO()
     count = export_jsonl(blob, out, to_seq=4)
     lines = [json.loads(line) for line in out.getvalue().splitlines()]
-    records = [l for l in lines if "summary" not in l]
+    records = [line for line in lines if "summary" not in line]
     assert len(records) == count
     assert all(r["seq"] <= 4 for r in records)
     assert records[-1]["seq"] == 4  # inclusive
@@ -160,7 +160,7 @@ def test_from_seq_and_to_seq_range():
     out = io.StringIO()
     count = export_jsonl(blob, out, from_seq=2, to_seq=5)
     lines = [json.loads(line) for line in out.getvalue().splitlines()]
-    records = [l for l in lines if "summary" not in l]
+    records = [line for line in lines if "summary" not in line]
     assert len(records) == count
     assert [r["seq"] for r in records] == [2, 3, 4, 5]
 
@@ -171,7 +171,7 @@ def test_range_empty_when_no_records_match():
     count = export_jsonl(blob, out, from_seq=100, to_seq=200)
     assert count == 0
     lines = [json.loads(line) for line in out.getvalue().splitlines()]
-    records = [l for l in lines if "summary" not in l]
+    records = [line for line in lines if "summary" not in line]
     assert records == []
     summary = lines[-1]
     assert summary["summary"] is True
@@ -223,5 +223,5 @@ def test_cli_export_with_range_flags(tmp_path):
     )
     assert result.exit_code == 0
     lines = dst.read_text(encoding="utf-8").splitlines()
-    records = [json.loads(l) for l in lines if "summary" not in json.loads(l)]
+    records = [json.loads(line) for line in lines if "summary" not in json.loads(line)]
     assert [r["seq"] for r in records] == [2, 3, 4, 5]
