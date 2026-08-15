@@ -1,0 +1,54 @@
+# SPDX-FileCopyrightText: 2026 Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
+name: spec-build
+
+on:
+  push:
+    branches: [main]
+    paths: ["standards/**"]
+  pull_request:
+    branches: [main]
+    paths: ["standards/**"]
+
+permissions:
+  contents: read
+
+jobs:
+  spec-build:
+    name: spec-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: "3.12"
+
+      # Ruby ships preinstalled on the ubuntu runner image; kramdown-rfc
+      # is a gem, xml2rfc is Python. No additional pinned actions needed.
+      - name: Install toolchain (xml2rfc + kramdown-rfc)
+        run: |
+          python -m pip install --upgrade pip
+          pip install xml2rfc
+          sudo gem install kramdown-rfc
+
+      # Render every draft source to RFCXML v3 and text. A source that
+      # does not render fails the job — the gate, not a suggestion. With
+      # no sources present the job reports that and passes: the pipeline
+      # is allowed to exist before its first document does.
+      - name: Build draft sources
+        run: |
+          shopt -s nullglob
+          files=(standards/draft-*.md)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "no draft sources in standards/ yet — pipeline verified, nothing to build"
+            exit 0
+          fi
+          for f in "${files[@]}"; do
+            echo "::group::kdrfc -3 $f"
+            kdrfc -3 "$f"
+            echo "::endgroup::"
+          done
+          ls -la standards/
