@@ -12,7 +12,7 @@ or a renumbering is visible at review time.
 
 | | |
 |---|---|
-| **Covers** | PALA-1 core v1.0 (frozen) and its profiles (robotics r1, inference r2) |
+| **Covers** | PALA-1 core v1.0 (frozen) and its profiles (robotics r1, inference r3) |
 | **Licence** | CC0-1.0, like the core specification. |
 
 ## The two rules above all others
@@ -72,27 +72,29 @@ unknown-value reader rule: a reader meeting a value it does not know
 reports it and moves on — rejection is forbidden (core §7.6; inference
 profile §3).
 
-### Inference profile (`profiles/inference.md`, r2)
+### Inference profile (`profiles/inference.md`, r3)
 
 **`EVENT`/`SAFETY` body tags** — u16, own namespace. Allocated:
-`0x0001–0x000B` (r1: 0x0001–0x0004; r2 added 0x0005–0x000B).
-**Next free: `0x000C`.**
+`0x0001–0x000E` (r1: 0x0001–0x0004; r2 added 0x0005–0x000B; r3 added
+0x000C–0x000E). **Next free: `0x000F`.**
 
 **`EVT_KIND`** — u16, with a range convention this registry makes
 explicit:
 
 | Range | Purpose | Allocated | Next free |
 |---|---|---|---|
-| 1–99 | Serving operations (`EVENT` records) | 1–7 | 8 |
-| 100–199 | Safety and oversight (`SAFETY` records) | 100–103 | 104 |
+| 1–99 | Serving operations (`EVENT` records) | 1–9 | 10 |
+| 100–199 | Safety and oversight (`SAFETY` records) | 100–104 | 105 |
 | 200–65535 | Unallocated; a future block is claimed here first | — | — |
 
 **`EVT_CATEGORY`** (incident categories, kind 102): 1–3 allocated;
 next free 4. **`EVT_SEVERITY`**: 1–3, closed by meaning (low/medium/
 high). **`EVT_DISPOSITION`**: 0–2 allocated; next free 3.
+**`EVT_OUTCOME`** (tool-result outcomes, kind 9): 0–3 allocated
+(ok / error / timeout / cancelled); next free 4. *(r3)*
 
-**`AGGREGATE` tags (profile portion)**: `0x0003–0x0007` allocated;
-next free `0x0008`.
+**`AGGREGATE` tags (profile portion)**: `0x0003–0x0008` allocated;
+next free `0x0009`.
 
 **`KEY_SHRED` body tags** — own namespace (inference profile §8):
 `0x0001–0x0003` allocated; next free `0x0004`. **`SHRED_REASON`**:
