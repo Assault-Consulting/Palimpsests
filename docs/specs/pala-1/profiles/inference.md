@@ -249,7 +249,7 @@ per-second convention of the robotics profile does not carry over.
 | 1 | **`MERKLE` leaf source — deferred.** Version 1 of this profile defines no leaf source, and an inference chain SHOULD NOT emit `MERKLE` records until a revision defines one. Candidates: per-request metadata digests (selective disclosure of one request's existence) vs per-token-batch digests (finer, heavier). The choice changes what a disclosed leaf proves and is not needed for the first writer. |
 | 2 | **Canonical config encoding for `ORIGIN_CONFIG_DIGEST`.** Must be byte-deterministic across versions of the emitting library, or the same config produces different origins. Fixed by the writer; recorded here when it is. |
 | 3 | **`EVT_KIND` completeness.** The enum will grow under Phase 3–4 instrumentation (shed classes, engine switches, context-memory events). Additions before freeze are expected; renumbering is not. *r2 exercised exactly this path: kinds 102–103 and tags 0x0005–0x000B arrived additively with the envelope untouched. r3 repeated it: kinds 8–9 and 104, tags 0x000C–0x000E, one `AGG_*` tag.* |
-| 4 | **Canonical tool-argument encoding for `EVT_PAYLOAD_DIGEST`.** Same shape as issue 2: byte-deterministic across library versions, or the same call produces different digests. Fixed by the writer; recorded here when it is. *(r3)* |
+| 4 | **Canonical tool-argument encoding for `EVT_PAYLOAD_DIGEST`** — **resolved by the writer** (the §6.2 path): JSON with sorted keys, compact separators, non-ASCII preserved, UTF-8, then SHA-256; pre-canonicalized `bytes` digest as-is (`canonical_tool_args_digest`). *(r3)* |
 
 ---
 
