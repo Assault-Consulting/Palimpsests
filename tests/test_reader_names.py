@@ -11,6 +11,7 @@ about how far that record can be trusted.
 from __future__ import annotations
 
 import pytest
+from palimpsests.audit.names import assurance_tier_name, time_trust_name
 from palimpsests.audit.pala.codec import (
     TIER_A,
     TIER_B,
@@ -20,7 +21,6 @@ from palimpsests.audit.pala.codec import (
     TIME_UNKNOWN,
     TIME_UNSYNCED,
 )
-from palimpsests.audit.reader import assurance_tier_name, time_trust_name
 
 
 @pytest.mark.parametrize(
