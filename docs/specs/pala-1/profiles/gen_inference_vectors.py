@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: Assault Consulting
 # SPDX-License-Identifier: CC0-1.0
-"""Generate the inference-profile companion vectors (r2 semantics).
+"""Generate the inference-profile companion vectors (r2 + r3 semantics).
 
 Deterministic: fixed key, seq-derived nonces, fixed ids and clocks —
 real crypto, fake entropy. Never do this outside a test vector.
@@ -8,7 +8,11 @@ real crypto, fake entropy. Never do this outside a test vector.
 These vectors are the byte-exact examples for the r2 additions —
 INCIDENT_CANDIDATE (SAFETY kind 102), OVERSIGHT_ACK (SAFETY kind 103)
 and the KEY_SHRED erasure body (profile §8) — plus one encrypted
-deployment-content EVENT so the shred has a real target. They are a
+deployment-content EVENT so the shred has a real target — and, from r3,
+the tool-loop records: TOOL_CALL (kind 8), TOOL_RESULT (kind 9) with its
+hash-bound reference, and GUARD_TOOL_LOOP_LIMIT (SAFETY kind 104). The
+r2 records are appended-to, never edited: their bytes are identical to
+the r2 revision of this file. They are a
 **companion** artifact: `../test-vectors.json` is frozen with the core
 and is not touched by this script or any future one; a byte of it
 changing would invalidate four recorded verification runs. This file
@@ -20,6 +24,7 @@ tags and kinds can check its decoding against `semantics` below.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import struct
 import sys
@@ -61,6 +66,16 @@ SHRED_TARGET_SEQS = 0x0002
 SHRED_DETAIL = 0x0003
 REASON_LEGAL_ERASURE = 1
 
+# r3 profile allocations (profile §3.1 / §4)
+EVT_TOKEN_COUNT = 0x0003
+EVT_TOOL_NAME = 0x000C
+EVT_PAYLOAD_DIGEST = 0x000D
+EVT_OUTCOME = 0x000E
+KIND_TOOL_CALL = 8
+KIND_TOOL_RESULT = 9
+KIND_GUARD_TOOL_LOOP_LIMIT = 104
+OUTCOME_OK = 0
+
 
 def h(b: bytes) -> str:
     return b.hex()
@@ -72,6 +87,10 @@ def u16(v: int) -> bytes:
 
 def u64(v: int) -> bytes:
     return struct.pack("<Q", v)
+
+
+def u32(v: int) -> bytes:
+    return struct.pack("<I", v)
 
 
 records: list[dict] = []
@@ -240,13 +259,84 @@ prev = emit(
     "(the tip), per core §7.2.",
 )
 
+# ─── r3: tool-loop records (profile §3.1 / §4, kind 104) ────────────────
+
+# 8 — EVENT kind 8: TOOL_CALL. Arguments never enter the log: the body
+# carries the registered tool name and a digest of the canonical
+# argument encoding (open issue 4 fixes the canonicalization; the
+# vector just needs deterministic bytes).
+tool_args = b'{"query":"pala-1 verification"}'
+call_body = R.encode_tlvs([
+    R.tlv(EVT_KIND, u16(KIND_TOOL_CALL)),
+    R.tlv(EVT_TOOL_NAME, b"web.search"),
+    R.tlv(EVT_PAYLOAD_DIGEST, hashlib.sha256(tool_args).digest()),
+])
+call_hash = emit(
+    "tool_call",
+    header(record_type=R.RT_EVENT, seq=8, prev=prev, body=call_body,
+           tlvs=[R.tlv(R.TLV_ORIGIN_ROLE, b"engine.native")],
+           span_id=SPAN_S1),
+    "TOOL_CALL (kind 8, r3): the loop dispatched an invocation — tool "
+    "name plus argument digest, never the arguments.",
+    body=call_body,
+)
+prev = call_hash
+
+# 9 — EVENT kind 9: TOOL_RESULT, hash-bound to its call, outcome ok.
+tool_result = b'{"hits":3}'
+result_body = R.encode_tlvs([
+    R.tlv(EVT_KIND, u16(KIND_TOOL_RESULT)),
+    R.tlv(EVT_REF_SEQ, u64(8)),
+    R.tlv(EVT_REF_HASH, call_hash),
+    R.tlv(EVT_OUTCOME, u16(OUTCOME_OK)),
+    R.tlv(EVT_PAYLOAD_DIGEST, hashlib.sha256(tool_result).digest()),
+])
+prev = emit(
+    "tool_result",
+    header(record_type=R.RT_EVENT, seq=9, prev=prev, body=result_body,
+           tlvs=[R.tlv(R.TLV_ORIGIN_ROLE, b"engine.native")],
+           span_id=SPAN_S1),
+    "TOOL_RESULT (kind 9, r3): outcome 0 (ok); the ref pair binds it to "
+    "seq 8 past any seq ambiguity — the OVERSIGHT_ACK rule reused. "
+    "Latency is the monotonic_ns delta between the two records.",
+    body=result_body,
+)
+
+# 10 — SAFETY kind 104: GUARD_TOOL_LOOP_LIMIT — the cap refused further
+# dispatches; iteration count in EVT_TOKEN_COUNT, ref to the last call.
+limit_body = R.encode_tlvs([
+    R.tlv(EVT_KIND, u16(KIND_GUARD_TOOL_LOOP_LIMIT)),
+    R.tlv(EVT_TOKEN_COUNT, u32(8)),
+    R.tlv(EVT_REF_SEQ, u64(8)),
+    R.tlv(EVT_REF_HASH, call_hash),
+])
+prev = emit(
+    "guard_tool_loop_limit",
+    header(record_type=R.RT_SAFETY, seq=10, prev=prev, body=limit_body,
+           tlvs=[R.tlv(R.TLV_ORIGIN_ROLE, b"engine.native")],
+           span_id=SPAN_S1),
+    "GUARD_TOOL_LOOP_LIMIT (kind 104, r3): the loop cap fired after 8 "
+    "iterations — a guard refusal on the record, never shed; feeds the "
+    "existing category-1 escalation counter.",
+    body=limit_body,
+)
+
+# 11 — ANCHOR noting the new head
+anchored_r3 = prev
+prev = emit(
+    "anchor_r3",
+    header(record_type=R.RT_ANCHOR, seq=11, prev=prev,
+           tlvs=[R.tlv(R.TLV_ANCHOR_HEAD, anchored_r3)]),
+    "Anchor over the extended chain; anchor_head below tracks this tip.",
+)
+
 chain_head = prev
 
 # ─── self-verify before writing anything ────────────────────────────────
 
 res = R.verify_chain(chain)
 assert res.chain_ok, f"generated chain does not verify: {res}"
-assert res.count == 8
+assert res.count == 12
 assert not res.breaks and not res.gaps and not res.violations
 # the encrypted body round-trips under the spec'd nonce/AAD derivation
 back = AESGCM(KEY).decrypt(R.nonce_for(3), bodies[3][12:],
@@ -255,13 +345,13 @@ assert back == plaintext
 
 out = {
     "$comment": (
-        "Inference-profile companion vectors (r2). Deterministic; real "
+        "Inference-profile companion vectors (r2 + r3). Deterministic; real "
         "crypto, fake entropy — never derive keys or ids like this outside "
         "a test vector. ../test-vectors.json is frozen with the core and "
         "is deliberately untouched by these."
     ),
     "profile": "inference",
-    "profile_revision": "r2",
+    "profile_revision": "r3",
     "generator": "gen_inference_vectors.py",
     "boot_id": h(BOOT_ID),
     "encryption": {
@@ -275,7 +365,7 @@ out = {
     "anchor_head": h(chain_head),
     "semantics": {
         "$comment": (
-            "Decoded r2 body expectations, so a profile-aware reader can "
+            "Decoded r2/r3 body expectations, so a profile-aware reader can "
             "check its tag/kind resolution — the envelope answers above "
             "are checkable with any core verifier."
         ),
@@ -293,6 +383,20 @@ out = {
         "6": {
             "record_type": "KEY_SHRED", "reason": 1,
             "target_seqs": [3], "detail": "erasure request E-17",
+        },
+        "8": {
+            "kind": 8, "kind_name": "TOOL_CALL",
+            "tool_name": "web.search",
+            "payload_digest": hashlib.sha256(tool_args).digest().hex(),
+        },
+        "9": {
+            "kind": 9, "kind_name": "TOOL_RESULT",
+            "ref_seq": 8, "ref_hash": h(call_hash), "outcome": 0,
+            "payload_digest": hashlib.sha256(tool_result).digest().hex(),
+        },
+        "10": {
+            "kind": 104, "kind_name": "GUARD_TOOL_LOOP_LIMIT",
+            "iterations": 8, "ref_seq": 8, "ref_hash": h(call_hash),
         },
     },
 }

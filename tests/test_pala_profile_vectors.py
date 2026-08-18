@@ -62,7 +62,7 @@ def test_envelope_verifies_with_the_production_verifier(vectors, container):
     headers = [hb for hb, _ in iter_records(container)]
     res = verify_headers(headers)
     assert res.chain_ok is True
-    assert res.count == len(vectors["records"]) == 8
+    assert res.count == len(vectors["records"])  # self-describing fixture
     assert res.breaks == [] and res.gaps == [] and res.violations == []
     assert res.head.hex() == vectors["chain_head"] == vectors["anchor_head"]
 

@@ -1,7 +1,7 @@
 {
-  "$comment": "Inference-profile companion vectors (r2). Deterministic; real crypto, fake entropy \u2014 never derive keys or ids like this outside a test vector. ../test-vectors.json is frozen with the core and is deliberately untouched by these.",
+  "$comment": "Inference-profile companion vectors (r2 + r3). Deterministic; real crypto, fake entropy \u2014 never derive keys or ids like this outside a test vector. ../test-vectors.json is frozen with the core and is deliberately untouched by these.",
   "profile": "inference",
-  "profile_revision": "r2",
+  "profile_revision": "r3",
   "generator": "gen_inference_vectors.py",
   "boot_id": "b0071d000000000000000000000000a2",
   "encryption": {
@@ -92,12 +92,54 @@
       "header_len": 192,
       "header_hex": "50414c410100c000500000030700000000000000b0071d000000000000000000000000a210ae1ab4dc7c9b7627c85520999e28d89287d91073420ebecbfbe65d7d81f6100000000000000000000000000000000000000000000000000000000000000000c0e9db1802000000c0b72d90a30ac218000000000000000000000000000000000000000000000000000000000000000000000000000000005000200010ae1ab4dc7c9b7627c85520999e28d89287d91073420ebecbfbe65d7d81f610",
       "record_hash": "7c33012ea92b5724f8442890513348aadb95b27273f678bce23c34bef851dec0"
+    },
+    {
+      "label": "tool_call",
+      "note": "TOOL_CALL (kind 8, r3): the loop dispatched an invocation \u2014 tool name plus argument digest, never the arguments.",
+      "seq": 8,
+      "record_type": "0x0012",
+      "header_len": 173,
+      "header_hex": "50414c410100ad00120000030800000000000000b0071d000000000000000000000000a27c33012ea92b5724f8442890513348aadb95b27273f678bce23c34bef851dec03131313131313131313131313131313100000000000000000000000000000000002ceb180200000000fa3c90a30ac2180000000038000000939b1e4b7262cafe867203ea779cd4ba5963903b7daf83dfbdae0a762f15aea301000d00656e67696e652e6e6174697665",
+      "record_hash": "d5fddef61cc220d6eaebd4084742e1040f3c794cd294a56fe3886ceac895893d",
+      "body_len": 56,
+      "body_hex": "0100020008000c000a007765622e7365617263680d002000e54e597d674f17cb99cafcbf9981ef8fc5e3cfea14c7ea21ddc51e6a46045e01"
+    },
+    {
+      "label": "tool_result",
+      "note": "TOOL_RESULT (kind 9, r3): outcome 0 (ok); the ref pair binds it to seq 8 past any seq ambiguity \u2014 the OVERSIGHT_ACK rule reused. Latency is the monotonic_ns delta between the two records.",
+      "seq": 9,
+      "record_type": "0x0012",
+      "header_len": 173,
+      "header_hex": "50414c410100ad00120000030900000000000000b0071d000000000000000000000000a2d5fddef61cc220d6eaebd4084742e1040f3c794cd294a56fe3886ceac895893d3131313131313131313131313131313100000000000000000000000000000000406efa1802000000403c4c90a30ac2180000000060000000ca387e04c010756cd380fd693bf83aa955ebacebe8603f532659fcf28d4a23b801000d00656e67696e652e6e6174697665",
+      "record_hash": "6d11e63476c5b3e75aaede6aa8a2e409bb9d2dedd6242c5c0f3c8cda296d1278",
+      "body_len": 96,
+      "body_hex": "01000200090008000800080000000000000009002000d5fddef61cc220d6eaebd4084742e1040f3c794cd294a56fe3886ceac895893d0e00020000000d0020005429ed31f7eec9dbc86e358b3bacc5eb07eba26715ab1e05c802841f2d3fbd57"
+    },
+    {
+      "label": "guard_tool_loop_limit",
+      "note": "GUARD_TOOL_LOOP_LIMIT (kind 104, r3): the loop cap fired after 8 iterations \u2014 a guard refusal on the record, never shed; feeds the existing category-1 escalation counter.",
+      "seq": 10,
+      "record_type": "0x0040",
+      "header_len": 173,
+      "header_hex": "50414c410100ad00400000030a00000000000000b0071d000000000000000000000000a26d11e63476c5b3e75aaede6aa8a2e409bb9d2dedd6242c5c0f3c8cda296d1278313131313131313131313131313131310000000000000000000000000000000080b0091902000000807e5b90a30ac218000000003e000000ef8a7fb4746fabc6212a69555ef90ebeb9ce497f66b369160774c46507153cf001000d00656e67696e652e6e6174697665",
+      "record_hash": "d82d560f54988256575ac19374f915b43419007004c6e22f7c5e116c8ff1c937",
+      "body_len": 62,
+      "body_hex": "010002006800030004000800000008000800080000000000000009002000d5fddef61cc220d6eaebd4084742e1040f3c794cd294a56fe3886ceac895893d"
+    },
+    {
+      "label": "anchor_r3",
+      "note": "Anchor over the extended chain; anchor_head below tracks this tip.",
+      "seq": 11,
+      "record_type": "0x0050",
+      "header_len": 192,
+      "header_hex": "50414c410100c000500000030b00000000000000b0071d000000000000000000000000a2d82d560f54988256575ac19374f915b43419007004c6e22f7c5e116c8ff1c9370000000000000000000000000000000000000000000000000000000000000000c0f2181902000000c0c06a90a30ac2180000000000000000000000000000000000000000000000000000000000000000000000000000000050002000d82d560f54988256575ac19374f915b43419007004c6e22f7c5e116c8ff1c937",
+      "record_hash": "76fd801ba7e34addf6d02f8dc531f36e53b65e9f31565c5561e24e5dadd56cd7"
     }
   ],
-  "chain_head": "7c33012ea92b5724f8442890513348aadb95b27273f678bce23c34bef851dec0",
-  "anchor_head": "7c33012ea92b5724f8442890513348aadb95b27273f678bce23c34bef851dec0",
+  "chain_head": "76fd801ba7e34addf6d02f8dc531f36e53b65e9f31565c5561e24e5dadd56cd7",
+  "anchor_head": "76fd801ba7e34addf6d02f8dc531f36e53b65e9f31565c5561e24e5dadd56cd7",
   "semantics": {
-    "$comment": "Decoded r2 body expectations, so a profile-aware reader can check its tag/kind resolution \u2014 the envelope answers above are checkable with any core verifier.",
+    "$comment": "Decoded r2/r3 body expectations, so a profile-aware reader can check its tag/kind resolution \u2014 the envelope answers above are checkable with any core verifier.",
     "4": {
       "kind": 102,
       "kind_name": "INCIDENT_CANDIDATE",
@@ -123,6 +165,27 @@
         3
       ],
       "detail": "erasure request E-17"
+    },
+    "8": {
+      "kind": 8,
+      "kind_name": "TOOL_CALL",
+      "tool_name": "web.search",
+      "payload_digest": "e54e597d674f17cb99cafcbf9981ef8fc5e3cfea14c7ea21ddc51e6a46045e01"
+    },
+    "9": {
+      "kind": 9,
+      "kind_name": "TOOL_RESULT",
+      "ref_seq": 8,
+      "ref_hash": "d5fddef61cc220d6eaebd4084742e1040f3c794cd294a56fe3886ceac895893d",
+      "outcome": 0,
+      "payload_digest": "5429ed31f7eec9dbc86e358b3bacc5eb07eba26715ab1e05c802841f2d3fbd57"
+    },
+    "10": {
+      "kind": 104,
+      "kind_name": "GUARD_TOOL_LOOP_LIMIT",
+      "iterations": 8,
+      "ref_seq": 8,
+      "ref_hash": "d5fddef61cc220d6eaebd4084742e1040f3c794cd294a56fe3886ceac895893d"
     }
   }
 }
