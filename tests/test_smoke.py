@@ -8,9 +8,8 @@ phase 1 alongside the engine Protocol.
 """
 from __future__ import annotations
 
-from importlib.metadata import version as distribution_version
-
 import palimpsests
+from importlib.metadata import version as distribution_version
 
 
 def test_version_is_exposed() -> None:
