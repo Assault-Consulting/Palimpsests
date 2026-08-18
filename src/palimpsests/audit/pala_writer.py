@@ -34,6 +34,7 @@ output is the definition of done for this profile (profile §7).
 
 from __future__ import annotations
 
+import json
 import os
 import struct
 import threading
@@ -94,6 +95,9 @@ EVT_REF_SEQ = 0x0008  # u64 — seq of the referenced record (r2)
 EVT_REF_HASH = 0x0009  # 32 bytes — record_hash of the referenced record (r2)
 EVT_OPERATOR_ID = 0x000A  # 16 bytes — pseudonymous operator id (r2)
 EVT_DISPOSITION = 0x000B  # u16 — 0 ack, 1 dismissed, 2 escalated (r2)
+EVT_TOOL_NAME = 0x000C  # UTF-8 <= 64 bytes — registered tool identifier (r3)
+EVT_PAYLOAD_DIGEST = 0x000D  # 32 bytes — digest of canonical args / result (r3)
+EVT_OUTCOME = 0x000E  # u16 — 0 ok, 1 error, 2 timeout, 3 cancelled (r3)
 
 # EVT_KIND values — operations (profile §3)
 KIND_MODEL_LOAD = 1
@@ -103,11 +107,14 @@ KIND_KV_RESTORE = 4
 KIND_PREFIX_COPY = 5
 KIND_PREFIX_WARM = 6
 KIND_RECOVERY_TRUNCATED_TAIL = 7
+KIND_TOOL_CALL = 8  # r3 — the loop dispatched a tool invocation
+KIND_TOOL_RESULT = 9  # r3 — the invocation returned / failed / was abandoned
 # EVT_KIND values — guard refusals (profile §4), from 100 upward
 KIND_GUARD_PREFIX_RELEASE = 100
 KIND_GUARD_STATE_REJECT = 101
 KIND_INCIDENT_CANDIDATE = 102  # r2 — never-shed observation, not a determination
 KIND_OVERSIGHT_ACK = 103  # r2 — the oversight loop's closing record
+KIND_GUARD_TOOL_LOOP_LIMIT = 104  # r3 — the loop cap refused further dispatches
 
 # r2 incident categories (profile §4, kind 102) — grows additively
 CAT_GUARD_ESCALATION = 1
@@ -118,6 +125,14 @@ CAT_ANCHOR_ANOMALY = 3
 DISP_ACKNOWLEDGED = 0
 DISP_DISMISSED = 1
 DISP_ESCALATED = 2
+
+# r3 — TOOL_RESULT outcomes (profile §3.1)
+OUTCOME_OK = 0
+OUTCOME_ERROR = 1
+OUTCOME_TIMEOUT = 2
+OUTCOME_CANCELLED = 3
+
+_TOOL_NAME_MAX = 64
 
 # r2 KEY_SHRED body — its OWN namespace (profile §8), not EVT tags
 SHRED_REASON = 0x0001  # u16
@@ -163,6 +178,25 @@ def canonical_config_digest(config: Mapping[str, object]) -> bytes:
     """
     lines = "\n".join(f"{k}={config[k]}" for k in sorted(config))
     return sha256(lines.encode("utf-8")).digest()
+
+
+def canonical_tool_args_digest(arguments: object) -> bytes:
+    """Digest of a tool invocation's arguments for ``EVT_PAYLOAD_DIGEST``.
+
+    Resolves inference-profile open issue §6.4 the same way §6.2 was
+    resolved for the config digest: the encoding must be byte-deterministic
+    across library versions, or the same call yields different digests.
+    The canonical form is JSON with sorted keys, compact separators, and
+    non-ASCII preserved, UTF-8, then SHA-256. ``bytes`` are treated as
+    already-canonical and digested as-is — for callers whose tool protocol
+    has its own canonical encoding.
+    """
+    if isinstance(arguments, (bytes, bytearray)):
+        return sha256(bytes(arguments)).digest()
+    encoded = json.dumps(
+        arguments, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    ).encode("utf-8")
+    return sha256(encoded).digest()
 
 
 def session_span_id(session_id: str) -> bytes:
@@ -590,6 +624,111 @@ class PalaWriter:
             ]
         )
         return self._emit(RT_SAFETY, tlvs=self._origin(role), body=body)
+
+    # ─── r3: tool-loop records (profile §3.1 / §4 kind 104) ─────────────────
+
+    def tool_call(
+        self,
+        name: str,
+        *,
+        args_digest: bytes | None = None,
+        detail: str | None = None,
+        span_id: bytes = ZERO16,
+        role: str = ROLE_NATIVE,
+    ) -> bytes:
+        """Record a dispatched tool invocation (EVENT kind 8, r3).
+
+        ``name`` is the registered tool identifier — an identifier, never
+        arguments; arguments enter the log only as ``args_digest``
+        (``canonical_tool_args_digest``). What this records is the
+        dispatch, not a "decision" — whether the dispatch was wise is a
+        judgment the log must not fake (profile §3.1).
+        """
+        raw = name.encode("utf-8")
+        if not raw or len(raw) > _TOOL_NAME_MAX:
+            raise ValueError(f"tool name must be 1..{_TOOL_NAME_MAX} UTF-8 bytes")
+        tlvs: list[tuple[int, bytes]] = [
+            (EVT_KIND, struct.pack("<H", KIND_TOOL_CALL)),
+            (EVT_TOOL_NAME, raw),
+        ]
+        if args_digest is not None:
+            if len(args_digest) != 32:
+                raise ValueError("args_digest must be 32 bytes")
+            tlvs.append((EVT_PAYLOAD_DIGEST, args_digest))
+        if detail is not None:
+            tlvs.append((EVT_DETAIL, _detail(detail)))
+        return self._emit(
+            RT_EVENT, tlvs=self._origin(role), body=encode_tlvs(tlvs), span_id=span_id
+        )
+
+    def tool_result(
+        self,
+        call_seq: int,
+        call_hash: bytes,
+        outcome: int,
+        *,
+        result_digest: bytes | None = None,
+        span_id: bytes = ZERO16,
+        role: str = ROLE_NATIVE,
+    ) -> bytes:
+        """Record a returned/failed/abandoned invocation (EVENT kind 9, r3).
+
+        The reference pair MUST name the ``TOOL_CALL`` — the hash binds it
+        past any seq ambiguity, the OVERSIGHT_ACK rule reused. The writer
+        validates the *format* only; whether the pair names a real call is
+        the reader's referential-integrity advisory. Latency is the
+        ``monotonic_ns`` delta between the two records — no duration field
+        exists because none is needed (profile §3.1).
+        """
+        if len(call_hash) != 32:
+            raise ValueError("call_hash must be 32 bytes")
+        if outcome not in (OUTCOME_OK, OUTCOME_ERROR, OUTCOME_TIMEOUT, OUTCOME_CANCELLED):
+            raise ValueError("outcome must be 0..3 (ok/error/timeout/cancelled)")
+        tlvs: list[tuple[int, bytes]] = [
+            (EVT_KIND, struct.pack("<H", KIND_TOOL_RESULT)),
+            (EVT_REF_SEQ, struct.pack("<Q", call_seq)),
+            (EVT_REF_HASH, call_hash),
+            (EVT_OUTCOME, struct.pack("<H", outcome)),
+        ]
+        if result_digest is not None:
+            if len(result_digest) != 32:
+                raise ValueError("result_digest must be 32 bytes")
+            tlvs.append((EVT_PAYLOAD_DIGEST, result_digest))
+        return self._emit(
+            RT_EVENT, tlvs=self._origin(role), body=encode_tlvs(tlvs), span_id=span_id
+        )
+
+    def guard_tool_loop_limit(
+        self,
+        iterations: int,
+        *,
+        call_seq: int | None = None,
+        call_hash: bytes | None = None,
+        span_id: bytes = ZERO16,
+        role: str = ROLE_NATIVE,
+    ) -> bytes:
+        """Record that the tool-loop cap refused further dispatches (SAFETY 104, r3).
+
+        The §4 pattern applied to the loop: the cap refuses rather than let
+        a runaway loop exhaust the engine, and this record observes the
+        refusal — it never implements it. ``call_seq``/``call_hash`` MAY
+        name the last ``TOOL_CALL`` before the cap and MUST be given
+        together. Never shed.
+        """
+        if (call_seq is None) != (call_hash is None):
+            raise ValueError("call_seq and call_hash must be given together")
+        if call_hash is not None and len(call_hash) != 32:
+            raise ValueError("call_hash must be 32 bytes")
+        tlvs: list[tuple[int, bytes]] = [
+            (EVT_KIND, struct.pack("<H", KIND_GUARD_TOOL_LOOP_LIMIT)),
+            (EVT_TOKEN_COUNT, struct.pack("<I", iterations)),
+        ]
+        if call_seq is not None and call_hash is not None:
+            tlvs.append((EVT_REF_SEQ, struct.pack("<Q", call_seq)))
+            tlvs.append((EVT_REF_HASH, call_hash))
+        return self._emit(
+            RT_SAFETY, tlvs=self._origin(role), body=encode_tlvs(tlvs), span_id=span_id
+        )
 
     # ─── r2: documented erasure (profile §8) ────────────────────────────────
 
