@@ -131,8 +131,17 @@ the correctness of the code itself.
 ## Cutting a release (maintainer checklist)
 
 1. Land all release content on `main` via PR (CI green).
-2. Update `pyproject.toml` `version`, `CHANGELOG.md`, and any status
-   banners (README / docs) to the new version — via a `release/x.y.z` PR.
+2. Update the version in **both** places, plus `CHANGELOG.md` and any status
+   banners (README / docs) — via a `release/x.y.z` PR:
+   - `pyproject.toml` `version`
+   - `src/palimpsests/__init__.py` `__version__`
+
+   These two are separate declarations of the same fact, and they have
+   drifted before: the 0.8.0 release shipped with the constant still reading
+   `0.7.0`, which published exports naming the wrong verifier.
+   `tests/test_smoke.py` now asserts they agree, so the drift fails CI — but
+   the checklist names both files so the release path does not depend on a
+   test catching a mistake that should not be made.
 3. After merge, tag from `main`:
    ```
    git tag vX.Y.Z -m "vX.Y.Z"
