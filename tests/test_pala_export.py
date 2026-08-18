@@ -48,16 +48,19 @@ def _vectors_blob() -> tuple[bytes, dict]:
 
 def test_export_is_deterministic_and_matches_the_published_chain():
     blob, v = _vectors_blob()
+    published = len(v["records"])  # the vectors file is self-describing;
+    # it grows additively across profile revisions, and this test pins the
+    # relationship (export count == published chain), not a revision's size
     a, b = io.StringIO(), io.StringIO()
-    assert export_jsonl(blob, a) == export_jsonl(blob, b) == 8
+    assert export_jsonl(blob, a) == export_jsonl(blob, b) == published
     assert a.getvalue() == b.getvalue()  # same bytes in, same bytes out
 
     lines = [json.loads(line) for line in a.getvalue().splitlines()]
-    assert len(lines) == 9  # 8 records + 1 summary
+    assert len(lines) == published + 1  # every record + 1 summary
     summary = lines[-1]
     assert summary["summary"] is True and summary["format"] == "pala-jsonl/1"
     assert summary["chain_head"] == v["chain_head"]
-    assert summary["chain_ok"] is True and summary["records"] == 8
+    assert summary["chain_ok"] is True and summary["records"] == published
     assert "authoritative" in summary["note"]  # derived, said out loud
 
 
@@ -121,7 +124,7 @@ def test_cli_export_writes_the_file_and_exits_zero(tmp_path):
     result = runner.invoke(app, ["pala", "export", str(src), "-o", str(dst)])
     assert result.exit_code == 0
     lines = dst.read_text(encoding="utf-8").splitlines()
-    assert len(lines) == 9
+    assert len(lines) == len(v["records"]) + 1
     assert json.loads(lines[-1])["chain_head"] == v["chain_head"]
 
 
@@ -166,16 +169,16 @@ def test_from_seq_and_to_seq_range():
 
 
 def test_range_empty_when_no_records_match():
-    blob, _ = _vectors_blob()
+    blob, v = _vectors_blob()
     out = io.StringIO()
-    count = export_jsonl(blob, out, from_seq=100, to_seq=200)
+    count = export_jsonl(blob, out, from_seq=1000, to_seq=2000)
     assert count == 0
     lines = [json.loads(line) for line in out.getvalue().splitlines()]
     records = [line for line in lines if "summary" not in line]
     assert records == []
     summary = lines[-1]
     assert summary["summary"] is True
-    assert summary["records"] == 8  # full chain count still reported
+    assert summary["records"] == len(v["records"])  # full chain count still reported
 
 
 def test_range_summary_includes_bounds():
