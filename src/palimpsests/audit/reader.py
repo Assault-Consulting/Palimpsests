@@ -67,6 +67,7 @@ from palimpsests.audit.pala_writer import (
     EVT_REF_SEQ,
     KIND_GUARD_PREFIX_RELEASE,
     KIND_GUARD_STATE_REJECT,
+    KIND_GUARD_TOOL_LOOP_LIMIT,
     KIND_INCIDENT_CANDIDATE,
     KIND_KV_RESTORE,
     KIND_KV_SAVE,
@@ -76,6 +77,8 @@ from palimpsests.audit.pala_writer import (
     KIND_PREFIX_COPY,
     KIND_PREFIX_WARM,
     KIND_RECOVERY_TRUNCATED_TAIL,
+    KIND_TOOL_CALL,
+    KIND_TOOL_RESULT,
     SHRED_TARGET_SEQS,
 )
 
@@ -119,6 +122,9 @@ _KIND_NAMES = {
     KIND_GUARD_STATE_REJECT: "GUARD_STATE_REJECT",
     KIND_INCIDENT_CANDIDATE: "INCIDENT_CANDIDATE",
     KIND_OVERSIGHT_ACK: "OVERSIGHT_ACK",
+    KIND_TOOL_CALL: "TOOL_CALL",
+    KIND_TOOL_RESULT: "TOOL_RESULT",
+    KIND_GUARD_TOOL_LOOP_LIMIT: "GUARD_TOOL_LOOP_LIMIT",
 }
 
 # Only these record types carry the profile EVT_KIND scheme in their body;
@@ -354,7 +360,12 @@ class AuditReader:
 
         items: list[AdvisoryItem] = []
         for dr, _hb in by_seq.values():
-            if dr.kind in (KIND_INCIDENT_CANDIDATE, KIND_OVERSIGHT_ACK):
+            if dr.kind in (
+                KIND_INCIDENT_CANDIDATE,
+                KIND_OVERSIGHT_ACK,
+                KIND_TOOL_RESULT,
+                KIND_GUARD_TOOL_LOOP_LIMIT,
+            ):
                 items.extend(self._check_reference(dr, by_seq))
             elif dr.record_type == RT_KEY_SHRED and dr.body_tlvs is not None:
                 items.extend(self._check_shred_targets(dr, by_seq))
@@ -403,6 +414,22 @@ class AuditReader:
                     boot,
                     f"OVERSIGHT_ACK at seq {dr.seq} resolves (hash-bound) to seq "
                     f"{ref_seq}, which is not an INCIDENT_CANDIDATE",
+                )
+            ]
+        if (
+            dr.kind in (KIND_TOOL_RESULT, KIND_GUARD_TOOL_LOOP_LIMIT)
+            and target_dr.kind != KIND_TOOL_CALL
+        ):
+            # r3: a result MUST bind to its call, and the loop guard MAY
+            # name the last call — either way, a resolved reference whose
+            # target is not a TOOL_CALL is semantic drift worth surfacing.
+            return [
+                AdvisoryItem(
+                    "tool_target_not_a_call",
+                    dr.seq,
+                    boot,
+                    f"{who} at seq {dr.seq} resolves (hash-bound) to seq "
+                    f"{ref_seq}, which is not a TOOL_CALL",
                 )
             ]
         return []
