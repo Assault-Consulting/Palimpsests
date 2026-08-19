@@ -31,6 +31,8 @@ from palimpsests.audit.pala.codec import (
     NONCE_LEN,
     RT_ANCHOR,
     RT_GENESIS,
+    RT_SPAN_END,
+    RT_SPAN_START,
     TIME_NTP_SYNCED,
     TIME_UNKNOWN,
     ZERO32,
@@ -49,6 +51,8 @@ _OFF_BOOT_ID = slice(20, 36)
 _OFF_PREV_HASH = slice(36, 68)
 _OFF_MONOTONIC = 100
 _OFF_WALL = 108
+_OFF_SPAN_ID = slice(68, 84)
+_ZERO16 = b"\x00" * 16
 
 
 @dataclass(frozen=True)
@@ -127,6 +131,12 @@ class _AdvisoryAccumulator:
         self._boot_time_trust: int | None = None
         self._last_mono: int | None = None
         self._last_wall: int | None = None  # last *non-zero* wall in this boot
+        # Span pairing (independent run #5 finding): §3.1 promises a crash
+        # leaves a visibly unclosed span, and this channel is where that
+        # visibility is operationalized — as advisories, never a verdict.
+        self._span_started: dict[bytes, int] = {}
+        self._span_ended: set[bytes] = set()
+        self._span_referenced: dict[bytes, int] = {}
 
     def observe(self, hb: bytes) -> None:
         rtype = struct.unpack_from("<H", hb, 8)[0]
@@ -139,6 +149,15 @@ class _AdvisoryAccumulator:
         self._observed += 1
         if rtype == RT_ANCHOR:
             self._any_anchor = True
+
+        span_id = bytes(hb[_OFF_SPAN_ID])
+        if span_id != _ZERO16:
+            if rtype == RT_SPAN_START:
+                self._span_started.setdefault(span_id, seq)
+            elif rtype == RT_SPAN_END:
+                self._span_ended.add(span_id)
+            else:
+                self._span_referenced.setdefault(span_id, seq)
 
         if boot_id != self._boot:
             # New boot: reset the per-boot baselines. Clocks reset at a
@@ -184,6 +203,36 @@ class _AdvisoryAccumulator:
             self._last_wall = wall
 
     def finish(self) -> Advisory:
+        for span_id, seq in sorted(
+            self._span_started.items(), key=lambda kv: kv[1]
+        ):
+            if span_id not in self._span_ended:
+                self._items.append(
+                    AdvisoryItem(
+                        code="span_unclosed",
+                        at_seq=seq,
+                        boot_id=None,
+                        detail=(
+                            f"SPAN_START {span_id.hex()[:16]}… at seq {seq} "
+                            "has no SPAN_END — §3.1's crash evidence, surfaced"
+                        ),
+                    )
+                )
+        for span_id, seq in sorted(
+            self._span_referenced.items(), key=lambda kv: kv[1]
+        ):
+            if span_id not in self._span_started:
+                self._items.append(
+                    AdvisoryItem(
+                        code="span_unopened",
+                        at_seq=seq,
+                        boot_id=None,
+                        detail=(
+                            f"span {span_id.hex()[:16]}… is referenced from "
+                            f"seq {seq} but no SPAN_START exists for it"
+                        ),
+                    )
+                )
         if self._observed and not self._any_anchor:
             self._items.append(
                 AdvisoryItem(

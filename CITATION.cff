@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: "If you use Palimpsests, please cite it as below."
+title: "Palimpsests"
+type: software
+authors:
+  - name: "Assault Consulting"
+    city: "Kyiv"
+    country: "UA"
+  - family-names: "Sparysh"
+    given-names: "Andrii"
+  - family-names: "Verteletskyi"
+    given-names: "Oleksandr"
+repository-code: "https://github.com/Assault-Consulting/Palimpsests"
+url: "https://palimpsests.dev"
+license: Apache-2.0
+keywords:
+  - "LLM inference"
+  - "audit trail"
+  - "tamper-evident logging"
+  - "PALA-1"
+  - "EU AI Act"
+preferred-citation:
+  type: report
+  title: "Verifiable Audit Trails for Local LLM Inference: the PALA-1 Format and its Regulatory Mapping"
+  authors:
+    - family-names: "Sparysh"
+      given-names: "Andrii"
+    - family-names: "Verteletskyi"
+      given-names: "Oleksandr"
+  doi: "10.5281/zenodo.21978107"
+  year: 2026

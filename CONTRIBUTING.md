@@ -82,6 +82,33 @@ How dependencies are selected, obtained, and tracked:
 - Path-safety and capability-gating code is security-sensitive — test the escape
   and denial paths explicitly, not just the happy path.
 
+## AI-assisted contributions
+
+AI coding tools are welcome here — several merged contributions used them,
+disclosed it voluntarily, and set the norm this section now makes explicit.
+For a project whose product is AI transparency, the bar is the same
+transparency applied to itself:
+
+- **Disclose the tooling** in the PR description — one line naming the
+  assistant/agent used (e.g. "AI tools used: opencode CLI"). Fully manual
+  work needs no disclaimer.
+- **You must have executed what you submit.** Run the tests, run the
+  commands, render the docs you wrote. A walkthrough whose output was never
+  produced, or a patch that was never run, will be sent back regardless of
+  how plausible it reads — plausibility is exactly what AI tools are good
+  at, and exactly what review here does not accept as evidence.
+- **You are the author.** The DCO sign-off (below) certifies *human*
+  responsibility for every line, AI-generated or not. "The model wrote it"
+  is not a review response; if you cannot explain a line, do not submit it.
+- **The review bar does not move.** AI-assisted PRs get the same non-author
+  review as everything else — no discount for volume, no penalty for
+  disclosure.
+- **Mismatched PRs are closed on sight.** A description that does not match
+  the diff, or a diff that does not address the linked issue, is closed
+  without extended discussion — that pattern is how automated PR-farming
+  looks, and the maintainers' review time is the project's scarcest
+  resource.
+
 ## Reporting vulnerabilities
 
 Please **do not** report security issues in public issues or pull requests. Use a
