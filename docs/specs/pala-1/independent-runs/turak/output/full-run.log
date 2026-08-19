@@ -1,0 +1,280 @@
+PALA-1 v1.0 independent verification run
+date: 2026-08-18T20:02:55Z
+perl: v5.42.2
+
+### 0. input package digests (must match the kit's pinned values)
+  b4ea536bec5d4a52cf1f2bbbd20ee8ea25b627bab41d7fa5da4012bd114381d5  PALA-1.md
+  20093ccd12075aef2062603b5282df83e70ce3a59944173d930183ca6e36fe56  profiles/robotics.md
+  3ef8feb3017bd24ca117710c7983641ee5a3803272b6dea82937d60735449a0f  profiles/inference.md
+  476c05ce8ef765c57b0b67bea8ac4ddf73a85d8e0435aac38b19831ae20a8193  test-vectors.json
+
+### 1. build the section 2.4 container
+built chain.pala: 12 records, 2315 bytes
+  sha256(chain.pala) = 6b65d40ebbe461a40778aee6c6f31b4aae8d1f12c96f17eca3524fa7cd1c8c6e
+
+### 2. section 8 expected results (the pass bar)
+==============================================================================
+PALA-1 v1.0 - section 8 Expected results (pass bar)
+container: chain.pala (2315 bytes)
+==============================================================================
+#   value                              result   computed
+--- ---------------------------------- -------- --------------------
+1   chain_head                         MATCH    3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813
+2   chain_ok                           MATCH    true
+3   record_count                       MATCH    12
+4   breaks (empty)                     MATCH    []
+5   gaps (empty)                       MATCH    []
+6   violations (empty)                 MATCH    []
+7   complete_to_anchor                 MATCH    true
+                                                (anchor = store current head)
+8   anchor_head                        MATCH    3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813
+                                                (computed head == published anchor_head)
+9   merkle_tree_hash                   MATCH    518f5be5173250f705e3bda029ec1c11ac5c4459115c07dde5bc1021d9f468db
+                                                (recomputed from merkle.leaves)
+10  merkle_leaf_count                  MATCH    30
+11  leaf-7 proof verifies (len 5)      MATCH    true/5
+                                                (folded against the RECOMPUTED root)
+
+  11/11 MATCH, 0 DIVERGE
+
+==============================================================================
+Extras beyond the pass bar
+==============================================================================
+  [ok] both Merkle constructions agree (iterative promotion vs RFC 6962 recursive)
+  [ok] independently generated leaf-7 proof == published merkle.proof (5 entries)
+  [ok] per-record record_hash = SHA-256(header_bytes) matches published: 12/12
+  [ok] body_digest = SHA-256(body) over exactly body_len bytes: 2/2 bodies
+  [ok] MERKLE record TLV 0x0011 MERKLE_TREE_HASH == recomputed root
+  [ok] MERKLE record TLV 0x0012 MERKLE_LEAF_COUNT == 30 published leaves
+  [ok] MERKLE record carries no leaves (body_len = 0, section 4.3)
+  [ok] ANCHOR record TLV 0x0050 ANCHOR_HEAD == record_hash at seq 8 (14434088e5f5866c...)
+  [ok] checking completeness against that stale TLV gives anchor_lag = 3
+  [ok] container has no truncated tail (final record ends exactly at EOF)
+  [--] uninterpretable records: []
+
+### 3. section 8 mutation demos + independent adversarial cases
+==============================================================================
+PALA-1 v1.0 - section 8 mutation demos
+==============================================================================
+
+  1. body_bitflip - flip one bit in the seq-3 body
+    [ok] body_digest mismatch detected (section 7.5)                yes
+    [ok] chain still verifies (section 1.2 - hash covers header only) true
+    [ok] chain_head unchanged by the body edit                      3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813
+
+  2. unknown_record_type - append a record of type 0x7fff
+    [ok] chain_ok                                                   true
+    [ok] count                                                      13
+    [ok] uninterpretable                                            [12]
+    [ok] not reported as a break (section 7.6)                      []
+
+  3. tail_truncation - drop the last record (seq 11)
+    [ok] dropped_seq                                                11
+    [ok] chain_ok WITHOUT an anchor (section 7.1 cannot see truncation) true
+    [ok] complete_to_anchor WITH an anchor (section 7.2 can)        false
+    [ok] diagnosis                                                  the anchored head names no record in this chain — the log was replaced, rolled back, or truncated
+    [ok] no truncated-tail report (the file ends on a record boundary) no
+
+  4. stale_anchor - check against the seq-9 ANCHOR_HEAD TLV
+    [ok] chain_ok                                                   true
+    [ok] complete_to_anchor                                         false
+    [ok] anchor_names_seq                                           8
+    [ok] anchor_lag                                                 3
+    [ok] diagnosis                                                  chain extends 3 record(s) beyond the anchored head — an unanchored tail, not a replacement
+
+  5. seq_gap - append seq 99 after seq 11, hashes valid
+    [ok] chain_ok                                                   false
+    [ok] gaps                                                       [99]
+    [ok] breaks empty - the hashes DO link (section 4.1)            []
+
+  6. missing_genesis - drop record 0; chain starts at BOOT (seq 1)
+     discriminating: the new first record has a NON-ZERO prev_hash
+    [ok] first record prev_hash is non-zero (case is discriminating) yes
+    [ok] chain_ok                                                   false
+    [ok] violation count is EXACTLY one                             1
+    [ok] violation is [0, ...]                                      0
+    [ok] violation text                                             chain does not start with a GENESIS record
+    [ok] breaks empty - no spurious break at the first record       []
+
+  7. unknown_time_with_clock - time_trust=UNKNOWN, wall_clock != 0
+    [ok] chain_ok                                                   false
+    [ok] violation count                                            1
+    [ok] violation seq                                              12
+    [ok] violation text                                             time_trust=UNKNOWN requires wall_clock_ns=0
+    [ok] wall_clock_ns round-trips past 2^53 exactly (section 1.1)  1784000010000000000
+
+==============================================================================
+Independently constructed cases (beyond the published demos)
+==============================================================================
+
+  A. a second GENESIS appended at seq 12 (section 4.2)
+    [ok] chain_ok false                                             false
+    [ok] violation text                                             GENESIS record at a position other than the first
+    [ok] breaks empty - the link is sound, the KIND is wrong        []
+
+  B. first record IS a GENESIS but prev_hash is non-zero (section 4.2)
+    [ok] chain_ok false                                             false
+    [ok] violation text                                             GENESIS prev_hash is not 32 zero bytes
+    [ok] exactly one violation                                      1
+
+  C. a TLV whose length overruns header_len (section 2.2)
+    [ok] chain_ok false                                             false
+    [ok] diagnosed as a TLV overrun                                 yes
+
+  D. file cut in the middle of the last record (section 2.4)
+    [ok] reported as a truncated tail, not a break                  yes
+    [ok] breaks empty (not a chain break at any earlier record)     []
+    [ok] records before the cut still parse                         11
+
+  E. an unknown TLV type 0x7f00 in a known record (section 2.2)
+    [ok] chain_ok true - unknown TLV does NOT cause rejection       true
+    [ok] record still interpretable (the TYPE is known)             []
+    [ok] the unknown TLV bytes were hashed into record_hash         yes
+
+  F. unknown format_version = 2 (section 7.6)
+    [ok] chain_ok true - MUST NOT reject                            true
+    [ok] reported uninterpretable                                   [12]
+    [ok] section 7.4 NOT applied to it (illegal time_trust=9 not flagged) 0
+
+  G. body_len = 0 but body_digest non-zero (section 2.1)
+    [ok] flagged                                                    yes
+
+  H. key_id != 0 with body_len = 20 (< 12 nonce + 16 tag) (section 4.4)
+    [ok] flagged                                                    yes
+
+  I. time_trust = 4, undefined in version 1 (section 5)
+    [ok] flagged                                                    yes
+
+  J. swap records seq 6 and seq 7 (section 4.1)
+    [ok] chain_ok false                                             false
+    [ok] breaks reported                                            yes
+    [ok] gaps reported too (seq order disturbed)                    yes
+
+  K. CVE-2012-2459 - promotion must not collide with duplication
+    [ok] root([a,b,c]) != root([a,b,c,c])                           distinct
+    [ok] our 3-leaf root is the PROMOTED one, not the duplicated one promoted
+    [ok] and the duplicated 3-leaf root equals root([a,b,c,c]) - the CVE yes
+
+  L. iterative-promotion vs RFC 6962 recursive, n = 0..200
+    [ok] all 201 leaf counts agree                                  agree
+
+  M. inclusion proofs for all 30 published leaves
+    [ok] all 30 leaves verify against the root                      30/30
+    [ok] leaf 8 folded through leaf 7 proof does NOT reach the root rejected
+    [--] proof lengths across 30 leaves: 4 x2, 5 x28
+
+  60 checks passed, 0 failed
+
+### 4. section 7.5 / 4.4 body verification and decryption
+==============================================================================
+AES-256-GCM self-test (FIPS-197 / SP 800-38D) before any PALA-1 claim
+==============================================================================
+  [ok] all published NIST vectors pass                          yes
+
+==============================================================================
+§7.5 body verification (needs the key)
+==============================================================================
+  [ok] seq 3: SHA-256(body) == body_digest over 75 bytes        match
+  [ok] seq 5: SHA-256(body) == body_digest over 44 bytes        match
+  [ok] seq 3 key_id matches the vectors                         7
+  [ok] derived nonce matches the §8 worked example              000000000300000000000000
+  [ok] the nonce is INSIDE body_len, as the §2.3 warning says   yes
+  [ok] aad is 26 bytes (8 + 16 + 2)                             26
+  [ok] body splits as nonce(12) || ciphertext || tag(16)        75
+  [ok] decrypts and authenticates                               yes
+  [ok] plaintext == the published plaintext_utf8                clear path ahead, one pedestrian at 12m, static
+
+==============================================================================
+§4.4 claims, demonstrated rather than assumed
+==============================================================================
+  [ok] the seq-3 body does NOT authenticate under seq 5's AAD   rejected
+  [ok] altering only the seq inside the AAD breaks authentication rejected
+  [ok] a one-bit ciphertext flip is caught by the GCM tag       rejected
+  [ok] with the key destroyed: body unreadable...               unreadable
+  [ok] ...while body_digest still matches (§4.4)                match
+  [ok] ...and the chain still verifies                          true
+  [ok] re-encrypting the plaintext reproduces the exact body bytes byte-identical
+
+==============================================================================
+§3.2 AGGREGATE body as a TLV sequence (robotics profile §4)
+==============================================================================
+  [ok] AGGREGATE body is cleartext (key_id = 0, §3.2 SHOULD)    0
+  [--] 0x0001 AGG_WINDOW_NS          len=8  value=1000000000
+  [--] 0x0002 AGG_SAMPLE_COUNT       len=4  value=30
+  [--] 0x0003 AGG_FLOW_MIN_MILLI     len=4  value=120
+  [--] 0x0004 AGG_FLOW_MAX_MILLI     len=4  value=4310
+  [--] 0x0005 AGG_FLOW_MEAN_MILLI    len=4  value=890
+  [ok] body TLVs parse and end exactly at body_len (§3.2, §2.2 encoding) yes
+
+  19 checks passed, 0 failed
+
+### 5. section 8 narrative table vs. the bytes
+==============================================================================
+§8 narrative table vs. the bytes
+==============================================================================
+  [ok] seq 0  is a GENESIS                                        GENESIS
+  [ok] seq 1  is a BOOT                                           BOOT
+  [ok] seq 2  is a SPAN_START                                     SPAN_START
+  [ok] seq 3  is a EVENT                                          EVENT
+  [ok] seq 4  is a MERKLE                                         MERKLE
+  [ok] seq 5  is a AGGREGATE                                      AGGREGATE
+  [ok] seq 6  is a SAFETY                                         SAFETY
+  [ok] seq 7  is a SHED                                           SHED
+  [ok] seq 8  is a SPAN_END                                       SPAN_END
+  [ok] seq 9  is a ANCHOR                                         ANCHOR
+  [ok] seq 10 is a WITNESS                                        WITNESS
+  [ok] seq 11 is a KEY_SHRED                                      KEY_SHRED
+
+  per-record claims in the §8 table
+  [ok] seq 0 assurance_tier = A (0)                               0
+  [ok] seq 0 time_trust = UNKNOWN (0)                             0
+  [ok] seq 0 prev_hash is 32 zero bytes (§4.2)                    yes
+  [ok] seq 1 wall_clock_ns = 0                                    0
+  [ok] seq 1 time_trust = UNSYNCED (1)                            1
+  [ok] seq 2 ORIGIN_ROLE = brain (robotics profile §1)            brain
+  [ok] seq 2 opens a span (span_id non-zero)                      yes
+  [ok] seq 3 key_id = 7                                           7
+  [ok] seq 3 ORIGIN_ROLE = eyes.tier1                             eyes.tier1
+  [ok] seq 3 ORIGIN_MODEL_DIGEST present and 32 bytes             32
+  [ok] seq 3 ORIGIN_CONFIG_DIGEST present and 32 bytes            32
+  [ok] seq 3 is in a CHILD span whose parent is the brain span (§2.1) yes
+  [ok] seq 2 brain span is a root span (parent_span_id zero = root, §2.1) yes
+  [ok] seq 4 MERKLE_LEAF_COUNT = 30                               30
+  [ok] seq 4 MERKLE_TREE_HASH is 32 bytes                         32
+  [ok] seq 4 body_len = 0 (commits without carrying, §4.3)        0
+  [ok] seq 5 key_id = 0 (cleartext)                               0
+  [ok] seq 5 has a body                                           yes
+  [ok] seq 6 ORIGIN_ROLE = perception_health                      perception_health
+  [ok] seq 7 SHED_CLASS = 1                                       1
+  [ok] seq 7 SHED_COUNT = 400                                     400
+  [ok] seq 7 SHED_WINDOW_NS = 12 s                                12000000000
+  [ok] seq 8 closes the same span (span_id matches seq 2)         yes
+  [ok] seq 9 ANCHOR_HEAD == record_hash of seq 8                  yes
+  [ok] seq 9 ANCHOR_HEAD is the value §8 prints                   14434088e5f5866cf0276ba5a9055d8ee0d115a750b2cdf9cc4006d9481b29b4
+  [ok] seq 10 WITNESS_KIND = 1 (transparency log)                 1
+  [ok] seq 10 WITNESS_RANGE_LO = 0                                0
+  [ok] seq 10 WITNESS_RANGE_HI = 9                                9
+  [ok] seq 10 WITNESS_RECEIPT present                             yes
+  [ok] seq 11 SHRED_KEY_ID = 7                                    7
+
+  cross-cutting envelope claims
+  [ok] all 12 records carry the same boot_id (one boot after GENESIS) yes
+  [ok] every record declares format_version = 1                   12
+  [ok] every header_len >= 156 and equals its actual byte count (§2.1) 12
+  [ok] seq increases by exactly 1 across the chain (§4.1)         0,1,2,3,4,5,6,7,8,9,10,11
+  [ok] every record after seq 0 links to its predecessor (§4.1)   11
+  [ok] the never-shed classes are all present (§3: SHED, SAFETY, ANCHOR, WITNESS, KEY_SHRED) 5
+  [ok] monotonic_ns is non-decreasing (§5: authoritative for ordering) 11
+  [ok] no record carries a wall clock it cannot justify (§5)      0
+
+==============================================================================
+span structure (§3.1) — observation, not a §7 check
+==============================================================================
+  span 111111111111...  referenced by 2 record(s), SPAN_START=seq 2 SPAN_END=seq 8
+  span 222222222222...  referenced by 2 record(s), SPAN_START=NONE SPAN_END=NONE
+  spans referenced with no SPAN_START in the chain: 222222222222...
+  §7 defines no span-pairing check, so a conformant verifier reports nothing here.
+
+  50 checks passed, 0 failed
+
+ALL SUITES PASSED
