@@ -53,6 +53,7 @@ from palimpsests.audit.pala_writer import (
     CAT_ANCHOR_ANOMALY,
     CAT_GUARD_ESCALATION,
     CAT_SELF_CHECK_FAILED,
+    ZERO16,
     PalaWriter,
 )
 
@@ -169,6 +170,55 @@ class NativeAudit:
 
     def prefix_copied(self, token_count: int, span_id: bytes) -> None:
         self._writer.prefix_copy(token_count, span_id=span_id)
+
+    def tool_called(
+        self, name: str, args_digest: bytes | None, span_id: bytes | None
+    ) -> tuple[int, bytes]:
+        """Record a dispatched tool invocation; return its (seq, hash).
+
+        The pair is what a later ``tool_result`` binds to — the session
+        keeps it per pending call and hands it back on completion.
+        """
+        rh = self._writer.tool_call(
+            name, args_digest=args_digest, span_id=span_id or ZERO16
+        )
+        return self._writer.seq - 1, rh
+
+    def tool_result(
+        self,
+        call_seq: int,
+        call_hash: bytes,
+        outcome: int,
+        result_digest: bytes | None,
+        span_id: bytes | None,
+    ) -> None:
+        """Record the invocation's completion, hash-bound to its call."""
+        self._writer.tool_result(
+            call_seq,
+            call_hash,
+            outcome,
+            result_digest=result_digest,
+            span_id=span_id or ZERO16,
+        )
+
+    def tool_loop_limited(
+        self,
+        iterations: int,
+        call_seq: int | None,
+        call_hash: bytes | None,
+        span_id: bytes | None,
+    ) -> None:
+        """The loop cap refused further dispatches (SAFETY 104) — a guard.
+
+        Feeds the same escalation window as every guard refusal: a burst
+        of loop-limit hits becomes an ``INCIDENT_CANDIDATE`` (category 1)
+        through the existing r2 trigger, not through anything new.
+        """
+        rh = self._writer.guard_tool_loop_limit(
+            iterations, call_seq=call_seq, call_hash=call_hash,
+            span_id=span_id or ZERO16,
+        )
+        self._note_guard(rh)
 
     def prefix_release_refused(self, holder_seq: int, consumer_count: int) -> None:
         """The scheduler refused to free a holder with live consumers."""

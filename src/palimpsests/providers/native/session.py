@@ -69,6 +69,14 @@ Until then: **do not pass ``load_state`` a blob you did not produce.** See
 from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
+from hashlib import sha256
+from palimpsests.audit.pala_writer import (
+    OUTCOME_CANCELLED,
+    OUTCOME_ERROR,
+    OUTCOME_OK,
+    OUTCOME_TIMEOUT,
+    canonical_tool_args_digest,
+)
 from palimpsests.engine.messages import ChatChunk
 from palimpsests.providers.native.backend import NativeBackend, Token
 from palimpsests.providers.native.scheduler import Scheduler, TurnRequest
@@ -113,6 +121,16 @@ class StateBlobError(ValueError):
     """
 
 
+class ToolLoopLimitError(RuntimeError):
+    """The server-side tool loop hit its configured hop cap.
+
+    The cap refuses further dispatches rather than let a runaway
+    generate→tool→continue loop exhaust the engine (profile §4, kind
+    104). With audit wired the refusal is recorded *and* raised — the
+    record observes the guard, it never replaces it.
+    """
+
+
 class NativeSession:
     """A live, stateful inference session backed by a held scheduler slot.
 
@@ -141,6 +159,7 @@ class NativeSession:
         prefix_already_seeded: bool = False,
         audit: NativeAudit | None = None,
         audit_span: bytes | None = None,
+        max_tool_hops: int | None = 64,
     ) -> None:
         self._backend = backend
         self._scheduler = scheduler
@@ -151,6 +170,12 @@ class NativeSession:
         # the span end. Turn streaming emits nothing (hot path untouched).
         self._audit = audit
         self._audit_span = audit_span
+        # Server-side tool loop (N5) accounting: pending dispatches by
+        # tool_call_id (value = the TOOL_CALL's (seq, hash) when audit is
+        # wired, else None) and the per-turn hop counter behind the cap.
+        self._pending_tool_calls: dict[str, tuple[int, bytes] | None] = {}
+        self._tool_hops = 0
+        self._max_tool_hops = max_tool_hops
         self._closed = False
         self._seq_id = scheduler.open_slot()
         # The system prefix is tokenized once and prepended only on the
@@ -207,6 +232,7 @@ class NativeSession:
         completion via ``run_turn``. Several sessions at once go through
         ``run_sessions`` instead.
         """
+        self._tool_hops = 0
         tokens = self._prepare_turn_tokens(content)
         self._scheduler.feed(
             self._seq_id,
@@ -215,6 +241,49 @@ class NativeSession:
             stop_tokens=self._stop_tokens,
         )
         yield from self._stream_turn()
+
+    def note_tool_call(
+        self,
+        tool_call_id: str,
+        name: str,
+        *,
+        arguments: object | None = None,
+        args_digest: bytes | None = None,
+    ) -> None:
+        """Record that the application dispatched a tool for this session.
+
+        The layer that *parses* the model's tool request (a model-format
+        concern above this session) calls this at dispatch time; the
+        session is where the record lands because the session is the
+        runtime boundary the loop runs through. With audit wired this
+        emits ``TOOL_CALL`` (r3) — arguments enter the log only as the
+        canonical digest — and remembers its (seq, hash) so the matching
+        result binds to it. Without audit it only tracks the pending id.
+        """
+        self._ensure_open()
+        ref: tuple[int, bytes] | None = None
+        if self._audit is not None:
+            if args_digest is None and arguments is not None:
+                args_digest = canonical_tool_args_digest(arguments)
+            ref = self._audit.tool_called(name, args_digest, self._audit_span)
+        self._pending_tool_calls[tool_call_id] = ref
+
+    def fail_tool_call(
+        self, tool_call_id: str, outcome: int = OUTCOME_ERROR
+    ) -> None:
+        """Record a dispatched call that will not feed a result.
+
+        For the non-ok outcomes that end a hop without a continuation:
+        ``OUTCOME_ERROR`` or ``OUTCOME_TIMEOUT``. Emits ``TOOL_RESULT``
+        bound to the recorded call (when audit is wired) and forgets the
+        pending id. Feeding nothing is the point — the turn stays where
+        it was.
+        """
+        if outcome not in (OUTCOME_ERROR, OUTCOME_TIMEOUT, OUTCOME_CANCELLED):
+            raise ValueError("fail_tool_call records error/timeout/cancelled only")
+        ref = self._pending_tool_calls.pop(tool_call_id, None)
+        if self._audit is not None and ref is not None:
+            self._audit.tool_result(ref[0], ref[1], outcome, None, self._audit_span)
 
     def append_tool_result(
         self, tool_call_id: str, result: str
@@ -230,9 +299,38 @@ class NativeSession:
         this minimal loop it is echoed into the rendered result so the
         model can correlate. Real tool-call *parsing* from the model's
         output (deciding a tool was requested) is a model-format concern
-        layered above this method.
+        layered above this method — ``note_tool_call`` is where that
+        layer reports the dispatch so the loop is on the record.
+
+        Each call is one hop against ``max_tool_hops``; past the cap the
+        guard refuses **before** anything is fed: the refusal is recorded
+        (SAFETY kind 104, with audit wired) and ``ToolLoopLimitError``
+        raised — record and raise, the ``load_state`` pattern.
         """
         self._ensure_open()
+        self._tool_hops += 1
+        if self._max_tool_hops is not None and self._tool_hops > self._max_tool_hops:
+            last = next(reversed(self._pending_tool_calls.values()), None) \
+                if self._pending_tool_calls else None
+            if self._audit is not None:
+                self._audit.tool_loop_limited(
+                    self._tool_hops - 1,
+                    last[0] if last else None,
+                    last[1] if last else None,
+                    self._audit_span,
+                )
+            raise ToolLoopLimitError(
+                f"tool loop exceeded {self._max_tool_hops} hops in one turn"
+            )
+        ref = self._pending_tool_calls.pop(tool_call_id, None)
+        if self._audit is not None and ref is not None:
+            self._audit.tool_result(
+                ref[0],
+                ref[1],
+                OUTCOME_OK,
+                sha256(result.encode("utf-8")).digest(),
+                self._audit_span,
+            )
         result_text = f"tool_result[{tool_call_id}]: {result}\nassistant:"
         tokens = self._backend.tokenize(result_text, add_special=False)
         self._scheduler.feed(
@@ -359,6 +457,16 @@ class NativeSession:
         if not self._closed:
             self._scheduler.close_slot(self._seq_id)
             self._closed = True
+            if self._audit is not None:
+                # Abandoned dispatches: every pending call is closed as
+                # cancelled (profile §3.1) before the span ends, so the
+                # chain never shows a call without a fate.
+                for ref in self._pending_tool_calls.values():
+                    if ref is not None:
+                        self._audit.tool_result(
+                            ref[0], ref[1], OUTCOME_CANCELLED, None, self._audit_span
+                        )
+            self._pending_tool_calls.clear()
             if self._audit is not None and self._audit_span is not None:
                 self._audit.session_closed(self._audit_span)
 
