@@ -154,6 +154,109 @@ def aad_for(seq: int, boot_id: bytes, record_type: int) -> bytes:
     return struct.pack("<Q", seq) + boot_id + struct.pack("<H", record_type)
 
 
+@dataclass(frozen=True)
+class HeaderField:
+    """Where one fixed-header field sits, for a consumer that renders bytes.
+
+    ``format`` is the ``struct`` code, so a caller that wants the *value*
+    can unpack the slice rather than reimplement the width.
+    """
+
+    name: str
+    offset: int
+    length: int
+    format: str
+
+
+def _split_format(fmt: str) -> list[str]:
+    """Break a struct format into its per-field codes, byte-order mark aside."""
+    codes: list[str] = []
+    digits = ""
+    for ch in fmt[1:]:
+        if ch.isdigit():
+            digits += ch
+        else:
+            codes.append(digits + ch)
+            digits = ""
+    return codes
+
+
+#: Field order, exactly as ``Header.encode`` packs it (§2.1).
+_FIELD_NAMES = (
+    "magic",
+    "format_version",
+    "header_len",
+    "record_type",
+    "assurance_tier",
+    "time_trust",
+    "seq",
+    "boot_id",
+    "prev_hash",
+    "span_id",
+    "parent_span_id",
+    "monotonic_ns",
+    "wall_clock_ns",
+    "key_id",
+    "body_len",
+    "body_digest",
+)
+
+
+def _build_header_fields() -> tuple[HeaderField, ...]:
+    """Derive the field map from ``_FIXED`` rather than transcribing §2.1.
+
+    Deriving matters. A hand-written table of offsets is a second statement
+    of the layout, and the two would drift the first time a field changed
+    width — silently, because nothing would compare them. Here the offsets
+    cannot disagree with the encoder: they are computed from the same format
+    string ``encode`` packs with.
+    """
+    codes = _split_format(_FIXED)
+    if len(codes) != len(_FIELD_NAMES):
+        raise AssertionError(
+            f"_FIXED has {len(codes)} fields, _FIELD_NAMES names {len(_FIELD_NAMES)}"
+        )
+    fields: list[HeaderField] = []
+    offset = 0
+    for name, code in zip(_FIELD_NAMES, codes, strict=True):
+        length = struct.calcsize("<" + code)
+        fields.append(HeaderField(name=name, offset=offset, length=length, format=code))
+        offset += length
+    if offset != FIXED_HEADER_LEN:
+        raise AssertionError(f"field map covers {offset} bytes, expected {FIXED_HEADER_LEN}")
+    return tuple(fields)
+
+
+#: The fixed header laid out for display (§2.1).
+#:
+#: Exists so that a reader-side tool can highlight fields in a hex view
+#: **without knowing any offsets of its own**. A shell that hard-codes "seq
+#: is at byte 12" has re-implemented part of the format, and it will be
+#: wrong on the day the format is not what it assumed — silently, and while
+#: showing a confident-looking answer.
+HEADER_FIELDS: tuple[HeaderField, ...] = _build_header_fields()
+
+
+def tlv_region(header_len: int) -> tuple[int, int]:
+    """Offset and length of the header's TLV area, given ``header_len``.
+
+    The TLVs are variable-length, so their extent is a function of the
+    record rather than a constant — which is precisely why a consumer must
+    ask for it instead of assuming. Returns a zero length when the header
+    carries none.
+
+    Raises ``MalformedRecord`` when ``header_len`` is shorter than the fixed
+    part: a caller passing a value it read out of a damaged record should
+    get the same refusal the decoder gives, not a negative length that
+    renders as an empty highlight.
+    """
+    if header_len < FIXED_HEADER_LEN:
+        raise MalformedRecord(
+            f"header_len {header_len} is shorter than the fixed header"
+        )
+    return FIXED_HEADER_LEN, header_len - FIXED_HEADER_LEN
+
+
 @dataclass
 class Header:
     """One record header — the unit the chain hash covers (§1.2).
