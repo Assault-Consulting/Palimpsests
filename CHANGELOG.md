@@ -6,6 +6,106 @@ aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 once it reaches v1.0. Before v1.0, minor versions may include breaking
 API changes.
 
+## [0.9.0] — 2026-08-20
+
+**Additive only — the PALA-1 wire format is unchanged (frozen at v1.0).** No
+envelope byte changes and no `format_version` bump; the profile kind/tag
+spaces grow additively, and `test-vectors.json` is byte-identical. This
+release ships the r3 tool-loop profile end to end (spec → vectors → writer →
+session wiring → reader), the reading-side advisory channel for tool
+references and span pairing, the standards-publication groundwork, and the
+record of a fifth independent verification.
+
+### Added (experimental) — the r3 tool loop
+
+- **Profile r3** (#145): `EVENT` kinds `TOOL_CALL` (8) and `TOOL_RESULT` (9)
+  with §3.1, `SAFETY` kind `GUARD_TOOL_LOOP_LIMIT` (104), tags
+  `EVT_TOOL_NAME` / `EVT_PAYLOAD_DIGEST` / `EVT_OUTCOME`, `AGG_TOOL_CALLS`.
+  Arguments and results enter the log only as digests; latency is the
+  monotonic delta between a result and its hash-bound call.
+- **Companion vectors extended to r3** (#146): four appended records
+  exercising every allocation; r2 records byte-identical; the CI
+  regeneration gate proves byte-for-byte reproduction.
+- **Writer methods** (#147): `tool_call` / `tool_result` /
+  `guard_tool_loop_limit` in the oversight-methods style (format validation
+  only), plus `canonical_tool_args_digest` — profile open issue §6.4
+  resolved (sorted-keys compact JSON, UTF-8, SHA-256; pre-canonical bytes
+  digest as-is).
+- **Session wiring** (#149): `note_tool_call` records dispatches,
+  `append_tool_result` closes the hop (hash-bound, result digest),
+  `fail_tool_call` covers error/timeout without feeding, `close()` ends
+  pending dispatches as cancelled. `max_tool_hops` (default 64) guards the
+  loop — the refusal is recorded (SAFETY 104) and `ToolLoopLimitError`
+  raised **before** anything is fed; limit refusals feed the existing r2
+  guard-escalation trigger.
+- **Reader recognition and advisories** (#150): the r3 kinds resolve by
+  name; `TOOL_RESULT` and the loop guard go through hash-bound reference
+  resolution plus the r3-specific `tool_target_not_a_call` — advisory,
+  never a violation.
+
+### Added
+
+- **Span-pairing advisories** (#150): `span_unclosed` (a `SPAN_START` with
+  no `SPAN_END` — §3.1's crash evidence, surfaced) and `span_unopened`
+  (a span referenced with no `SPAN_START`), header-only, never a verdict.
+  The resolution of independent run #5's finding; see
+  `docs/specs/pala-1/CLARIFICATIONS.md` C-1.
+- **Header field map export** (#151): the fixed-header layout exported for
+  byte-level rendering by reading tools, checked against encoded bytes.
+- **CLI/export**: `pala export --from-seq/--to-seq` (#135),
+  `palimpsests --version` (#136), `pala verify --json` with
+  verdict/counts/first-violation (#138) — all three from external
+  contributors.
+- **Standards groundwork** (#139): `docs/specs/pala-1/REGISTRIES.md`
+  (allocation index and registration procedure),
+  `docs/specs/pala-1/ANCHOR-SOURCES.md` (anchor-source catalogue incl. the
+  TEE-quote composition), and the `standards/` kramdown-rfc build pipeline
+  with a CI render gate.
+- **`CITATION.cff`** (#150) with the Zenodo DOI of the regulatory
+  whitepaper as the preferred citation.
+
+### Changed
+
+- CI status contexts fan into a single required **`ci-complete`** check
+  (#127), removing the class of stuck-"Expected" states.
+- Vector-consuming tests derive expected counts from the self-describing
+  fixture (#146), so additive profile revisions no longer break them.
+- `time_trust` / `assurance_tier` values resolve to names in exports and
+  reader output (#144).
+
+### Fixed
+
+- `__version__` drift: 0.8.0 shipped with the constant still reading
+  `0.7.0` (found through the `--version` contribution, #136; fixed in
+  #142). A smoke test now asserts `pyproject` and `__version__` agree.
+
+### Documentation
+
+- **`docs/specs/pala-1/CLARIFICATIONS.md`**: the post-freeze clarification
+  log — C-1 span pairing (deliberately not a verdict check;
+  operationalized as the advisories above), C-2…C-5 resolving run-5's
+  logged ambiguities; implementation count corrected to five (three
+  external).
+- **Fifth independent verification run recorded** (#148): Perl 5, core
+  modules only, AES-256-GCM implemented from FIPS-197/SP 800-38D and
+  self-tested against NIST vectors; 140 checks, all §8 values reproduced.
+- **`docs/AUDIT-ARCHITECTURE.md`** (#150): where the audit layer sits —
+  the layer diagram, the audit boundary, below-the-TEE-line positioning.
+- **`CONTRIBUTING.md`** gains the AI-assisted contributions section
+  (#150): disclose the tooling, execute what you submit, DCO certifies
+  human responsibility, same review bar.
+- `GOVERNANCE.md` records the branch-protection measurement anchor;
+  `docs/BADGE-STATUS.md` updated (#127).
+
+### External contributions
+
+This cycle merged work from four external contributors: the export range
+flags, the CLI version flag, the JSON verify output and its edge-case
+tests (#135–#138), the fifth independent verification (#148), and
+dependency updates via Dependabot (#141). The `--version` contribution
+also caught the shipped version-constant defect — the funnel working as
+designed.
+
 ## [0.8.0] — 2026-08-11
 
 **Additive only — the PALA-1 wire format is unchanged (frozen at v1.0).** No
