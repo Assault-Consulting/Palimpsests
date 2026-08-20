@@ -145,15 +145,17 @@ jobs:
           cp test-vectors.json /tmp/committed.json
           python gen_vectors.py
           cmp test-vectors.json /tmp/committed.json && echo "vectors reproduce byte-for-byte"
-      # The r2 companion vectors carry their own gate; the frozen core
+      # The companion vectors carry their own gate; the frozen core
       # vectors above are untouched by them by construction, and the cmp
-      # above would catch any drift regardless.
-      - name: Regenerate and compare (inference profile r2)
+      # above would catch any drift regardless. The companion set grows
+      # additively across profile revisions (r2, r3, ...), so the step
+      # name stays revision-free on purpose.
+      - name: Regenerate and compare (inference profile companions)
         working-directory: docs/specs/pala-1/profiles
         run: |
-          cp inference-vectors.json /tmp/committed-r2.json
+          cp inference-vectors.json /tmp/committed-companion.json
           python gen_inference_vectors.py
-          cmp inference-vectors.json /tmp/committed-r2.json && echo "r2 companion vectors reproduce byte-for-byte"
+          cmp inference-vectors.json /tmp/committed-companion.json && echo "companion vectors reproduce byte-for-byte"
 
   ci-complete:
     name: ci-complete
