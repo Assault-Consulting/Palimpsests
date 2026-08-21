@@ -48,6 +48,13 @@ dependencies = [
 keyring = [
     "keyring>=25.0",
 ]
+# The OpenAI-compatible HTTP endpoint (`palimpsests-serve`). Optional so
+# the base install stays minimal; the server module is import-safe
+# without it and only `create_app` needs FastAPI.
+serve = [
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+]
 # At-rest audit-log encryption. sqlcipher3-wheels ships prebuilt binaries
 # so it doesn't need a local SQLCipher/OpenSSL toolchain. Isolated behind
 # an extra — but NOT optional in effect: without it the audit log refuses
@@ -106,6 +113,9 @@ dev = [
     # cryptography so the PALA-1 body tests and the vector-regeneration CI
     # job run; the codec itself stays stdlib-only outside bodies.
     "cryptography>=42.0",
+    # fastapi so the OpenAI-endpoint tests run (and count for coverage) in
+    # CI; uvicorn is runtime-only and stays out of dev.
+    "fastapi>=0.115",
 ]
 
 [project.urls]
@@ -115,6 +125,7 @@ Issues = "https://github.com/Assault-Consulting/Palimpsests/issues"
 
 [project.scripts]
 palimpsests = "palimpsests.cli:main"
+palimpsests-serve = "palimpsests.server.openai_api:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/palimpsests"]
