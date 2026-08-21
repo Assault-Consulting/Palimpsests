@@ -118,6 +118,53 @@ palimpsests engine --help       # engine subcommands
 
 ---
 
+### Verify a PALA-1 stream without decryption keys
+
+`pala verify` only reads record headers and checks each body's digest. It
+does not open encrypted bodies, so an auditor can validate a copied stream
+without receiving the keys that created it. The following small script makes
+a stream whose head can be verified end to end. Save it as `make_demo.py`:
+
+```python
+from palimpsests.audit.pala_writer import PalaWriter
+
+path = "demo.pala"
+with PalaWriter(path) as writer:
+    writer.genesis()
+    writer.boot()
+    head = writer.anchor()
+
+print(head.hex())
+```
+
+Run the script and keep the printed value as the out-of-band anchor:
+
+```bash
+python make_demo.py
+# e.g. 0123... (64 hexadecimal characters)
+```
+
+First export the headers to a reviewable JSONL file. The binary `.pala` file
+remains authoritative; the export is only a convenient inspection view.
+
+```bash
+palimpsests pala export demo.pala --out demo.jsonl
+```
+
+Finally, give the saved anchor to the header-only verifier:
+
+```bash
+palimpsests pala verify demo.pala --anchor <the-64-character-value-from-above>
+```
+
+An exit status of `0` means the records are internally consistent and the
+chain head matches that anchor. No encryption key is requested or used. If
+the anchor is unavailable, omit `--anchor`: the command can still check
+internal consistency, but intentionally reports that completeness was not
+established.
+
+---
+
 ## 4. Which settings work
 
 ### 4.1. `chat` command settings
