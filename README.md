@@ -9,12 +9,12 @@
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13534/badge)](https://www.bestpractices.dev/projects/13534)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Assault-Consulting/Palimpsests/badge)](https://scorecard.dev/viewer/?uri=github.com/Assault-Consulting/Palimpsests)
 
-> **Status: v0.8 — the audit format is the deliverable.** The **[PALA-1
+> **Status: v0.9 — the audit format is the deliverable.** The **[PALA-1
 > format](docs/specs/pala-1/PALA-1.md)** is **frozen at v1.0**: a
 > self-describing, byte-level audit format with byte-exact test vectors, a CC0
 > reference implementation, a stdlib-only production codec, and the
-> three-question `palimpsests pala verify` CLI — with **four independent
-> verifier implementations (two external) on record** and a self-service
+> three-question `palimpsests pala verify` CLI — with **five independent
+> verifier implementations (three external) on record** and a self-service
 > [verification kit](docs/specs/pala-1/verification-kit/README.md). The writer
 > emits it end-to-end with cross-boot resume; the writer APIs remain
 > experimental and may change before v1.0. Verify it yourself; do not take our
@@ -33,6 +33,35 @@
 > **[docs/ASSURANCE-CASE.md](docs/ASSURANCE-CASE.md)**; the honest
 > target-vs-measured performance picture is in
 > **[docs/POSITIONING.md](docs/POSITIONING.md)**.
+
+---
+
+## Try it in 60 seconds
+
+No model download, no configuration — the demo runs a tiny audited agent
+turn through the real level-3 stack and verifies its trail before your
+eyes:
+
+```bash
+pip install palimpsests
+palimpsests demo          # agent turn → PALA-1 chain → verified, narrated
+palimpsests pala verify palimpsests-demo.pala   # run the auditor's check yourself
+```
+
+Then point any OpenAI-compatible client (chat shells, editor plugins,
+agent frameworks) at your local engine — same interface, with an
+evidence trail:
+
+```bash
+pip install 'palimpsests[serve]'
+palimpsests serve         # OpenAI-compatible endpoint on http://127.0.0.1:11435/v1
+```
+
+Compliance mappings, architecture, and the assurance case are one link
+deep: **[AUDIT-ARCHITECTURE](docs/AUDIT-ARCHITECTURE.md)** ·
+**[EU-AI-ACT-MAPPING](docs/compliance/EU-AI-ACT-MAPPING.md)** ·
+**[ASSURANCE-CASE](docs/ASSURANCE-CASE.md)** ·
+**[the frozen PALA-1 spec](docs/specs/pala-1/PALA-1.md)**.
 
 ---
 
@@ -83,7 +112,7 @@ inference runs* and *whether the log can be trusted* are first-order concerns.
   control.
 - **Frozen, independently-verifiable format** — PALA-1 is **frozen at v1.0**,
   specified byte-for-byte with test vectors, a CC0 reference implementation, and
-  four independent verifiers (two external). A log is evidence anyone can check
+  five independent verifiers (three external). A log is evidence anyone can check
   from the spec alone; it does not depend on trusting this codebase.
 - **Encrypted, tamper-evident audit log** — every model and KV operation is
   recorded to an encrypted store (SQLCipher, key in the OS keychain). Each row is
@@ -203,7 +232,16 @@ only `httpx`, which the base already pulls.
 
 ## Quick start
 
-Requires a running [Ollama](https://ollama.com) daemon for level 1.
+```bash
+# the whole point in one command — no model, no daemon, no config:
+palimpsests demo
+
+# the OpenAI-compatible endpoint (needs the serve extra):
+palimpsests serve
+```
+
+Everything below requires a running [Ollama](https://ollama.com) daemon
+for level 1.
 
 ```bash
 # talk to a model (prompt via -m, or piped over stdin)
@@ -418,6 +456,14 @@ the novelty is in this composition and its seams, not in a new inference kernel.
       advisories (referential integrity, boot-scoped monotonic drift);
       JSONL export; the `AuditReader` public API; retention guidance. See
       [docs/ROADMAP.md](docs/ROADMAP.md).
+- [x] **v0.9 — the tool loop on the record + the standards groundwork** —
+      profile r3 (`TOOL_CALL`/`TOOL_RESULT`, the loop-limit guard) end to end:
+      spec, byte-exact companion vectors, writer, session wiring, reader
+      recognition and advisories (including span pairing — the resolution of
+      the fifth independent run's finding); `palimpsests demo`; the
+      OpenAI-compatible endpoint (`palimpsests serve`); post-freeze
+      [CLARIFICATIONS](docs/specs/pala-1/CLARIFICATIONS.md); a fifth
+      independent verification (Perl 5, hand-rolled NIST-validated AES-GCM).
 - [ ] **Later** — assurance tiers B/C (hardware root of trust, external
       witness); a discrete-GPU run (the integrated GPU flatters every
       prefill-saving mechanism, so these ratios compress on fast prefill); a
