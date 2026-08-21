@@ -11,13 +11,14 @@ one base URL. Everything the engine records (sessions, operations, guard
 refusals) is recorded exactly as for any other caller: compatibility is
 the door; the audit trail is what is behind it.
 
-Scope of this first version, stated rather than implied: chat and
-streaming. ``tools`` in a request are accepted and echoed into scope
-documentation territory — function-calling emission depends on the
-model's output format and lands as its own change. ``usage`` is
-reported as zeros (token accounting is engine-level work). There is no
-authentication: this binds to localhost by default and is a local tool,
-not an internet service — put a real gateway in front of it otherwise.
+Scope, stated rather than implied: chat, streaming, and function calling
+in the one convention documented in ``tool_calls`` (Hermes/Qwen
+``<tool_call>`` blocks). With ``tools`` present, streaming assembles the
+reply first and replays it as SSE — tool_calls-shape correctness over
+first-token latency, in this version. ``usage`` is reported as zeros
+(token accounting is engine-level work). There is no authentication:
+this binds to localhost by default and is a local tool, not an internet
+service — put a real gateway in front of it otherwise.
 
 The module is import-safe without the ``serve`` extra; constructing the
 app is what requires FastAPI.
@@ -30,6 +31,7 @@ import uuid
 from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass
 from palimpsests.engine.messages import ChatChunk
+from palimpsests.server.tool_calls import parse_tool_calls, tools_system_message
 
 ChatFn = Callable[..., Iterator[ChatChunk]]
 ModelsFn = Callable[[], Sequence[str]]
@@ -56,8 +58,22 @@ def _default_deps() -> _Deps:
     return _Deps(chat_fn=chat_fn, models_fn=models_fn)
 
 
-def create_app(*, chat_fn: ChatFn | None = None, models_fn: ModelsFn | None = None):
-    """Build the FastAPI app. Dependencies are injectable for tests."""
+def create_app(
+    *,
+    chat_fn: ChatFn | None = None,
+    models_fn: ModelsFn | None = None,
+    audit=None,
+):
+    """Build the FastAPI app. Dependencies are injectable for tests.
+
+    ``audit`` is an optional ``NativeAudit`` adapter: with it, the
+    endpoint records the tool loop it mediates into a PALA-1 chain —
+    ``TOOL_CALL`` when tool calls are handed to the client (the dispatch
+    boundary this process directly observes), ``TOOL_RESULT`` when the
+    client posts the results back, hash-bound to their calls. Works on
+    every engine level, because the recording boundary is the endpoint
+    itself, not the engine.
+    """
     from fastapi import FastAPI
     from fastapi.responses import JSONResponse, StreamingResponse
 
@@ -68,6 +84,19 @@ def create_app(*, chat_fn: ChatFn | None = None, models_fn: ModelsFn | None = No
     )
 
     app = FastAPI(title="Palimpsests", docs_url=None, redoc_url=None)
+    # Dispatched tool calls awaiting results: id -> the TOOL_CALL's
+    # (seq, hash), so a later request's results bind to their calls.
+    pending: dict[str, tuple[int, bytes]] = {}
+
+    if audit is not None:
+        def _cancel_pending() -> None:
+            from palimpsests.audit.pala_writer import OUTCOME_CANCELLED
+
+            for ref in pending.values():
+                audit.tool_result(ref[0], ref[1], OUTCOME_CANCELLED, None, None)
+            pending.clear()
+
+        app.router.on_shutdown.append(_cancel_pending)
 
     def _deps() -> _Deps:
         nonlocal deps
@@ -101,11 +130,72 @@ def create_app(*, chat_fn: ChatFn | None = None, models_fn: ModelsFn | None = No
         completion_id = f"chatcmpl-{uuid.uuid4().hex[:24]}"
         created = int(time.time())
 
+        tools = body.get("tools") or []
+        outgoing = list(messages)
+        if tools:
+            outgoing = [tools_system_message(tools), *outgoing]
+        if audit is not None:
+            _record_tool_results(audit, messages, pending)
+
         chunks = _deps().chat_fn(
             model=model,
-            messages=messages,
+            messages=outgoing,
             context_size=int(body.get("max_context") or 8192),
         )
+
+        if tools:
+            # Parsing needs the whole reply, so with tools the response is
+            # assembled first; streaming then replays it as SSE. Documented
+            # trade: correctness of the tool_calls shape over first-token
+            # latency, in this version.
+            text_parts: list[str] = []
+            finish = "stop"
+            for c in chunks:
+                if c.delta:
+                    text_parts.append(c.delta)
+                if c.done and c.finish_reason:
+                    finish = c.finish_reason
+            calls, remaining = parse_tool_calls("".join(text_parts))
+            if calls and audit is not None:
+                for pc in calls:
+                    pending[pc.id] = audit.tool_called(
+                        pc.name,
+                        _args_digest(pc.arguments),
+                        None,
+                    )
+            if stream:
+                return StreamingResponse(
+                    _sse_prebuilt(
+                        completion_id=completion_id,
+                        created=created,
+                        model=model,
+                        content=remaining if not calls else None,
+                        tool_calls=[pc.as_openai() for pc in calls] or None,
+                        finish="tool_calls" if calls else finish,
+                    ),
+                    media_type="text/event-stream",
+                )
+            message: dict = {"role": "assistant"}
+            if calls:
+                message["content"] = remaining or None
+                message["tool_calls"] = [pc.as_openai() for pc in calls]
+                finish = "tool_calls"
+            else:
+                message["content"] = remaining
+            return {
+                "id": completion_id,
+                "object": "chat.completion",
+                "created": created,
+                "model": model,
+                "choices": [
+                    {"index": 0, "message": message, "finish_reason": finish}
+                ],
+                "usage": {
+                    "prompt_tokens": 0,
+                    "completion_tokens": 0,
+                    "total_tokens": 0,
+                },
+            }
 
         if stream:
             return StreamingResponse(
@@ -166,9 +256,89 @@ def _sse(
     yield "data: [DONE]\n\n"
 
 
+def _args_digest(arguments: dict) -> bytes:
+    from palimpsests.audit.pala_writer import canonical_tool_args_digest
+
+    return canonical_tool_args_digest(arguments)
+
+
+def _record_tool_results(audit, messages: list, pending: dict) -> None:
+    """Bind incoming role:"tool" messages to their recorded calls."""
+    from hashlib import sha256
+    from palimpsests.audit.pala_writer import OUTCOME_OK
+
+    for m in messages:
+        if not isinstance(m, dict) or m.get("role") != "tool":
+            continue
+        ref = pending.pop(m.get("tool_call_id"), None)
+        if ref is None:
+            continue
+        content = str(m.get("content", ""))
+        audit.tool_result(
+            ref[0], ref[1], OUTCOME_OK,
+            sha256(content.encode("utf-8")).digest(), None,
+        )
+
+
+def _sse_prebuilt(
+    *,
+    completion_id: str,
+    created: int,
+    model: str,
+    content: str | None,
+    tool_calls: list | None,
+    finish: str,
+) -> Iterator[str]:
+    """Replay an already-assembled completion as OpenAI SSE chunks."""
+
+    def event(delta: dict, fin: str | None) -> str:
+        payload = {
+            "id": completion_id,
+            "object": "chat.completion.chunk",
+            "created": created,
+            "model": model,
+            "choices": [{"index": 0, "delta": delta, "finish_reason": fin}],
+        }
+        return f"data: {json.dumps(payload)}\n\n"
+
+    yield event({"role": "assistant"}, None)
+    if tool_calls:
+        indexed = [{"index": i, **tc} for i, tc in enumerate(tool_calls)]
+        yield event({"tool_calls": indexed}, None)
+    elif content:
+        yield event({"content": content}, None)
+    yield event({}, finish)
+    yield "data: [DONE]\n\n"
+
+
+def default_audit():
+    """The endpoint's own PALA-1 chain at ``<config>/serve.pala``.
+
+    Cross-boot: an existing chain is adopted (the adapter then emits the
+    BOOT link), a missing one starts at GENESIS. Returns a wired
+    ``NativeAudit`` — or None if the audit stack cannot construct, so
+    serving never fails on the recorder.
+    """
+    try:
+        from palimpsests.audit.pala_writer import PalaWriter
+        from palimpsests.core import default_config_dir
+        from palimpsests.providers.native.audit import NativeAudit
+
+        path = default_config_dir() / "serve.pala"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        if path.exists() and path.stat().st_size > 0:
+            writer = PalaWriter.open_existing(path)
+        else:
+            writer = PalaWriter(path)
+        return NativeAudit(writer)
+    except Exception:
+        return None
+
+
 def main() -> None:
     """Console-script entry point: ``palimpsests-serve``."""
     import argparse
+    import atexit
     import uvicorn
 
     parser = argparse.ArgumentParser(
@@ -177,4 +347,7 @@ def main() -> None:
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=11435)
     args = parser.parse_args()
-    uvicorn.run(create_app(), host=args.host, port=args.port)
+    audit = default_audit()
+    if audit is not None:
+        atexit.register(audit.writer.close)
+    uvicorn.run(create_app(audit=audit), host=args.host, port=args.port)
