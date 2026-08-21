@@ -10,6 +10,7 @@ parsing, and so a downstream embedder can call the same functions
 without a terminal.
 
 Commands:
+    palimpsests demo                an audited agent turn + verify, in seconds
     palimpsests models              list models on the active engine
     palimpsests engine list         show known engines + active marker
     palimpsests engine use <id>     switch the active engine
@@ -53,6 +54,7 @@ from palimpsests.core import (
     open_audit_log,
     select_engine,
 )
+from palimpsests.demo import demo as demo_cmd
 from palimpsests.providers import EngineError
 from pathlib import Path
 
@@ -74,6 +76,8 @@ pala_app = typer.Typer(
     no_args_is_help=True,
 )
 app.add_typer(pala_app, name="pala")
+
+app.command("demo")(demo_cmd)
 
 
 def _ctx() -> AppContext:
