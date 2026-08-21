@@ -106,11 +106,26 @@ class AppContext:
     def active_engine(self) -> InferenceEngine:
         """Return the currently active engine instance.
 
+        If the configured active engine is not installed this run but
+        another one is, the best installed engine (highest control
+        level) is used for this run — without persisting anything: an
+        explicit choice in the registry is never overwritten by a
+        runtime condition. A newcomer without an Ollama daemon but with
+        a configured level-2/3 engine gets a working default instead of
+        a connection error.
+
         Raises KeyError if the active engine id has no constructed
         instance — which only happens if the config names an engine we
         don't know how to build.
         """
         engine_id = self.registry.active_engine_id
+        record = next(
+            (r for r in self.registry.known() if r.engine_id == engine_id), None
+        )
+        if record is not None and not record.installed:
+            fallback = _best_installed_id(self.registry)
+            if fallback is not None:
+                return self.engines[fallback]
         return self.engines[engine_id]
 
 
@@ -260,8 +275,27 @@ def list_models(ctx: AppContext) -> Sequence[ModelInfo]:
 
 @audited("engine.select")
 def select_engine(ctx: AppContext, engine_id: str) -> None:
-    """Make ``engine_id`` the active engine."""
+    """Make ``engine_id`` the active engine.
+
+    ``engine_id="auto"`` resolves to the best installed engine (highest
+    control level) at call time and persists that concrete choice — the
+    registry never stores the word "auto", so what happens is always
+    inspectable in ``engine list``.
+    """
+    if engine_id == "auto":
+        best = _best_installed_id(ctx.registry)
+        if best is None:
+            raise KeyError("auto")
+        engine_id = best
     ctx.registry.set_active(engine_id)
+
+
+def _best_installed_id(registry: EngineRegistry) -> str | None:
+    """The installed engine with the highest control level, or None."""
+    installed = [r for r in registry.known() if r.installed]
+    if not installed:
+        return None
+    return max(installed, key=lambda r: r.control_level).engine_id
 
 
 def list_engines(ctx: AppContext) -> list[tuple[str, int, bool, bool]]:
