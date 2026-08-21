@@ -11,6 +11,7 @@ without a terminal.
 
 Commands:
     palimpsests demo                an audited agent turn + verify, in seconds
+    palimpsests serve               OpenAI-compatible endpoint over the engine
     palimpsests models              list models on the active engine
     palimpsests engine list         show known engines + active marker
     palimpsests engine use <id>     switch the active engine
@@ -78,6 +79,37 @@ pala_app = typer.Typer(
 app.add_typer(pala_app, name="pala")
 
 app.command("demo")(demo_cmd)
+
+
+@app.command("serve")
+def serve_cmd(
+    host: str = typer.Option("127.0.0.1", help="Address to bind (localhost by default)."),
+    port: int = typer.Option(11435, help="Port to listen on."),
+) -> None:
+    """Serve the OpenAI-compatible endpoint over the active engine.
+
+    The same interface the ecosystem already speaks — point any client at
+    this base URL — with the difference that everything the engine does is
+    on the audit record. Requires the 'serve' extra:
+    pip install 'palimpsests[serve]'.
+    """
+    try:
+        import uvicorn
+        from palimpsests.server.openai_api import create_app
+    except ImportError as e:
+        typer.secho(
+            "error: the serve extra is not installed; "
+            "run: pip install 'palimpsests[serve]'",
+            fg=typer.colors.RED,
+            err=True,
+        )
+        raise typer.Exit(code=1) from e
+    typer.secho(
+        f"serving OpenAI-compatible endpoint on http://{host}:{port}  "
+        "(every request on the audit record)",
+        fg=typer.colors.GREEN,
+    )
+    uvicorn.run(create_app(), host=host, port=port)
 
 
 def _ctx() -> AppContext:
