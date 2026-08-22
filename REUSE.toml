@@ -23,7 +23,7 @@ SPDX-FileCopyrightText = "Assault Consulting"
 SPDX-License-Identifier = "Apache-2.0"
 
 [[annotations]]
-path = ["docs/specs/pala-1/PALA-1.md", "docs/specs/pala-1/test-vectors.json", "docs/specs/pala-1/profiles/robotics.md", "docs/specs/pala-1/profiles/inference.md"]
+path = ["docs/specs/pala-1/PALA-1.md", "docs/specs/pala-1/test-vectors.json", "docs/specs/pala-1/profiles/inference-vectors.json", "docs/specs/pala-1/profiles/robotics.md", "docs/specs/pala-1/profiles/inference.md"]
 precedence = "override"
 SPDX-FileCopyrightText = "Assault Consulting"
 SPDX-License-Identifier = "CC0-1.0"
