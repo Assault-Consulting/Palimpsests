@@ -19,6 +19,7 @@ Commands:
     palimpsests audit verify        check the audit log's hash chain
     palimpsests pala verify <file>  verify a PALA-1 stream (experimental)
     palimpsests pala export <file>  export a PALA-1 stream as JSONL (pala2json)
+    palimpsests pala selftest       verify this build against the packaged vectors
 """
 from __future__ import annotations
 
@@ -581,6 +582,34 @@ def pala_verify_cmd(
         )
 
     raise typer.Exit(code=code)
+
+
+@pala_app.command("selftest")
+def pala_selftest_cmd() -> None:
+    """Verify this installed build against the packaged published vectors.
+
+    Reruns the linked verifier over the vector sets shipped in the wheel
+    and compares every published expectation (per-record hashes, chain
+    heads, the verify block), plus the one check a vector run alone
+    cannot make: that __version__ agrees with the distribution metadata.
+
+    \b
+    Exit codes:
+      0  sound     — every expectation reproduced
+      1  UNSOUND   — a mismatch; the output names it
+    """
+    from palimpsests.audit.pala.selftest import run_selftest
+
+    result = run_selftest()
+    typer.echo("selftest against the packaged published vectors:")
+    for line in result.lines:
+        typer.echo(line)
+    if result.ok:
+        typer.secho("sound: this build reproduces the published expectations",
+                    fg=typer.colors.GREEN)
+        raise typer.Exit(code=0)
+    typer.secho("UNSOUND: see the failing line above", fg=typer.colors.RED, err=True)
+    raise typer.Exit(code=1)
 
 
 @pala_app.command("export")
