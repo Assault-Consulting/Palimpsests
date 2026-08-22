@@ -20,6 +20,7 @@ Commands:
     palimpsests pala verify <file>  verify a PALA-1 stream (experimental)
     palimpsests pala export <file>  export a PALA-1 stream as JSONL (pala2json)
     palimpsests pala selftest       verify this build against the packaged vectors
+    palimpsests pala bundle <file>  assemble the evidence bundle (records+proofs)
 """
 from __future__ import annotations
 
@@ -610,6 +611,88 @@ def pala_selftest_cmd() -> None:
         raise typer.Exit(code=0)
     typer.secho("UNSOUND: see the failing line above", fg=typer.colors.RED, err=True)
     raise typer.Exit(code=1)
+
+
+@pala_app.command("bundle")
+def pala_bundle_cmd(
+    file: str = typer.Argument(
+        ..., help="A PALA-1 file container: records concatenated back-to-back (§2.4)."
+    ),
+    out: str = typer.Option(
+        None, "--out", "-o",
+        help="Bundle path (default: <file>.bundle.tar).",
+    ),
+    from_seq: int = typer.Option(
+        None, "--from-seq", help="Inclusive lower bound of the record range."
+    ),
+    to_seq: int = typer.Option(
+        None, "--to-seq", help="Inclusive upper bound of the record range."
+    ),
+    anchor: str = typer.Option(
+        None, "--anchor",
+        help="Expected chain head (64 hex chars) from OUTSIDE the file; its "
+        "answer and provenance are recorded in the bundle.",
+    ),
+    anchor_file: str = typer.Option(
+        None, "--anchor-file",
+        help="Read the expected head from a file (same format as pala verify).",
+    ),
+) -> None:
+    """Assemble the evidence bundle — one file to attach, open, re-verify.
+
+    A plain tar: the range's records (exact source bytes), inclusion
+    proofs against chain-carried Merkle roots, the verification verdict
+    with anchor provenance, every time claim with its trust level by
+    name, and a manifest with the SHA-256 of each member. Derived and
+    unsigned: the chain stays authoritative, and everything inside
+    re-verifies from the spec alone. A damaged chain bundles too — the
+    verdict inside says so; packaging broken evidence is half the point.
+
+    \b
+    Exit codes:
+      0  assembled
+      3  UNREADABLE — the file (or the output path) could not be used
+    """
+    from palimpsests.audit.pala.bundle import assemble_bundle
+
+    sources = []
+    if anchor is not None:
+        try:
+            raw = bytes.fromhex(anchor)
+        except ValueError:
+            _fail(False, EXIT_UNREADABLE, "--anchor is not valid hex")
+        if len(raw) != 32:
+            _fail(False, EXIT_UNREADABLE, "--anchor must be 32 bytes (64 hex chars)")
+        sources.append(ManualAnchor(anchor))
+    if anchor_file is not None:
+        sources.append(FileAnchor(anchor_file))
+    anchor_source = None
+    if len(sources) == 1:
+        anchor_source = sources[0]
+    elif len(sources) > 1:
+        anchor_source = ChainedAnchorSource(sources)
+
+    out_path = out if out is not None else f"{file}.bundle.tar"
+    try:
+        res = assemble_bundle(
+            file, out_path,
+            from_seq=from_seq, to_seq=to_seq, anchor_source=anchor_source,
+        )
+    except OSError as e:
+        typer.echo(f"UNREADABLE: {e}", err=True)
+        raise typer.Exit(EXIT_UNREADABLE) from e
+    typer.echo(
+        f"bundled {res.records} record(s) ({res.proven} with inclusion "
+        f"proofs) to {res.path}"
+    )
+    typer.echo(f"source head: {res.head}")
+    if res.chain_ok:
+        typer.secho("chain verdict inside: sound", fg=typer.colors.GREEN)
+    else:
+        typer.secho(
+            "chain verdict inside: BROKEN — bundled for inspection",
+            fg=typer.colors.YELLOW, err=True,
+        )
 
 
 @pala_app.command("export")
