@@ -36,10 +36,12 @@ def test_load_returns_the_published_content():
     assert len(core["records"]) == 12
     assert core["chain_head"] == json.loads(CORE.read_text())["chain_head"]
     assert inf["chain_head"] == json.loads(INFERENCE.read_text())["chain_head"]
-    # the companion is the profile set: it names its profile/revision and
-    # carries record bodies (the envelope set is header-focused)
+    # the companion is the profile set: it names its profile and carries
+    # the top-level semantics block (decoded r2/r3 expectations, keyed by
+    # seq) that a profile-aware reader checks its rendering against
     assert inf["profile"] == "inference"
-    assert any(r.get("body_hex") for r in inf["records"])
+    kinds = {v.get("kind_name") for v in inf["semantics"].values() if isinstance(v, dict)}
+    assert "TOOL_CALL" in kinds
 
 
 def test_unknown_set_is_a_clean_keyerror():
