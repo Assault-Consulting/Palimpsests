@@ -72,6 +72,7 @@ def verify_headers(
     *,
     known_types: frozenset[int] = KNOWN_RECORD_TYPES,
     expected_head: bytes | None = None,
+    start_prev: bytes | None = None,
 ) -> VerifyResult:
     """Header-only verification per §7.1, with §7.2 when an anchor is given.
 
@@ -80,8 +81,13 @@ def verify_headers(
     head covered by the newest witness receipt. Without it, tail
     truncation is undetectable and ``complete_to_anchor`` stays ``None``;
     that is not a limitation of this function, it is why anchors exist.
+
+    ``start_prev`` declares a mid-chain start: the first record must
+    link to this hash (a manifest's previous-segment head) instead of
+    being required to be GENESIS — the primitive segment verification
+    is built on. Without it, behaviour is unchanged.
     """
-    verifier = IncrementalVerifier(known_types=known_types)
+    verifier = IncrementalVerifier(known_types=known_types, start_prev=start_prev)
     for hb in headers:
         verifier.step(hb)
         if verifier.halted:
