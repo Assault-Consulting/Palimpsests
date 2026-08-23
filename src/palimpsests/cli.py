@@ -21,6 +21,7 @@ Commands:
     palimpsests pala export <file>  export a PALA-1 stream as JSONL (pala2json)
     palimpsests pala selftest       verify this build against the packaged vectors
     palimpsests pala bundle <file>  assemble the evidence bundle (records+proofs)
+    palimpsests pala segment <file> split a chain into retention-ready segments
 """
 from __future__ import annotations
 
@@ -693,6 +694,56 @@ def pala_bundle_cmd(
             "chain verdict inside: BROKEN — bundled for inspection",
             fg=typer.colors.YELLOW, err=True,
         )
+
+
+@pala_app.command("segment")
+def pala_segment_cmd(
+    file: str = typer.Argument(
+        ..., help="A PALA-1 file container: records concatenated back-to-back (§2.4)."
+    ),
+    out_dir: str = typer.Option(
+        None, "--out-dir", "-o",
+        help="Directory for segment files + segments.json (default: <file>.segments/).",
+    ),
+    records_per_segment: int = typer.Option(
+        100_000, "--records-per-segment", "-n",
+        help="Records per segment file (cut strictly at record boundaries).",
+    ),
+) -> None:
+    """Split a chain into retention-ready segments — the cut keeps the proof.
+
+    Writes fixed-size segment files plus segments.json. Every segment
+    verifies alone, seeded with its predecessor's head from the
+    manifest (pala verify's machinery with a declared mid-chain start);
+    deleting expired segments keeps the rest verifiable; concatenating
+    all segments reproduces the source byte-for-byte. The manifest is
+    derived and unsigned — the segments stay authoritative.
+
+    \b
+    Exit codes:
+      0  segmented
+      3  UNREADABLE — the file (or the output dir) could not be used
+    """
+    from palimpsests.audit.pala.segments import segment_chain
+
+    target = out_dir if out_dir is not None else f"{file}.segments"
+    try:
+        res = segment_chain(
+            file, target, records_per_segment=records_per_segment
+        )
+    except OSError as e:
+        typer.echo(f"UNREADABLE: {e}", err=True)
+        raise typer.Exit(EXIT_UNREADABLE) from e
+    typer.echo(
+        f"segmented into {len(res.segments)} file(s) in {target} "
+        f"(manifest: {res.manifest_path.name})"
+    )
+    typer.echo(f"source head: {res.source_head}")
+    typer.secho(
+        "every segment verifies alone, seeded from the manifest; "
+        "keep segments.json for as long as any segment lives",
+        fg=typer.colors.GREEN,
+    )
 
 
 @pala_app.command("export")
