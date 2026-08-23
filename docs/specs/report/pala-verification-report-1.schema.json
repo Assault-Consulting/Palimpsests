@@ -1,0 +1,203 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palimpsests.dev/schemas/pala-verification-report-1.schema.json",
+  "title": "pala-verification-report/1",
+  "description": "The machine truth of the verification-report shape. One owner (palimpsests.audit.report); every rendering validates against this file, which ships inside the wheel. The report is an attestation of a check, never a compliance claim. Version fields (verifier.tool, verifier.package) and checked_at are normalized away by golden-file consumers.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format", "subject", "verifier", "checked_at", "chain", "container",
+    "anchor", "completeness", "existence", "diagnosis", "advisory",
+    "safety", "time_basis", "verdict"
+  ],
+  "properties": {
+    "format": { "const": "pala-verification-report/1" },
+    "verdict": {
+      "enum": ["sound", "partial", "violation"],
+      "description": "Produced ONLY by palimpsests.audit.report.derive_verdict; renderers must not re-derive the rule."
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["filename", "sha256", "bytes", "records", "boots", "spans", "first_seq", "last_seq"],
+      "properties": {
+        "filename": { "type": "string" },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "records": { "type": "integer", "minimum": 0 },
+        "boots": { "type": "integer", "minimum": 0 },
+        "spans": { "type": "integer", "minimum": 0 },
+        "first_seq": { "type": ["integer", "null"] },
+        "last_seq": { "type": ["integer", "null"] }
+      }
+    },
+    "verifier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tool", "package", "spec"],
+      "properties": {
+        "tool": { "type": "string", "description": "The shell names itself (e.g. 'palimpsests-auditor X.Y.Z'). Normalized in golden tests." },
+        "package": { "type": "string", "description": "Always names this package. Normalized in golden tests." },
+        "spec": { "const": "PALA-1 v1.0" }
+      }
+    },
+    "checked_at": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["wall_ns", "note"],
+      "description": "Isolated by design: two reports of one file diff to this object only.",
+      "properties": {
+        "wall_ns": { "type": "integer" },
+        "note": { "type": "string" }
+      }
+    },
+    "container": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["well_formed", "malformed", "bytes_parsed", "bytes_total", "body_digest_mismatches"],
+      "description": "§2.4 well-formedness and the body↔header digest binding, attested by the report's own walk — a body swap is invisible to a header-only chain check.",
+      "properties": {
+        "well_formed": { "type": "boolean" },
+        "malformed": { "type": ["string", "null"] },
+        "bytes_parsed": { "type": "integer", "minimum": 0 },
+        "bytes_total": { "type": "integer", "minimum": 0 },
+        "body_digest_mismatches": { "type": "array", "items": { "type": "integer" } }
+      }
+    },
+    "chain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["chain_ok", "head", "breaks", "gaps", "violations", "uninterpretable"],
+      "properties": {
+        "chain_ok": { "type": "boolean" },
+        "head": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "breaks": { "type": "array", "items": { "type": "integer" } },
+        "gaps": { "type": "array", "items": { "type": "integer" } },
+        "violations": { "type": "array" },
+        "uninterpretable": { "type": "array", "items": { "type": "integer" } }
+      }
+    },
+    "anchor": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["head", "source_kind", "source_detail", "observed_at_ns", "attempts"],
+          "properties": {
+            "head": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+            "source_kind": { "type": "string" },
+            "source_detail": { "type": ["string", "null"] },
+            "observed_at_ns": {
+              "type": ["integer", "null"],
+              "description": "null when the anchor source does not carry an observation time (file/manual sources today)."
+            },
+            "attempts": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["source_kind", "outcome", "error"],
+                "properties": {
+                  "source_kind": { "type": "string" },
+                  "outcome": { "type": "string" },
+                  "error": { "type": ["string", "null"] }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "completeness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["complete_to_anchor", "anchor_lag", "anchor_reason"],
+      "description": "Tri-state on purpose: null = NOT CHECKED and must never be rendered as passed (L7).",
+      "properties": {
+        "complete_to_anchor": { "type": ["boolean", "null"] },
+        "anchor_lag": { "type": ["integer", "null"] },
+        "anchor_reason": { "type": ["string", "null"] }
+      }
+    },
+    "existence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["external_pins", "note"],
+      "properties": {
+        "external_pins": { "type": "array", "items": { "type": "integer" } },
+        "note": { "type": "string" }
+      }
+    },
+    "diagnosis": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["pattern", "at_seq", "expected", "narrative"],
+          "properties": {
+            "pattern": { "type": "string" },
+            "at_seq": { "type": ["integer", "null"] },
+            "expected": { "type": ["string", "null"] },
+            "narrative": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "advisory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["count", "items", "note"],
+      "properties": {
+        "count": { "type": "integer", "minimum": 0 },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["code", "at_seq", "detail"],
+            "properties": {
+              "code": { "type": "string" },
+              "at_seq": { "type": ["integer", "null"] },
+              "detail": { "type": ["string", "null"] }
+            }
+          }
+        },
+        "note": { "const": "advisory items do not affect the verdict" }
+      }
+    },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["count", "unacknowledged_candidates", "items"],
+      "properties": {
+        "count": { "type": "integer", "minimum": 0 },
+        "unacknowledged_candidates": { "type": "integer", "minimum": 0 },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["seq", "kind", "kind_name"],
+            "properties": {
+              "seq": { "type": "integer" },
+              "kind": { "type": ["integer", "null"] },
+              "kind_name": { "type": ["string", "null"] }
+            }
+          }
+        }
+      }
+    },
+    "time_basis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["axis", "wall_claims_qualified_by", "caveats"],
+      "properties": {
+        "axis": { "const": "proved-order" },
+        "wall_claims_qualified_by": { "const": "time_trust" },
+        "caveats": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}
