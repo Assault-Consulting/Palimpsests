@@ -116,6 +116,9 @@ dev = [
     # fastapi so the OpenAI-endpoint tests run (and count for coverage) in
     # CI; uvicorn is runtime-only and stays out of dev.
     "fastapi>=0.115",
+    # jsonschema so the report validates against its shipped schema in CI —
+    # the machine seam between the package and Auditor's renderings.
+    "jsonschema>=4.21",
     # build so the vectors sdist→wheel round-trip test (U9) runs in CI:
     # force-include from docs/ is exactly the shape that produces a good
     # wheel and a broken sdist-built wheel if docs/ ever leaves the sdist.
@@ -144,6 +147,10 @@ packages = ["src/palimpsests"]
 [tool.hatch.build.targets.wheel.force-include]
 "docs/specs/pala-1/test-vectors.json" = "palimpsests/audit/pala/_vectors/core.json"
 "docs/specs/pala-1/profiles/inference-vectors.json" = "palimpsests/audit/pala/_vectors/inference.json"
+# The report schema is the machine truth of pala-verification-report/1:
+# it ships beside the code so any consumer (Auditor's sidecar included)
+# validates against the exact schema of the installed version.
+"docs/specs/report/pala-verification-report-1.schema.json" = "palimpsests/audit/_schemas/pala-verification-report-1.schema.json"
 
 [tool.ruff]
 line-length = 100

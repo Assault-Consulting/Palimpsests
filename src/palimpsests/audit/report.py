@@ -7,7 +7,8 @@ Format id ``pala-verification-report/1``. The shape is the contract
 drafted in Auditor's FUNCTIONALITY.md §15, built here so the JSON
 schema has exactly one owner: the package's HTML/CLI report and
 Auditor's PDF/JSON are two renderings of this one model and cannot
-drift apart.
+drift apart. The machine truth of the shape ships in the wheel:
+``palimpsests/audit/_schemas/pala-verification-report-1.schema.json``.
 
 Wording discipline, inherited from the contract: the report is an
 attestation of a check — *this tool verified file X against an anchor
@@ -25,6 +26,7 @@ import struct
 import time
 from dataclasses import dataclass, field
 from hashlib import sha256
+from palimpsests.audit.pala import MalformedRecord, body_digest_of, iter_records
 from palimpsests.audit.pala.codec import RT_WITNESS
 from palimpsests.audit.pala_writer import EVT_REF_SEQ
 from palimpsests.audit.reader import AuditReader
@@ -33,6 +35,33 @@ from pathlib import Path
 REPORT_FORMAT = "pala-verification-report/1"
 SPEC_ID = "PALA-1 v1.0"
 _ADVISORY_NOTE = "advisory items do not affect the verdict"
+
+
+def derive_verdict(data: dict) -> str:
+    """The one verdict rule, exported so every rendering calls it.
+
+    "violation" — the chain broke, the container is malformed, a body
+    does not match its header digest, or the head missed a supplied
+    anchor. "partial" — sound as far as checked, but completeness was
+    NOT checked (no anchor), so truncation or wholesale replacement
+    would not have been detected. "sound" — everything checked, held.
+    A renderer MUST NOT re-derive this rule; it calls this function or
+    reads the report's ``verdict`` field, which was produced by it.
+    """
+    chain = data["chain"]
+    container = data["container"]
+    completeness = data["completeness"]
+    broken = (
+        not chain["chain_ok"]
+        or not container["well_formed"]
+        or bool(container["body_digest_mismatches"])
+        or completeness["complete_to_anchor"] is False
+    )
+    if broken:
+        return "violation"
+    if completeness["complete_to_anchor"] is None:
+        return "partial"
+    return "sound"
 
 
 @dataclass(frozen=True)
@@ -86,6 +115,22 @@ def build_report(
     path = Path(source)
     raw = path.read_bytes()
 
+    # The report's own container walk (K2/K5): §2.4 well-formedness and
+    # the body↔header digest binding are attested here, not assumed —
+    # reader.verify() covers headers, and a body swap is invisible to a
+    # header-only chain check.
+    bytes_parsed = 0
+    body_mismatches: list[int] = []
+    malformed: str | None = None
+    try:
+        for hb, body in iter_records(raw):
+            bytes_parsed += len(hb) + len(body)
+            if body and body_digest_of(body) != hb[124:156]:
+                (bad_seq,) = struct.unpack_from("<Q", hb, 12)
+                body_mismatches.append(bad_seq)
+    except MalformedRecord as e:
+        malformed = str(e)
+
     with AuditReader.open(path, anchor=anchor_source) as reader:
         ver = reader.verify()
         boots = reader.boots()
@@ -119,6 +164,13 @@ def build_report(
         "checked_at": {
             "wall_ns": time.time_ns(),
             "note": "the auditing machine's clock",
+        },
+        "container": {
+            "well_formed": malformed is None,
+            "malformed": malformed,
+            "bytes_parsed": bytes_parsed,
+            "bytes_total": len(raw),
+            "body_digest_mismatches": body_mismatches,
         },
         "chain": {
             "chain_ok": chain.chain_ok,
@@ -184,4 +236,5 @@ def build_report(
             "caveats": [],
         },
     }
+    data["verdict"] = derive_verdict(data)
     return VerificationReport(data=data)
