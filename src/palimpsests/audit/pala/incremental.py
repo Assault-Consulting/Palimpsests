@@ -259,9 +259,10 @@ class IncrementalVerifier:
     ``halted`` and stops feeding.
     """
 
-    def __init__(self, *, known_types) -> None:
+    def __init__(self, *, known_types, start_prev: bytes | None = None) -> None:
         self._known_types = known_types
-        self._prev = ZERO32
+        self._start_prev = start_prev
+        self._prev = start_prev if start_prev is not None else ZERO32
         self._expected_seq: int | None = None
         self._count = 0
         self._halted = False
@@ -310,7 +311,15 @@ class IncrementalVerifier:
 
         # §4.2 — "no predecessor" and "predecessor removed" must be
         # distinguishable; that is the entire reason GENESIS is a type.
-        if index == 0:
+        if index == 0 and self._start_prev is not None:
+            # A declared mid-chain start (segment verification): the first
+            # record is link-checked against the declared predecessor —
+            # the previous segment's head from a manifest — instead of
+            # being required to be GENESIS. The link check itself happens
+            # in the elif below, because _prev was seeded with start_prev.
+            if hb[_OFF_PREV_HASH] != self._prev:
+                self._breaks.append(seq)
+        elif index == 0:
             if rtype != RT_GENESIS:
                 # §4.2 / §8: a first record that is not GENESIS is exactly ONE
                 # violation at position 0 — a property of the chain, not of
