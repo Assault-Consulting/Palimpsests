@@ -8,6 +8,7 @@
 [![Python](https://img.shields.io/pypi/pyversions/palimpsests.svg)](https://pypi.org/project/palimpsests/)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13534/badge)](https://www.bestpractices.dev/projects/13534)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Assault-Consulting/Palimpsests/badge)](https://scorecard.dev/viewer/?uri=github.com/Assault-Consulting/Palimpsests)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21978107.svg)](https://doi.org/10.5281/zenodo.21978107)
 
 > **Status: v0.9 — the audit format is the deliverable.** The **[PALA-1
 > format](docs/specs/pala-1/PALA-1.md)** is **frozen at v1.0**: a

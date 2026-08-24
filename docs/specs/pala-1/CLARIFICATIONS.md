@@ -68,6 +68,23 @@ rule, hashed but not judged.
 §7.1's pseudocode uses `break` as loop control and `breaks` as a report
 array. These are unrelated; the report array is the normative object.
 
+## C-6 — §7.6 makes the chain-link fields version-invariant (run #5 author, PR #170)
+
+Raised as a reading during the crypto-agility work: §7.6 freezes
+`prev_hash` and `body_digest` "at their stated offsets", and §2.1
+states both as 32 bytes — so a future format version honouring §7.6
+cannot widen them in place. **The reading is correct, and it is the
+design.** The chain-link fields are version-invariant precisely so
+that records of a version a verifier does not implement still *chain*:
+an unknown-version record is hashed into the head through the same
+32-byte fields as any other (the coexistence mechanism §7.6 exists
+for, and what the A2 invariant test demonstrates by counterfactual).
+Consequences, stated: within the PALA-1 envelope a stronger chain
+digest is **framed alongside** — a TLV, a witness path over a wider
+hash — never substituted at the frozen offsets; substituting the link
+itself is a new envelope (a "PALA-2" event), not a new version of this
+one. Credit: Oleksii Turak, question 2 of PR #170.
+
 ## Implementation count
 
 §11's "four independent implementations — two of them external" was

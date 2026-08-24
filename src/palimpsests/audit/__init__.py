@@ -17,6 +17,9 @@ Public surface:
 - ``store_head_anchor`` / ``load_head_anchor`` / ``clear_head_anchor`` —
   the out-of-database anchor that makes wholesale log replacement
   detectable.
+- ``AuditReader`` — the PALA-1 stream reader (re-exported from
+  ``palimpsests.audit.reader`` so the one import a consumer needs is
+  the package root — the WS-G ergonomics tail).
 """
 from __future__ import annotations
 
@@ -38,9 +41,11 @@ from .log import (
     get_audit_log,
     set_audit_log,
 )
+from .reader import AuditReader
 
 __all__ = [
     "GENESIS",
+    "AuditReader",
     "AuditLog",
     "AuditEvent",
     "AuditDenied",
