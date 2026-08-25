@@ -96,7 +96,7 @@ jobs:
       # deprecation warning on this step). upload-sarif is a narrow action, so
       # the v3 -> v4 major bump is low risk; the step is also soft-failed above.
       - name: Upload to code-scanning
-        uses: github/codeql-action/upload-sarif@ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd  # v4.37.7
+        uses: github/codeql-action/upload-sarif@db488ddef3bf6cb639b32c2e9a7c0a7ea8271d28  # v4.37.8
         # Non-gating: requires Code scanning enabled on the repo; a 403 here
         # must not turn main red for a report workflow.
         continue-on-error: true
