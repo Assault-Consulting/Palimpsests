@@ -6,6 +6,195 @@ aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 once it reaches v1.0. Before v1.0, minor versions may include breaking
 API changes.
 
+## [0.10.0] — 2026-08-24
+
+**Additive only — the PALA-1 wire format is unchanged (frozen at v1.0).** No
+envelope byte changes and no `format_version` bump; `test-vectors.json` is
+byte-identical. Two things change with this release. First, the value is
+visible in one command: `palimpsests demo` writes and verifies an audited
+agent turn with no model, no network and no configuration, and
+`palimpsests serve` puts an OpenAI-compatible endpoint in front of the engine
+whose tool loop is recorded as it runs. Second, the audit trail stops being
+something only this package can read: the published vectors ship inside the
+wheel, inclusion proofs and evidence bundles are assemblable, the
+verification report has one schema owner and a machine-checkable JSON Schema,
+and the consumer surface is declared with stability classes rather than
+inferred from source.
+
+### Added — developer experience
+
+- **`palimpsests demo`** (#154): one command — an agent turn through the real
+  level-3 stack, a PALA-1 chain written, and the production reader verifying
+  it, narrated. Built on real seams only (`PalaWriter` → `NativeAudit` →
+  `NativeSession` → `AuditReader`), so it is the seed of a future launcher
+  rather than a throwaway script; the demo backend is labelled **inside the
+  chain** (`injected:` detail), so even the demo artifact does not overstate
+  itself.
+- **OpenAI-compatible endpoint** (#155, #156): `POST /v1/chat/completions`
+  (plain and SSE, standard `chat.completion.chunk` framing and `[DONE]`) and
+  `GET /v1/models`, over `core.chat` — so it works at every engine level,
+  L1/Ollama included. Ships behind a new `serve` extra (fastapi + uvicorn);
+  the base install is unchanged and the module is import-safe without the
+  extra. Started with `palimpsests serve` or the `palimpsests-serve` entry
+  point. Scope is stated rather than implied: `usage` is reported as honest
+  zeros until token accounting is engine-level work, and there is no auth
+  because this is a localhost tool — a real gateway goes in front otherwise.
+- **Function calling, with the loop on the record** (#159): `tools` are
+  declared to the model in one stated convention (Hermes/Qwen
+  `<tool_call>{json}</tool_call>`, with a bare-JSON fallback) and returned in
+  canonical OpenAI shape (`tool_calls`, `finish_reason: "tool_calls"`,
+  indexed SSE chunk); a malformed block stays in the text rather than being
+  erased — the model's utterance is not this layer's to rewrite. **The
+  recorder sits on the endpoint**, the dispatch boundary this process
+  actually observes: handing calls to the client emits `TOOL_CALL`
+  (arguments as a canonical digest), the client's posted results emit
+  `TOOL_RESULT` hash-bound to their call, and shutdown cancels every pending
+  call so the chain never shows a call without a fate. Consequence: the
+  auditable tool loop works on **every** engine level, without waiting for
+  session affinity. `serve` keeps its own cross-boot chain at
+  `<config>/serve.pala`.
+- **Engine auto-selection** (#158): `active_engine()` falls back to the best
+  *installed* engine for the current run when the configured one is absent,
+  and `palimpsests engine use auto` resolves and persists the **concrete**
+  id. Two honesty properties, both tested: the fallback never persists, and
+  an explicit installed choice is never second-guessed — the registry never
+  stores the word "auto", so `engine list` always shows what will run.
+
+### Added — the audit consumer surface
+
+- **The published vectors ship in the wheel** (#160): both the envelope set
+  and the profile companion, force-included at build time from
+  `docs/specs/pala-1/` — one file in git (the source of truth, pinned by the
+  regeneration gate), a build-time copy in the wheel. One canonical accessor,
+  `vectors.load("core"|"inference")` over `importlib.resources` — never
+  `__file__`, which breaks under zipimport and frozen builds, exactly where a
+  self-check matters most. A sdist→wheel round-trip test pins the failure
+  mode `twine check` cannot see.
+- **`palimpsests pala selftest`** (#161): does this installed build reproduce
+  the published expectations? Per-record hashes, chain heads and the verify
+  blocks — plus an explicit `__version__`-vs-distribution-metadata check,
+  because a vector run alone cannot catch that drift (the 0.8.0 defect). The
+  output is paste-able into a bug report.
+- **Merkle inclusion proofs** (#162): `inclusion_proof(reader, seq)` and
+  `range_proofs(reader, lo, hi)`, taking the reader a consumer already holds
+  and returning values. The coverage rule is stated once and needs no new
+  TLV: a `MERKLE` record whose `MERKLE_LEAF_COUNT` is *N* covers the *N*
+  records immediately preceding it. `None`, never an exception, for an
+  unaggregated tail or an absent seq — "not yet aggregated" is not "not
+  included", and a bundle must be able to say which.
+- **`merkle_checkpoint`** (#163): the writing side, so real chains become
+  provable rather than only fixtures. Windows tile by construction — each
+  checkpoint aggregates everything since the previous one, that record's own
+  hash included — which leaves exactly one unproven record: the final
+  checkpoint, the honest tail.
+- **`pala bundle`** (#164): the evidence bundle, format `pala-bundle/1` — one
+  plain tar with the range's **exact source bytes**, per-seq proofs, the
+  verdict at assembly time with anchor provenance and attempts, every time
+  claim with its trust level **by name**, and a manifest digesting every
+  member. Deterministic (same inputs → byte-identical bundle), derived and
+  unsigned: the chain stays authoritative, and a damaged chain bundles too,
+  with the verdict inside saying so. The acceptance test reproduces every
+  claim in the bundle using spec-level operations only, without a line of the
+  assembler module.
+- **Time health** (#165): per-boot drift series with a least-squares slope in
+  ppm — the clock-quality fingerprint — never crossing a boot boundary, and
+  an UNSYNCED boot's drift computed and *labelled* rather than hidden. Plus a
+  step catalog classifying `step`, `regression` (signed negative — the one an
+  auditor cares about) and `slew`, where a run of sub-threshold corrections
+  is one entry, not forty. The 128 ms threshold is ntpd's own step-vs-slew
+  line, stated with its reason. Analytics, never verdict inputs.
+- **Per-boot statistics** (#166): uptime by monotonic span, span open/closed
+  counts with the open rate and median closed duration, and **anchor cadence
+  as a first-class field** — `widest_anchor_gap_ns`, **edge gaps included**,
+  because a record's "existed by" claim can never be narrower than the gap
+  between the anchor writes bracketing it, and that bracket is widest exactly
+  when nobody was looking. `None` where there are no anchors at all: an
+  unbounded bracket must not read as a perfect one.
+- **The verification-report model** (#167, #168): `build_report()` produces
+  `pala-verification-report/1` — one schema owner for both this package's
+  report and any downstream rendering. `checked_at` is isolated so two
+  reports of one file differ by a single line; completeness that was never
+  asked stays `None` and is never rendered as passed; the unacknowledged
+  incident-candidate count is resolved through `EVT_REF_SEQ` and is the
+  loudest number in the report. The verdict rule (`derive_verdict`) is
+  exported and embedded in the model, so a renderer reads the field instead
+  of re-deriving it. The report's own container walk attests a malformed
+  container and checks every body against its header digest — a truncated
+  file and a body swap under an intact header chain both now surface, where
+  header-only verification is blind by design.
+- **A machine-checkable report schema** (#168):
+  `docs/specs/report/pala-verification-report-1.schema.json` (JSON Schema
+  2020-12, `additionalProperties: false`, CC0), **shipped in the wheel** beside
+  the vectors, and validated in CI against every built report — so two
+  consumers stop drifting by hand-checked prose.
+
+### Added — retention
+
+- **`pala segment`** (#169): retention needs a knife that keeps the proof.
+  `verify_headers(..., start_prev=...)` allows a **declared mid-chain start**,
+  so the seam between segments is a checked hash link rather than a
+  convention — a forged seed is a detected break, and without the parameter
+  verifier behaviour is byte-identical to before. `segment_chain()` and the
+  CLI cut fixed-size segments strictly at record boundaries with one
+  deterministic `pala-segments/1` manifest. Three pinned properties: every
+  segment verifies alone when seeded from the manifest; deleting the first
+  segment's bytes leaves a tail that still proves it continues a specific,
+  *named* history (so "predecessor deleted under retention" is
+  distinguishable from "predecessor missing"); and concatenating all segments
+  reproduces the source byte-for-byte.
+
+### Changed
+
+- **`AuditReader` is re-exported from `palimpsests.audit`** (#171). The 0.8
+  note that it was reachable only at `palimpsests.audit.reader` no longer
+  applies: the package root is the one import a consumer needs, matching how
+  `docs/INTEGRATION-SURFACE.md` names channel 1.
+- The consumer-facing reading surface is **declared public as of this
+  release** (#168); the writer APIs remain experimental.
+
+### Documentation
+
+- **`docs/INTEGRATION-SURFACE.md`** (#168): the consumer contract — seven
+  channels with declared stability classes, the copy-then-read rule for live
+  files (a malformed tail on a live file is a record in flight, not
+  tampering), the golden-test normalization rule, the size envelope stated
+  rather than implied, and embedder practice. Its closing line is the
+  contract's spirit: if a behaviour matters to a consumer and is not written
+  there, it is not promised.
+- **`docs/specs/pala-1/CRYPTO-AGILITY.md`** (#170): a non-normative design
+  note (CC0) on what is fixed in v1 and why one suite *is* the security
+  argument, where the change seams are (`format_version`, §7.6 coexistence,
+  opaque witness receipts, TLV lengths that already frame wider digests),
+  and what is deliberately not provided — with a table mapping every
+  behavioural claim to the test that pins it. Where the note reasons rather
+  than asserts, it says so.
+- **`CLARIFICATIONS.md` C-6** (#171): `prev_hash` and `body_digest` at their
+  frozen 32-byte offsets are **version-invariant** — precisely what lets an
+  unknown-version record still chain. A stronger chain digest is framed
+  alongside within the PALA-1 envelope, never substituted at the frozen
+  offsets; substituting the link is a new envelope. Raised in review of #170;
+  credited to Turak.
+- **README restructured around trying it first** (#157): install-and-run at
+  the top, compliance and architecture one link deep.
+
+### External contributions
+
+- **Cryptographic scope and agility** (#170) — 80 invariant tests plus the
+  design note, contributed by Oleksii: known answers traced to the published
+  vectors, chain links folded with `hashlib.sha256` directly so no fixture
+  inherits the assumption it exists to test, and a hand-built
+  `format_version = 2` record proving the coexistence claim end to end (it
+  chains, it is reported as uninterpretable, it is hashed into the head, and
+  it is not judged). Its review also produced C-6 above. No production-code
+  change and no wire change.
+
+### Notes
+
+- Full suite at the release commit: **660 passed, 1 skipped**; coverage
+  90.77 % statement / 84.48 % branch against the 90 % / 80 % Gold gates; ruff
+  clean on both the current and the CI-pinned version; `reuse lint` clean;
+  `test-vectors.json` untouched.
+
 ## [0.9.0] — 2026-08-20
 
 **Additive only — the PALA-1 wire format is unchanged (frozen at v1.0).** No
@@ -702,6 +891,9 @@ Initial release.
   from the OS keychain, falling back to an ephemeral key headless.
 - **CLI** — `chat`, `models`, `engine list` / `engine use`.
 
+[0.10.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.10.0
+[0.9.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.9.0
+[0.8.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.8.0
 [0.7.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.7.0
 [0.6.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.6.0
 [0.5.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.5.0
