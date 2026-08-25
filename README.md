@@ -10,7 +10,8 @@
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Assault-Consulting/Palimpsests/badge)](https://scorecard.dev/viewer/?uri=github.com/Assault-Consulting/Palimpsests)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21978107.svg)](https://doi.org/10.5281/zenodo.21978107)
 
-> **Status: v0.9 — the audit format is the deliverable.** The **[PALA-1
+> **Status: v0.10 — the audit format is the deliverable, and its consumer
+> surface is public.** The **[PALA-1
 > format](docs/specs/pala-1/PALA-1.md)** is **frozen at v1.0**: a
 > self-describing, byte-level audit format with byte-exact test vectors, a CC0
 > reference implementation, a stdlib-only production codec, and the
@@ -19,7 +20,8 @@
 > [verification kit](docs/specs/pala-1/verification-kit/README.md). The writer
 > emits it end-to-end with cross-boot resume; the writer APIs remain
 > experimental and may change before v1.0. Verify it yourself; do not take our
-> word for it.
+> word for it — the published vectors now ship **inside the wheel**, and
+> `palimpsests pala selftest` checks this build against them.
 >
 > Underneath sits a real local inference engine: Levels 1 (Ollama) and 2
 > (llama.cpp) behind one abstraction, a context-memory layer, and a level-3
@@ -461,10 +463,21 @@ the novelty is in this composition and its seams, not in a new inference kernel.
       profile r3 (`TOOL_CALL`/`TOOL_RESULT`, the loop-limit guard) end to end:
       spec, byte-exact companion vectors, writer, session wiring, reader
       recognition and advisories (including span pairing — the resolution of
-      the fifth independent run's finding); `palimpsests demo`; the
-      OpenAI-compatible endpoint (`palimpsests serve`); post-freeze
+      the fifth independent run's finding); post-freeze
       [CLARIFICATIONS](docs/specs/pala-1/CLARIFICATIONS.md); a fifth
       independent verification (Perl 5, hand-rolled NIST-validated AES-GCM).
+- [x] **v0.10 — value in one command, and a public consumer surface** —
+      `palimpsests demo` (an audited agent turn, verified, with no model or
+      network) and the OpenAI-compatible endpoint `palimpsests serve`,
+      including function calling whose every tool hop is recorded as r3 on
+      every engine level; engine auto-selection. On the audit side the trail
+      becomes something others can consume: the published vectors ship in the
+      wheel with `pala selftest`, Merkle inclusion proofs and
+      `merkle_checkpoint`, the `pala bundle` evidence bundle, time-health and
+      per-boot analytics, the `pala-verification-report/1` model with a JSON
+      Schema shipped beside the vectors, `pala segment` for retention, and
+      [INTEGRATION-SURFACE](docs/INTEGRATION-SURFACE.md) declaring the
+      stability class of every channel.
 - [ ] **Later** — assurance tiers B/C (hardware root of trust, external
       witness); a discrete-GPU run (the integrated GPU flatters every
       prefill-saving mechanism, so these ratios compress on fast prefill); a
