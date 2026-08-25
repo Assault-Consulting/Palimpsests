@@ -6,12 +6,7 @@
 <title>Palimpsests — local-first LLM inference with a tamper-evident record</title>
 <meta name="description" content="An Apache-2.0 inference engine for regulated and air-gapped deployments. Runs language models on hardware you control and writes a hash-chained record of every request." />
 
-<!-- ============================================================
-     Discoverability / indexing (Google, Bing, AI agents).
-     PLACEHOLDER DOMAIN: replace every https://palimpsests.dev
-     with your production domain here and in robots.txt,
-     sitemap.xml, llms.txt and site.webmanifest.
-     ============================================================ -->
+<!-- Discoverability / indexing (Google, Bing, AI agents). -->
 <link rel="canonical" href="https://palimpsests.dev/" />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 <meta name="author" content="Assault Consulting" />
@@ -352,6 +347,7 @@
     <div class="nav__links">
       <a class="hide-sm" href="#caps">Capabilities</a>
       <a class="hide-sm" href="#record">The record</a>
+      <a class="hide-sm" href="#gold">Assurance</a>
       <a class="hide-sm" href="#eu-law">EU law</a>
       <a class="hide-sm" href="#boundary">Boundary</a>
       <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
@@ -374,7 +370,7 @@
           <a class="btn" href="https://pypi.org/project/palimpsests/" rel="noopener">View on PyPI ↗</a>
         </div>
         <div class="roster" style="margin-top:1.4rem">
-          <a class="chip" href="https://www.bestpractices.dev/projects/13534" rel="noopener">OpenSSF Best Practices: Silver ↗</a>
+          <a class="chip" href="https://www.bestpractices.dev/projects/13534" rel="noopener">OpenSSF Best Practices: Gold ↗</a>
           <span class="chip">fully open source (Apache-2.0)</span>
           <span class="chip">independently verified</span>
           <span class="chip">reproducible builds</span>
@@ -475,7 +471,7 @@
     <div class="blk__head" data-reveal>
       <span class="eyebrow">The record</span>
       <h2 class="display">The record beneath the record.</h2>
-      <p>Every request leaves a tamper-evident entry, chained by hash so the log can’t be silently altered — written in a published, frozen wire format, <span class="mono">PALA-1 v1.0</span>, not an internal detail. Four independent implementations, two of them outside the project, reproduce it from the spec and test vectors alone. That’s the record-keeping substrate the EU AI Act’s logging expectations rest on — kept locally, verifiable without revealing what it holds. And the software itself carries the same discipline.</p>
+      <p>Every request leaves a tamper-evident entry, chained by hash so the log can’t be silently altered — written in a published, frozen wire format, <span class="mono">PALA-1 v1.0</span>, not an internal detail. Five independent implementations, three of them outside the project, reproduce it from the spec and test vectors alone. That’s the record-keeping substrate the EU AI Act’s logging expectations rest on — kept locally, verifiable without revealing what it holds. And the software itself carries the same discipline.</p>
     </div>
 
     <div class="prov">
@@ -495,6 +491,33 @@
         <h4>OSPS Baseline L2 · fuzzed in CI</h4>
         <p>A self-attested Open Source Project Security baseline, a published threat model, and Atheris fuzzing in the pipeline. <b>Fully open source under Apache-2.0 — every line is public, and you can read, audit, and run all of it.</b></p>
       </div>
+    </div>
+  </div>
+</section>
+
+<section class="blk wrap" id="gold">
+  <div class="blk__head" data-reveal>
+    <span class="eyebrow">Assurance</span>
+    <h2 class="display">Gold, on the public record.</h2>
+    <p>Palimpsests holds the OpenSSF Best Practices <b>Gold</b> badge — the highest tier of the programme, and the first held by a project founded by a team from Ukraine. It is not a self-declaration: every criterion is a <a href="https://www.bestpractices.dev/projects/13534" rel="noopener">public registry entry ↗</a> anyone can open and check against this repository.</p>
+  </div>
+
+  <div class="prov">
+    <div class="prov__item" data-reveal>
+      <h4>Reviewed by a second person</h4>
+      <p>Every change — code and docs alike — lands through a pull request reviewed by someone who didn&rsquo;t write it. No direct commits to main.</p>
+    </div>
+    <div class="prov__item" data-reveal>
+      <h4>Releases that rebuild</h4>
+      <p>Signed with PEP 740 / Sigstore provenance — and reproducible: the v0.10.0 wheel rebuilds byte-for-byte to match the artifact published on PyPI.</p>
+    </div>
+    <div class="prov__item" data-reveal>
+      <h4>Analysed without pause</h4>
+      <p>Static analysis and Atheris fuzzing in CI, a published threat model, and an external security review with every finding closed.</p>
+    </div>
+    <div class="prov__item" data-reveal>
+      <h4>Citable, permanently</h4>
+      <p>Every release is archived with a persistent identifier — <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">DOI 10.5281/zenodo.21978107 ↗</a> — so the exact code behind a claim can be cited and retrieved.</p>
     </div>
   </div>
 </section>
@@ -648,6 +671,7 @@
     <div class="foot__links">
       <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
       <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">DOI</a>
       <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
       <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
     </div>
