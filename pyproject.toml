@@ -95,6 +95,13 @@ native = [
 pala = [
     "cryptography>=42.0",
 ]
+# The SCITT bridge (audit.pala.scitt): a chain head as a COSE_Sign1 Signed
+# Statement for registration with a transparency service (RFC 9943). Off the
+# write path by design; a bare install keeps full header-only verification.
+scitt = [
+    "cbor2>=5.6",
+    "cryptography>=42.0",
+]
 # Local vector math for block-memory retrieval (cosine over stored
 # embeddings). numpy is the only requirement; the embed source itself is
 # the active engine by default (no model dependency here).
