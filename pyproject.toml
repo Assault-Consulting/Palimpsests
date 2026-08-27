@@ -120,6 +120,9 @@ dev = [
     # cryptography so the PALA-1 body tests and the vector-regeneration CI
     # job run; the codec itself stays stdlib-only outside bodies.
     "cryptography>=42.0",
+    # cbor2 so the SCITT-bridge tests run in CI; the bridge itself stays
+    # lazy behind [scitt] and a bare install needs neither.
+    "cbor2>=5.6",
     # fastapi so the OpenAI-endpoint tests run (and count for coverage) in
     # CI; uvicorn is runtime-only and stays out of dev.
     "fastapi>=0.115",
