@@ -102,6 +102,13 @@ scitt = [
     "cbor2>=5.6",
     "cryptography>=42.0",
 ]
+# Tier-B anchor: the chain head as an object on a PKCS#11 token (ADR-0004).
+# Optional plumbing beside the format; every other anchor source works
+# without it. CI tests it against SoftHSM2 only — the mechanism, not the
+# tier claim.
+pkcs11 = [
+    "python-pkcs11>=0.7",
+]
 # Local vector math for block-memory retrieval (cosine over stored
 # embeddings). numpy is the only requirement; the embed source itself is
 # the active engine by default (no model dependency here).

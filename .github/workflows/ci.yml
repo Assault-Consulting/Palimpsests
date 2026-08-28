@@ -86,10 +86,13 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install (base + dev)
+      - name: Install SoftHSM2 (tier-B anchor tests run here, ADR-0004)
+        run: sudo apt-get update -q && sudo apt-get install -y -q softhsm2
+
+      - name: Install (base + dev + pkcs11)
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          pip install -e ".[dev]" python-pkcs11
 
       - name: Coverage (statement + branch)
         run: pytest --cov=palimpsests --cov-report=term-missing --cov-report=json
