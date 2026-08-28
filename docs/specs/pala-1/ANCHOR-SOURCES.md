@@ -29,6 +29,7 @@ The writer's anchor boundary is pluggable for the same reason.
 |---|---|---|---|
 | Local file | Accidental truncation | Filesystem permissions | Zero |
 | OS keychain (current default) | Truncation by an actor without keychain access | OS account isolation | Zero |
+| PKCS#11 token (shipped, ADR-0004) | Truncation by an actor who owns the host account but not the token's PIN and presence | The token's isolation from the host | A token (SoftHSM covers CI) |
 | Peer device | Loss/compromise of one machine | The peer's independence | A second device |
 | RFC 3161 TSA (witness path, `WITNESS_KIND = 2`) | Fresh genesis — proves existence at time T | The TSA | Network, per-witness |
 | Transparency log (witness path, `WITNESS_KIND = 1`) | Fresh genesis, with public auditability | The log's append-only property | Network, per-witness |
@@ -38,6 +39,20 @@ The first three hold the *current* head (the §7.2 store); the witness
 pair proves *existence at a time* (§7.3, tier C). The TEE option below
 strengthens the store leg, not the witness leg — the distinction the
 core draws between §7.2 and §7.3 carries through unchanged.
+
+## PKCS#11 token store — shipped (ADR-0004)
+
+The first store outside the host trust boundary is in the code:
+`Pkcs11Anchor` / `Pkcs11AnchorStore` behind the existing pluggable
+seams, the `[pkcs11]` extra, and `pkcs11` as one more **named source**
+in a chain's attempts — a report renders it exactly like `keychain` and
+`file`, no schema change. This strengthens the *store* leg (§7.2), not
+the witness leg (§7.3): *when* still comes from a witness.
+
+Claim honesty, verbatim from the ADR: **the tier-B mechanism is shipped
+and tested; a tier-B claim for a concrete deployment requires a real
+token or HSM holding the anchor — SoftHSM in CI proves the code path,
+not the tier.**
 
 ## TEE-quote-bound anchoring
 
