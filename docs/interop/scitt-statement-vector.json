@@ -1,0 +1,34 @@
+{
+  "format": "pala-1 scitt-bridge statement vector, v1",
+  "purpose": "A deterministic COSE_Sign1 Signed Statement over the published PALA-1 core-vector chain head, reproducible byte-for-byte from public standards alone. Real crypto, fake entropy - never use this key outside a test vector.",
+  "key": {
+    "alg": "EdDSA (Ed25519), COSE alg -8",
+    "source": "RFC 8032, section 7.1, TEST 1 - a published test key, chosen so nothing about it is ours",
+    "private_seed_hex": "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60",
+    "public_key_hex": "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a"
+  },
+  "subject_chain": {
+    "source": "docs/specs/pala-1/test-vectors.json (the published core vectors)",
+    "chain_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+    "first_seq": 0,
+    "last_seq": 11
+  },
+  "statement_inputs": {
+    "issuer": "urn:example:pala-1:reference-emitter",
+    "subject": "pala-1:chain:3a1a3673f50498eb",
+    "cwt_claims_note": "issuer -> CWT claim key 1, subject -> CWT claim key 2, carried in the COSE protected header under label 15 (RFC 9597)",
+    "payload_note": "attached CBOR map: {1: chain head (32 bytes), 2: first_seq, 3: last_seq, 4: 'pala-1/v1.0'}"
+  },
+  "expected": {
+    "statement_hex": "d284584ca201270fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202781d70616c612d313a636861696e3a33613161333637336635303439386562a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840542c844ebd2376f77e32f2081dee8e8be23046a6328db0319ee7a9ab094b7f0fcf4a986a6191cb99c0e06683a358876c2dfb99a881721551e751d359a665eb03",
+    "statement_sha256": "b47ca4f565048482d8ad8184bac82c18232022387ee08de855f42080936ae997",
+    "statement_length_bytes": 202,
+    "verifies_with_public_key": true,
+    "payload_commits_to_chain_head": true
+  },
+  "tamper_expectations": [
+    "flip any bit of the 32-byte head inside the payload: signature verification MUST fail (the payload is signed)",
+    "flip any bit of the signature: verification MUST fail",
+    "verify against a different expected head: the commitment check MUST fail even though the signature is valid"
+  ]
+}
