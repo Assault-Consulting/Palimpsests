@@ -156,3 +156,33 @@ def test_chained_resolution_names_the_pkcs11_link(softhsm):
     kinds = [(a.source_kind, a.outcome) for a in chain.last_attempts]
     assert ("pkcs11", "absent") in kinds
     assert ("manual", "answered") in kinds
+
+
+def test_unknown_token_label_raises_not_none(softhsm):
+    src = Pkcs11Anchor(softhsm, "no-such-token", user_pin=_PIN)
+    with pytest.raises(AnchorSourceError, match="not found"):
+        src.current_head()
+
+
+def test_multiple_objects_under_the_label_are_ambiguous(softhsm, source):
+    """Two objects under our label must raise, never pick one silently."""
+    from pkcs11 import Attribute, ObjectClass
+
+    lib = pkcs11.lib(softhsm)
+    token = lib.get_token(token_label=_TOKEN)
+    with token.open(rw=True, user_pin=_PIN) as session:
+        for obj in session.get_objects(
+            {Attribute.CLASS: ObjectClass.DATA, Attribute.LABEL: "pala-anchor-head"}
+        ):
+            obj.destroy()
+        for value in (b"\x04" * 32, b"\x05" * 32):
+            session.create_object(
+                {
+                    Attribute.CLASS: ObjectClass.DATA,
+                    Attribute.LABEL: "pala-anchor-head",
+                    Attribute.VALUE: value,
+                    Attribute.TOKEN: True,
+                }
+            )
+    with pytest.raises(AnchorSourceError, match="unambiguous"):
+        source.current_head()
