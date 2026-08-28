@@ -43,6 +43,10 @@ class ChatChunk:
     done: bool = False
     finish_reason: str | None = None
     tool_call: ToolCall | None = None
+    # Terminal metadata (populated on the done chunk where the engine
+    # reports it; None means "this engine level does not report it yet").
+    prompt_tokens: int | None = None
+    completion_tokens: int | None = None
 
 
 @dataclass(frozen=True)
