@@ -40,6 +40,7 @@ import struct
 import threading
 import time
 from collections.abc import Mapping
+from dataclasses import dataclass
 from hashlib import sha256
 from palimpsests.audit.pala.codec import (
     FIXED_HEADER_LEN,
@@ -72,6 +73,7 @@ from palimpsests.audit.pala.codec import (
     encode_tlvs,
     record_hash,
 )
+from palimpsests.audit.pala.segments import SEGMENTS_FORMAT
 
 # ─── profile §1: ORIGIN_ROLE vocabulary (component names, not a taxonomy) ────
 
@@ -199,6 +201,41 @@ def canonical_tool_args_digest(arguments: object) -> bytes:
     return sha256(encoded).digest()
 
 
+_monotonic = time.monotonic  # module alias: tests substitute a fake clock
+
+
+@dataclass(frozen=True)
+class RotationPolicy:
+    """When the writer cuts a segment on its own (WS-ROT).
+
+    Thresholds are checked after each record, under the writer's lock —
+    the cut falls strictly between records, never inside one. A record
+    that crosses a threshold stays in the segment it was written to;
+    the next record opens the successor. While a span this writer
+    opened is still open, a due cut is deferred to the span boundary
+    (the #178 rule: a hand-made cut never severs a span), and performed
+    right after the record that closes the last open span.
+
+    ``max_age_s`` measures the age of the current segment on the
+    process's monotonic clock; it has no cross-boot meaning, so after
+    ``open_existing`` the age of the adopted segment restarts at zero.
+    Byte- and record-thresholds carry across a resume exactly (bytes
+    from the file, records from the resume scan).
+    """
+
+    max_records: int | None = None
+    max_bytes: int | None = None
+    max_age_s: float | None = None
+
+    def __post_init__(self) -> None:
+        if self.max_records is None and self.max_bytes is None and self.max_age_s is None:
+            raise ValueError("an empty RotationPolicy rotates on nothing; set a threshold")
+        for name in ("max_records", "max_bytes", "max_age_s"):
+            v = getattr(self, name)
+            if v is not None and v <= 0:
+                raise ValueError(f"{name} must be positive when set")
+
+
 def session_span_id(session_id: str) -> bytes:
     """Derive a 16-byte ``span_id`` from a session identifier, deterministically.
 
@@ -230,6 +267,7 @@ class PalaWriter:
         boot_id: bytes | None = None,
         time_trust: int = TIME_UNSYNCED,
         assurance_tier: int = TIER_A,
+        rotation: RotationPolicy | None = None,
     ) -> None:
         if boot_id is not None and len(boot_id) != 16:
             raise ValueError("boot_id must be 16 bytes")
@@ -253,12 +291,62 @@ class PalaWriter:
             )
         self._path = os.fspath(path)
         self._fh = open(path, "ab", buffering=0)  # noqa: SIM115 — closed in close()
+        self._init_rotation(rotation, seg_records=0, seg_first_seq=0,
+                            seg_prev_head=ZERO32, seg_bytes=0)
+
+    def _init_rotation(
+        self,
+        rotation: RotationPolicy | None,
+        *,
+        seg_records: int,
+        seg_first_seq: int,
+        seg_prev_head: bytes,
+        seg_bytes: int,
+        base_path: str | None = None,
+    ) -> None:
+        """Segment bookkeeping for the rotation policy (WS-ROT).
+
+        ``_base_path`` stays the construction-time path: successors are
+        named ``<base>.00001``, ``<base>.00002``, … and the manifest —
+        maintained only when a policy is set — lives at
+        ``<base>.segments.json`` in the ``pala-segments/1`` shape the
+        offline knife writes, closed segments only, updated atomically
+        at each cut. Every entry's ``prev_head`` is the head the segment
+        started from, so any closed segment verifies **alone** via
+        ``verify_headers(..., start_prev=...)``.
+        """
+        self._rotation = rotation
+        self._base_path = base_path if base_path is not None else self._path
+        self._seg_records = seg_records
+        self._seg_first_seq = seg_first_seq
+        self._seg_prev_head = seg_prev_head
+        self._seg_bytes = seg_bytes
+        self._seg_started_mono = _monotonic()
+        self._seg_index = 0
+        self._rotation_due = False
+        self._manifest_entries: list[dict] = []
+        if rotation is None:
+            return
+        mp = self._manifest_path()
+        if os.path.exists(mp):
+            with open(mp, encoding="utf-8") as fh:
+                mf = json.load(fh)
+            if mf.get("format") != SEGMENTS_FORMAT:
+                raise ValueError(
+                    f"{mp} is not a {SEGMENTS_FORMAT} manifest — refusing to "
+                    "extend a history this writer cannot read"
+                )
+            self._manifest_entries = list(mf.get("segments", []))
+
+    def _manifest_path(self) -> str:
+        return f"{self._base_path}.segments.json"
 
     @classmethod
     def open_existing(
         cls,
         path: str | os.PathLike[str],
         *,
+        rotation: RotationPolicy | None = None,
         boot_id: bytes | None = None,
         time_trust: int = TIME_UNSYNCED,
         assurance_tier: int = TIER_A,
@@ -294,7 +382,9 @@ class PalaWriter:
         size = os.path.getsize(path)
         if size == 0:
             raise ValueError("file is empty — use PalaWriter(path) to start a new chain")
+        first_header: bytes | None = None
         last_header: bytes | None = None
+        record_count = 0
         last_seq = 0
         last_end = 0
         off = 0
@@ -313,6 +403,9 @@ class PalaWriter:
                 rest = fh.read(hlen - FIXED_HEADER_LEN)
                 fh.seek(body_len, os.SEEK_CUR)
                 last_header = fixed + rest
+                if first_header is None:
+                    first_header = last_header
+                record_count += 1
                 last_seq = seq
                 off += hlen + body_len
                 last_end = off
@@ -355,6 +448,35 @@ class PalaWriter:
         w._open_spans = set()  # historic spans are outside this writer's knowledge
         w._path = os.fspath(path)
         w._fh = open(path, "ab", buffering=0)  # noqa: SIM115 — closed in close()
+        first = Header.decode(first_header)
+        base = None
+        if rotation is not None:
+            stem, dot, suffix = w._path.rpartition(".")
+            if dot and suffix.isdigit():
+                candidate = f"{stem}.segments.json"
+                if os.path.exists(candidate):
+                    try:
+                        with open(candidate, encoding="utf-8") as mfh:
+                            mf = json.load(mfh)
+                        entries = mf.get("segments", [])
+                        if (
+                            mf.get("format") == SEGMENTS_FORMAT
+                            and entries
+                            and entries[-1].get("head") == first.prev_hash.hex()
+                        ):
+                            # The link checks out: this file continues the
+                            # manifest's history — extend it, don't fork it.
+                            base = stem
+                    except (OSError, ValueError):
+                        base = None
+        w._init_rotation(
+            rotation,
+            seg_records=record_count,
+            seg_first_seq=first.seq,
+            seg_prev_head=first.prev_hash,
+            seg_bytes=last_end,
+            base_path=base,
+        )
         return w
 
     # ─── the one place a record is written ──────────────────────────────────
@@ -409,6 +531,9 @@ class PalaWriter:
                 self._open_spans.add(span_id)
             elif record_type == RT_SPAN_END:
                 self._open_spans.discard(span_id)
+            self._seg_records += 1
+            self._seg_bytes += len(header_bytes) + len(body)
+            self._maybe_rotate_locked()
             return rh
 
     @staticmethod
@@ -885,15 +1010,96 @@ class PalaWriter:
                     f"rotation blocked: {len(self._open_spans)} span(s) opened by "
                     "this writer are still open — close them, rotate, reopen"
                 )
-            if os.path.exists(p) and os.path.getsize(p) > 0:
-                raise ValueError(
-                    "next_path already holds bytes — a rotation starts an empty "
-                    "segment; appending to a foreign file would interleave chains"
+            return self._rotate_core(p)
+
+    def _rotate_core(self, p: str) -> bytes:
+        """The cut itself — caller holds the lock and has cleared the spans.
+
+        With a rotation policy set, the closed segment lands in the
+        ``pala-segments/1`` manifest (closed segments only; the open one
+        is never listed), written atomically via a same-directory
+        replace. Without a policy, this is exactly the #178 behaviour.
+        """
+        if os.path.exists(p) and os.path.getsize(p) > 0:
+            raise ValueError(
+                "next_path already holds bytes — a rotation starts an empty "
+                "segment; appending to a foreign file would interleave chains"
+            )
+        closed = {
+            "file": os.path.basename(self._path),
+            "first_seq": self._seg_first_seq,
+            "last_seq": self._seq - 1,
+            "records": self._seg_records,
+            "head": self._head.hex(),
+            "prev_head": self._seg_prev_head.hex(),
+        }
+        self._fh.close()
+        self._fh = open(p, "ab", buffering=0)  # noqa: SIM115 — closed in close()
+        self._path = p
+        if self._rotation is not None:
+            self._manifest_entries.append(closed)
+            self._write_manifest()
+        self._seg_prev_head = self._head
+        self._seg_first_seq = self._seq
+        self._seg_records = 0
+        self._seg_bytes = 0
+        self._seg_started_mono = _monotonic()
+        return self._head
+
+    def _maybe_rotate_locked(self) -> None:
+        """Post-record policy check; the cut falls between records only."""
+        pol = self._rotation
+        if pol is None:
+            return
+        due = self._rotation_due
+        if not due and pol.max_records is not None:
+            due = self._seg_records >= pol.max_records
+        if not due and pol.max_bytes is not None:
+            due = self._seg_bytes >= pol.max_bytes
+        if not due and pol.max_age_s is not None:
+            due = _monotonic() - self._seg_started_mono >= pol.max_age_s
+        if not due:
+            return
+        if self._open_spans:
+            # Deferred to the span boundary (#178: a cut never severs a
+            # span); performed right after the closing SPAN_END record.
+            self._rotation_due = True
+            return
+        self._rotation_due = False
+        self._rotate_core(self._next_segment_path())
+
+    def _next_segment_path(self) -> str:
+        n = self._seg_index + 1
+        while os.path.exists(f"{self._base_path}.{n:05d}"):
+            n += 1
+        self._seg_index = n
+        return f"{self._base_path}.{n:05d}"
+
+    def _write_manifest(self) -> None:
+        import palimpsests
+
+        pol = self._rotation
+        assert pol is not None
+        manifest = {
+            "format": SEGMENTS_FORMAT,
+            "tool": {"name": "palimpsests", "version": palimpsests.__version__},
+            "source_head": self._manifest_entries[-1]["head"],
+            "rotation": {
+                k: v
+                for k, v in (
+                    ("max_records", pol.max_records),
+                    ("max_bytes", pol.max_bytes),
+                    ("max_age_s", pol.max_age_s),
                 )
-            self._fh.close()
-            self._fh = open(p, "ab", buffering=0)  # noqa: SIM115 — closed in close()
-            self._path = p
-            return self._head
+                if v is not None
+            },
+            "segments": self._manifest_entries,
+        }
+        mp = self._manifest_path()
+        tmp = f"{mp}.tmp"
+        with open(tmp, "w", encoding="utf-8") as fh:
+            fh.write(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+        os.replace(tmp, mp)
 
     def close(self) -> None:
         with self._lock:
