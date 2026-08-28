@@ -211,6 +211,16 @@ stronger than it is. A stale anchor that still names a row *inside* the chain is
 reported separately as `anchor_lag` (an unanchored tail, e.g. after a crash
 between commit and anchoring), not as a replacement.
 
+The keychain anchor shares the **host trust boundary** with the writer: an
+attacker who owns the OS account owns both. A PKCS#11 token store
+(ADR-0004, the `[pkcs11]` extra) moves the anchor outside that boundary —
+the head lives as an object on a token the host can read but cannot
+silently rewrite without the token's PIN and presence. The wording that
+travels with it, verbatim from the ADR: *the tier-B mechanism is shipped
+and tested; a tier-B claim for a concrete deployment requires a real
+token or HSM holding the anchor — SoftHSM in CI proves the code path,
+not the tier.*
+
 ### What an attacker can still do
 
 Stated plainly, because the boundary matters more than the mechanism:
