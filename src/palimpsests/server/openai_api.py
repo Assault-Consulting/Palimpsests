@@ -16,9 +16,10 @@ in the one convention documented in ``tool_calls`` (Hermes/Qwen
 ``<tool_call>`` blocks). With ``tools`` present, streaming assembles the
 reply first and replays it as SSE — tool_calls-shape correctness over
 first-token latency, in this version. ``usage`` is reported as zeros
-(token accounting is engine-level work). There is no authentication:
-this binds to localhost by default and is a local tool, not an internet
-service — put a real gateway in front of it otherwise.
+(token accounting is engine-level work). Authentication is opt-in: this
+binds to localhost by default and is a local tool — pass ``--api-key``
+(or set ``PALIMPSESTS_SERVE_API_KEY``) the moment anything beyond your
+own shell can reach the port.
 
 The module is import-safe without the ``serve`` extra; constructing the
 app is what requires FastAPI.
@@ -26,6 +27,8 @@ app is what requires FastAPI.
 from __future__ import annotations
 
 import json
+import os
+import sys
 import time
 import uuid
 from collections.abc import Callable, Iterator, Sequence
@@ -63,6 +66,7 @@ def create_app(
     chat_fn: ChatFn | None = None,
     models_fn: ModelsFn | None = None,
     audit=None,
+    api_key: str | None = None,
 ):
     """Build the FastAPI app. Dependencies are injectable for tests.
 
@@ -73,9 +77,16 @@ def create_app(
     client posts the results back, hash-bound to their calls. Works on
     every engine level, because the recording boundary is the endpoint
     itself, not the engine.
+
+    ``api_key``, when given, requires ``Authorization: Bearer <key>`` on
+    every request — the serve-side answer to the level-2 exposure caveat
+    in SECURITY.md.
     """
     from fastapi import FastAPI
     from fastapi.responses import JSONResponse, StreamingResponse
+
+    if api_key is not None and not api_key:
+        raise ValueError("api_key must be a non-empty string when given")
 
     deps: _Deps | None = (
         _Deps(chat_fn=chat_fn, models_fn=models_fn)
@@ -84,6 +95,30 @@ def create_app(
     )
 
     app = FastAPI(title="Palimpsests", docs_url=None, redoc_url=None)
+
+    if api_key is not None:
+        import hmac
+
+        # Bearer auth on every endpoint. Constant-time compare; the 401
+        # body follows the OpenAI error shape so compatible clients
+        # surface it instead of choking on it. This is the level-2
+        # exposure mitigation from SECURITY.md, applied to serve.
+        @app.middleware("http")
+        async def _require_bearer(request, call_next):
+            supplied = request.headers.get("authorization", "")
+            expected = f"Bearer {api_key}"
+            if not hmac.compare_digest(supplied, expected):
+                return JSONResponse(
+                    status_code=401,
+                    content={
+                        "error": {
+                            "message": "Incorrect API key provided.",
+                            "type": "invalid_request_error",
+                            "code": "invalid_api_key",
+                        }
+                    },
+                )
+            return await call_next(request)
     # Dispatched tool calls awaiting results: id -> the TOOL_CALL's
     # (seq, hash), so a later request's results bind to their calls.
     pending: dict[str, tuple[int, bytes]] = {}
@@ -339,15 +374,76 @@ def main() -> None:
     """Console-script entry point: ``palimpsests-serve``."""
     import argparse
     import atexit
-    import uvicorn
 
     parser = argparse.ArgumentParser(
         description="Serve the OpenAI-compatible endpoint over the active engine."
     )
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=11435)
+    parser.add_argument(
+        "--api-key",
+        default=os.environ.get("PALIMPSESTS_SERVE_API_KEY") or None,
+        help=(
+            "require this bearer key on every request "
+            "(default: $PALIMPSESTS_SERVE_API_KEY if set)"
+        ),
+    )
+    parser.add_argument(
+        "--print-opencode-config",
+        action="store_true",
+        help="print an opencode.json provider block for this endpoint and exit",
+    )
     args = parser.parse_args()
+    if args.print_opencode_config:
+        print(_opencode_config(args.host, args.port, args.api_key))
+        print(
+            "# OpenCode also needs an auth.json entry for this provider id\n"
+            "# (~/.local/share/opencode/auth.json):\n"
+            '#   {"palimpsests": {"type": "api", "key": "'
+            + (args.api_key or "sk-local")
+            + '"}}\n'
+            "# The key is checked by serve only when --api-key is set;\n"
+            "# OpenCode requires the entry to exist either way.",
+            file=sys.stderr,
+        )
+        return
+    import uvicorn  # runtime-only: the config printer must not need it
+
     audit = default_audit()
     if audit is not None:
         atexit.register(audit.writer.close)
-    uvicorn.run(create_app(audit=audit), host=args.host, port=args.port)
+    uvicorn.run(
+        create_app(audit=audit, api_key=args.api_key), host=args.host, port=args.port
+    )
+
+
+def _opencode_config(host: str, port: int, api_key: str | None) -> str:
+    """The opencode.json provider block for this endpoint, as JSON text.
+
+    Deliberately hard-wired to ``@ai-sdk/openai-compatible`` — the one
+    provider package whose request shape matches what serve implements;
+    "works with OpenCode" means exactly this pairing, nothing looser.
+    """
+    try:
+        model_ids = list(_default_deps().models_fn())
+    except Exception:
+        model_ids = []
+    if not model_ids:
+        model_ids = ["MODEL_ID"]  # engine unreachable now; replace by hand
+    options: dict = {"baseURL": f"http://{host}:{port}/v1"}
+    if api_key:
+        options["apiKey"] = api_key
+    return json.dumps(
+        {
+            "$schema": "https://opencode.ai/config.json",
+            "provider": {
+                "palimpsests": {
+                    "npm": "@ai-sdk/openai-compatible",
+                    "name": "Palimpsests (local, audited)",
+                    "options": options,
+                    "models": {m: {"name": m} for m in model_ids},
+                }
+            },
+        },
+        indent=2,
+    )
