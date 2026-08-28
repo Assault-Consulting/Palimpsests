@@ -84,6 +84,40 @@ segments that verify as one chain. This gives clean archival units.
   prefixes are roadmap (post-0.8); until then, prune at segment
   boundaries and keep the anchor for the retained head.
 
+### Rotation in production (writer-side, 0.11)
+
+`pala segment` is the offline knife for a chain that already grew;
+`RotationPolicy` on `PalaWriter` makes the same cut at write time, so
+a chain that lives for months never needs the knife. Thresholds —
+`max_records`, `max_bytes`, `max_age_s` — are checked after each
+record under the writer's lock: the cut falls strictly between
+records, a record that crosses a threshold stays in its segment, and
+a due cut is deferred to the span boundary (a cut never severs a
+span). Closed segments land in an atomically-updated
+`pala-segments/1` manifest whose `prev_head` seeds let every segment
+verify **alone** (`start_prev`), exactly as the offline knife's does.
+
+**Choosing triggers for the six-month duty.** Segment size is your
+pruning granularity: once the duty window passes, expired segments are
+deleted whole and the manifest keeps every head, so the survivors
+still name the history they continue (§3 above). At the measured
+≈ 181 B/record (§1):
+
+    max_bytes ≈ records_per_day × 181 B × days_per_segment
+
+| Load | Volume | Weekly segments | 6-month window |
+|---|---|---|---|
+| ~10 k records/day | ≈ 1.8 MB/day | `max_bytes=16 MiB` | ≈ 330 MB, ~26 segments |
+| ~100 k records/day | ≈ 18 MB/day | `max_bytes=128 MiB` | ≈ 3.3 GB, ~26 segments |
+
+Prefer `max_bytes` (or its `max_records` equivalent, ≈ `max_bytes`/181)
+as the primary trigger: both are deterministic and carry exactly
+across a resume. `max_age_s` runs on the process's monotonic clock and
+restarts at zero when a segment is adopted by `open_existing` — use it
+as a backstop for near-idle writers, not as the primary cut. Segments
+of ≤ 128 MiB also keep cross-boot resume of the live segment well
+under a second (§4: ≈ 4 s/GB).
+
 ## 4. Resume cost of large chains
 
 Cross-boot resume (`open_existing`) walks the file once to adopt the
