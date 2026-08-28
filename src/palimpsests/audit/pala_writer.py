@@ -243,6 +243,7 @@ class PalaWriter:
         self._resume_boot_pending = False
         self._recovered_tail_bytes = 0
         self._recovered_tail_offset = 0
+        self._open_spans: set[bytes] = set()
         if os.path.exists(path) and os.path.getsize(path) > 0:
             # A fresh writer on a non-empty file would append a second GENESIS
             # and corrupt the chain silently. Refuse; resuming is explicit.
@@ -351,6 +352,7 @@ class PalaWriter:
         w._resume_boot_pending = True
         w._recovered_tail_bytes = torn
         w._recovered_tail_offset = last_end
+        w._open_spans = set()  # historic spans are outside this writer's knowledge
         w._path = os.fspath(path)
         w._fh = open(path, "ab", buffering=0)  # noqa: SIM115 — closed in close()
         return w
@@ -403,6 +405,10 @@ class PalaWriter:
             self._fh.write(header_bytes + body)
             self._head = rh
             self._seq += 1
+            if record_type == RT_SPAN_START:
+                self._open_spans.add(span_id)
+            elif record_type == RT_SPAN_END:
+                self._open_spans.discard(span_id)
             return rh
 
     @staticmethod
@@ -849,6 +855,45 @@ class PalaWriter:
     def path(self) -> str:
         """The container's filesystem path (for self-verification readers)."""
         return self._path
+
+    def rotate(self, next_path: str | os.PathLike[str]) -> bytes:
+        """Cut the container at a record boundary; continue in a new file.
+
+        Rotation is a storage operation, invisible to the chain (core
+        §2.4): same boot, same sequence, same head — the next record
+        simply lands in ``next_path``, and the byte concatenation of the
+        segments verifies as one container. No ``BOOT`` is emitted:
+        ``BOOT`` is the cross-boot link (core §4.2), and this is not a
+        new boot.
+
+        Refused while a span **this writer opened** is still open. That
+        is not a wire rule — the boundary is invisible either way — but
+        an operational courtesy to readers who handle segments one at a
+        time: close the span, rotate, reopen. Spans inherited by
+        ``open_existing`` are outside this writer's knowledge and do not
+        block rotation.
+
+        Returns the chain head at the cut — the natural value to anchor
+        or checkpoint for the closed segment.
+        """
+        p = os.fspath(next_path)
+        with self._lock:
+            if not self._started:
+                raise ValueError("nothing to rotate: the chain has no records yet")
+            if self._open_spans:
+                raise ValueError(
+                    f"rotation blocked: {len(self._open_spans)} span(s) opened by "
+                    "this writer are still open — close them, rotate, reopen"
+                )
+            if os.path.exists(p) and os.path.getsize(p) > 0:
+                raise ValueError(
+                    "next_path already holds bytes — a rotation starts an empty "
+                    "segment; appending to a foreign file would interleave chains"
+                )
+            self._fh.close()
+            self._fh = open(p, "ab", buffering=0)  # noqa: SIM115 — closed in close()
+            self._path = p
+            return self._head
 
     def close(self) -> None:
         with self._lock:
