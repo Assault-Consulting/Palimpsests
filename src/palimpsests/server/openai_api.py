@@ -15,8 +15,9 @@ Scope, stated rather than implied: chat, streaming, and function calling
 in the one convention documented in ``tool_calls`` (Hermes/Qwen
 ``<tool_call>`` blocks). With ``tools`` present, streaming assembles the
 reply first and replays it as SSE — tool_calls-shape correctness over
-first-token latency, in this version. ``usage`` is reported as zeros
-(token accounting is engine-level work). Authentication is opt-in: this
+first-token latency, in this version. ``usage`` carries the engine's
+reported counters where the level reports them (level 1 does), zeros
+where it does not yet. Authentication is opt-in: this
 binds to localhost by default and is a local tool — pass ``--api-key``
 (or set ``PALIMPSESTS_SERVE_API_KEY``) the moment anything beyond your
 own shell can reach the port.
@@ -185,11 +186,14 @@ def create_app(
             # latency, in this version.
             text_parts: list[str] = []
             finish = "stop"
+            p_tok = c_tok = None
             for c in chunks:
                 if c.delta:
                     text_parts.append(c.delta)
-                if c.done and c.finish_reason:
-                    finish = c.finish_reason
+                if c.done:
+                    if c.finish_reason:
+                        finish = c.finish_reason
+                    p_tok, c_tok = c.prompt_tokens, c.completion_tokens
             calls, remaining = parse_tool_calls("".join(text_parts))
             if calls and audit is not None:
                 for pc in calls:
@@ -225,11 +229,7 @@ def create_app(
                 "choices": [
                     {"index": 0, "message": message, "finish_reason": finish}
                 ],
-                "usage": {
-                    "prompt_tokens": 0,
-                    "completion_tokens": 0,
-                    "total_tokens": 0,
-                },
+                "usage": _usage(p_tok, c_tok),
             }
 
         if stream:
@@ -240,11 +240,14 @@ def create_app(
 
         text_parts: list[str] = []
         finish = "stop"
+        p_tok = c_tok = None
         for c in chunks:
             if c.delta:
                 text_parts.append(c.delta)
-            if c.done and c.finish_reason:
-                finish = c.finish_reason
+            if c.done:
+                if c.finish_reason:
+                    finish = c.finish_reason
+                p_tok, c_tok = c.prompt_tokens, c.completion_tokens
         return {
             "id": completion_id,
             "object": "chat.completion",
@@ -257,14 +260,16 @@ def create_app(
                     "finish_reason": finish,
                 }
             ],
-            "usage": {
-                "prompt_tokens": 0,
-                "completion_tokens": 0,
-                "total_tokens": 0,
-            },
+            "usage": _usage(p_tok, c_tok),
         }
 
     return app
+
+
+def _usage(prompt_tokens: int | None, completion_tokens: int | None) -> dict:
+    """OpenAI usage block; zeros where the engine reported nothing."""
+    p, c = prompt_tokens or 0, completion_tokens or 0
+    return {"prompt_tokens": p, "completion_tokens": c, "total_tokens": p + c}
 
 
 def _sse(

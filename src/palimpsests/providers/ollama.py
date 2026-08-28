@@ -189,6 +189,8 @@ class OllamaEngine(BaseInferenceEngine):
                     delta=obj.get("message", {}).get("content", ""),
                     done=True,
                     finish_reason=obj.get("done_reason"),
+                    prompt_tokens=obj.get("prompt_eval_count"),
+                    completion_tokens=obj.get("eval_count"),
                 )
             else:
                 yield ChatChunk(
