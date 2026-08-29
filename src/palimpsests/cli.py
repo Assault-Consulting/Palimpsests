@@ -696,6 +696,87 @@ def pala_bundle_cmd(
         )
 
 
+@pala_app.command("report")
+def pala_report_cmd(
+    file: str = typer.Argument(
+        ..., help="A PALA-1 file container: records concatenated back-to-back (§2.4)."
+    ),
+    anchor: str = typer.Option(
+        None, "--anchor",
+        help="Expected chain head, 64 hex chars, obtained OUTSIDE the file "
+        "(same semantics as pala verify).",
+    ),
+    anchor_file: str = typer.Option(
+        None, "--anchor-file",
+        help="Read the expected head from a file (same format as pala verify). "
+        "Combined with --anchor, the two are tried in the order given.",
+    ),
+    html: bool = typer.Option(
+        False, "--html",
+        help="Render one self-contained static HTML page (no JavaScript, no "
+        "external assets) instead of JSON.",
+    ),
+    out: str = typer.Option(
+        None, "--out", "-o", help="Write to a file instead of stdout.",
+    ),
+) -> None:
+    """The verification report — an attestation document, not a gate.
+
+    Emits ``pala-verification-report/1``: JSON by default, ``--html`` for
+    a dependency-free static page. The verdict (sound / partial /
+    violation) lives INSIDE the document, produced by the model's one
+    verdict rule; anchor failures are *reported* in it, never fatal.
+
+    \b
+    Exit codes (deliberately not the verify contract — gating belongs
+    to `pala verify`):
+      0  the report was produced (whatever it attests)
+      3  UNREADABLE — the chain file cannot be read, or --anchor is
+         invalid hex
+
+    Deterministic for the same inputs except ``checked_at``, which is
+    isolated so two reports of one file diff to a single line — in the
+    JSON and in the HTML alike.
+    """
+    sources = []
+    if anchor is not None:
+        try:
+            raw = bytes.fromhex(anchor)
+        except ValueError:
+            _fail(False, EXIT_UNREADABLE, "--anchor is not valid hex")
+        if len(raw) != 32:
+            _fail(False, EXIT_UNREADABLE, "--anchor must be 32 bytes (64 hex chars)")
+        sources.append(ManualAnchor(anchor))
+    if anchor_file is not None:
+        sources.append(FileAnchor(anchor_file))
+    anchor_source = None
+    if len(sources) == 1:
+        anchor_source = sources[0]
+    elif len(sources) > 1:
+        anchor_source = ChainedAnchorSource(sources)
+
+    from palimpsests.audit.report import build_report
+    from palimpsests.audit.report_html import render_html
+
+    try:
+        rep = build_report(file, anchor_source=anchor_source)
+    except OSError as e:
+        typer.echo(f"UNREADABLE: {e}", err=True)
+        raise typer.Exit(EXIT_UNREADABLE) from e
+    payload = (
+        render_html(rep.data).encode("utf-8") if html else rep.to_json_bytes()
+    )
+    if out is not None:
+        try:
+            Path(out).write_bytes(payload)
+        except OSError as e:
+            typer.echo(f"UNREADABLE: {e}", err=True)
+            raise typer.Exit(EXIT_UNREADABLE) from e
+        typer.echo(f"wrote {out}")
+    else:
+        sys.stdout.write(payload.decode("utf-8"))
+
+
 @pala_app.command("segment")
 def pala_segment_cmd(
     file: str = typer.Argument(
