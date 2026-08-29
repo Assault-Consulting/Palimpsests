@@ -1,0 +1,328 @@
+{
+ "env": {
+  "python": "3.12.10",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "processor": "Intel64 Family 6 Model 170 Stepping 4, GenuineIntel"
+ },
+ "params": {
+  "REPEATS_incl_warmup": 6,
+  "N_HASH": 200000,
+  "N_SIG": 20000,
+  "headers": "12 real 156-byte fixed headers from test-vectors.json, cycled"
+ },
+ "M1_write": {
+  "A_chain_sha256": {
+   "label": "M1 write: SHA-256 chain hash",
+   "n": 200000,
+   "kept": 5,
+   "min_ns": 414.809,
+   "median_ns": 429.006,
+   "max_ns": 457.9475,
+   "stdev_ns": 14.07632268243378,
+   "raw": [
+    {
+     "repeat": 0,
+     "warmup": true,
+     "n": 200000,
+     "ns_per_record": 421.097
+    },
+    {
+     "repeat": 1,
+     "warmup": false,
+     "n": 200000,
+     "ns_per_record": 428.502
+    },
+    {
+     "repeat": 2,
+     "warmup": false,
+     "n": 200000,
+     "ns_per_record": 414.809
+    },
+    {
+     "repeat": 3,
+     "warmup": false,
+     "n": 200000,
+     "ns_per_record": 457.9475
+    },
+    {
+     "repeat": 4,
+     "warmup": false,
+     "n": 200000,
+     "ns_per_record": 434.1445
+    },
+    {
+     "repeat": 5,
+     "warmup": false,
+     "n": 200000,
+     "ns_per_record": 429.006
+    }
+   ]
+  },
+  "B_cose_es256": {
+   "label": "M1 write: COSE_Sign1 ES256",
+   "n": 20000,
+   "kept": 5,
+   "min_ns": 803597.375,
+   "median_ns": 812642.735,
+   "max_ns": 827595.595,
+   "stdev_ns": 8978.348930039076,
+   "raw": [
+    {
+     "repeat": 0,
+     "warmup": true,
+     "n": 20000,
+     "ns_per_record": 811478.39
+    },
+    {
+     "repeat": 1,
+     "warmup": false,
+     "n": 20000,
+     "ns_per_record": 803597.375
+    },
+    {
+     "repeat": 2,
+     "warmup": false,
+     "n": 20000,
+     "ns_per_record": 810029.9
+    },
+    {
+     "repeat": 3,
+     "warmup": false,
+     "n": 20000,
+     "ns_per_record": 812642.735
+    },
+    {
+     "repeat": 4,
+     "warmup": false,
+     "n": 20000,
+     "ns_per_record": 824279.24
+    },
+    {
+     "repeat": 5,
+     "warmup": false,
+     "n": 20000,
+     "ns_per_record": 827595.595
+    }
+   ]
+  },
+  "B_cose_eddsa": {
+   "label": "M1 write: COSE_Sign1 EdDSA",
+   "n": 20000,
+   "kept": 5,
+   "min_ns": 77670.49,
+   "median_ns": 78964.185,
+   "max_ns": 79735.77,
+   "stdev_ns": 815.6529818286699,
+   "raw": [
+    {
+     "repeat": 0,
+     "warmup": true,
+     "n": 20000,
+     "ns_per_record": 77353.52
+    },
+    {
+     "repeat": 1,
+     "warmup": false,
+     "n": 20000,
+     "ns_per_record": 79326.375
+    },
+    {
+     "repeat": 2,
+     "warmup": false,
+     "n": 20000,
+     "ns_per_record": 79735.77
+    },
+    {
+     "repeat": 3,
+     "warmup": false,
+     "n": 20000,
+     "ns_per_record": 77670.49
+    },
+    {
+     "repeat": 4,
+     "warmup": false,
+     "n": 20000,
+     "ns_per_record": 78964.185
+    },
+    {
+     "repeat": 5,
+     "warmup": false,
+     "n": 20000,
+     "ns_per_record": 77844.465
+    }
+   ]
+  }
+ },
+ "M2_verify": {
+  "A_chain_sha256": {
+   "label": "M2 verify: SHA-256 chain recompute",
+   "n": 200000,
+   "kept": 5,
+   "min_ns": 418.996,
+   "median_ns": 424.4745,
+   "max_ns": 432.052,
+   "stdev_ns": 4.345330291243705,
+   "raw": [
+    {
+     "repeat": 0,
+     "warmup": true,
+     "n": 200000,
+     "ns_per_record": 452.317
+    },
+    {
+     "repeat": 1,
+     "warmup": false,
+     "n": 200000,
+     "ns_per_record": 418.996
+    },
+    {
+     "repeat": 2,
+     "warmup": false,
+     "n": 200000,
+     "ns_per_record": 424.4745
+    },
+    {
+     "repeat": 3,
+     "warmup": false,
+     "n": 200000,
+     "ns_per_record": 424.456
+    },
+    {
+     "repeat": 4,
+     "warmup": false,
+     "n": 200000,
+     "ns_per_record": 428.1685
+    },
+    {
+     "repeat": 5,
+     "warmup": false,
+     "n": 200000,
+     "ns_per_record": 432.052
+    }
+   ]
+  },
+  "B_cose_es256": {
+   "label": "M2 verify: COSE_Sign1 ES256",
+   "n": 20000,
+   "kept": 5,
+   "min_ns": 1502079.05,
+   "median_ns": 1515875.155,
+   "max_ns": 1527270.055,
+   "stdev_ns": 9678.749586934022,
+   "raw": [
+    {
+     "repeat": 0,
+     "warmup": true,
+     "n": 20000,
+     "ns_per_record": 1510207.365
+    },
+    {
+     "repeat": 1,
+     "warmup": false,
+     "n": 20000,
+     "ns_per_record": 1515875.155
+    },
+    {
+     "repeat": 2,
+     "warmup": false,
+     "n": 20000,
+     "ns_per_record": 1502079.05
+    },
+    {
+     "repeat": 3,
+     "warmup": false,
+     "n": 20000,
+     "ns_per_record": 1517402.525
+    },
+    {
+     "repeat": 4,
+     "warmup": false,
+     "n": 20000,
+     "ns_per_record": 1502144.075
+    },
+    {
+     "repeat": 5,
+     "warmup": false,
+     "n": 20000,
+     "ns_per_record": 1527270.055
+    }
+   ]
+  },
+  "B_cose_eddsa": {
+   "label": "M2 verify: COSE_Sign1 EdDSA",
+   "n": 20000,
+   "kept": 5,
+   "min_ns": 87818.88,
+   "median_ns": 88206.22,
+   "max_ns": 91566.85,
+   "stdev_ns": 1423.172105725798,
+   "raw": [
+    {
+     "repeat": 0,
+     "warmup": true,
+     "n": 20000,
+     "ns_per_record": 91999.785
+    },
+    {
+     "repeat": 1,
+     "warmup": false,
+     "n": 20000,
+     "ns_per_record": 88262.095
+    },
+    {
+     "repeat": 2,
+     "warmup": false,
+     "n": 20000,
+     "ns_per_record": 88206.22
+    },
+    {
+     "repeat": 3,
+     "warmup": false,
+     "n": 20000,
+     "ns_per_record": 91566.85
+    },
+    {
+     "repeat": 4,
+     "warmup": false,
+     "n": 20000,
+     "ns_per_record": 87818.88
+    },
+    {
+     "repeat": 5,
+     "warmup": false,
+     "n": 20000,
+     "ns_per_record": 87860.07
+    }
+   ]
+  },
+  "_note": "decode() is included in verify (a received record is bytes); key set once outside timing per boundary decision above"
+ },
+ "M3_bytes": {
+  "chain_record_bytes": 156,
+  "chain_integrity_marginal_bytes": 32,
+  "cose_es256_total_bytes": 231,
+  "cose_es256_envelope_overhead_bytes": 75,
+  "cose_eddsa_total_bytes": 231,
+  "cose_eddsa_envelope_overhead_bytes": 75,
+  "payload_bytes": 156
+ },
+ "M4_timestamp": {
+  "ns_value": 1786000000123456789,
+  "exceeds_2^53": true,
+  "2^53": 9007199254740992,
+  "jcs_rfc8785_error": "IntegerDomainError: 1786000000123456789 exceeds safe integer domain for JSON floats",
+  "jcs_lib": "rfc8785==0.1.4",
+  "ieee754_double_roundtrip": 1786000000123456768,
+  "ieee754_delta_ns": -21,
+  "workaround_rfc3339_string": "2026-08-14T05:06:40.123456789Z",
+  "workaround_rfc3339_bytes": 30,
+  "workaround_cbor_integer_bytes": 9,
+  "workaround_cbor_integer_hex": "1b18c925899834cd15",
+  "string_order_pitfall": {
+   "earlier_instant": "2026-08-14T05:06:40.09Z",
+   "later_instant": "2026-08-14T05:06:40.1Z",
+   "string_sorts_earlier_first": true,
+   "note": "0.09s precedes 0.1s in time but '...40.09Z' > '...40.1Z' lexically"
+  }
+ }
+}

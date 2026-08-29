@@ -1,0 +1,164 @@
+{
+ "note": "native cryptography (OpenSSL) primitives over the 156-byte headers; reference to separate pycose ES256's pure-Python backend from the primitive cost",
+ "cryptography": "50.0.1",
+ "ecdsa_p256_sign": {
+  "label": "native ECDSA P-256 sign (cryptography)",
+  "n": 20000,
+  "min_ns": 18871.28,
+  "median_ns": 18985.66,
+  "max_ns": 19367.555,
+  "stdev_ns": 210.04142714236244,
+  "raw": [
+   {
+    "repeat": 0,
+    "warmup": true,
+    "ns_per_record": 19212.485
+   },
+   {
+    "repeat": 1,
+    "warmup": false,
+    "ns_per_record": 18871.28
+   },
+   {
+    "repeat": 2,
+    "warmup": false,
+    "ns_per_record": 19324.81
+   },
+   {
+    "repeat": 3,
+    "warmup": false,
+    "ns_per_record": 18985.66
+   },
+   {
+    "repeat": 4,
+    "warmup": false,
+    "ns_per_record": 19367.555
+   },
+   {
+    "repeat": 5,
+    "warmup": false,
+    "ns_per_record": 18917.53
+   }
+  ]
+ },
+ "ecdsa_p256_verify": {
+  "label": "native ECDSA P-256 verify (cryptography)",
+  "n": 20000,
+  "min_ns": 48726.745,
+  "median_ns": 50452.955,
+  "max_ns": 52029.34,
+  "stdev_ns": 1164.0141110355985,
+  "raw": [
+   {
+    "repeat": 0,
+    "warmup": true,
+    "ns_per_record": 49614.335
+   },
+   {
+    "repeat": 1,
+    "warmup": false,
+    "ns_per_record": 48726.745
+   },
+   {
+    "repeat": 2,
+    "warmup": false,
+    "ns_per_record": 51050.03
+   },
+   {
+    "repeat": 3,
+    "warmup": false,
+    "ns_per_record": 52029.34
+   },
+   {
+    "repeat": 4,
+    "warmup": false,
+    "ns_per_record": 50452.955
+   },
+   {
+    "repeat": 5,
+    "warmup": false,
+    "ns_per_record": 49444.855
+   }
+  ]
+ },
+ "ed25519_sign": {
+  "label": "native Ed25519 sign (cryptography)",
+  "n": 20000,
+  "min_ns": 25138.755,
+  "median_ns": 25758.33,
+  "max_ns": 27465.44,
+  "stdev_ns": 848.5055421303969,
+  "raw": [
+   {
+    "repeat": 0,
+    "warmup": true,
+    "ns_per_record": 24659.525
+   },
+   {
+    "repeat": 1,
+    "warmup": false,
+    "ns_per_record": 25188.93
+   },
+   {
+    "repeat": 2,
+    "warmup": false,
+    "ns_per_record": 25138.755
+   },
+   {
+    "repeat": 3,
+    "warmup": false,
+    "ns_per_record": 25758.33
+   },
+   {
+    "repeat": 4,
+    "warmup": false,
+    "ns_per_record": 26124.005
+   },
+   {
+    "repeat": 5,
+    "warmup": false,
+    "ns_per_record": 27465.44
+   }
+  ]
+ },
+ "ed25519_verify": {
+  "label": "native Ed25519 verify (cryptography)",
+  "n": 20000,
+  "min_ns": 70445.575,
+  "median_ns": 71909.18,
+  "max_ns": 73017.05,
+  "stdev_ns": 957.4485401910655,
+  "raw": [
+   {
+    "repeat": 0,
+    "warmup": true,
+    "ns_per_record": 76951.96
+   },
+   {
+    "repeat": 1,
+    "warmup": false,
+    "ns_per_record": 70445.575
+   },
+   {
+    "repeat": 2,
+    "warmup": false,
+    "ns_per_record": 70613.655
+   },
+   {
+    "repeat": 3,
+    "warmup": false,
+    "ns_per_record": 72017.545
+   },
+   {
+    "repeat": 4,
+    "warmup": false,
+    "ns_per_record": 73017.05
+   },
+   {
+    "repeat": 5,
+    "warmup": false,
+    "ns_per_record": 71909.18
+   }
+  ]
+ }
+}
