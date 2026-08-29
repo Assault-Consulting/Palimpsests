@@ -20,14 +20,19 @@ embedded). Verify against the consolidated EUR-Lex text when citing.
 `Planned (v0.8)` — scheduled, additive only (the wire format is
 frozen at PALA-1 v1.0; the EVT_KIND space grows without any change to
 framing or the hash contract); `Planned (post-0.8)` — on the roadmap,
-not yet scheduled.
+not yet scheduled; `Shipped (v0.10)` — present in the v0.10.0 release;
+`Shipped (main)` — merged on `main`, verified at the commit named in
+Provenance, ships with the next tag.
 
 **Provenance.** Verified against the `v0.7.0` tag (`7940dc3`); rows
 marked `Shipped (v0.8)` are verified against the v0.8.0 release. PALA-1
 core and both profiles are frozen at v1.0 (tag `pala1-v1.0`);
 `test-vectors.json` digest `476c05ce…8193`, byte-identical since the
 freeze. Capability claims below were checked against the source at
-these tags.
+these tags. Re-checked in full on 2026-08-29 against `main` at
+`ec4d38e` (post-#185); rows marked `Shipped (v0.10)` are verified
+against the v0.10.0 release, rows marked `Shipped (main)` against that
+commit.
 
 ---
 
@@ -56,17 +61,18 @@ these tags.
 | Capability | Mechanism | Status |
 |---|---|---|
 | Header-only verifiability (no keys, no payload content) | The chain and Merkle verification consume record headers only; payload bodies are never needed to verify integrity (spec §1.2) | Shipped (v0.7) |
-| Packaged header-only export bundle | Export tooling in the audit package | Planned (v0.8) |
+| Packaged evidence bundle — one attachable, re-verifiable file | `pala bundle` (#164), format `pala-bundle/1`: the chain, inclusion proofs, the verification verdict, time-claims, and a manifest with per-member digests; deterministic (same inputs → byte-identical), derived and unsigned — every claim inside is re-verifiable from spec-level operations without this package's code | Shipped (v0.10) |
 | Incident timeline reconstruction (supports Art. 73 reporting) | Proved ordering via sequence numbers; session spans (a crash leaves a visibly unclosed span); monotonic deltas per record | Shipped (v0.7) |
 | Aggregation-friendly export (JSONL; each line carries sequence, record hash, and anchor reference so integrity is reconstructable from an archive) | `pala export jsonl` — deterministic, derived, never authoritative | Shipped (v0.8) |
-| Syslog / CSV derived exports (explicitly non-authoritative) | Export tooling in the audit package | Planned (v0.8, stretch) |
+| Syslog / CSV derived exports (explicitly non-authoritative) | Export tooling in the audit package | Planned (stretch, unscheduled) |
 
 ### (c) Monitoring of operation by deployers (Art. 26(5))
 
 | Capability | Mechanism | Status |
 |---|---|---|
 | Verification without developer tooling | `pala verify` CLI (exit codes for sound / violation / partial; explicit partial semantics when no anchor is available) | Shipped (v0.7) |
-| Independently implementable verification | Written from spec + byte-exact test vectors alone; demonstrated by four verifier implementations, two of them external (see INDEPENDENT-VERIFICATION.md), and reproducible by anyone via the verification kit | Shipped (v0.7) |
+| Independently implementable verification | Written from spec + byte-exact test vectors alone; demonstrated by five verifier implementations, three of them external — the fifth written in Perl from core modules alone (see INDEPENDENT-VERIFICATION.md and `independent-runs/`) — and reproducible by anyone via the verification kit | Shipped (v0.7) |
+| Machine-readable verification verdict with one schema owner | `pala report` → `pala-verification-report/1` (#167/#168) with an in-repo JSON Schema; `checked_at` isolated so two reports of one file differ by a single line; completeness never silently true | Shipped (v0.10) |
 | Graphical review tooling | Auditor application | Planned (post-0.8) |
 
 ## Article 12(3) — minimum logging for remote biometric systems (Annex III 1(a))
@@ -96,6 +102,8 @@ interfaces.
 | Archival of whole segments without loss of verifiability | Spec §2.4; verification consumes the file sequence | Shipped (v0.7) |
 | Bounded, explicit degradation when a prefix is absent | Verifying a chain whose prefix is absent — e.g. an archived-away head — reports exactly one explicit violation at position 0 (missing genesis) and verifies the remainder as sound; the loss is visible, never silent. (A truncated *tail* is a different case: it is invisible to the §7.1 chain check and is caught by the anchor, not by a position-0 violation.) | Shipped (v0.7) |
 | Retention guidance for providers (≥ 6 months context) and deployers, with storage math from measured bytes/record | docs/RETENTION.md — measured per-kind footprint (~181 B/record weighted, results/audit-overhead-footprint-v0.7.0.md), archival/pruning at segment boundaries, ~4 s/GB resume cost | Shipped (v0.8) |
+| Segmenting an existing monolith at record boundaries | `pala segment` (#169), manifest `pala-segments/1`; each closed segment verifies standalone from its manifest seed | Shipped (v0.10) |
+| Writer-side rotation for months-long chains | `RotationPolicy` on the writer (#178, #183): record-boundary cuts, span-safe deferral, atomically-updated `pala-segments/1` manifest whose `prev_head` seeds let every closed segment verify alone; trigger math for the six-month duty in RETENTION.md §3 | Shipped (main) |
 | Formal prefix-consistency proofs for pruning | Merkle consistency proofs across pruned prefixes | Planned (post-0.8) |
 
 ## Beyond the requirements
@@ -117,6 +125,16 @@ positioned as such:
 - **Independent verifiability**: byte-exact test vectors and a
   verification protocol exercised by external implementers against
   real releases, and packaged as a self-service verification kit.
+- **SCITT/COSE interop**: a chain checkpoint exports as a COSE_Sign1
+  Signed Statement in RFC 9943 vocabulary for registration in a
+  transparency service (#176); the verified/reported split is stated
+  where the bridge is defined — Shipped (main).
+- **Hardware-token anchor store — tier B mechanism**: a PKCS#11 anchor
+  source behind the existing anchor seams (#179), claim honesty fixed
+  in the docs (#180): the mechanism is shipped and tested against a
+  hermetic SoftHSM; a tier-B *claim* for a concrete deployment requires
+  a real token or HSM — SoftHSM proves the code path, not the tier —
+  Shipped (main).
 
 ## Other frameworks
 
