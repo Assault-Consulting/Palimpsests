@@ -209,7 +209,7 @@ def audit_verify_cmd(
 
     Exit codes:
 
-    \\b
+    \b
       0  verified   — chain intact and head matches the stored anchor
       1  TAMPERED   — a row was altered, deleted, reordered, or the whole
                       history was replaced
@@ -328,7 +328,7 @@ def pala_verify_cmd(
     Encrypted bodies are checked against the digest bound into their
     header, never opened.
 
-    \\b
+    \b
       consistency  — do the records chain, with no gaps, no violated
                      MUSTs, and every body matching its header digest?
       completeness — does the chain head match the anchor you supplied?
@@ -338,7 +338,7 @@ def pala_verify_cmd(
 
     Exit codes (the same contract as `palimpsests audit verify`):
 
-    \\b
+    \b
       0  verified   — chain intact and head matches --anchor
       1  TAMPERED   — a break, gap, violated MUST, body-digest mismatch,
                       malformed container, or an anchor mismatch
@@ -595,7 +595,7 @@ def pala_selftest_cmd() -> None:
     heads, the verify block), plus the one check a vector run alone
     cannot make: that __version__ agrees with the distribution metadata.
 
-    \\b
+    \b
     Exit codes:
       0  sound     — every expectation reproduced
       1  UNSOUND   — a mismatch; the output names it
@@ -649,7 +649,7 @@ def pala_bundle_cmd(
     re-verifies from the spec alone. A damaged chain bundles too — the
     verdict inside says so; packaging broken evidence is half the point.
 
-    \\b
+    \b
     Exit codes:
       0  assembled
       3  UNREADABLE — the file (or the output path) could not be used
@@ -727,7 +727,7 @@ def pala_report_cmd(
     violation) lives INSIDE the document, produced by the model's one
     verdict rule; anchor failures are *reported* in it, never fatal.
 
-    \\b
+    \b
     Exit codes (deliberately not the verify contract — gating belongs
     to `pala verify`):
       0  the report was produced (whatever it attests)
@@ -800,7 +800,7 @@ def pala_segment_cmd(
     all segments reproduces the source byte-for-byte. The manifest is
     derived and unsigned — the segments stay authoritative.
 
-    \\b
+    \b
     Exit codes:
       0  segmented
       3  UNREADABLE — the file (or the output dir) could not be used
@@ -866,7 +866,7 @@ def pala_export_cmd(
     seq range.  Both flags are optional; when omitted the full log is
     exported.
 
-    \\b
+    \b
     Exit codes:
       0  exported
       3  UNREADABLE — the file (or the output path) could not be used
