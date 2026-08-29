@@ -72,7 +72,7 @@ commit.
 |---|---|---|
 | Verification without developer tooling | `pala verify` CLI (exit codes for sound / violation / partial; explicit partial semantics when no anchor is available) | Shipped (v0.7) |
 | Independently implementable verification | Written from spec + byte-exact test vectors alone; demonstrated by five verifier implementations, three of them external — the fifth written in Perl from core modules alone (see INDEPENDENT-VERIFICATION.md and `independent-runs/`) — and reproducible by anyone via the verification kit | Shipped (v0.7) |
-| Machine-readable verification verdict with one schema owner | `pala report` → `pala-verification-report/1` (#167/#168) with an in-repo JSON Schema; `checked_at` isolated so two reports of one file differ by a single line; completeness never silently true | Shipped (v0.10) |
+| Machine-readable verification verdict with one schema owner | The `pala-verification-report/1` model (#167/#168): the JSON Schema ships in the wheel, `checked_at` is isolated so two reports of one file differ by a single line, completeness never silently true; the evidence bundle's `verification.json` carries the same verdict fields; rendered directly by `pala report` — JSON and a self-contained static HTML page (#187, main) | Shipped (v0.10) |
 | Graphical review tooling | Auditor application | Planned (post-0.8) |
 
 ## Article 12(3) — minimum logging for remote biometric systems (Annex III 1(a))
