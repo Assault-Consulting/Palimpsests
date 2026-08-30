@@ -111,7 +111,7 @@ def serve_cmd(
     typer.secho(
         f"serving OpenAI-compatible endpoint on http://{host}:{port}  "
         + (
-            "(tool loops recorded to serve.pala)"
+            "(structured tool loops recorded to serve.pala)"
             if audit is not None
             else "(PALA recorder unavailable — serving without it)"
         ),
