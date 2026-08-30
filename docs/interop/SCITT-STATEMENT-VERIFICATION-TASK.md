@@ -88,7 +88,11 @@ Four ways "the same statement" can honestly differ in bytes; the vector's
   F2 (content type, protected), F4 (full chain head in the CWT subject),
   and rescopes F3 (`statement_sha256`/`length` are expectations for the
   deterministic encoder emitting the tagged form, not signature-bound
-  identities).
+  identities). Verified and reproduced byte-for-byte by bridge run **B2**
+  (`docs/specs/pala-1/independent-runs/turak/scitt-statement-b2/`), which
+  confirmed F1/F2/F4 fixed and F3's rescoping correct, and reported four
+  further findings — the substantive one being that the tamper list does
+  not exercise Ed25519 `S + L` signature malleability.
 
 ## Deliverables
 
