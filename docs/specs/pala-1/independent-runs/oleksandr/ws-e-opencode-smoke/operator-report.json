@@ -1,0 +1,70 @@
+{
+  "advisory": {
+    "count": 1,
+    "items": [
+      {
+        "at_seq": null,
+        "code": "anchor_never_written",
+        "detail": "the chain carries no ANCHOR record"
+      }
+    ],
+    "note": "advisory items do not affect the verdict"
+  },
+  "anchor": null,
+  "chain": {
+    "breaks": [],
+    "chain_ok": true,
+    "gaps": [],
+    "head": "ec07d1a0fc224ae0dfeadb90f5108c6ba847b967abfb3a706659a0fa81465f31",
+    "uninterpretable": [],
+    "violations": []
+  },
+  "checked_at": {
+    "note": "the auditing machine's clock",
+    "wall_ns": 1788078851842510400
+  },
+  "completeness": {
+    "anchor_lag": null,
+    "anchor_reason": null,
+    "complete_to_anchor": null
+  },
+  "container": {
+    "body_digest_mismatches": [],
+    "bytes_parsed": 312,
+    "bytes_total": 312,
+    "malformed": null,
+    "well_formed": true
+  },
+  "diagnosis": null,
+  "existence": {
+    "external_pins": [],
+    "note": "tier A: none available"
+  },
+  "format": "pala-verification-report/1",
+  "safety": {
+    "count": 0,
+    "items": [],
+    "unacknowledged_candidates": 0
+  },
+  "subject": {
+    "boots": 1,
+    "bytes": 312,
+    "filename": "serve.pala",
+    "first_seq": 0,
+    "last_seq": 1,
+    "records": 2,
+    "sha256": "6715fa5f721efb145744d9c2b62a036e23ac480c206bc3919b8b8d2d139e9ba1",
+    "spans": 0
+  },
+  "time_basis": {
+    "axis": "proved-order",
+    "caveats": [],
+    "wall_claims_qualified_by": "time_trust"
+  },
+  "verdict": "partial",
+  "verifier": {
+    "package": "palimpsests 0.10.0",
+    "spec": "PALA-1 v1.0",
+    "tool": "palimpsests 0.10.0"
+  }
+}
