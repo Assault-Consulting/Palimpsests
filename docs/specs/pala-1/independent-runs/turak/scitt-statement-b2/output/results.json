@@ -1,0 +1,314 @@
+{
+  "vector_sha256": "e51575d0e8959694d6e3567a97432fba1f4403d7cff1331f720bb8dcd1570ec7",
+  "passed": 61,
+  "total": 61,
+  "failed": 0,
+  "elapsed_seconds": 0.081,
+  "checks": [
+    {
+      "check": "ed25519.py reproduces RFC 8032 s7.1 TEST 1 and TEST 2",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "vector public key derives from vector seed (RFC 8032 s5.1.5)",
+      "ok": true,
+      "detail": "derived d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a"
+    },
+    {
+      "check": "first byte is 0xd2 (CBOR tag 18, tagged COSE_Sign1)",
+      "ok": true,
+      "detail": "got 0xd2"
+    },
+    {
+      "check": "whole message decodes under a STRICT RFC 8949 s4.2.1 decoder",
+      "ok": true,
+      "detail": "protected=205 B, payload=53 B, sig=64 B; no non-minimal heads, no indefinite lengths, no trailing bytes"
+    },
+    {
+      "check": "body is a 4-element array",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "unprotected bucket is empty",
+      "ok": true,
+      "detail": "0 entr(ies)"
+    },
+    {
+      "check": "payload is attached (a bstr, not nil)",
+      "ok": true,
+      "detail": "53 bytes"
+    },
+    {
+      "check": "signature is 64 bytes",
+      "ok": true,
+      "detail": "64"
+    },
+    {
+      "check": "signature verifies with key.public_key_hex",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "expected.verifies_with_public_key matches observation",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "payload is a CBOR map of 4 entries",
+      "ok": true,
+      "detail": "keys [1, 2, 3, 4]"
+    },
+    {
+      "check": "payload[1] is the 32-byte chain head, equal to chain_head_hex",
+      "ok": true,
+      "detail": "got 3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813"
+    },
+    {
+      "check": "payload[2] == first_seq (0)",
+      "ok": true,
+      "detail": "got 0"
+    },
+    {
+      "check": "payload[3] == last_seq (11)",
+      "ok": true,
+      "detail": "got 11"
+    },
+    {
+      "check": "payload[4] is the format id 'pala-1/v1.0'",
+      "ok": true,
+      "detail": "got 'pala-1/v1.0'"
+    },
+    {
+      "check": "expected.payload_commits_to_chain_head matches observation",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "payload map keys are in RFC 8949 s4.2.1 deterministic order",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "protected bucket decodes to a map of 4 entries",
+      "ok": true,
+      "detail": "keys [1, 3, 4, 15]"
+    },
+    {
+      "check": "alg (label 1) is EdDSA (-8)",
+      "ok": true,
+      "detail": "got -8"
+    },
+    {
+      "check": "content type (label 3) present in the PROTECTED bucket",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "content type equals statement_inputs.content_type",
+      "ok": true,
+      "detail": "got 'application/vnd.palimpsests.pala1-head+cbor'"
+    },
+    {
+      "check": "kid (label 4) present in the PROTECTED bucket (RFC 9943 s6 MUST)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "kid equals statement_inputs.kid_hex",
+      "ok": true,
+      "detail": "got 866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a415743"
+    },
+    {
+      "check": "kid is the RFC 9679 COSE Key Thumbprint (SHA-256) of the key",
+      "ok": true,
+      "detail": "matches the RFC 8949 s4.2.1 bytewise ordering"
+    },
+    {
+      "check": "the numeric-ordering thumbprint is NOT what the vector used",
+      "ok": true,
+      "detail": "confirms the vector followed RFC 8949 s4.2.1"
+    },
+    {
+      "check": "CWT claims (label 15) present in the PROTECTED bucket (RFC 9597)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "CWT iss (claim 1) equals statement_inputs.issuer",
+      "ok": true,
+      "detail": "got 'urn:example:pala-1:reference-emitter'"
+    },
+    {
+      "check": "CWT sub (claim 2) equals statement_inputs.subject",
+      "ok": true,
+      "detail": "got 'pala-1:chain:3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813'"
+    },
+    {
+      "check": "CWT sub carries the FULL 64-hex chain head (B1 finding F4)",
+      "ok": true,
+      "detail": "no truncation; 64 hex chars"
+    },
+    {
+      "check": "protected labels are [1, 3, 4, 15]",
+      "ok": true,
+      "detail": "got [1, 3, 4, 15]"
+    },
+    {
+      "check": "labels are in numeric ascending order",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "labels are in RFC 8949 s4.2.1 bytewise-on-encoded-key order",
+      "ok": true,
+      "detail": "encoded keys ['01', '03', '04', '0f']"
+    },
+    {
+      "check": "protected bucket re-encodes to identical bytes (deterministic)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "independently built protected header == published bytes",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "independently built payload == published bytes",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "independently produced Ed25519 signature == published signature",
+      "ok": true,
+      "detail": "RFC 8032 determinism (byte_stability mode 1)"
+    },
+    {
+      "check": "REPRODUCED: full statement matches expected.statement_hex byte-for-byte",
+      "ok": true,
+      "detail": "331 bytes"
+    },
+    {
+      "check": "statement_length_bytes == 331",
+      "ok": true,
+      "detail": "331"
+    },
+    {
+      "check": "statement_sha256 matches",
+      "ok": true,
+      "detail": "ce47efa9883090d4d6328e74f934e5dbabcf3a046d1098e768c53d92b661f941"
+    },
+    {
+      "check": "T1 flip a bit of the head inside the payload -> signature FAILS",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "T2 flip a bit of the signature -> verification FAILS",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "T3 verify against a different expected head -> commitment check FAILS while the signature stays VALID",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "T4a kid in unprotected -> signature still VERIFIES",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "T4b kid in unprotected -> bytes are NOT the published statement",
+      "ok": true,
+      "detail": "331 bytes vs 331"
+    },
+    {
+      "check": "T4c an ATTACKER can rewrite the unprotected kid and the signature still verifies (B1 case A10 -- why kid must be protected)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "T5a strip tag 18 -> content identical, first byte now 0x84",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "T5b strip tag 18 -> different artifact (bytes and sha256 differ)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "T5c a tag-requiring parser rejects the untagged form",
+      "ok": true,
+      "detail": "untagged COSE_Sign1; expected tag 18 (first byte 0xd2)"
+    },
+    {
+      "check": "T5d ... but the untagged form still carries a VALID signature: tag presence is an artifact-identity question, not a crypto one",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "A1 re-encode the protected bstr length head (58cd -> 5900cd): signature STILL VALID, artifact bytes/sha256/length CHANGE (confirms the vector's F3/A1 note)",
+      "ok": true,
+      "detail": "332 bytes, sha256 e58c691ecb5d0a1e"
+    },
+    {
+      "check": "A2 a STRICT RFC 8949 s4.2.1 decoder rejects that re-encoding",
+      "ok": true,
+      "detail": "non-minimal length head: argument 205 encoded in 2 bytes at 2"
+    },
+    {
+      "check": "A3 the same re-encoding INSIDE the protected bucket breaks the signature (those bytes are signed)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "A4 truncated signature (63 bytes) -> rejected",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "A5a S+L malleability: rejected when RFC 8032 s5.1.7's 0<=S<L range check is enforced",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "A5b ... and ACCEPTED without it -- a second valid 64-byte signature over the same statement; verifiers omitting the range check lose signature uniqueness",
+      "ok": true,
+      "detail": "S+L = cb2ef1d5ef03b37e377359b5bba5ebfeb07bb5808ea4edb3bb13ad8c04d5a713"
+    },
+    {
+      "check": "A6 claim confusion: a CWT parser would read the payload as iss/sub/aud/exp with wrong TYPES; the protected content type is what forbids that reading (B1 F2)",
+      "ok": true,
+      "detail": "iss=<32 bytes, want tstr>, sub=0, aud=11, exp='pala-1/v1.0'"
+    },
+    {
+      "check": "A7 tag 98 (COSE_Sign) presented as COSE_Sign1 -> rejected",
+      "ok": true,
+      "detail": "tag 98 is COSE_Sign (multi-signature), not COSE_Sign1"
+    },
+    {
+      "check": "A8 truncated statement -> rejected",
+      "ok": true,
+      "detail": "truncated string: want 64 bytes at 267"
+    },
+    {
+      "check": "A9 trailing byte after the statement -> rejected",
+      "ok": true,
+      "detail": "trailing data: 1 byte(s) after the top-level item"
+    },
+    {
+      "check": "A10 detached payload (nil) + the payload supplied out of band: the SAME signature verifies over a DIFFERENT artifact -- another artifact-identity vs signature-validity split",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "A11 duplicate map key in the protected bucket: a length-driven decoder accepts it; RFC 8949 s5.6 calls the result invalid, so reject duplicates explicitly",
+      "ok": true,
+      "detail": "our decoder surfaces both keys; a dict-building decoder would silently keep one -- and which one it keeps decides the kid"
+    }
+  ]
+}
