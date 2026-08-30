@@ -186,3 +186,27 @@ their result comes back.
 6. **Recording it.** The submission lands as a new run row in §5 and a
    folder under `independent-runs/<name>/` beside the existing ones. From
    that point it, too, is off-limits to the next external run.
+
+## 7. Bridge runs — the SCITT Signed Statement
+
+Sections 1-6 govern the wire-format exit test of PALA-1 §11. The SCITT
+bridge is a second, later surface: not the record format, but the
+COSE_Sign1 Signed Statement a producer registers with a transparency
+service (RFC 9943) over a chain head. Its task, its boundary and its
+vector are separate — `docs/interop/SCITT-STATEMENT-VERIFICATION-TASK.md`
+and `docs/interop/scitt-statement-vector.json` — and runs against it are
+recorded here rather than in §5, so that neither record is read as
+evidence for the other. A bridge run says nothing about the wire format,
+and the runs in §5 say nothing about the bridge.
+
+| | |
+|---|---|
+| Run | **B1** — first bridge run |
+| Date | 2026-08-30 |
+| Vector tested | `docs/interop/scitt-statement-vector.json` at `296f331`, SHA-256 `bf810261…54bf9491` |
+| Implementer | Oleksii Turak (olexii.turak@gmail.com) — **maintainer, not an unaffiliated external run** (§6). Method disclosure: produced with an AI coding agent (Claude) under the implementer's direction and review, as with run #4; the repository postdates the agent's training cutoff. The run's own record discloses every file read. |
+| Verifier (link) | [`independent-runs/turak/scitt-statement/`](independent-runs/turak/scitt-statement/) — 1027 lines of Python across three files, standard library only. No COSE, CBOR or cryptographic library: `cbor.py` from RFC 8949, `ed25519.py` from RFC 8032 §5.1 (self-checked against §7.1 TEST 1, which is also the vector's key), `scitt_verify.py` from RFC 9052 §4.4, RFC 9597 §2 and RFC 9943 §6. |
+| Result | **PASS on every pass-bar check, and the stretch goal met.** The 202-byte statement parses as a tagged COSE_Sign1, its Ed25519 signature verifies over the §4.4 Sig_structure, its payload commits to the published `chain_head` with the stated sequence range and format id, and the whole message was **reproduced byte-for-byte** from the vector's stated inputs by independent construction. 45 checks, 0 pass-bar failures. All 3 `tamper_expectations` held. 11 adversarial cases constructed. Provenance confirmed in both directions: the key is RFC 8032's published test key, and the subject is the `chain_head` of `test-vectors.json`. |
+| Findings | **4 — one of them a MUST violation.** **F1 (conformance, open):** the protected header carries only `alg` and CWT claims, so it has no `kid`, `x5t` or `x5chain` — RFC 9943 §6 requires `kid` when the other two are absent, leaving a transparency service no in-band way to resolve the issuer's key. **F2 (ambiguity):** with no `content type` declared, a payload keyed 1..4 is not distinguishable from a CWT Claims Set, which RFC 9597 §2 would oblige a verifier to reject on mismatch. **F3 (malleability):** RFC 9052 §9 scopes its minimum-length rule to the Sig_structure, not to the message, so a re-encoded 203-byte variant carries the same valid signature — `statement_sha256` identifies a serialisation, not a statement. **F4 (design):** `sub` truncates the chain head to 8 bytes, so two chains collide in the SCITT subject at a 64-bit birthday bound. |
+| Ambiguities logged | **9** — see [`scitt-statement/ambiguity-log.md`](independent-runs/turak/scitt-statement/ambiguity-log.md). Three became findings (A5 → F3, A7 → F2, A8 the context for F1). The rest are places the published material could state rather than imply: the external AAD (A3), the outer encoding rule (A5), the payload's format id, which exists only inside an English sentence (A2), and two files the task's rationale depends on but its reading list omits — RFC 9943 itself (A1) and `test-vectors.json`, which the vector names as its own provenance (A6). |
+| Status | **Reported, not resolved.** F1 is a defect in the published statement; correcting it means adding `kid` to the *protected* header — adversarial case A10 shows an unprotected `kid` is unauthenticated — which changes the statement bytes, its length and `statement_sha256`, so the vector is reissued with it. That work touches bridge code the run's boundary put off-limits and is deliberately left to a separate change. F1 turns on one sentence of RFC 9943 prose that the same RFC's CDDL does not enforce (A8), so an unaffiliated confirmation is worth having before it is acted on. |
