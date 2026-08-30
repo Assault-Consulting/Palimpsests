@@ -1,0 +1,21 @@
+[chain] 705 B sha256 27bbaa6da345f4711728123fa867d9b65435670c32a07fc8958d75c6f60cf41a
+[chain] head 4108276553625fb5f33c04b5d2a230e54b06562e3cac5b69cd937d2aeeeea4d1 records 4 chain_ok True
+[stmt] 345 B sha256 6ac05cb8665699c9ed03822a3e1cd5881957e7e270c0aba4a08d8fc9c85b74a1; self-verify OK; issuer urn:assault-consulting:palimpsests:b2-registration
+[reg] POST /entries -> 201; Location: http://localhost:8000/entries/115190002101c23f55d2253bb9489ffdb982d0f1c668ecc0d60b2cf03ec9f6f5
+[reg] entry_id 115190002101c23f55d2253bb9489ffdb982d0f1c668ecc0d60b2cf03ec9f6f5
+[reg] registration receipt 131 B sha256 08b9dd6eafed6b97a0bbc3205a5b0f5abc266e184f869faac62e932cf77d99dd
+[fetch] fresh receipt 131 B sha256 08b9dd6eafed6b97a0bbc3205a5b0f5abc266e184f869faac62e932cf77d99dd
+[fetch] round-trip statement byte-identical: True; jwks keys: 1 (alg ES256)
+[receipt] detached=True vds=1 tree_size=1 leaf_index=0 proof_len=0
+[receipt] claims iss='https://transparency.example' sub=None
+[verify] leaf='statement_bytes': inclusion=True receipt-signature-over-reconstructed-root=False
+[verify] leaf='statement_sha256': inclusion=True receipt-signature-over-reconstructed-root=False
+[VERDICT] receipt VERIFIED per the service's own modules: False; leaf=None; root=None
+[VERDICT] entry_id == sha256(statement): False
+[probe] payload 53 B; sha256(payload) = 115190002101c23f55d2253bb9489ffdb982d0f1c668ecc0d60b2cf03ec9f6f5
+[probe] entry_id == sha256(payload): True
+[probe] leaf='payload_bytes': receipt-signature-over-root = False (root 802711e6d90584589f7f…)
+[probe] leaf='payload_sha256': receipt-signature-over-root = True (root 064bf68dca3e247589ba…)
+[VERDICT-FINAL] receipt VERIFIED: signature (ES256, service jwks) over RFC 9162 root; leaf definition = payload_sha256; root = 064bf68dca3e247589baa4725e6cd930a15ca77082fa00d1739202b55f616983
+[TS-FINDINGS] entry identity = sha256(PAYLOAD), not the signed statement: two distinct COSE_Sign1 over one payload collide into one entry
+[TS-FINDINGS] receipt claims: iss = service default, statement's CWT iss/sub not propagated — binding to the statement is by leaf only
