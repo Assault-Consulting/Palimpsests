@@ -17,7 +17,22 @@ in the one convention documented in ``tool_calls`` (Hermes/Qwen
 reply first and replays it as SSE — tool_calls-shape correctness over
 first-token latency, in this version. ``usage`` carries the engine's
 reported counters where the level reports them (level 1 does), zeros
-where it does not yet. Authentication is opt-in: this
+where it does not yet.
+
+Visibility limitation, measured rather than assumed (smoke-run #189,
+``docs/specs/pala-1/independent-runs/oleksandr/ws-e-opencode-smoke/``):
+the audited tool loop — kind 8 ``TOOL_CALL`` / kind 9 ``TOOL_RESULT`` —
+exists only for *structured* calls that cross this endpoint. A client
+whose model narrates the call as text, and which then parses and
+executes it locally, bypasses any server-side recorder by definition;
+#189 pinned that as model × prompt behaviour (a heavy client system
+prompt suppressed structured calling on every local model tried), not
+an adapter defect. A terminal can render both modes identically — the
+chain is the witness. No prose-mining here, ever: extracting "calls"
+the model never committed as structure would fabricate evidence.
+Accepted follow-up directions are recorded in ADR-0005.
+
+Authentication is opt-in: this
 binds to localhost by default and is a local tool — pass ``--api-key``
 (or set ``PALIMPSESTS_SERVE_API_KEY``) the moment anything beyond your
 own shell can reach the port.
@@ -75,7 +90,9 @@ def create_app(
     endpoint records the tool loop it mediates into a PALA-1 chain —
     ``TOOL_CALL`` when tool calls are handed to the client (the dispatch
     boundary this process directly observes), ``TOOL_RESULT`` when the
-    client posts the results back, hash-bound to their calls. Works on
+    client posts the results back, hash-bound to their calls —
+    structured calls only; the module docstring states the text-mode
+    visibility limit. Works on
     every engine level, because the recording boundary is the endpoint
     itself, not the engine.
 
@@ -128,11 +145,20 @@ def create_app(
         def _cancel_pending() -> None:
             from palimpsests.audit.pala_writer import OUTCOME_CANCELLED
 
+            if not pending:
+                return
             for ref in pending.values():
                 audit.tool_result(ref[0], ref[1], OUTCOME_CANCELLED, None, None)
             pending.clear()
 
+        # Two seams on purpose: the ASGI shutdown covers well-behaved
+        # exits, and main()'s atexit closer calls the same function again
+        # right before the writer closes — a Windows console Ctrl-C can
+        # take uvicorn down without ever delivering lifespan shutdown
+        # (smoke-run #189: five pending calls, zero CANCELLED on the
+        # record). Idempotent, so double delivery is a no-op.
         app.router.on_shutdown.append(_cancel_pending)
+        app.state.cancel_pending = _cancel_pending
 
     def _deps() -> _Deps:
         nonlocal deps
@@ -415,11 +441,19 @@ def main() -> None:
     import uvicorn  # runtime-only: the config printer must not need it
 
     audit = default_audit()
+    app = create_app(audit=audit, api_key=args.api_key)
     if audit is not None:
-        atexit.register(audit.writer.close)
-    uvicorn.run(
-        create_app(audit=audit, api_key=args.api_key), host=args.host, port=args.port
-    )
+
+        def _close_audit() -> None:
+            # Cancel-before-close, even when the ASGI shutdown never ran
+            # (Windows console Ctrl-C can skip it — see create_app).
+            cancel = getattr(app.state, "cancel_pending", None)
+            if cancel is not None:
+                cancel()
+            audit.writer.close()
+
+        atexit.register(_close_audit)
+    uvicorn.run(app, host=args.host, port=args.port)
 
 
 def _opencode_config(host: str, port: int, api_key: str | None) -> str:
