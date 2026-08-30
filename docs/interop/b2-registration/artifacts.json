@@ -1,0 +1,68 @@
+{
+  "run": "B.2/B.4 \u2014 registration of a PALA-1 Signed Statement with a SCRAPI-compatible transparency service, and receipt verification",
+  "date": "2026-08-30",
+  "service": {
+    "impl": "vcon-dev/scittles",
+    "commit": "6653ab2",
+    "operated_by": "the project (self-hosted for this run)",
+    "deps_note": "cbor2 pinned to 5.6.5 locally after finding B4-F1; the service's own pin cbor2>=5.6.0 admits the broken cbor2 6.x + pycose 1.1.0 pair",
+    "endpoints": [
+      "POST /entries",
+      "GET /entries/{id}",
+      "GET /signed-statements/{id}",
+      "GET /jwks",
+      "/.well-known/transparency-configuration"
+    ]
+  },
+  "chain": {
+    "file_sha256": "27bbaa6da345f4711728123fa867d9b65435670c32a07fc8958d75c6f60cf41a",
+    "bytes": 705,
+    "records": 4,
+    "head": "4108276553625fb5f33c04b5d2a230e54b06562e3cac5b69cd937d2aeeeea4d1",
+    "verify": "chain_ok true; pala verify exit 2 (PARTIAL - no anchor supplied, honest)",
+    "hex": "50414c4101009c00010000010000000000000000798a98256f1cd77e30ec15d0ec084095000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005d6778461f000000836fbae1a9b0d0180000000000000000000000000000000000000000000000000000000000000000000000000000000050414c410100a900120000010100000000000000798a98256f1cd77e30ec15d0ec0840958e23ec9f66e947c35ce7672dc082048abcfb10e83d53150605e7d506cffa16400000000000000000000000000000000000000000000000000000000000000000f95a7b461f000000dd65bde1a9b0d018000000000e0000003f24870733d27f7c56177a59e15d5521bdac742d6a52d5a01baa0af818c78afc010009007363686564756c6572010002000600030004000300000050414c410100a900120000010200000000000000798a98256f1cd77e30ec15d0ec084095969ff70f380231fc73e1c2e74bc3af6e9816cdcc084f3c0cc2e59aa8ca87ff7e0000000000000000000000000000000000000000000000000000000000000000a9b47b461f000000dcc0bde1a9b0d018000000000e000000a77786f0c98011ba486cb6c730e4476934e9a333404b0090f4dd259f6d239ba2010009007363686564756c6572010002000600030004000700000050414c410100a900120000010300000000000000798a98256f1cd77e30ec15d0ec08409540eb132365d64ab60d5891b0f4a31761e3e95adf49693f0a142a9a2cfdcc24ad000000000000000000000000000000000000000000000000000000000000000057e87b461f000000baf4bde1a9b0d018000000000e000000b84a49c243a5296be81330f95011cbdaf9d2e2805396911c062d104b73132791010009007363686564756c6572010002000600030004000b000000"
+  },
+  "statement": {
+    "construction": "vector-v2 shape: EdDSA, kid = RFC 9679 thumbprint (protected), content type (protected), CWT iss/sub with FULL head",
+    "issuer": "urn:assault-consulting:palimpsests:b2-registration",
+    "bytes": 345,
+    "sha256": "6ac05cb8665699c9ed03822a3e1cd5881957e7e270c0aba4a08d8fc9c85b74a1",
+    "hex": "d28458dba4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f7204582072699871cc1ddd405fbbc9b0fe3c573035dd2e2494abb5f1fdbbc16da94fd5440fa201783275726e3a61737361756c742d636f6e73756c74696e673a70616c696d7073657374733a62322d726567697374726174696f6e02784d70616c612d313a636861696e3a34313038323736353533363235666235663333633034623564326132333065353462303635363265336361633562363963643933376432616565656561346431a05835a40158204108276553625fb5f33c04b5d2a230e54b06562e3cac5b69cd937d2aeeeea4d102000303046b70616c612d312f76312e3058408c7a34a4ab7c803dac6ca97fc1d98f649efedb70d7b5c5209919e80cf5cd71a0221cd382c81c35d2047d7164fa63d739aaebcfca0c148c82521824403f2a4c0a",
+    "signing_key": "per-run Ed25519, generated in-run, retained by the maintainer; public key in the statement's kid derivation"
+  },
+  "registration": {
+    "status": 201,
+    "entry_id": "115190002101c23f55d2253bb9489ffdb982d0f1c668ecc0d60b2cf03ec9f6f5",
+    "entry_id_is": "sha256(statement PAYLOAD) - finding B4-F2"
+  },
+  "receipt": {
+    "bytes": 131,
+    "sha256": "08b9dd6eafed6b97a0bbc3205a5b0f5abc266e184f869faac62e932cf77d99dd",
+    "hex": "d2845830a40126044674732d6b657919018b010fa101781c68747470733a2f2f7472616e73706172656e63792e6578616d706c65a119018ca120814483010080f6584090a199aad379611446f4607cd352bfc5050f610b5b54b4da16b6b649ed28920ad01aa16a4d717bada9f7626aa4f91ee0a5d2c10fe18145608505090feedd7353",
+    "form": "COSE_Sign1 ES256, DETACHED payload = RFC 9162 Merkle root; vds=1; inclusion proof in unprotected header",
+    "registration_equals_fresh": true,
+    "verified": {
+      "how": "root reconstructed from tree_size=1/leaf_index=0/proof=[] with leaf = sha256(payload); signature checked with the service's /jwks ES256 key via pycose; inclusion re-checked with the service's own src.core.verification",
+      "leaf_definition": "payload_sha256",
+      "root": "064bf68dca3e247589baa4725e6cd930a15ca77082fa00d1739202b55f616983",
+      "signature_over_root": true
+    }
+  },
+  "round_trip": {
+    "GET /signed-statements/{id} byte-identical to submitted": true
+  },
+  "jwks": {
+    "keys": [
+      {
+        "kty": "EC",
+        "crv": "P-256",
+        "x": "fh_dXUwxSfv3zGR9zGSru1G5LHh3egMcYKxmXDjohPE",
+        "y": "6NUbfQAgSnMYajItK7NTa-s91uaVqEpWL3z32xxQbyU",
+        "use": "sig",
+        "alg": "ES256",
+        "kid": ""
+      }
+    ]
+  },
+  "transcript_sha256": "9ea7a7295f00aefecfe8fda7008614ab88cdf03a1208979a4d8740cb5d199b75"
+}
