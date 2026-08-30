@@ -43,12 +43,15 @@ disagree, the RFC wins — and the disagreement is a finding we want.
 3. **Decode** the attached payload (a CBOR map) and check it commits
    to `subject_chain.chain_head_hex` with the stated sequence range
    and format id.
-4. **Check the protected header**: alg is EdDSA (-8); CWT claims
-   (label 15) carry the stated issuer and subject.
+4. **Check the protected header**: alg is EdDSA (-8); `kid` (label 4)
+   equals the vector's stated RFC 9679 COSE Key Thumbprint of the
+   verification key; `content type` (label 3) names the payload; CWT
+   claims (label 15) carry the stated issuer and the full-head subject.
+   All four labels sit in the *protected* bucket, in ascending order.
 5. **Reproduce** (stretch, but valued): rebuild the statement
    byte-for-byte from the inputs — Ed25519 is deterministic, so an
-   independent construction that agrees on all 202 bytes is the
-   strongest possible interop evidence. If your bytes differ, say
+   independent construction that agrees on every byte of the published
+   statement is the strongest possible interop evidence. If your bytes differ, say
    exactly where; a legitimate encoding divergence is a specification
    finding, not a failure of your run.
 6. **Tamper**: confirm each expectation in `tamper_expectations`
@@ -56,6 +59,36 @@ disagree, the RFC wins — and the disagreement is a finding we want.
 7. **Adversarial (optional, valued)**: construct inputs of your own
    design — malformed CBOR, wrong tag, truncated signature, claim
    confusion — and report how a careful verifier should treat each.
+
+## Byte stability — what "reproduce" may claim
+
+Four ways "the same statement" can honestly differ in bytes; the vector's
+`byte_stability` section states each precisely. In one line each:
+
+1. **Signature determinism** — reproduction is claimable only because the
+   alg is EdDSA (RFC 8032, deterministic by construction). ES256 bytes are
+   library-dependent (RFC 6979 is a choice, not a requirement): such a
+   vector could claim *verifies*, never *reproduces*.
+2. **The unprotected bucket** is outside the signature — mutations there
+   keep verification green while changing the artifact. "The signature
+   verifies" and "these are the published bytes" are separate claims.
+3. **Tag 18** — this vector's statement is the tagged form (first byte
+   `0xd2`); an untagged re-encoding is a different artifact.
+4. **The Sig_structure is assembled, not extracted** — what is signed is
+   `["Signature1", protected, external_aad, payload]`, built by each
+   implementation; byte agreement there is the precondition for signature
+   agreement.
+
+## History
+
+- **v1** (commit `296f331`) — verified and reproduced byte-for-byte by
+  bridge run **B1** (`docs/specs/pala-1/independent-runs/turak/
+  scitt-statement/`), which reported four findings.
+- **v2** (this file) — resolves F1 (`kid`, protected, RFC 9943 §6 MUST),
+  F2 (content type, protected), F4 (full chain head in the CWT subject),
+  and rescopes F3 (`statement_sha256`/`length` are expectations for the
+  deterministic encoder emitting the tagged form, not signature-bound
+  identities).
 
 ## Deliverables
 

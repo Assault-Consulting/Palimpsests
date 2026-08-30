@@ -27,6 +27,36 @@ the codec is byte-exact everywhere else: full control of the exact
 bytes in the Sig_structure, and no transitive dependency surface. This
 is not a general COSE implementation and takes no configuration.
 
+Byte stability, stated precisely (bridge run B1 plus a cross-library
+measurement) — four ways "the same statement" can honestly differ in
+bytes, and what this module does about each:
+
+1. **Signature determinism.** Byte-for-byte reproduction is promised
+   only under EdDSA: RFC 8032 makes the signature deterministic by
+   construction. ES256 has no such guarantee from the standard —
+   RFC 6979 derandomisation is a per-library choice (one common COSE
+   stack applies it, a common raw-ECDSA stack does not), so two
+   conforming implementations legitimately emit different signature
+   bytes over identical input. An ES256 vector may claim "verifies",
+   never "reproduces". The published vector uses EdDSA for exactly
+   this reason.
+2. **The unprotected bucket is outside the signature.** Anything
+   placed or moved there changes the artifact's bytes while the
+   signature keeps verifying — "the signature is valid" and "these are
+   the published bytes" are two different claims and must be checked
+   separately. This module emits an empty unprotected map and keeps
+   every meaningful parameter protected.
+3. **Tag 18 is one byte that libraries disagree on.** This module
+   emits and requires the *tagged* COSE_Sign1 form (first byte 0xd2);
+   an untagged re-encoding of the same content is a different
+   artifact, accepted by some parsers and not others.
+4. **The Sig_structure is assembled, not extracted.** What is signed
+   is the separately constructed CBOR array ["Signature1", protected,
+   external_aad, payload] (RFC 9052 §4.4) — two implementations must
+   build those bytes identically for signatures over identical inputs
+   to agree, which is why deterministic CBOR encoding is used here for
+   everything that is hashed or signed.
+
 Dependencies (``cbor2``, ``cryptography``) are imported lazily via the
 ``[scitt]`` extra, mirroring ``bodies.py``: a bare install keeps full
 header-only verification; only the bridge needs the packages.
@@ -48,7 +78,16 @@ __all__ = [
 ALG_ES256 = -7
 ALG_EDDSA = -8
 _HDR_ALG = 1
+_HDR_CONTENT_TYPE = 3  # RFC 9052 §3.1: what the payload is (B1 finding F2)
+_HDR_KID = 4  # RFC 9052 §3.1; required by RFC 9943 §6 absent x5t/x5chain (B1 F1)
 _HDR_CWT_CLAIMS = 15  # RFC 9597: CWT claims in COSE headers
+
+# The payload's media type, vendor tree (unregistered), naming the
+# {1,2,3,4} map below. Declared in the *protected* header so a verifier
+# never has to guess whether the payload is a CWT Claims Set — it is not
+# (bridge run B1, finding F2: without this, RFC 9597 §2 invites a reading
+# that must then be rejected).
+CONTENT_TYPE = "application/vnd.palimpsests.pala1-head+cbor"
 _CWT_ISS = 1
 _CWT_SUB = 2
 
@@ -92,15 +131,61 @@ def _crypto():
     return hashes, ec, decode_dss_signature, encode_dss_signature
 
 
+def _cose_key_thumbprint(public_key: Any, alg: int) -> bytes:
+    """RFC 9679 COSE Key Thumbprint (SHA-256) — the default ``kid``.
+
+    Deterministically encodes the required COSE_Key fields for the
+    algorithm's key type and hashes them; two parties holding the same
+    key derive the same identifier with no registry between them.
+    """
+    import hashlib
+
+    cbor2 = _cbor2()
+    if alg == ALG_EDDSA:
+        from cryptography.hazmat.primitives.serialization import (
+            Encoding,
+            PublicFormat,
+        )
+
+        x = public_key.public_bytes(Encoding.Raw, PublicFormat.Raw)
+        cose_key = {1: 1, -1: 6, -2: x}  # OKP / Ed25519 / x
+    elif alg == ALG_ES256:
+        nums = public_key.public_numbers()
+        cose_key = {
+            1: 2,  # EC2
+            -1: 1,  # P-256
+            -2: nums.x.to_bytes(32, "big"),
+            -3: nums.y.to_bytes(32, "big"),
+        }
+    else:
+        raise ValueError(f"unsupported COSE alg {alg}; this bridge takes -7 or -8")
+    return hashlib.sha256(cbor2.dumps(cose_key, canonical=True)).digest()
+
+
 def _sig_structure(protected: bytes, payload: bytes) -> bytes:
     # RFC 9052 §4.4: ["Signature1", body_protected, external_aad, payload]
     return _cbor2().dumps(["Signature1", protected, b"", payload])
 
 
-def _cose_sign1(payload: bytes, key: Any, *, alg: int, claims: dict | None = None) -> bytes:
+def _cose_sign1(
+    payload: bytes,
+    key: Any,
+    *,
+    alg: int,
+    claims: dict | None = None,
+    kid: bytes | None = None,
+) -> bytes:
     cbor2 = _cbor2()
     hashes, ec, decode_dss, _ = _crypto()
-    phdr: dict = {_HDR_ALG: alg}
+    public_key = key.public_key() if hasattr(key, "public_key") else key
+    if kid is None:
+        kid = _cose_key_thumbprint(public_key, alg)
+    # Labels inserted in ascending order (1, 3, 4, 15) so the encoded map
+    # is already in RFC 8949 §4.2.1 deterministic form — a strict decoder
+    # (bridge run B1 used one) accepts it without reordering. kid and the
+    # content type sit in the *protected* bucket on purpose: unprotected
+    # copies are unauthenticated (B1 adversarial case A10).
+    phdr: dict = {_HDR_ALG: alg, _HDR_CONTENT_TYPE: CONTENT_TYPE, _HDR_KID: kid}
     if claims:
         phdr[_HDR_CWT_CLAIMS] = claims
     protected = cbor2.dumps(phdr)
@@ -173,6 +258,7 @@ def build_signed_statement(
     issuer: str,
     subject: str,
     alg: int = ALG_ES256,
+    kid: bytes | None = None,
 ) -> bytes:
     """One COSE_Sign1 committing to a chain head — the whole export.
 
@@ -180,10 +266,19 @@ def build_signed_statement(
     the shape a SCITT transparency service registers. What leaves the
     device is this message: one digest and a range, no record body, no
     model output.
+
+    The protected header also carries ``kid`` (RFC 9679 COSE Key
+    Thumbprint of the verification key by default — pass ``kid`` to
+    override) and the payload's content type; both are required or
+    invited by RFC 9943 §6, and both were absent before bridge run B1
+    reported it (findings F1, F2). Put the FULL chain head in
+    ``subject``: a truncated head collides across chains at the
+    truncation's birthday bound, and a transparency service indexes by
+    this value (B1, finding F4).
     """
     payload = head_payload(head, first_seq, last_seq)
     claims = {_CWT_ISS: issuer, _CWT_SUB: subject}
-    return _cose_sign1(payload, key, alg=alg, claims=claims)
+    return _cose_sign1(payload, key, alg=alg, claims=claims, kid=kid)
 
 
 def check_statement_against_head(

@@ -1,5 +1,6 @@
 {
-  "format": "pala-1 scitt-bridge statement vector, v1",
+  "format": "pala-1 scitt-bridge statement vector, v2",
+  "supersedes": "v1 (commit 296f331, sha256 bf81026143d0cb8415667509e1d650b0b7efad7de24eb7907ea4002054bf9491), reissued after bridge run B1 (docs/specs/pala-1/independent-runs/turak/scitt-statement/): F1 - kid added to the protected header (RFC 9943 section 6 MUST absent x5t/x5chain); F2 - content type declared in the protected header; F4 - the CWT subject now carries the FULL chain head (the 16-hex truncation collided across chains at a 64-bit birthday bound); F3 - the sha256/length fields below are rescoped, see expected.note.",
   "purpose": "A deterministic COSE_Sign1 Signed Statement over the published PALA-1 core-vector chain head, reproducible byte-for-byte from public standards alone. Real crypto, fake entropy - never use this key outside a test vector.",
   "key": {
     "alg": "EdDSA (Ed25519), COSE alg -8",
@@ -15,20 +16,36 @@
   },
   "statement_inputs": {
     "issuer": "urn:example:pala-1:reference-emitter",
-    "subject": "pala-1:chain:3a1a3673f50498eb",
+    "subject": "pala-1:chain:3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+    "subject_note": "the FULL 32-byte head in hex - a truncated subject collides across chains at the truncation's birthday bound, and a transparency service indexes by this value (B1 finding F4)",
+    "kid_hex": "866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a415743",
+    "kid_note": "protected header label 4 = RFC 9679 COSE Key Thumbprint (SHA-256) of the verification key; in the PROTECTED bucket because an unprotected kid is unauthenticated (B1 adversarial case A10)",
+    "content_type": "application/vnd.palimpsests.pala1-head+cbor",
+    "content_type_note": "protected header label 3; names the payload schema so it is never read as a CWT Claims Set (B1 finding F2, ambiguity A8). Vendor tree, unregistered.",
     "cwt_claims_note": "issuer -> CWT claim key 1, subject -> CWT claim key 2, carried in the COSE protected header under label 15 (RFC 9597)",
-    "payload_note": "attached CBOR map: {1: chain head (32 bytes), 2: first_seq, 3: last_seq, 4: 'pala-1/v1.0'}"
+    "payload_note": "attached CBOR map: {1: chain head (32 bytes), 2: first_seq, 3: last_seq, 4: 'pala-1/v1.0'}",
+    "protected_header_order_note": "labels appear in ascending order (1, 3, 4, 15) - RFC 8949 section 4.2.1 deterministic form; a strict decoder accepts without reordering"
+  },
+  "byte_stability": {
+    "note": "Four ways 'the same statement' can honestly differ in bytes. 'The signature verifies' and 'these are the published bytes' are two different claims; check the one you mean.",
+    "1_signature_determinism": "Byte-for-byte reproduction is claimable here ONLY because the alg is EdDSA - RFC 8032 makes the signature deterministic by construction, confirmed across three runs in B1. ES256 has no such guarantee from the standard: RFC 6979 derandomisation is a per-library choice (a common COSE stack applies it; a common raw-ECDSA stack does not), so two conforming implementations legitimately emit different signature bytes over identical input. An ES256 vector could claim 'verifies', never 'reproduces'.",
+    "2_unprotected_bucket": "The unprotected map is outside the Sig_structure. Content placed or moved there changes the artifact's bytes while the signature keeps verifying (measured: moving kid to unprotected grew a test statement and left verification green). This statement carries an EMPTY unprotected map; every meaningful parameter is protected.",
+    "3_tag_18": "This statement is the TAGGED COSE_Sign1 form - first byte 0xd2 (CBOR tag 18). Libraries disagree on emitting/requiring the tag; an untagged re-encoding (starting 0x84) of the same content is a different artifact. A byte comparison must reject or explicitly normalise it.",
+    "4_sig_structure": "What is signed is not the message but the separately assembled CBOR array [\"Signature1\", protected, external_aad, payload] (RFC 9052 section 4.4). Two implementations must build those bytes identically - deterministic CBOR again - or signatures over identical inputs will not agree."
   },
   "expected": {
-    "statement_hex": "d284584ca201270fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202781d70616c612d313a636861696e3a33613161333637336635303439386562a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840542c844ebd2376f77e32f2081dee8e8be23046a6328db0319ee7a9ab094b7f0fcf4a986a6191cb99c0e06683a358876c2dfb99a881721551e751d359a665eb03",
-    "statement_sha256": "b47ca4f565048482d8ad8184bac82c18232022387ee08de855f42080936ae997",
-    "statement_length_bytes": 202,
+    "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+    "statement_sha256": "ce47efa9883090d4d6328e74f934e5dbabcf3a046d1098e768c53d92b661f941",
+    "statement_length_bytes": 331,
     "verifies_with_public_key": true,
-    "payload_commits_to_chain_head": true
+    "payload_commits_to_chain_head": true,
+    "note": "statement_sha256 and statement_length_bytes are expectations for THIS deterministic encoder emitting the TAGGED form - not signature-bound identities. COSE malleability outside the Sig_structure (B1 finding F3, adversarial case A1: re-encoding a CBOR length head keeps the signature valid and changes both fields) means artifact identity and signature validity must be checked separately."
   },
   "tamper_expectations": [
     "flip any bit of the 32-byte head inside the payload: signature verification MUST fail (the payload is signed)",
     "flip any bit of the signature: verification MUST fail",
-    "verify against a different expected head: the commitment check MUST fail even though the signature is valid"
+    "verify against a different expected head: the commitment check MUST fail even though the signature is valid",
+    "move kid from the protected to the unprotected map: the signature still verifies AND the bytes are no longer the published statement - the two checks are distinct (byte_stability mode 2; B1 case A10)",
+    "strip the outer tag 18 (0xd2): the content is unchanged but the artifact differs in its first byte; a byte-exact consumer MUST treat it as a different statement (byte_stability mode 3)"
   ]
 }
