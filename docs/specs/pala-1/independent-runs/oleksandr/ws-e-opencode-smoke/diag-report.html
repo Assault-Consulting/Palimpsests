@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>PALA-1 verification report &mdash; serve.pala</title>
+<style>
+body{font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;color:#1a1a1a;
+max-width:52rem;margin:2rem auto;padding:0 1rem}
+h1{font-size:1.3rem;margin-bottom:.2rem}
+h2{font-size:1.05rem;margin:1.4rem 0 .4rem;border-bottom:1px solid #ddd;
+padding-bottom:.15rem}
+code{font:13px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;
+word-break:break-all}
+table{border-collapse:collapse;width:100%;font-size:14px}
+td,th{padding:.25rem .5rem;border:1px solid #e3e3e3;text-align:left;
+vertical-align:top}
+th{background:#f6f6f6;font-weight:600}
+.kv td:first-child{width:14rem;color:#555}
+.verdict{display:inline-block;padding:.25rem .7rem;border-radius:.3rem;
+color:#fff;font-weight:700;letter-spacing:.03em}
+.v-sound{background:#2e7d32}.v-partial{background:#b26a00}
+.v-violation{background:#b71c1c}
+.muted{color:#666;font-size:13px}
+footer{margin-top:2rem;padding-top:.6rem;border-top:1px solid #ddd;
+color:#666;font-size:13px}
+</style></head><body>
+<h1>PALA-1 verification report</h1>
+<p class="muted">Format <code>pala-verification-report/1</code> &middot; spec <code>PALA-1 v1.0</code></p>
+<p><span class="verdict v-partial">PARTIAL</span> &mdash; sound as far as checked — completeness was NOT checked (no anchor), so truncation or wholesale replacement would not have been detected</p>
+<p>This tool verified <code>serve.pala</code> with <strong>no anchor supplied</strong> &mdash; completeness was not checked.
+<span class="muted">Checked at 2026-08-30 08:34:25 UTC (the auditing machine&rsquo;s clock).</span></p>
+<h2>Subject</h2>
+<table class="kv"><tr><td>filename</td><td><code>serve.pala</code></td></tr><tr><td>sha256</td><td><code>a87a0cfcb8690b8b7138f17249bb9b92bf31dd429123f598dca48b784cb54d6d</code></td></tr><tr><td>bytes</td><td>1598</td></tr><tr><td>records</td><td>8</td></tr><tr><td>boots / spans</td><td>2 / 0</td></tr><tr><td>seq range</td><td>0 &ndash; 7</td></tr></table>
+<h2>Container (&sect;2.4)</h2>
+<table class="kv"><tr><td>well-formed</td><td>yes</td></tr><tr><td>bytes parsed / total</td><td>1598 / 1598</td></tr><tr><td>body-digest mismatches</td><td>&mdash;</td></tr></table>
+<h2>Chain (&sect;7.1)</h2>
+<table class="kv"><tr><td>chain_ok</td><td>yes</td></tr><tr><td>head</td><td><code>cd372b034b5b9a20da1f1d51ba3c3237609a548e28dd06644c588036ae2768c1</code></td></tr><tr><td>breaks</td><td>&mdash;</td></tr><tr><td>gaps</td><td>&mdash;</td></tr><tr><td>violations</td><td>&mdash;</td></tr><tr><td>uninterpretable</td><td>&mdash;</td></tr></table>
+<h2>Anchor &amp; completeness (&sect;7.2)</h2>
+<p>No anchor was supplied.</p>
+<table class="kv"><tr><td>complete to anchor</td><td>not checked</td></tr><tr><td>anchor lag</td><td>None</td></tr><tr><td>reason</td><td>None</td></tr></table>
+<h2>Existence pins</h2>
+<table class="kv"><tr><td>external pins</td><td>&mdash;</td></tr><tr><td>note</td><td>tier A: none available</td></tr></table>
+<h2>Advisories</h2>
+<p class="muted">advisory items do not affect the verdict.</p>
+<table><tr><th>code</th><th>at seq</th><th>detail</th></tr><tr><td>anchor_never_written</td><td>None</td><td>the chain carries no ANCHOR record</td></tr></table>
+<h2>Safety records</h2>
+<table class="kv"><tr><td>count</td><td>0</td></tr><tr><td>unacknowledged candidates</td><td>0</td></tr></table>
+<h2>Verifier</h2>
+<table class="kv"><tr><td>tool</td><td>palimpsests 0.10.0</td></tr><tr><td>package</td><td>palimpsests 0.10.0</td></tr><tr><td>time basis</td><td>proved-order; wall claims qualified by <code>time_trust</code></td></tr></table>
+<footer>This document attests a check performed at the stated time; it does not certify anything. Derived rendering of <code>pala-verification-report/1</code> &mdash; the chain itself is authoritative and re-verifiable without this page.</footer>
+</body></html>

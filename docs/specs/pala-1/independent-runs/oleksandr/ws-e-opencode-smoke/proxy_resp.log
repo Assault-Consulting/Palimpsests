@@ -1,0 +1,84 @@
+
+===CONN===
+[RESP] HTTP/1.1 200 OK
+date: Sun, 30 Aug 2026 07:53:44 GMT
+server: uvicorn
+content-length: 226
+content-type: application/json
+
+[RESP] {"object":"list","data":[{"id":"llama3.1:8b","object":"model","owned_by":"palimpsests"},{"id":"qwen2.5-coder:14b","object":"model","owned_by":"palimpsests"},{"id":"qwen2.5-coder:7b","object":"model","owned_by":"palimpsests"}]}
+===CONN===
+[RESP] HTTP/1.1 200 OK
+date: Sun, 30 Aug 2026 07:53:47 GMT
+server: uvicorn
+content-type: text/event-stream; charset=utf-8
+Transfer-Encoding: chunked
+
+[RESP] d7
+data: {"id": "chatcmpl-17e502f9bc154aef974f5396", "object": "chat.completion.chunk", "created": 1788076427, "model": "llama3.1:8b", "choices": [{"index": 0, "delta": {"role": "assistant"}, "finish_reason": null}]}
+
+
+
+===CONN===
+[RESP] d9
+data: {"id": "chatcmpl-17e502f9bc154aef974f5396", "object": "chat.completion.chunk", "created": 1788076427, "model": "llama3.1:8b", "choices": [{"index": 0, "delta": {"content": "Creating"}, "finish_reason": null}]}
+
+
+[RESP] d3
+data: {"id": "chatcmpl-17e502f9bc154aef974f5396", "object": "chat.completion.chunk", "created": 1788076427, "model": "llama3.1:8b", "choices": [{"index": 0, "delta": {"content": " a"}, "finish_reason": null}]}
+
+
+[RESP] d6
+data: {"id": "chatcmpl-17e502f9bc154aef974f5396", "object": "chat.completion.chunk", "created": 1788076427, "model": "llama3.1:8b", "choices": [{"index": 0, "delta": {"content": " file"}, "finish_reason": null}]}
+
+
+[RESP] d5
+data: {"id": "chatcmpl-17e502f9bc154aef974f5396", "object": "chat.completion.chunk", "created": 1788076427, "model": "llama3.1:8b", "choices": [{"index": 0, "delta": {"content": " and"}, "finish_reason": null}]}
+
+
+[RESP] d9
+data: {"id": "chatcmpl-17e502f9bc154aef974f5396", "object": "chat.completion.chunk", "created": 1788076427, "model": "llama3.1:8b", "choices": [{"index": 0, "delta": {"content": " reading"}, "finish_reason": null}]}
+
+
+[RESP] d5
+data: {"id": "chatcmpl-17e502f9bc154aef974f5396", "object": "chat.completion.chunk", "created": 1788076427, "model": "llama3.1:8b", "choices": [{"index": 0, "delta": {"content": " its"}, "finish_reason": null}]}
+
+
+[RESP] da
+data: {"id": "chatcmpl-17e502f9bc154aef974f5396", "object": "chat.completion.chunk", "created": 1788076427, "model": "llama3.1:8b", "choices": [{"index": 0, "delta": {"content": " contents"}, "finish_reason": null}]}
+
+
+[RESP] c6
+data: {"id": "chatcmpl-17e502f9bc154aef974f5396", "object": "chat.completion.chunk", "created": 1788076427, "model": "llama3.1:8b", "choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}]}
+
+
+[RESP] e
+data: [DONE]
+
+
+[RESP] 0
+
+[RESP] HTTP/1.1 200 OK
+date: Sun, 30 Aug 2026 07:53:47 GMT
+server: uvicorn
+content-type: text/event-stream; charset=utf-8
+Transfer-Encoding: chunked
+
+[RESP] d7
+data: {"id": "chatcmpl-18124e1058d8467fb6e5de21", "object": "chat.completion.chunk", "created": 1788076428, "model": "llama3.1:8b", "choices": [{"index": 0, "delta": {"role": "assistant"}, "finish_reason": null}]}
+
+
+[RESP] 10f
+data: {"id": "chatcmpl-18124e1058d8467fb6e5de21", "object": "chat.completion.chunk", "created": 1788076428, "model": "llama3.1:8b", "choices": [{"index": 0, "delta": {"content": "`echo \"smoke-run OK\" > hello.txt && cat hello.txt && ls -la`"}, "finish_reason": null}]}
+
+
+[RESP] c6
+data: {"id": "chatcmpl-18124e1058d8467fb6e5de21", "object": "chat.completion.chunk", "created": 1788076428, "model": "llama3.1:8b", "choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}]}
+
+
+[RESP] e
+data: [DONE]
+
+
+[RESP] 0
+
