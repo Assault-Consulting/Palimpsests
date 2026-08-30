@@ -1,0 +1,351 @@
+{
+  "vector_file": "C:\\Users\\SnowFree\\Documents\\GitHub\\palimpsests\\docs\\interop\\scitt-statement-vector.json",
+  "vector_sha256": "bf81026143d0cb8415667509e1d650b0b7efad7de24eb7907ea4002054bf9491",
+  "statement_sha256": "b47ca4f565048482d8ad8184bac82c18232022387ee08de855f42080936ae997",
+  "statement_length_bytes": 202,
+  "reproduced_byte_for_byte": true,
+  "checks": [
+    {
+      "section": "0. Key material and provenance",
+      "name": "public key derives from the published seed",
+      "ok": true,
+      "detail": "derived d75a980182b10ab7...(32 bytes)",
+      "pass_bar": true
+    },
+    {
+      "section": "0. Key material and provenance",
+      "name": "seed reproduces RFC 8032 section 7.1 TEST 1 signature (provenance)",
+      "ok": true,
+      "detail": "the key really is the published RFC test key",
+      "pass_bar": true
+    },
+    {
+      "section": "0. Key material and provenance",
+      "name": "this verifier's Ed25519 verifies RFC 8032 TEST 1",
+      "ok": true,
+      "detail": "known-answer test on the signature check itself",
+      "pass_bar": true
+    },
+    {
+      "section": "0. Key material and provenance",
+      "name": "chain head is the one published in the core vectors",
+      "ok": true,
+      "detail": "test-vectors.json sha256 476c05ce8ef765c5...",
+      "pass_bar": true
+    },
+    {
+      "section": "0. Key material and provenance",
+      "name": "the sequence range covers the whole published chain",
+      "ok": true,
+      "detail": "seq 0..11 is 12 records",
+      "pass_bar": true
+    },
+    {
+      "section": "1. Parse expected.statement_hex as a COSE_Sign1 (RFC 9052)",
+      "name": "length is as published",
+      "ok": true,
+      "detail": "202 bytes",
+      "pass_bar": true
+    },
+    {
+      "section": "1. Parse expected.statement_hex as a COSE_Sign1 (RFC 9052)",
+      "name": "SHA-256 is as published",
+      "ok": true,
+      "detail": "b47ca4f565048482d8ad8184bac82c18232022387ee08de855f42080936ae997",
+      "pass_bar": true
+    },
+    {
+      "section": "1. Parse expected.statement_hex as a COSE_Sign1 (RFC 9052)",
+      "name": "CBOR tag 18, 4-element array, well-formed",
+      "ok": true,
+      "detail": "parsed",
+      "pass_bar": true
+    },
+    {
+      "section": "1. Parse expected.statement_hex as a COSE_Sign1 (RFC 9052)",
+      "name": "unprotected header is an empty map",
+      "ok": true,
+      "detail": "RFC 9943 section 6.3 requires this for registration",
+      "pass_bar": true
+    },
+    {
+      "section": "1. Parse expected.statement_hex as a COSE_Sign1 (RFC 9052)",
+      "name": "payload is attached (a bstr, not nil)",
+      "ok": true,
+      "detail": "",
+      "pass_bar": true
+    },
+    {
+      "section": "1. Parse expected.statement_hex as a COSE_Sign1 (RFC 9052)",
+      "name": "signature is 64 bytes",
+      "ok": true,
+      "detail": "542c844ebd2376f7...(64 bytes)",
+      "pass_bar": true
+    },
+    {
+      "section": "1. Parse expected.statement_hex as a COSE_Sign1 (RFC 9052)",
+      "name": "encoded in RFC 8949 section 4.2.1 deterministic form",
+      "ok": true,
+      "detail": "shortest-form heads, ordered map keys",
+      "pass_bar": false
+    },
+    {
+      "section": "2. Verify the Ed25519 signature over the Sig_structure",
+      "name": "signature verifies under key.public_key_hex",
+      "ok": true,
+      "detail": "ok",
+      "pass_bar": true
+    },
+    {
+      "section": "3. Decode the payload and check its commitment",
+      "name": "payload is a CBOR map of 4 entries",
+      "ok": true,
+      "detail": "",
+      "pass_bar": true
+    },
+    {
+      "section": "3. Decode the payload and check its commitment",
+      "name": "payload key 1 equals subject_chain.chain_head_hex",
+      "ok": true,
+      "detail": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+      "pass_bar": true
+    },
+    {
+      "section": "3. Decode the payload and check its commitment",
+      "name": "payload key 2 equals first_seq",
+      "ok": true,
+      "detail": "0",
+      "pass_bar": true
+    },
+    {
+      "section": "3. Decode the payload and check its commitment",
+      "name": "payload key 3 equals last_seq",
+      "ok": true,
+      "detail": "11",
+      "pass_bar": true
+    },
+    {
+      "section": "3. Decode the payload and check its commitment",
+      "name": "payload key 4 equals the stated format id",
+      "ok": true,
+      "detail": "'pala-1/v1.0'",
+      "pass_bar": true
+    },
+    {
+      "section": "4. Check the protected header",
+      "name": "alg is EdDSA (-8)",
+      "ok": true,
+      "detail": "RFC 9052",
+      "pass_bar": true
+    },
+    {
+      "section": "4. Check the protected header",
+      "name": "CWT claims are carried in the protected header at label 15",
+      "ok": true,
+      "detail": "RFC 9597 section 2",
+      "pass_bar": true
+    },
+    {
+      "section": "4. Check the protected header",
+      "name": "CWT claim 1 (iss) is the stated issuer",
+      "ok": true,
+      "detail": "urn:example:pala-1:reference-emitter",
+      "pass_bar": true
+    },
+    {
+      "section": "4. Check the protected header",
+      "name": "CWT claim 2 (sub) is the stated subject",
+      "ok": true,
+      "detail": "pala-1:chain:3a1a3673f50498eb",
+      "pass_bar": true
+    },
+    {
+      "section": "4. Check the protected header",
+      "name": "subject names the chain head it commits to",
+      "ok": true,
+      "detail": "sub carries the first 8 bytes of the head",
+      "pass_bar": true
+    },
+    {
+      "section": "4. Check the protected header",
+      "name": "RFC 9943 section 6: kid present when neither x5t nor x5chain is",
+      "ok": false,
+      "detail": "protected header carries only alg and CWT claims",
+      "pass_bar": false
+    },
+    {
+      "section": "4. Check the protected header",
+      "name": "content type (label 3) declares what the payload is",
+      "ok": false,
+      "detail": "absent; optional in the RFC 9943 figure-3 CDDL",
+      "pass_bar": false
+    },
+    {
+      "section": "5. Reproduce the statement byte-for-byte from the inputs",
+      "name": "rebuilt protected header matches",
+      "ok": true,
+      "detail": "76 bytes",
+      "pass_bar": true
+    },
+    {
+      "section": "5. Reproduce the statement byte-for-byte from the inputs",
+      "name": "rebuilt payload matches",
+      "ok": true,
+      "detail": "53 bytes",
+      "pass_bar": true
+    },
+    {
+      "section": "5. Reproduce the statement byte-for-byte from the inputs",
+      "name": "rebuilt signature matches (Ed25519 is deterministic)",
+      "ok": true,
+      "detail": "542c844ebd2376f7...(64 bytes)",
+      "pass_bar": true
+    },
+    {
+      "section": "5. Reproduce the statement byte-for-byte from the inputs",
+      "name": "all 202 bytes match",
+      "ok": true,
+      "detail": "independent construction agrees with the published bytes",
+      "pass_bar": true
+    },
+    {
+      "section": "6. Tamper expectations from the vector",
+      "name": "T1 bit-flip in the payload head breaks the signature",
+      "ok": true,
+      "detail": "the group equation [S]B = R + [k]A does not hold",
+      "pass_bar": true
+    },
+    {
+      "section": "6. Tamper expectations from the vector",
+      "name": "T2 bit-flip in the signature breaks verification",
+      "ok": true,
+      "detail": "the group equation [S]B = R + [k]A does not hold",
+      "pass_bar": true
+    },
+    {
+      "section": "6. Tamper expectations from the vector",
+      "name": "T3 commitment check fails against a different head, signature still valid",
+      "ok": true,
+      "detail": "a valid signature over the wrong subject is still the wrong subject",
+      "pass_bar": true
+    },
+    {
+      "section": "7. Adversarial cases of this run's own design",
+      "name": "A1 non-shortest length prefix still carries a valid signature",
+      "ok": true,
+      "detail": "203 bytes, sha256 d5b1d222654fac88...",
+      "pass_bar": false
+    },
+    {
+      "section": "7. Adversarial cases of this run's own design",
+      "name": "A1' a determinism-enforcing parse rejects it",
+      "ok": true,
+      "detail": "which is the mitigation for F3",
+      "pass_bar": true
+    },
+    {
+      "section": "7. Adversarial cases of this run's own design",
+      "name": "A2 tag 98 (COSE_Sign) is rejected",
+      "ok": true,
+      "detail": "a Sign1 verifier must not accept a multi-signer structure",
+      "pass_bar": true
+    },
+    {
+      "section": "7. Adversarial cases of this run's own design",
+      "name": "A3 untagged COSE_Sign1 is rejected by this verifier",
+      "ok": true,
+      "detail": "accepted only where the content type establishes the type out of band",
+      "pass_bar": false
+    },
+    {
+      "section": "7. Adversarial cases of this run's own design",
+      "name": "A4 63-byte signature is rejected on length, not on the curve",
+      "ok": true,
+      "detail": "signature is 63 bytes, not 64",
+      "pass_bar": true
+    },
+    {
+      "section": "7. Adversarial cases of this run's own design",
+      "name": "A5 S+L is rejected with the RFC 8032 range check",
+      "ok": true,
+      "detail": "",
+      "pass_bar": true
+    },
+    {
+      "section": "7. Adversarial cases of this run's own design",
+      "name": "A5' the same bytes verify without it -- a second valid signature",
+      "ok": true,
+      "detail": "why RFC 8032 section 5.1.7 requires 0 <= S < L",
+      "pass_bar": false
+    },
+    {
+      "section": "7. Adversarial cases of this run's own design",
+      "name": "A6 duplicate map key in the protected header is rejected",
+      "ok": true,
+      "detail": "RFC 8949 section 5.6",
+      "pass_bar": true
+    },
+    {
+      "section": "7. Adversarial cases of this run's own design",
+      "name": "A7 payload stripped to nil cannot be verified as-is",
+      "ok": true,
+      "detail": "no payload to place in the Sig_structure; must fail closed, not skip",
+      "pass_bar": true
+    },
+    {
+      "section": "7. Adversarial cases of this run's own design",
+      "name": "A8 reading the payload as a CWT Claims Set contradicts the header",
+      "ok": true,
+      "detail": "payload[1] is bytes, header iss is a text string",
+      "pass_bar": false
+    },
+    {
+      "section": "7. Adversarial cases of this run's own design",
+      "name": "A9 a different chain head yields an identical CWT subject",
+      "ok": true,
+      "detail": "sub is only the first 8 bytes of the head",
+      "pass_bar": false
+    },
+    {
+      "section": "7. Adversarial cases of this run's own design",
+      "name": "A10 an injected unprotected header does not disturb the signature",
+      "ok": true,
+      "detail": "so a kid added later would be unauthenticated -- it belongs in protected",
+      "pass_bar": false
+    },
+    {
+      "section": "7. Adversarial cases of this run's own design",
+      "name": "A11 trailing bytes after the statement are rejected",
+      "ok": true,
+      "detail": "no silent truncation of the input",
+      "pass_bar": true
+    }
+  ],
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "conformance",
+      "title": "The Signed Statement violates a MUST in RFC 9943 section 6.",
+      "detail": "RFC 9943 section 6 requires the kid header parameter to be present when neither x5t nor x5chain is in the protected header. This statement has none of the three, so a conforming SCITT transparency service has no in-band key identifier with which to resolve the issuer's verification key."
+    },
+    {
+      "id": "F2",
+      "severity": "ambiguity",
+      "title": "Nothing on the wire says the payload is not a CWT Claims Set.",
+      "detail": "The payload is a CBOR map keyed 1..4. In a COSE object whose protected header carries CWT claims (RFC 9597), integer keys 1 and 2 are conventionally iss and sub. A verifier that reads this payload as a CWT Claims Set gets iss = 32 raw bytes and sub = 0, and RFC 9597 section 2 then obliges it to compare those against the header's claims and reject. Declaring content type (label 3) would settle it."
+    },
+    {
+      "id": "F3",
+      "severity": "malleability",
+      "title": "expected.statement_sha256 is not a signature-bound identity.",
+      "detail": "RFC 9052 section 9 requires definite lengths and minimum-length arguments, but says the restriction applies to the Sig_structure, Enc_structure and MAC_structure -- not to the COSE message that carries them. So re-encoding the protected header's byte-string length in the two-byte form leaves the signed Sig_structure untouched and the signature still verifies, while the message becomes 203 bytes with a different SHA-256. The vector publishes statement_sha256 and statement_length_bytes as expectations, which treats the serialisation as an identity it is not: a verifier that matches on either must independently enforce RFC 8949 section 4.2.1, because nothing in COSE obliges the encoder to."
+    },
+    {
+      "id": "F4",
+      "severity": "design",
+      "title": "The CWT subject truncates the chain head to 8 bytes.",
+      "detail": "sub is 'pala-1:chain:' plus the first 16 hex characters of the head, so two different chains collide in the SCITT subject at a 64-bit birthday bound (~2^32 work). A transparency service that indexes or authorises by sub -- which is what sub is for -- cannot distinguish them. Verified here by signing a second statement over a head differing in byte 20: same sub, valid signature. The payload still commits to the full head, so this is an indexing and authorisation hazard rather than a forgery."
+    }
+  ],
+  "pass_bar_failures": 0
+}

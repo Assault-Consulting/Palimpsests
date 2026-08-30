@@ -1,0 +1,102 @@
+vector file : C:\Users\SnowFree\Documents\GitHub\palimpsests\docs\interop\scitt-statement-vector.json
+vector sha256: bf81026143d0cb8415667509e1d650b0b7efad7de24eb7907ea4002054bf9491
+
+==========================================================================
+0. Key material and provenance
+==========================================================================
+  [PASS] public key derives from the published seed  -- derived d75a980182b10ab7...(32 bytes)
+  [PASS] seed reproduces RFC 8032 section 7.1 TEST 1 signature (provenance)  -- the key really is the published RFC test key
+  [PASS] this verifier's Ed25519 verifies RFC 8032 TEST 1  -- known-answer test on the signature check itself
+  [PASS] chain head is the one published in the core vectors  -- test-vectors.json sha256 476c05ce8ef765c5...
+  [PASS] the sequence range covers the whole published chain  -- seq 0..11 is 12 records
+
+==========================================================================
+1. Parse expected.statement_hex as a COSE_Sign1 (RFC 9052)
+==========================================================================
+  [PASS] length is as published  -- 202 bytes
+  [PASS] SHA-256 is as published  -- b47ca4f565048482d8ad8184bac82c18232022387ee08de855f42080936ae997
+  [PASS] CBOR tag 18, 4-element array, well-formed  -- parsed
+  [PASS] unprotected header is an empty map  -- RFC 9943 section 6.3 requires this for registration
+  [PASS] payload is attached (a bstr, not nil)
+  [PASS] signature is 64 bytes  -- 542c844ebd2376f7...(64 bytes)
+  [PASS] encoded in RFC 8949 section 4.2.1 deterministic form  -- shortest-form heads, ordered map keys
+
+==========================================================================
+2. Verify the Ed25519 signature over the Sig_structure
+==========================================================================
+  Sig_structure (146 bytes): 846a5369676e617475726531...(146 bytes)
+  [PASS] signature verifies under key.public_key_hex  -- ok
+
+==========================================================================
+3. Decode the payload and check its commitment
+==========================================================================
+  [PASS] payload is a CBOR map of 4 entries
+  [PASS] payload key 1 equals subject_chain.chain_head_hex  -- 3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813
+  [PASS] payload key 2 equals first_seq  -- 0
+  [PASS] payload key 3 equals last_seq  -- 11
+  [PASS] payload key 4 equals the stated format id  -- 'pala-1/v1.0'
+
+==========================================================================
+4. Check the protected header
+==========================================================================
+  [PASS] alg is EdDSA (-8)  -- RFC 9052
+  [PASS] CWT claims are carried in the protected header at label 15  -- RFC 9597 section 2
+  [PASS] CWT claim 1 (iss) is the stated issuer  -- urn:example:pala-1:reference-emitter
+  [PASS] CWT claim 2 (sub) is the stated subject  -- pala-1:chain:3a1a3673f50498eb
+  [PASS] subject names the chain head it commits to  -- sub carries the first 8 bytes of the head
+  [FAIL] RFC 9943 section 6: kid present when neither x5t nor x5chain is  -- protected header carries only alg and CWT claims
+  [FINDING F1] (conformance) The Signed Statement violates a MUST in RFC 9943 section 6.
+           RFC 9943 section 6 requires the kid header parameter to be present when neither x5t nor x5chain is in the protected header. This statement has none of the three, so a conforming SCITT transparency service has no in-band key identifier with which to resolve the issuer's verification key.
+  [FAIL] content type (label 3) declares what the payload is  -- absent; optional in the RFC 9943 figure-3 CDDL
+  [FINDING F2] (ambiguity) Nothing on the wire says the payload is not a CWT Claims Set.
+           The payload is a CBOR map keyed 1..4. In a COSE object whose protected header carries CWT claims (RFC 9597), integer keys 1 and 2 are conventionally iss and sub. A verifier that reads this payload as a CWT Claims Set gets iss = 32 raw bytes and sub = 0, and RFC 9597 section 2 then obliges it to compare those against the header's claims and reject. Declaring content type (label 3) would settle it.
+
+==========================================================================
+5. Reproduce the statement byte-for-byte from the inputs
+==========================================================================
+  [PASS] rebuilt protected header matches  -- 76 bytes
+  [PASS] rebuilt payload matches  -- 53 bytes
+  [PASS] rebuilt signature matches (Ed25519 is deterministic)  -- 542c844ebd2376f7...(64 bytes)
+  [PASS] all 202 bytes match  -- independent construction agrees with the published bytes
+
+==========================================================================
+6. Tamper expectations from the vector
+==========================================================================
+  [PASS] T1 bit-flip in the payload head breaks the signature  -- the group equation [S]B = R + [k]A does not hold
+  [PASS] T2 bit-flip in the signature breaks verification  -- the group equation [S]B = R + [k]A does not hold
+  [PASS] T3 commitment check fails against a different head, signature still valid  -- a valid signature over the wrong subject is still the wrong subject
+
+==========================================================================
+7. Adversarial cases of this run's own design
+==========================================================================
+  [PASS] A1 non-shortest length prefix still carries a valid signature  -- 203 bytes, sha256 d5b1d222654fac88...
+  [FINDING F3] (malleability) expected.statement_sha256 is not a signature-bound identity.
+           RFC 9052 section 9 requires definite lengths and minimum-length arguments, but says the restriction applies to the Sig_structure, Enc_structure and MAC_structure -- not to the COSE message that carries them. So re-encoding the protected header's byte-string length in the two-byte form leaves the signed Sig_structure untouched and the signature still verifies, while the message becomes 203 bytes with a different SHA-256. The vector publishes statement_sha256 and statement_length_bytes as expectations, which treats the serialisation as an identity it is not: a verifier that matches on either must independently enforce RFC 8949 section 4.2.1, because nothing in COSE obliges the encoder to.
+  [PASS] A1' a determinism-enforcing parse rejects it  -- which is the mitigation for F3
+  [PASS] A2 tag 98 (COSE_Sign) is rejected  -- a Sign1 verifier must not accept a multi-signer structure
+  [PASS] A3 untagged COSE_Sign1 is rejected by this verifier  -- accepted only where the content type establishes the type out of band
+  [PASS] A4 63-byte signature is rejected on length, not on the curve  -- signature is 63 bytes, not 64
+  [PASS] A5 S+L is rejected with the RFC 8032 range check
+  [PASS] A5' the same bytes verify without it -- a second valid signature  -- why RFC 8032 section 5.1.7 requires 0 <= S < L
+  [PASS] A6 duplicate map key in the protected header is rejected  -- RFC 8949 section 5.6
+  [PASS] A7 payload stripped to nil cannot be verified as-is  -- no payload to place in the Sig_structure; must fail closed, not skip
+  [PASS] A8 reading the payload as a CWT Claims Set contradicts the header  -- payload[1] is bytes, header iss is a text string
+  [PASS] A9 a different chain head yields an identical CWT subject  -- sub is only the first 8 bytes of the head
+  [FINDING F4] (design) The CWT subject truncates the chain head to 8 bytes.
+           sub is 'pala-1:chain:' plus the first 16 hex characters of the head, so two different chains collide in the SCITT subject at a 64-bit birthday bound (~2^32 work). A transparency service that indexes or authorises by sub -- which is what sub is for -- cannot distinguish them. Verified here by signing a second statement over a head differing in byte 20: same sub, valid signature. The payload still commits to the full head, so this is an indexing and authorisation hazard rather than a forgery.
+  [PASS] A10 an injected unprotected header does not disturb the signature  -- so a kid added later would be unauthenticated -- it belongs in protected
+  [PASS] A11 trailing bytes after the statement are rejected  -- no silent truncation of the input
+
+==========================================================================
+Summary
+==========================================================================
+  checks run       : 45
+  checks passed    : 43
+  pass-bar failures: 0
+  findings         : 4
+    F1 (conformance) The Signed Statement violates a MUST in RFC 9943 section 6.
+    F2 (ambiguity) Nothing on the wire says the payload is not a CWT Claims Set.
+    F3 (malleability) expected.statement_sha256 is not a signature-bound identity.
+    F4 (design) The CWT subject truncates the chain head to 8 bytes.
+
+  wrote C:\Users\SnowFree\Documents\GitHub\palimpsests\docs\specs\pala-1\independent-runs\turak\scitt-statement\output\results.json
