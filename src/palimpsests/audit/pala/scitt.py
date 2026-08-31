@@ -56,6 +56,19 @@ bytes, and what this module does about each:
    build those bytes identically for signatures over identical inputs
    to agree, which is why deterministic CBOR encoding is used here for
    everything that is hashed or signed.
+5. **Signature uniqueness (Ed25519 S + L).** Adding the group order L
+   to the scalar S yields a second, distinct 64-byte signature over
+   the identical Sig_structure — rejected by a verifier enforcing
+   RFC 8032 §5.1.7's ``0 <= S < L`` range check, accepted by one that
+   omits it; both behaviours exist in the wild (bridge run B2, F-2).
+   Not a forgery — a uniqueness failure, which matters wherever
+   registrations are deduplicated or indexed by signature bytes. This
+   module's verify path rejects the non-canonical form (its backend
+   enforces the range check; pinned by test).
+6. **A detached payload is a different artifact.** Setting the payload
+   to nil and supplying it externally leaves the signature verifying
+   over a shorter message — a fifth identity/validity split (B2, F-3).
+   This bridge always emits the attached form.
 
 Dependencies (``cbor2``, ``cryptography``) are imported lazily via the
 ``[scitt]`` extra, mirroring ``bodies.py``: a bare install keeps full
@@ -201,7 +214,12 @@ def _cose_sign1(
 
 
 def _cose_verify1(message: bytes, public_key: Any) -> bytes:
-    """Verify a COSE_Sign1; return its payload, or raise ``ValueError``."""
+    """Verify a COSE_Sign1; return its payload, or raise ``ValueError``.
+
+    Ed25519 verification here rejects a non-canonical scalar (S >= L,
+    RFC 8032 §5.1.7) through its backend — the S + L variant of a valid
+    signature does not verify; a test pins that behaviour.
+    """
     cbor2 = _cbor2()
     hashes, ec, _, encode_dss = _crypto()
     tag = cbor2.loads(message)
