@@ -62,7 +62,7 @@ disagree, the RFC wins — and the disagreement is a finding we want.
 
 ## Byte stability — what "reproduce" may claim
 
-Four ways "the same statement" can honestly differ in bytes; the vector's
+Six ways "the same statement" can honestly differ in bytes; the vector's
 `byte_stability` section states each precisely. In one line each:
 
 1. **Signature determinism** — reproduction is claimable only because the
@@ -75,9 +75,16 @@ Four ways "the same statement" can honestly differ in bytes; the vector's
 3. **Tag 18** — this vector's statement is the tagged form (first byte
    `0xd2`); an untagged re-encoding is a different artifact.
 4. **The Sig_structure is assembled, not extracted** — what is signed is
-   `["Signature1", protected, external_aad, payload]`, built by each
-   implementation; byte agreement there is the precondition for signature
-   agreement.
+   `["Signature1", protected, external_aad, payload]` with
+   `external_aad = h''`, built by each implementation; byte agreement
+   there is the precondition for signature agreement.
+5. **Signature uniqueness** — Ed25519 `S + L` is a second, distinct valid
+   signature over the same Sig_structure unless the verifier enforces
+   RFC 8032 §5.1.7's range check; both behaviours exist in the wild
+   (B2, F-2).
+6. **A detached payload is a different artifact** — the signature keeps
+   verifying while the bytes shrink (B2, F-3); this vector's statement is
+   the attached form.
 
 ## History
 

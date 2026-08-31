@@ -85,3 +85,34 @@ def test_the_tamper_expectations_hold(doc):
     broken[-1] ^= 0x01
     with pytest.raises(ValueError):
         scitt.check_statement_against_head(bytes(broken), key.public_key(), head)
+
+
+def test_s_plus_l_malleated_signature_is_rejected():
+    """B2 finding F-2, pinned: our verify path enforces RFC 8032 §5.1.7.
+
+    Adding the group order L to the scalar S yields a second, distinct
+    64-byte signature over the identical Sig_structure. A stack without
+    the range check accepts it; ours must not. The malleated scalar is
+    cross-checked against the value published in bridge run B2.
+    """
+    import cbor2
+
+    v = json.loads(VECTOR.read_text(encoding="utf-8"))
+    stmt = bytes.fromhex(v["expected"]["statement_hex"])
+    pub = ed25519.Ed25519PublicKey.from_public_bytes(
+        bytes.fromhex(v["key"]["public_key_hex"])
+    )
+    head = bytes.fromhex(v["subject_chain"]["chain_head_hex"])
+
+    L = 2**252 + 27742317777372353535851937790883648493
+    tag = cbor2.loads(stmt)
+    protected, unprotected, payload, sig = tag.value
+    s_int = int.from_bytes(sig[32:], "little")
+    malleated = sig[:32] + (s_int + L).to_bytes(32, "little")
+    assert malleated[32:].hex() == (
+        "cb2ef1d5ef03b37e377359b5bba5ebfeb07bb5808ea4edb3bb13ad8c04d5a713"
+    )  # the exact value bridge run B2 published
+
+    stmt2 = cbor2.dumps(cbor2.CBORTag(18, [protected, unprotected, payload, malleated]))
+    with pytest.raises(ValueError):
+        scitt.check_statement_against_head(stmt2, pub, head)
