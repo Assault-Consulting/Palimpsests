@@ -1,0 +1,11 @@
+--- /home/claude/create_statement.py.orig	2026-08-30 21:46:27.442055329 +0000
++++ /home/claude/venv/lib/python3.12/site-packages/scitt_emulator/create_statement.py	2026-08-30 21:46:27.443379992 +0000
+@@ -21,7 +21,7 @@
+ 
+ @pycose.headers.CoseHeaderAttribute.register_attribute()
+ class CWTClaims(pycose.headers.CoseHeaderAttribute):
+-    identifier = 14
++    identifier = 15  # RFC 9597 registered value; upstream still carries the draft-era 14
+     fullname = "CWT_CLAIMS"
+ 
+ 
