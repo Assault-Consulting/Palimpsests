@@ -1,0 +1,41 @@
+=== 2026-08-30T21:46:28Z SCITT registration run (task B.2) ===
+service: scitt-api-emulator (scitt-community), tree-alg CCF, http://127.0.0.1:8080
+claim: b2-statement.cose (348 bytes, sha256 d9c04189c49d59b33e9c5d3db4968360f60438822ba1cc58ed554a6953c93aac)
+
+--- client submit-claim (POST /entries) ---
+Claim Registered:
+  json:     {'entryId': '1'}
+  Entry ID: 1
+  Receipt:  .//home/claude/b2-receipt.cbor
+Entry ID written to /home/claude/b2-entry-id.txt
+entry_id: 1
+
+--- raw GET /entries/1 (headers) ---
+HTTP/1.1 200 OK
+Server: Werkzeug/3.1.8 Python/3.12.3
+Date: Sun, 30 Aug 2026 21:46:28 GMT
+Content-Disposition: inline; filename=1.cose
+Content-Type: application/octet-stream
+--- raw GET /entries/1/receipt (headers) ---
+HTTP/1.1 200 OK
+Server: Werkzeug/3.1.8 Python/3.12.3
+Date: Sun, 30 Aug 2026 21:46:28 GMT
+Content-Disposition: inline; filename=1.receipt.cbor
+Content-Type: application/cbor
+
+--- verify-receipt (the service's own verifier) ---
+Leaf hash: 7845f7afa7afa439610608393a35f748b6b40ced7398a9dedbf2ed5afc32979f
+Root: 3273da10b3ebf1c8ccfa88ee895f9db3619ac725733d3bcb30913b74d7c1651b
+Receipt verified
+verify-receipt exit: 0
+
+--- statement re-verified by palimpsests (the producer side) ---
+check_statement_against_head: OK; commits to ec07d1a0fc224ae0dfeadb90f5108c6ba847b967abfb3a706659a0fa81465f31
+receipt sha256: f58337c3b58e7b67a5d8aa655910926e099d725b950a5a7847d104c4ac8ec1c4
+
+--- artifact digests ---
+d9c04189c49d59b33e9c5d3db4968360f60438822ba1cc58ed554a6953c93aac  /home/claude/b2-statement.cose
+f58337c3b58e7b67a5d8aa655910926e099d725b950a5a7847d104c4ac8ec1c4  /home/claude/b2-receipt.cbor
+f58337c3b58e7b67a5d8aa655910926e099d725b950a5a7847d104c4ac8ec1c4  /home/claude/b2-receipt-raw.cbor
+d9c04189c49d59b33e9c5d3db4968360f60438822ba1cc58ed554a6953c93aac  /home/claude/b2-entry-raw.cose
+client receipt == raw GET receipt (byte-identical)
