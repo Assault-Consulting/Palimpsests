@@ -1,0 +1,16 @@
+=== 2026-08-30T21:45:22Z first submission — rejected by the unpatched emulator ===
+client submit-claim --claim b2-statement.cose --url http://127.0.0.1:8080
+
+RuntimeError: HTTP error 400: {
+  "detail": "Claim does not have a CWTClaims header parameter",
+  "type": "urn:ietf:params:scitt:error:invalidInput"
+}
+
+Root cause (scitt_emulator/create_statement.py, unpatched):
+    class CWTClaims(pycose.headers.CoseHeaderAttribute):
+        identifier = 14          # draft-era label; RFC 9597 registered 15
+
+Decoded protected header of the submitted statement (pycose 1.1.0):
+    keys [1, 3, 4, 15]  -> the emulator's `CWTClaims in msg.phdr` test is False
+The statement was not changed. The emulator received the one-line patch
+in emulator-patch.diff; the second submission (transcript.txt) succeeded.
