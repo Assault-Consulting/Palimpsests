@@ -10,6 +10,13 @@ record produce byte-identical answers. The property test
 ``batch(N) ≡ N × incremental`` enforces that, and the existing differential
 test against ``palaudit_ref.py`` plus the §8 vectors guard the refactor.
 
+One *verifier*, but ``AuditReader.verify()`` currently constructs two of
+them over the same headers: ``verify_headers`` builds one and discards the
+advisory it has already accumulated, and ``AuditReader._compute_advisory``
+then builds a second to obtain it. The answers agree — the rules are still
+in one place — but the header loop, including its per-record TLV decode and
+hash, runs twice. Tracked as U14.
+
 The same pass accumulates the **advisory** channel — cheap, header-only
 signals (clock and monotonic regressions within a boot, mid-boot
 time-trust changes, a chain with no ANCHOR). Advisory items are never a
