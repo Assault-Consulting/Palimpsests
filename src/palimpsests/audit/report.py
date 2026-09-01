@@ -105,12 +105,39 @@ def build_report(
     *,
     anchor_source=None,
     tool: str | None = None,
+    reader: AuditReader | None = None,
 ) -> VerificationReport:
     """Build the report for the chain at ``source``.
 
     ``tool`` lets a shell name itself ("palimpsests-auditor X.Y.Z");
     the default names this package. The file digest is taken over the
     bytes as opened, once, and carried into the subject block.
+
+    ``reader``, when given, is used in place of opening a fresh one.
+    Without it, this function always opened its own — even when the
+    caller already held one open on the same file. A caller that had
+    already paid to decode the chain (any prior ``verify()``,
+    ``records()``, ``boots()`` or ``spans()`` call warms
+    ``AuditReader``'s own cache) paid that cost a second time here, for
+    no reason but that this function had no way to be handed the first
+    reader. Measured on a synthetic 1,000,004-record / 224 MB chain:
+    the decode alone costs tens of seconds, so a caller that already
+    has a warm reader and calls this function pays for it twice.
+
+    ``reader`` is used exactly as given — never closed here, and never
+    re-opened. Closing what you did not open would surprise a caller
+    who still wants to use it afterward; that stays their
+    responsibility, the same as it always was for a reader they
+    themselves opened. ``anchor_source`` is ignored when ``reader`` is
+    given: the reader's own anchor, set at the time *it* was opened,
+    is what a shared reader already answers with, and silently
+    substituting a different one here would verify against an anchor
+    the caller never asked this call to use.
+
+    ``reader`` must be open on the same bytes as ``source`` names. This
+    is not checked — the caller already holds both and is the only one
+    in a position to know they agree; a report built from a mismatched
+    pair would name one file's identity over another file's verdict.
     """
     path = Path(source)
     raw = path.read_bytes()
@@ -131,7 +158,7 @@ def build_report(
     except MalformedRecord as e:
         malformed = str(e)
 
-    with AuditReader.open(path, anchor=anchor_source) as reader:
+    if reader is not None:
         ver = reader.verify()
         boots = reader.boots()
         spans = reader.spans()
@@ -140,6 +167,16 @@ def build_report(
             rec.seq for rec in reader.records() if rec.record_type == RT_WITNESS
         ]
         seqs = [rec.seq for rec in reader.records()]
+    else:
+        with AuditReader.open(path, anchor=anchor_source) as opened:
+            ver = opened.verify()
+            boots = opened.boots()
+            spans = opened.spans()
+            safety = _safety_section(opened)
+            witness_pins = [
+                rec.seq for rec in opened.records() if rec.record_type == RT_WITNESS
+            ]
+            seqs = [rec.seq for rec in opened.records()]
 
     chain = ver.chain
     version = palimpsests.__version__

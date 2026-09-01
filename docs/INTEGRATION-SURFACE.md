@@ -69,6 +69,27 @@ multi-GB retention archives (see `docs/RETENTION.md` for the storage
 math) should be segmented before interactive use. A streaming reader
 is backlog, not promise.
 
+Measured at that boundary, not just estimated: a synthetic
+1,000,004-record / 224 MB chain, `open()` plus `verify()` plus
+`build_report()` together, was killed by the OS on a 3.9 GB machine —
+`_referential_advisories()` needs every record's kind to resolve r2
+references, which needs every body decoded, and `_decoded_records()`
+keeps the full decoded chain in memory once that happens. A
+100,000-record / 22.4 MB chain, well inside the stated envelope, ran
+the same flow in 4.9 s at 460 MB peak RSS — roughly 20× the file's own
+size. "Comfortable" holds well short of the 10^6 mark; nearer it, the
+margin is thinner than the file size alone suggests, and depends on
+how much RAM the caller's machine actually has to spare.
+
+One redundant cost is now avoidable: `build_report()` previously
+always opened its own `AuditReader`, even when the caller already had
+one open — decoding the same chain a second time for no reason but
+that the function had no way to be handed the first reader. It now
+accepts one (`reader=`); a caller holding a reader that has already
+paid this cost no longer pays it again. This does not change the
+underlying decode's own cost or memory shape — that is the streaming
+reader work already named above as backlog.
+
 ## Conformance for embedders
 
 - Run `pala selftest` (or `run_selftest()`) at sidecar startup and
