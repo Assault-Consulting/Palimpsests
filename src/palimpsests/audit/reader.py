@@ -371,6 +371,39 @@ class AuditReader:
                 items.extend(self._check_shred_targets(dr, by_seq))
         return items
 
+    def _hash_verified_target(
+        self,
+        dr: DecodedRecord,
+        by_seq: dict[int, tuple[DecodedRecord, bytes]],
+    ) -> DecodedRecord | None:
+        """``dr``'s own ``EVT_REF_SEQ`` / ``EVT_REF_HASH`` resolved to a
+        record in the chain whose own hash matches — or ``None`` for
+        every other case: no reference present, an unresolved seq, or a
+        hash that does not match.
+
+        The one check r2 resolution rests on, shared by
+        :meth:`_check_reference` (which reports *why* a reference failed,
+        so it still does its own extraction to build that message) and
+        :meth:`acknowledged_candidates` (which only needs whether
+        resolution succeeded). One definition of "resolves", not two —
+        a second one is how a report could once call a candidate
+        acknowledged by an ack whose hash the advisory channel was
+        already flagging as wrong.
+        """
+        tlvs = dict(dr.body_tlvs or [])
+        raw_seq = tlvs.get(EVT_REF_SEQ)
+        raw_hash = tlvs.get(EVT_REF_HASH)
+        if raw_seq is None or len(raw_seq) != 8 or raw_hash is None:
+            return None
+        (ref_seq,) = struct.unpack("<Q", raw_seq)
+        target = by_seq.get(ref_seq)
+        if target is None:
+            return None
+        target_dr, target_hb = target
+        if _record_hash(target_hb) != raw_hash:
+            return None
+        return target_dr
+
     def _check_reference(
         self,
         dr: DecodedRecord,
@@ -395,8 +428,8 @@ class AuditReader:
                     "which is not in the chain",
                 )
             ]
-        target_dr, target_hb = target
-        if _record_hash(target_hb) != raw_hash:
+        target_dr = self._hash_verified_target(dr, by_seq)
+        if target_dr is None:
             return [
                 AdvisoryItem(
                     "reference_hash_mismatch",
@@ -635,6 +668,32 @@ class AuditReader:
             elif dr.kind == KIND_MODEL_LOAD or _has_model_digest(dr.header):
                 current = _origin_of(dr)
         return current
+
+    def acknowledged_candidates(self) -> set[int]:
+        """The seq of every ``INCIDENT_CANDIDATE`` with at least one
+        hash-verified ``OVERSIGHT_ACK`` naming it — the r2 loop's
+        positive case.
+
+        Matching on ``EVT_REF_SEQ`` alone would count a candidate
+        acknowledged even when the ack's own ``EVT_REF_HASH`` does not
+        match the record at that seq — precisely the case
+        ``reference_hash_mismatch`` already exists to flag on the
+        advisory side (:meth:`_check_reference`). This resolves
+        references the same way, through :meth:`_hash_verified_target`,
+        so the two cannot disagree about what "acknowledged" means.
+        """
+        by_seq: dict[int, tuple[DecodedRecord, bytes]] = {
+            dr.seq: (dr, hb)
+            for dr, hb in zip(self._decoded_records(), self._headers, strict=True)
+        }
+        acknowledged: set[int] = set()
+        for dr, _hb in by_seq.values():
+            if dr.kind != KIND_OVERSIGHT_ACK:
+                continue
+            target = self._hash_verified_target(dr, by_seq)
+            if target is not None and target.kind == KIND_INCIDENT_CANDIDATE:
+                acknowledged.add(target.seq)
+        return acknowledged
 
 
 def decode_record(index: int, hb: bytes, body: bytes) -> DecodedRecord:
