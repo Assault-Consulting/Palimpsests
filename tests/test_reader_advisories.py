@@ -169,3 +169,99 @@ def test_oversight_loop_across_a_resume_resolves_cleanly(tmp_path):
     # boot-scoped advisories from the header pass stay silent as well:
     # a mono reset across BOOT is normal, never a regression (Track C rule).
     assert all(i.code != "mono_regression_in_boot" for i in ver.advisory.items)
+
+
+# --- acknowledged_candidates() -------------------------------------------
+#
+# The positive case _referential_advisories only ever reports the failure
+# side of: silence (no advisory item) is what a *correctly* hash-verified
+# ack produces, same as a candidate with no ack at all. Telling those two
+# apart is what this accessor is for.
+
+
+def test_a_correctly_acked_candidate_is_acknowledged(tmp_path):
+    log = tmp_path / "a.pala"
+    with PalaWriter(log) as w:
+        w.genesis()
+        w.boot()
+        cand = w.incident_candidate(CAT_GUARD_ESCALATION, 2)
+        cand_seq = w.seq - 1
+        w.oversight_ack(cand_seq, cand, DISP_ACKNOWLEDGED, OPERATOR)
+    with AuditReader.open(log) as reader:
+        assert reader.acknowledged_candidates() == {cand_seq}
+
+
+def test_a_candidate_with_no_ack_is_not_acknowledged(tmp_path):
+    log = tmp_path / "a.pala"
+    with PalaWriter(log) as w:
+        w.genesis()
+        w.boot()
+        w.incident_candidate(CAT_GUARD_ESCALATION, 2)
+    with AuditReader.open(log) as reader:
+        assert reader.acknowledged_candidates() == set()
+
+
+def test_a_hash_mismatched_ack_does_not_acknowledge_its_named_candidate(tmp_path):
+    """The case worth having: an ack that names the right seq but the
+    wrong hash is exactly what reference_hash_mismatch already flags as
+    broken on the advisory side — it must not separately count as a
+    valid acknowledgement here. Before this accessor existed,
+    ``_safety_section`` matched on EVT_REF_SEQ alone and would have
+    counted this candidate acknowledged."""
+    log = tmp_path / "a.pala"
+    with PalaWriter(log) as w:
+        w.genesis()
+        w.boot()
+        w.incident_candidate(CAT_GUARD_ESCALATION, 2)
+        cand_seq = w.seq - 1
+        w.oversight_ack(cand_seq, b"\xcd" * 32, DISP_ACKNOWLEDGED, OPERATOR)
+    with AuditReader.open(log) as reader:
+        ver = reader.verify()
+        assert [i.code for i in _referential(ver)] == ["reference_hash_mismatch"]
+        assert reader.acknowledged_candidates() == set()
+
+
+def test_an_ack_correctly_bound_to_a_non_candidate_acknowledges_nothing(tmp_path):
+    """Hash-correct, but the target is not an INCIDENT_CANDIDATE at all
+    (ack_target_not_a_candidate on the advisory side) — still not an
+    acknowledgement of anything."""
+    log = tmp_path / "a.pala"
+    with PalaWriter(log) as w:
+        w.genesis()
+        boot_hash = w.boot()
+        boot_seq = w.seq - 1
+        w.oversight_ack(boot_seq, boot_hash, DISP_ACKNOWLEDGED, OPERATOR)
+    with AuditReader.open(log) as reader:
+        assert reader.acknowledged_candidates() == set()
+
+
+def test_acknowledgement_across_a_resume_is_seen_too(tmp_path):
+    """The same cross-boot case test_oversight_loop_across_a_resume_
+    resolves_cleanly covers for advisories — the positive accessor
+    closes across a resume the same way."""
+    log = tmp_path / "a.pala"
+    with PalaWriter(log) as w:
+        w.genesis()
+        w.boot()
+        cand = w.incident_candidate(CAT_GUARD_ESCALATION, 3)
+        cand_seq = w.seq - 1
+    with PalaWriter.open_existing(log) as w2:
+        w2.boot()
+        w2.oversight_ack(cand_seq, cand, DISP_ACKNOWLEDGED, OPERATOR)
+    with AuditReader.open(log) as reader:
+        assert reader.acknowledged_candidates() == {cand_seq}
+
+
+def test_two_candidates_one_acked_one_not(tmp_path):
+    log = tmp_path / "a.pala"
+    with PalaWriter(log) as w:
+        w.genesis()
+        w.boot()
+        acked = w.incident_candidate(CAT_GUARD_ESCALATION, 2)
+        acked_seq = w.seq - 1
+        w.incident_candidate(CAT_GUARD_ESCALATION, 2)
+        unacked_seq = w.seq - 1
+        w.oversight_ack(acked_seq, acked, DISP_ACKNOWLEDGED, OPERATOR)
+    with AuditReader.open(log) as reader:
+        assert reader.acknowledged_candidates() == {acked_seq}
+        assert unacked_seq not in reader.acknowledged_candidates()
