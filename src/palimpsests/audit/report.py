@@ -28,7 +28,6 @@ from dataclasses import dataclass, field
 from hashlib import sha256
 from palimpsests.audit.pala import MalformedRecord, body_digest_of, iter_records
 from palimpsests.audit.pala.codec import RT_WITNESS
-from palimpsests.audit.pala_writer import EVT_REF_SEQ
 from palimpsests.audit.reader import AuditReader
 from pathlib import Path
 
@@ -75,8 +74,21 @@ class VerificationReport:
 
 
 def _safety_section(reader) -> dict:
+    """§15's ``safety`` block: every SAFETY record, and the r2 loop's
+    positive count.
+
+    ``unacknowledged_candidates`` was, before this, a straight seq-only
+    match against every OVERSIGHT_ACK's ``EVT_REF_SEQ`` — the same
+    overclaim ``reference_hash_mismatch`` exists to catch on the
+    advisory side, just not caught here: an ack whose bound
+    ``EVT_REF_HASH`` did not match the candidate at that seq still
+    counted the candidate acknowledged. ``acknowledged_candidates()``
+    is the reader's own hash-verified resolution — the same one
+    ``_check_reference`` uses — so this number and the advisory items
+    describing a broken reference cannot disagree about which
+    candidates are actually acknowledged.
+    """
     candidates: set[int] = set()
-    ack_targets: set[int] = set()
     items: list[dict] = []
     count = 0
     for rec in reader.records():
@@ -88,14 +100,10 @@ def _safety_section(reader) -> dict:
         )
         if rec.kind_name == "INCIDENT_CANDIDATE":
             candidates.add(rec.seq)
-        elif rec.kind_name == "OVERSIGHT_ACK" and rec.body_tlvs:
-            for t, v in rec.body_tlvs:
-                if t == EVT_REF_SEQ and len(v) == 8:
-                    (ref,) = struct.unpack("<Q", v)
-                    ack_targets.add(ref)
+    acknowledged = reader.acknowledged_candidates()
     return {
         "count": count,
-        "unacknowledged_candidates": len(candidates - ack_targets),
+        "unacknowledged_candidates": len(candidates - acknowledged),
         "items": items,
     }
 
