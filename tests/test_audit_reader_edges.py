@@ -208,6 +208,61 @@ def test_origin_view_detail_still_matches_the_record_s_own_detail(tmp_path):
 
 
 # --------------------------------------------------------------------------- #
+# U15: an OVERSIGHT_ACK's operator_id and disposition
+# --------------------------------------------------------------------------- #
+#
+# Both were already in the writer's own oversight_ack() call — nothing
+# downstream of decode_record kept them, the same gap detail (above) had
+# for the record a caller actually looks up rather than the one origin_at
+# happens to be reporting on.
+
+
+def test_ack_operator_id_and_disposition_are_decoded(tmp_path):
+    from palimpsests.audit.pala_writer import (
+        CAT_GUARD_ESCALATION,
+        DISP_DISMISSED,
+        PalaWriter,
+    )
+
+    log = tmp_path / "ack.pala"
+    operator = bytes.fromhex("0e5a70120e5a70120e5a70120e5a7012")
+    w = PalaWriter(log)
+    w.genesis()
+    w.boot()
+    cand = w.incident_candidate(CAT_GUARD_ESCALATION, 2)
+    cand_seq = w.seq - 1
+    w.oversight_ack(cand_seq, cand, DISP_DISMISSED, operator)
+    w.close()
+
+    r = AuditReader.open(log)
+    ack = next(d for d in r.records() if d.kind_name == "OVERSIGHT_ACK")
+    assert ack.operator_id == operator
+    assert ack.disposition == DISP_DISMISSED
+    assert ack.disposition_name == "DISMISSED"
+    r.close()
+
+
+def test_a_candidate_carries_no_operator_id_or_disposition(tmp_path):
+    """These belong to the ack, not the candidate it names — a candidate
+    record's own fields stay None even though it is kind-bearing too."""
+    from palimpsests.audit.pala_writer import CAT_GUARD_ESCALATION, PalaWriter
+
+    log = tmp_path / "candidate.pala"
+    w = PalaWriter(log)
+    w.genesis()
+    w.boot()
+    w.incident_candidate(CAT_GUARD_ESCALATION, 2)
+    w.close()
+
+    r = AuditReader.open(log)
+    cand = next(d for d in r.records() if d.kind_name == "INCIDENT_CANDIDATE")
+    assert cand.operator_id is None
+    assert cand.disposition is None
+    assert cand.disposition_name is None
+    r.close()
+
+
+# --------------------------------------------------------------------------- #
 # TailingReader: missing file, and a second drain after a rollback diagnosis
 # --------------------------------------------------------------------------- #
 
