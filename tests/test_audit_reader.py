@@ -286,3 +286,47 @@ def test_records_decode_kind_names(tmp_path):
     assert "MODEL_LOAD" in names
     assert "PREFIX_COPY" in names
     assert "MODEL_UNLOAD" in names
+
+
+# --- U10: a record's own hash --------------------------------------------
+#
+# Header.prev_hash and body_digest were already on the reader's objects;
+# nothing downstream of decode_record kept the header bytes record_hash()
+# needs to name a record BY its own hash, only by its predecessor's claim
+# about it.
+
+
+def test_record_hash_matches_the_codec_s_own_function(tmp_path):
+    log, _ = _good_chain(tmp_path)
+    raw = _headers(log.read_bytes())
+    decoded = list(AuditReader.open(log).records())
+    assert len(decoded) == len(raw)
+    for dr, hb in zip(decoded, raw, strict=True):
+        assert dr.record_hash == record_hash(hb)
+
+
+def test_record_hash_is_present_even_when_the_header_does_not_decode(tmp_path):
+    """§7.6: an unknown format version yields a minimal record rather than
+    being rejected. Its hash must still be there — chain verification
+    hashes the raw header bytes regardless of whether this layer could
+    read their fields."""
+    log, _ = _good_chain(tmp_path)
+    raw = bytearray(log.read_bytes())
+    raw[4] = 0xFF  # format_version (offset 4, per _FIXED's struct layout)
+    unknown = tmp_path / "unknown_version.pala"
+    unknown.write_bytes(bytes(raw))
+
+    expected_hb = _headers(bytes(raw))[0]
+    dr = next(iter(AuditReader.open(unknown).records()))
+    assert dr.header is None  # confirms the minimal-record path was taken
+    assert dr.record_hash == record_hash(expected_hb)
+
+
+def test_record_hash_is_stable_across_repeated_calls(tmp_path):
+    """_decoded_records() caches after the first walk; the second call
+    must return the same hash, not recompute something different."""
+    log, _ = _good_chain(tmp_path)
+    reader = AuditReader.open(log)
+    first = [dr.record_hash for dr in reader.records()]
+    second = [dr.record_hash for dr in reader.records()]
+    assert first == second
