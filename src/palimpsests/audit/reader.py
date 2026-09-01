@@ -151,6 +151,11 @@ class DecodedRecord:
     # when header did not decode: the hash is over the raw header bytes,
     # which chain verification itself hashes regardless of whether this
     # layer could interpret their fields.
+    detail: str | None  # EVT_DETAIL, UTF-8, on an EVENT/SAFETY body only
+    # (§10.5, the same scope kind/kind_name use) — a record type outside
+    # that set may carry its own, differently-tagged detail field (e.g.
+    # KEY_SHRED's SHRED_DETAIL = 0x0003, a different tag under a
+    # different body schema), which this field does not read.
 
 
 @dataclass(frozen=True)
@@ -735,13 +740,14 @@ def decode_record(index: int, hb: bytes, body: bytes) -> DecodedRecord:
     except MalformedRecord:
         rtype = struct.unpack_from("<H", hb, 8)[0]
         (seq,) = struct.unpack_from("<Q", hb, 12)
-        return DecodedRecord(seq, index, rtype, None, None, None, None, None, rhash)
+        return DecodedRecord(seq, index, rtype, None, None, None, None, None, rhash, None)
 
     rtype = header.record_type
     type_name = _TYPE_NAMES.get(rtype)
     body_tlvs: list[tuple[int, bytes]] | None = None
     kind: int | None = None
     kind_name: str | None = None
+    detail: str | None = None
 
     if header.key_id == 0 and body:
         try:
@@ -750,13 +756,14 @@ def decode_record(index: int, hb: bytes, body: bytes) -> DecodedRecord:
             body_tlvs = None
         if body_tlvs is not None and rtype in _KIND_BEARING:
             for t, v in body_tlvs:
-                if t == EVT_KIND and len(v) >= 2:
+                if kind is None and t == EVT_KIND and len(v) >= 2:
                     kind = struct.unpack_from("<H", v, 0)[0]
                     kind_name = _KIND_NAMES.get(kind)
-                    break
+                elif detail is None and t == EVT_DETAIL:
+                    detail = v.decode("utf-8", "replace")
 
     return DecodedRecord(
-        header.seq, index, rtype, type_name, header, body_tlvs, kind, kind_name, rhash
+        header.seq, index, rtype, type_name, header, body_tlvs, kind, kind_name, rhash, detail
     )
 
 
@@ -776,16 +783,10 @@ def _origin_of(dr: DecodedRecord) -> OriginView:
     role_b = _origin_tlv(header, TLV_ORIGIN_ROLE)
     md = _origin_tlv(header, TLV_ORIGIN_MODEL_DIGEST)
     cd = _origin_tlv(header, TLV_ORIGIN_CONFIG_DIGEST)
-    detail = None
-    if dr.body_tlvs is not None:
-        for t, v in dr.body_tlvs:
-            if t == EVT_DETAIL:
-                detail = v.decode("utf-8", "replace")
-                break
     return OriginView(
         role=role_b.decode("utf-8", "replace") if role_b is not None else None,
         model_digest=md,
         config_digest=cd,
         since_seq=dr.seq,
-        detail=detail,
+        detail=dr.detail,
     )
