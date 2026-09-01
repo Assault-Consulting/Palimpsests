@@ -147,6 +147,10 @@ class DecodedRecord:
     body_tlvs: list[tuple[int, bytes]] | None  # None: no body / encrypted / opaque
     kind: int | None  # EVT_KIND for an EVENT/SAFETY body, else None
     kind_name: str | None  # resolved per §10.5; None = unknown kind, reported
+    record_hash: bytes  # SHA-256 over hb (§1.2) — always present, even
+    # when header did not decode: the hash is over the raw header bytes,
+    # which chain verification itself hashes regardless of whether this
+    # layer could interpret their fields.
 
 
 @dataclass(frozen=True)
@@ -704,12 +708,13 @@ def decode_record(index: int, hb: bytes, body: bytes) -> DecodedRecord:
     minimal record — reported, never rejected (§7.6). Kind is resolved only
     for EVENT/SAFETY bodies (§10.5) and only when the body is cleartext.
     """
+    rhash = _record_hash(hb)
     try:
         header = Header.decode(hb)
     except MalformedRecord:
         rtype = struct.unpack_from("<H", hb, 8)[0]
         (seq,) = struct.unpack_from("<Q", hb, 12)
-        return DecodedRecord(seq, index, rtype, None, None, None, None, None)
+        return DecodedRecord(seq, index, rtype, None, None, None, None, None, rhash)
 
     rtype = header.record_type
     type_name = _TYPE_NAMES.get(rtype)
@@ -730,7 +735,7 @@ def decode_record(index: int, hb: bytes, body: bytes) -> DecodedRecord:
                     break
 
     return DecodedRecord(
-        header.seq, index, rtype, type_name, header, body_tlvs, kind, kind_name
+        header.seq, index, rtype, type_name, header, body_tlvs, kind, kind_name, rhash
     )
 
 
