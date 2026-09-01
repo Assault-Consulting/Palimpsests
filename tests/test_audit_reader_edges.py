@@ -145,6 +145,69 @@ def test_origin_detail_is_extracted(tmp_path):
 
 
 # --------------------------------------------------------------------------- #
+# U12: DecodedRecord.detail — EVT_DETAIL, decoded onto the record itself
+# --------------------------------------------------------------------------- #
+#
+# origin_at's own detail (above) already read EVT_DETAIL, but only for the
+# one record that happens to be the active origin. Nothing decoded it onto
+# the record a caller is actually looking at.
+
+
+def test_record_detail_matches_what_the_writer_set(tmp_path):
+    log, _ = _chain(tmp_path / "c.pala")
+    r = AuditReader.open(log)
+    load = next(d for d in r.records() if d.kind_name == "MODEL_LOAD")
+    assert load.detail == "qwen2.5-1.5b"
+    r.close()
+
+
+def test_record_detail_is_none_when_the_body_carries_none(tmp_path):
+    log = tmp_path / "no-detail.pala"
+    w = PalaWriter(log)
+    w.genesis()
+    w.boot()
+    w.model_load(model_digest=bytes(range(32)), config_digest=bytes(range(1, 33)))
+    w.close()
+
+    r = AuditReader.open(log)
+    load = next(d for d in r.records() if d.kind_name == "MODEL_LOAD")
+    assert load.detail is None
+    r.close()
+
+
+def test_record_detail_is_not_extracted_on_non_kind_bearing_types(tmp_path):
+    """kind/kind_name only resolve on EVENT/SAFETY bodies (§10.5); detail
+    shares that scope. KEY_SHRED carries its own, differently-numbered
+    detail field (SHRED_DETAIL = 0x0003, not EVT_DETAIL = 0x0004, under
+    KEY_SHRED's own body schema) — confirmed directly rather than assumed
+    generic, after an earlier version of this test wrongly expected
+    DecodedRecord.detail to read it."""
+    log = tmp_path / "shred.pala"
+    w = PalaWriter(log)
+    w.genesis()
+    w.boot()
+    w.key_shred(7, detail="ticket E-99")
+    w.close()
+
+    r = AuditReader.open(log)
+    shred = next(d for d in r.records() if d.type_name == "KEY_SHRED")
+    assert shred.kind is None  # KEY_SHRED carries no EVT_KIND either
+    assert shred.detail is None  # its own SHRED_DETAIL, not this field
+    r.close()
+
+
+def test_origin_view_detail_still_matches_the_record_s_own_detail(tmp_path):
+    """_origin_of() now reads dr.detail rather than re-scanning body_tlvs
+    itself — confirms the simplification did not change what it returns."""
+    log, _ = _chain(tmp_path / "c.pala")
+    r = AuditReader.open(log)
+    load = next(d for d in r.records() if d.kind_name == "MODEL_LOAD")
+    origin = r.origin_at(load.seq)
+    assert origin.detail == load.detail
+    r.close()
+
+
+# --------------------------------------------------------------------------- #
 # TailingReader: missing file, and a second drain after a rollback diagnosis
 # --------------------------------------------------------------------------- #
 
