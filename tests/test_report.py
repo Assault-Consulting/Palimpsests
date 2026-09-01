@@ -48,6 +48,29 @@ def test_section15_shape_and_safety_accounting(tmp_path):
     assert report["container"]["bytes_parsed"] == report["container"]["bytes_total"]
 
 
+def test_a_hash_mismatched_ack_does_not_count_as_acknowledged(tmp_path):
+    """§15's ``safety.unacknowledged_candidates`` used to match on
+    EVT_REF_SEQ alone: an ack naming the right seq but the wrong hash
+    counted its candidate acknowledged, the same overclaim
+    ``reference_hash_mismatch`` already flags as broken on the advisory
+    side. Both now agree.
+    """
+    log = tmp_path / "w.pala"
+    w = PalaWriter(log)
+    w.genesis()
+    w.boot()
+    w.incident_candidate(1, 2, detail="never validly acked")
+    cand_seq = w.seq - 1
+    w.oversight_ack(cand_seq, b"\xcd" * 32, 1, b"\x07" * 16)  # wrong hash
+    w.close()
+
+    report = build_report(log).data
+    assert report["safety"]["unacknowledged_candidates"] == 1
+    assert any(
+        i["code"] == "reference_hash_mismatch" for i in report["advisory"]["items"]
+    )
+
+
 def test_deterministic_modulo_checked_at(tmp_path):
     log = _chain(tmp_path)
     a = build_report(log).data
