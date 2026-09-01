@@ -128,9 +128,24 @@ def build_report(
     ``records()``, ``boots()`` or ``spans()`` call warms
     ``AuditReader``'s own cache) paid that cost a second time here, for
     no reason but that this function had no way to be handed the first
-    reader. Measured on a synthetic 1,000,004-record / 224 MB chain:
-    the decode alone costs tens of seconds, so a caller that already
-    has a warm reader and calls this function pays for it twice.
+    reader. On a million-record chain that second decode is the
+    difference between finishing and being killed for memory.
+
+    What ``reader`` does **not** save, stated because the paragraph
+    above invites the wrong reading. ``path.read_bytes()`` and the
+    container walk below it run unconditionally, before this parameter
+    is consulted: supplying a reader still costs a full second read of
+    the file into a ``bytes`` object held for the rest of this
+    function — alongside the reader's own mapping of the same file —
+    and the subject digest is then taken over that copy. Nor does it
+    reduce the peak of the reader it is handed; it removes a second
+    reader, not the first one's cost.
+
+    The container walk itself stays: §2.4 well-formedness and the
+    body↔header digest binding are attested here, not assumed, and a
+    header-only chain check cannot see a body swap. Measured, that walk
+    is the cheap part of this function. Reading the file a second time
+    to perform it is not required, and is U14's.
 
     ``reader`` is used exactly as given — never closed here, and never
     re-opened. Closing what you did not open would surprise a caller
