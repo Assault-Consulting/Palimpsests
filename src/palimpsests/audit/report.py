@@ -28,7 +28,6 @@ from dataclasses import dataclass, field
 from hashlib import sha256
 from palimpsests.audit.pala import MalformedRecord, body_digest_of, iter_records
 from palimpsests.audit.pala.codec import RT_WITNESS
-from palimpsests.audit.pala_writer import EVT_REF_SEQ
 from palimpsests.audit.reader import AuditReader
 from pathlib import Path
 
@@ -75,8 +74,21 @@ class VerificationReport:
 
 
 def _safety_section(reader) -> dict:
+    """§15's ``safety`` block: every SAFETY record, and the r2 loop's
+    positive count.
+
+    ``unacknowledged_candidates`` was, before this, a straight seq-only
+    match against every OVERSIGHT_ACK's ``EVT_REF_SEQ`` — the same
+    overclaim ``reference_hash_mismatch`` exists to catch on the
+    advisory side, just not caught here: an ack whose bound
+    ``EVT_REF_HASH`` did not match the candidate at that seq still
+    counted the candidate acknowledged. ``acknowledged_candidates()``
+    is the reader's own hash-verified resolution — the same one
+    ``_check_reference`` uses — so this number and the advisory items
+    describing a broken reference cannot disagree about which
+    candidates are actually acknowledged.
+    """
     candidates: set[int] = set()
-    ack_targets: set[int] = set()
     items: list[dict] = []
     count = 0
     for rec in reader.records():
@@ -88,14 +100,10 @@ def _safety_section(reader) -> dict:
         )
         if rec.kind_name == "INCIDENT_CANDIDATE":
             candidates.add(rec.seq)
-        elif rec.kind_name == "OVERSIGHT_ACK" and rec.body_tlvs:
-            for t, v in rec.body_tlvs:
-                if t == EVT_REF_SEQ and len(v) == 8:
-                    (ref,) = struct.unpack("<Q", v)
-                    ack_targets.add(ref)
+    acknowledged = reader.acknowledged_candidates()
     return {
         "count": count,
-        "unacknowledged_candidates": len(candidates - ack_targets),
+        "unacknowledged_candidates": len(candidates - acknowledged),
         "items": items,
     }
 
@@ -105,12 +113,39 @@ def build_report(
     *,
     anchor_source=None,
     tool: str | None = None,
+    reader: AuditReader | None = None,
 ) -> VerificationReport:
     """Build the report for the chain at ``source``.
 
     ``tool`` lets a shell name itself ("palimpsests-auditor X.Y.Z");
     the default names this package. The file digest is taken over the
     bytes as opened, once, and carried into the subject block.
+
+    ``reader``, when given, is used in place of opening a fresh one.
+    Without it, this function always opened its own — even when the
+    caller already held one open on the same file. A caller that had
+    already paid to decode the chain (any prior ``verify()``,
+    ``records()``, ``boots()`` or ``spans()`` call warms
+    ``AuditReader``'s own cache) paid that cost a second time here, for
+    no reason but that this function had no way to be handed the first
+    reader. Measured on a synthetic 1,000,004-record / 224 MB chain:
+    the decode alone costs tens of seconds, so a caller that already
+    has a warm reader and calls this function pays for it twice.
+
+    ``reader`` is used exactly as given — never closed here, and never
+    re-opened. Closing what you did not open would surprise a caller
+    who still wants to use it afterward; that stays their
+    responsibility, the same as it always was for a reader they
+    themselves opened. ``anchor_source`` is ignored when ``reader`` is
+    given: the reader's own anchor, set at the time *it* was opened,
+    is what a shared reader already answers with, and silently
+    substituting a different one here would verify against an anchor
+    the caller never asked this call to use.
+
+    ``reader`` must be open on the same bytes as ``source`` names. This
+    is not checked — the caller already holds both and is the only one
+    in a position to know they agree; a report built from a mismatched
+    pair would name one file's identity over another file's verdict.
     """
     path = Path(source)
     raw = path.read_bytes()
@@ -131,7 +166,7 @@ def build_report(
     except MalformedRecord as e:
         malformed = str(e)
 
-    with AuditReader.open(path, anchor=anchor_source) as reader:
+    if reader is not None:
         ver = reader.verify()
         boots = reader.boots()
         spans = reader.spans()
@@ -140,6 +175,16 @@ def build_report(
             rec.seq for rec in reader.records() if rec.record_type == RT_WITNESS
         ]
         seqs = [rec.seq for rec in reader.records()]
+    else:
+        with AuditReader.open(path, anchor=anchor_source) as opened:
+            ver = opened.verify()
+            boots = opened.boots()
+            spans = opened.spans()
+            safety = _safety_section(opened)
+            witness_pins = [
+                rec.seq for rec in opened.records() if rec.record_type == RT_WITNESS
+            ]
+            seqs = [rec.seq for rec in opened.records()]
 
     chain = ver.chain
     version = palimpsests.__version__
