@@ -61,8 +61,13 @@ from palimpsests.audit.pala.codec import record_hash as _record_hash
 from palimpsests.audit.pala.incremental import Advisory, AdvisoryItem, IncrementalVerifier
 from palimpsests.audit.pala.verify import VerifyResult, verify_headers
 from palimpsests.audit.pala_writer import (
+    DISP_ACKNOWLEDGED,
+    DISP_DISMISSED,
+    DISP_ESCALATED,
     EVT_DETAIL,
+    EVT_DISPOSITION,
     EVT_KIND,
+    EVT_OPERATOR_ID,
     EVT_REF_HASH,
     EVT_REF_SEQ,
     KIND_GUARD_PREFIX_RELEASE,
@@ -132,6 +137,15 @@ _KIND_NAMES = {
 # kind resolution must never be applied to them (§10.5).
 _KIND_BEARING = frozenset({RT_EVENT, RT_SAFETY})
 
+# EVT_DISPOSITION's own three values (an OVERSIGHT_ACK's body), named the
+# same way kind is — the number is what a caller checks against, the name
+# is what a person reads.
+_DISP_NAMES = {
+    DISP_ACKNOWLEDGED: "ACKNOWLEDGED",
+    DISP_DISMISSED: "DISMISSED",
+    DISP_ESCALATED: "ESCALATED",
+}
+
 _PREFIX_ABSENT = "chain does not start with a GENESIS record"
 
 
@@ -156,6 +170,15 @@ class DecodedRecord:
     # that set may carry its own, differently-tagged detail field (e.g.
     # KEY_SHRED's SHRED_DETAIL = 0x0003, a different tag under a
     # different body schema), which this field does not read.
+    operator_id: bytes | None  # EVT_OPERATOR_ID, 16 opaque bytes, an
+    # OVERSIGHT_ACK's own pseudonymous operator — the mapping to a
+    # person lives with the deployer, outside the log (§ writer
+    # docstring). Same kind-bearing scope as detail.
+    disposition: int | None  # EVT_DISPOSITION, 0/1/2 — an OVERSIGHT_ACK's
+    # own disposition. Same scope as operator_id.
+    disposition_name: str | None  # resolved via _DISP_NAMES; None when
+    # disposition is None, or is present but not one of the three
+    # known values (a record this build cannot fully interpret).
 
 
 @dataclass(frozen=True)
@@ -725,6 +748,52 @@ class AuditReader:
                 acknowledged.add(target.seq)
         return acknowledged
 
+    def shredded_targets(self) -> dict[int, int]:
+        """Maps a record's seq to the seq of the ``KEY_SHRED`` that
+        successfully shreds it — resolved in the chain and key_id-
+        matched, the same two checks :meth:`_check_shred_targets`
+        already makes to flag the broken cases
+        (``shred_target_unresolved``, ``shred_target_key_mismatch``) as
+        advisories. The positive case, exposed directly — the same
+        shape of gap :meth:`acknowledged_candidates` closed for r2's
+        acknowledged state.
+
+        A ``KEY_SHRED`` with no declared key (``TLV_SHRED_KEY_ID``
+        absent) resolves every existing target it names — there is
+        nothing to mismatch against, the same permissiveness
+        :meth:`_check_shred_targets` already has. A record named by
+        more than one resolving ``KEY_SHRED`` keeps the last one, in
+        seq order — a re-shred is what actually holds now, not a
+        history of every attempt.
+        """
+        by_seq: dict[int, DecodedRecord] = {
+            dr.seq: dr for dr in self._decoded_records()
+        }
+        shredded: dict[int, int] = {}
+        for dr in by_seq.values():
+            if dr.record_type != RT_KEY_SHRED or dr.body_tlvs is None:
+                continue
+            tlvs = dict(dr.body_tlvs)
+            raw = tlvs.get(SHRED_TARGET_SEQS)
+            if raw is None or len(raw) % 8 != 0:
+                continue
+            shred_key: int | None = None
+            if dr.header is not None:
+                kid = _origin_tlv(dr.header, TLV_SHRED_KEY_ID)
+                if kid is not None and len(kid) == 4:
+                    (shred_key,) = struct.unpack("<I", kid)
+            for i in range(0, len(raw), 8):
+                (t_seq,) = struct.unpack_from("<Q", raw, i)
+                target_dr = by_seq.get(t_seq)
+                if target_dr is None:
+                    continue
+                target_key = (
+                    target_dr.header.key_id if target_dr.header is not None else None
+                )
+                if shred_key is None or target_key == shred_key:
+                    shredded[t_seq] = dr.seq
+        return shredded
+
 
 def decode_record(index: int, hb: bytes, body: bytes) -> DecodedRecord:
     """Decode one record from its header bytes and (already-sliced) body.
@@ -740,7 +809,9 @@ def decode_record(index: int, hb: bytes, body: bytes) -> DecodedRecord:
     except MalformedRecord:
         rtype = struct.unpack_from("<H", hb, 8)[0]
         (seq,) = struct.unpack_from("<Q", hb, 12)
-        return DecodedRecord(seq, index, rtype, None, None, None, None, None, rhash, None)
+        return DecodedRecord(
+            seq, index, rtype, None, None, None, None, None, rhash, None, None, None, None
+        )
 
     rtype = header.record_type
     type_name = _TYPE_NAMES.get(rtype)
@@ -748,6 +819,9 @@ def decode_record(index: int, hb: bytes, body: bytes) -> DecodedRecord:
     kind: int | None = None
     kind_name: str | None = None
     detail: str | None = None
+    operator_id: bytes | None = None
+    disposition: int | None = None
+    disposition_name: str | None = None
 
     if header.key_id == 0 and body:
         try:
@@ -761,9 +835,26 @@ def decode_record(index: int, hb: bytes, body: bytes) -> DecodedRecord:
                     kind_name = _KIND_NAMES.get(kind)
                 elif detail is None and t == EVT_DETAIL:
                     detail = v.decode("utf-8", "replace")
+                elif operator_id is None and t == EVT_OPERATOR_ID and len(v) == 16:
+                    operator_id = v
+                elif disposition is None and t == EVT_DISPOSITION and len(v) >= 2:
+                    disposition = struct.unpack_from("<H", v, 0)[0]
+                    disposition_name = _DISP_NAMES.get(disposition)
 
     return DecodedRecord(
-        header.seq, index, rtype, type_name, header, body_tlvs, kind, kind_name, rhash, detail
+        header.seq,
+        index,
+        rtype,
+        type_name,
+        header,
+        body_tlvs,
+        kind,
+        kind_name,
+        rhash,
+        detail,
+        operator_id,
+        disposition,
+        disposition_name,
     )
 
 
