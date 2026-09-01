@@ -137,6 +137,66 @@ def test_shred_targets_unresolved_and_key_mismatch(tmp_path):
     assert codes == ["shred_target_key_mismatch", "shred_target_unresolved"]
 
 
+# --- U15: shredded_targets() -----------------------------------------------
+#
+# _check_shred_targets only ever reports the broken side: an unresolved
+# target or a key mismatch. Silence there covers both "successfully
+# shredded" and "this KEY_SHRED named no targets at all" — the same
+# ambiguity acknowledged_candidates() closed for the r2 loop's positive
+# case, here for the erasure loop's.
+
+
+def test_a_successfully_shredded_target_is_resolved(tmp_path):
+    log = tmp_path / "a.pala"
+    with PalaWriter(log) as w:
+        w.genesis()
+        w.boot()
+        w.kv_save(b"\x11" * 32)  # cleartext: key_id 0
+        clear_seq = w.seq - 1
+        w.key_shred(0, REASON_LEGAL_ERASURE, target_seqs=[clear_seq])
+        shred_seq = w.seq - 1
+    with AuditReader.open(log) as reader:
+        ver = reader.verify()
+        assert _referential(ver) == []  # clean — no mismatch, no unresolved
+        assert reader.shredded_targets() == {clear_seq: shred_seq}
+
+
+def test_an_unresolved_or_mismatched_target_is_not_in_shredded_targets(tmp_path):
+    """The same fixture test_shred_targets_unresolved_and_key_mismatch
+    uses — confirms the positive accessor and the advisory codes agree
+    about what did *not* resolve, the same way acknowledged_candidates()
+    was built to agree with reference_hash_mismatch."""
+    log = tmp_path / "a.pala"
+    with PalaWriter(log) as w:
+        w.genesis()
+        w.boot()
+        w.kv_save(b"\x11" * 32)
+        clear_seq = w.seq - 1
+        w.key_shred(9, REASON_LEGAL_ERASURE, target_seqs=[clear_seq, 4242])
+    with AuditReader.open(log) as reader:
+        ver = reader.verify()
+        codes = sorted(i.code for i in _referential(ver))
+        assert codes == ["shred_target_key_mismatch", "shred_target_unresolved"]
+        assert reader.shredded_targets() == {}
+
+
+def test_a_later_shred_of_the_same_target_wins(tmp_path):
+    """Two KEY_SHRED records naming the same target, both resolving:
+    the later one (in seq order) is what shredded_targets() reports —
+    the record of what actually holds now, not a history of attempts."""
+    log = tmp_path / "a.pala"
+    with PalaWriter(log) as w:
+        w.genesis()
+        w.boot()
+        w.kv_save(b"\x11" * 32)
+        clear_seq = w.seq - 1
+        w.key_shred(0, REASON_LEGAL_ERASURE, target_seqs=[clear_seq])
+        w.key_shred(0, REASON_LEGAL_ERASURE, target_seqs=[clear_seq])
+        second_shred_seq = w.seq - 1
+    with AuditReader.open(log) as reader:
+        assert reader.shredded_targets() == {clear_seq: second_shred_seq}
+
+
 def test_candidate_source_reference_is_checked_too(tmp_path):
     log = tmp_path / "a.pala"
     with PalaWriter(log) as w:
