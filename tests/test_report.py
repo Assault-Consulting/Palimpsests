@@ -109,3 +109,79 @@ def test_report_validates_against_the_shipped_schema(tmp_path):
     schema = json.loads(schema_path.read_text())
     report = build_report(_chain(tmp_path)).data
     jsonschema.validate(report, schema)  # raises on any shape drift
+
+
+# --- reader reuse -------------------------------------------------------- #
+#
+# Before this, build_report always opened its own AuditReader — even when
+# a caller already had one open on the same file and had already paid to
+# decode it. On a chain large enough to matter, that is not a rounding
+# error: a caller like Auditor, whose own session already holds a warm
+# reader by the time it asks for a report, was paying the same decode a
+# second time for no reason but that build_report had no way to be handed
+# the first one.
+
+
+def test_a_passed_reader_produces_the_same_report_as_none(tmp_path):
+    log = _chain(tmp_path)
+    from palimpsests.audit.reader import AuditReader
+
+    without = build_report(log).data
+    with AuditReader.open(log) as reader:
+        withit = build_report(log, reader=reader).data
+    without["checked_at"] = withit["checked_at"] = None
+    assert without == withit
+
+
+def test_a_passed_reader_means_no_second_reader_is_opened(tmp_path, monkeypatch):
+    log = _chain(tmp_path)
+    from palimpsests.audit import report as report_module
+    from palimpsests.audit.reader import AuditReader
+
+    opened_count = 0
+    real_open = AuditReader.open
+
+    def counting_open(*args, **kwargs):
+        nonlocal opened_count
+        opened_count += 1
+        return real_open(*args, **kwargs)
+
+    monkeypatch.setattr(report_module.AuditReader, "open", counting_open)
+
+    with AuditReader.open(log) as reader:  # the one open this test allows
+        assert opened_count == 1
+        report_module.build_report(log, reader=reader)
+
+    # build_report itself must not have opened a second one.
+    assert opened_count == 1
+
+
+def test_a_passed_reader_is_not_closed_by_build_report(tmp_path):
+    log = _chain(tmp_path)
+    from palimpsests.audit.reader import AuditReader
+
+    reader = AuditReader.open(log)
+    try:
+        build_report(log, reader=reader)
+        # Still usable — build_report neither closed it nor exhausted
+        # anything a caller might still need from it.
+        assert reader.verify().chain.chain_ok is True
+    finally:
+        reader.close()
+
+
+def test_a_passed_reader_s_own_anchor_is_used_over_anchor_source(tmp_path):
+    from palimpsests.audit.anchors import ManualAnchor
+    from palimpsests.audit.reader import AuditReader
+
+    log = _chain(tmp_path)
+    head = build_report(log).data["chain"]["head"]
+
+    # The reader is opened against the real head; anchor_source here
+    # names an anchor that does not exist and must be ignored — passing
+    # a reader means the reader's own anchor decides, not this parameter.
+    with AuditReader.open(log, anchor=ManualAnchor(head)) as reader:
+        report = build_report(
+            log, anchor_source=ManualAnchor("00" * 32), reader=reader
+        ).data
+    assert report["completeness"]["complete_to_anchor"] is True
