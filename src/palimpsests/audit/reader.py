@@ -655,7 +655,26 @@ class AuditReader:
         ]
 
     def origin_at(self, seq: int) -> OriginView | None:
+        return self._origin_state_at(seq)[0]
+
+    def unloaded_at(self, seq: int) -> bool:
+        """Whether the last EVENT record at or before ``seq`` that set the
+        origin state was a ``MODEL_UNLOAD`` — distinguishing "declared,
+        then unloaded" from "never declared" when :meth:`origin_at`
+        returns ``None`` for both.
+
+        Read directly rather than assumed: ``KIND_MODEL_UNLOAD`` sets the
+        running origin to ``None``, exactly the value it starts at before
+        any ``MODEL_LOAD`` — the two collapse in :meth:`origin_at` alone.
+        Additive rather than a change to that method's own return type:
+        a caller that only ever checked "is it None" is unaffected, and
+        one that needs to render the two states differently now can.
+        """
+        return self._origin_state_at(seq)[1]
+
+    def _origin_state_at(self, seq: int) -> tuple[OriginView | None, bool]:
         current: OriginView | None = None
+        last_was_unload = False
         for dr in self._decoded_records():
             if dr.header is None:
                 continue
@@ -665,9 +684,11 @@ class AuditReader:
                 continue
             if dr.kind == KIND_MODEL_UNLOAD:
                 current = None
+                last_was_unload = True
             elif dr.kind == KIND_MODEL_LOAD or _has_model_digest(dr.header):
                 current = _origin_of(dr)
-        return current
+                last_was_unload = False
+        return current, last_was_unload
 
     def acknowledged_candidates(self) -> set[int]:
         """The seq of every ``INCIDENT_CANDIDATE`` with at least one
