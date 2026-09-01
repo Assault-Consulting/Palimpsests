@@ -10,10 +10,32 @@ external dependency is the trusted head, and it arrives only through the
 anchors live.
 
 One walk, shared. The container is scanned once on construction; record
-*bodies* are decoded lazily and only when a caller asks for records, spans,
-boots, or origins — ``verify()`` is header-only. A truncated tail (the file
+*bodies* are decoded when a caller asks for records, spans, boots, or
+origins — and, today, also by ``verify()``. A truncated tail (the file
 ends mid-record) is reported as exactly that (``Diagnosis`` pattern
 ``truncated_tail``, §2.4), never as a chain break at an earlier record.
+
+``verify()`` is not header-only, and this docstring said it was. Two of
+the three things it does are: the §7.1 chain check and the
+``IncrementalVerifier`` advisory pass both read ``self._headers`` and
+touch no body. The third is not. ``_referential_advisories()`` resolves
+an ack to its candidate and a shred to its targets, which needs a
+record's ``kind`` — a body-decoded field carrying inference-profile
+values (``profiles/inference.md`` §3, §4). On a chain of any size that
+is the dominant cost of calling ``verify()``, and it is paid whether or
+not the caller wanted body-level findings.
+
+The checks themselves belong in this layer: ``inference.md`` §4 asks for
+exactly them, as reader advisories, never chain violations. What is open
+is their placement inside the method that answers the core's three
+questions — ``PALA-1.md`` §3.4 describes that answer as
+profile-independent, and ``inference.md`` §3.1 says the envelope
+verifier never reads kinds at all. The advisory channel is this
+package's own addition above §7 rather than something §7 specifies, so
+this is a question about where the boundary is drawn in *this* API, not
+a conformance defect. Moving the pass would change what
+``Verification.advisory`` contains, so it is a decision for the
+maintainers rather than something to do quietly. Tracked as U14.
 
 The module path is chosen so extraction into ``palimpsests-audit`` renames
 nothing: this facade sits above ``pala`` (the wire codec) and consumes only
@@ -316,6 +338,26 @@ class AuditReader:
 
     # ── verification ────────────────────────────────────────────────────
     def verify(self) -> Verification:
+        """The core's three questions, plus the advisory channel.
+
+        The chain check (§7.1) and the ``IncrementalVerifier`` pass are
+        header-only. ``advisory`` additionally carries the referential
+        items from :meth:`_referential_advisories`, which decodes record
+        bodies across the chain to produce them — see the module
+        docstring and U14. On a large chain that pass, not the chain
+        check, is what this call costs.
+
+        Cached: the first call pays for the whole file, every call after
+        it is free.
+
+        Not thread-safe, and the cache is what makes that matter. The
+        window between "is the cache empty" and "the cache is filled"
+        lasts the whole decode, so two callers arriving on a cold reader
+        each run the full decode and each hold their own result while
+        they do — N callers, N decodes, N times the transient memory,
+        and slower than serialising them. A caller serving concurrent
+        requests should hold its own lock around this reader.
+        """
         if self._verification is not None:
             return self._verification
 
