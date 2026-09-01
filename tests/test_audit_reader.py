@@ -232,6 +232,54 @@ def test_origin_at_across_load_unload(tmp_path):
     r.close()
 
 
+# --- U11: telling "never declared" apart from "declared, then unloaded" -
+#
+# origin_at() alone cannot: KIND_MODEL_UNLOAD sets the running origin to
+# None, the same value it starts at before any MODEL_LOAD. F9 (Auditor)
+# asks for different wording for each ("not stated in this file" vs "no
+# model active"), and the data could not tell a reader which one applied.
+
+
+def test_unloaded_at_is_false_before_any_load(tmp_path):
+    log, _ = _good_chain(tmp_path)
+    r = AuditReader.open(log)
+    recs = list(r.records())
+    load_seq = next(d.seq for d in recs if d.kind_name == "MODEL_LOAD")
+    assert r.origin_at(load_seq - 1) is None
+    assert r.unloaded_at(load_seq - 1) is False  # never declared, not unloaded
+    r.close()
+
+
+def test_unloaded_at_is_true_after_an_unload(tmp_path):
+    log, _ = _good_chain(tmp_path)
+    r = AuditReader.open(log)
+    recs = list(r.records())
+    unload_seq = next(d.seq for d in recs if d.kind_name == "MODEL_UNLOAD")
+    assert r.origin_at(unload_seq) is None
+    assert r.unloaded_at(unload_seq) is True
+    r.close()
+
+
+def test_unloaded_at_is_false_again_after_a_second_load(tmp_path):
+    """Load, unload, load again: at the second load, origin_at is not
+    None, and unloaded_at agrees — the unload is no longer the most
+    recent state-changing event."""
+    log = tmp_path / "reload.pala"
+    w = PalaWriter(log)
+    w.genesis()
+    w.boot()
+    w.model_load(model_digest=bytes(range(32)), config_digest=bytes(range(1, 33)))
+    w.model_unload()
+    w.model_load(model_digest=bytes(range(32, 64)), config_digest=bytes(range(1, 33)))
+    second_load_seq = w.seq - 1
+    w.close()
+
+    r = AuditReader.open(log)
+    assert r.origin_at(second_load_seq) is not None
+    assert r.unloaded_at(second_load_seq) is False
+    r.close()
+
+
 def test_records_decode_kind_names(tmp_path):
     log, _ = _good_chain(tmp_path)
     names = [d.kind_name for d in AuditReader.open(log).records() if d.kind_name]
