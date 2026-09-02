@@ -151,3 +151,55 @@ strong baseline?" — and being willing to answer "no" — is much harder to
 copy, because it requires the honesty to publish results that don't
 flatter you. That honesty is the durable asset. Protect it by choosing the
 baseline and metrics here, in writing, before each run.
+
+## Reader verification cost (Track U14)
+
+`AuditReader.verify()` performs the §7.1 chain pass **and** a
+referential advisory pass that decodes record bodies (an
+`OVERSIGHT_ACK` resolved to its candidate, a `KEY_SHRED` to its
+targets). The second pass is the dominant cost on any sizable chain,
+and 0.11 ships that cost as a named regression against 0.10.0. The
+harness below exists so the fix lands against measurements, not
+impressions — and so the next regression of this class is caught by a
+number, not by a downstream consumer.
+
+**Tools.** `benchmarks/gen_reader_fixtures.py` writes a fixture with a
+recorded composition; `benchmarks/bench_reader_verify.py` measures it.
+Composition is part of the result: the referential pass's cost depends
+directly on it, so every fixture carries a `.composition.json` and the
+bench embeds it into its output. A figure quoted without its
+composition is not reproducible.
+
+**Profiles.** `calm` — a serving cycle, ~0.02% referential records at
+ladder sizes: the baseline. `toolheavy` — dense tool loops with an
+incident/ack pair per unit, ~28% referential: a ceiling, not a norm.
+`encrypted` — bodies sealed with `key_id != 0` (the §8 vector key):
+referential participation is zero by construction, because kinds live
+in bodies the verifier cannot open. That profile is the one untested
+hypothesis: what `verify()` pays over bodies it cannot read.
+
+**Ladder.** 10k / 50k / 100k / 250k / 1M records per profile.
+Fixtures are generated on demand and never committed.
+
+**Metrics, per run.** RSS (`VmRSS`) and `tracemalloc` peak after
+`open()` and after `verify()`, separately; wall time for `open()`, the
+chain pass alone (`verify_headers` over `iter_records`), `verify()` in
+full, and `build_report(reader=)`. The referential pass is reported as
+the difference of the two timings and labeled *derived*.
+
+**Rules.** Each repeat runs in a fresh child process (RSS does not
+reliably return to baseline in a long-lived interpreter). Results are
+**ranges over repeats, never points** — observed spread between
+identical full-path runs reaches 1.5×. Container and laptop runs are
+non-canonical: ratios travel, absolute numbers belong to the machine
+that produced them.
+
+```bash
+python benchmarks/gen_reader_fixtures.py --profile calm --records 100000 --out /tmp/u14
+python benchmarks/bench_reader_verify.py /tmp/u14/calm-100000.pala --repeats 3 --json out.json
+```
+
+**Publication policy.** The harness and methodology are public now;
+the numbers publish together with the U14 fix as a characterization of
+the implementation — not before, and never as a property of the
+format.
