@@ -1,0 +1,254 @@
+{
+ "commit_under_test": "0af95b6",
+ "records": 300000,
+ "batch": 50000,
+ "environment": "single-threaded container, 3997 MB cap, Python 3.12",
+ "canonical": false,
+ "note": "slopes (bytes/record) travel between machines; absolute RSS does not",
+ "runs": [
+  {
+   "milestones": [
+    {
+     "records": 50003.0,
+     "rss_mb": 248.62109375,
+     "pyheap_mb": 81.79074096679688,
+     "file_mb": 10.014042854309082,
+     "internal_verified_mb": 10.014042854309082,
+     "internal_seen_entries": 50003.0
+    },
+    {
+     "records": 100003.0,
+     "rss_mb": 301.046875,
+     "pyheap_mb": 95.70374774932861,
+     "file_mb": 20.027623176574707,
+     "internal_verified_mb": 20.027623176574707,
+     "internal_seen_entries": 100003.0
+    },
+    {
+     "records": 150003.0,
+     "rss_mb": 320.609375,
+     "pyheap_mb": 111.69004535675049,
+     "file_mb": 30.041203498840332,
+     "internal_verified_mb": 30.041203498840332,
+     "internal_seen_entries": 150003.0
+    },
+    {
+     "records": 200003.0,
+     "rss_mb": 334.96875,
+     "pyheap_mb": 123.90065383911133,
+     "file_mb": 40.05478382110596,
+     "internal_verified_mb": 40.05478382110596,
+     "internal_seen_entries": 200003.0
+    },
+    {
+     "records": 250003.0,
+     "rss_mb": 355.43359375,
+     "pyheap_mb": 138.53107166290283,
+     "file_mb": 50.06836414337158,
+     "internal_verified_mb": 50.06836414337158,
+     "internal_seen_entries": 250003.0
+    },
+    {
+     "records": 300000.0,
+     "rss_mb": 369.2734375,
+     "pyheap_mb": 156.22011852264404,
+     "file_mb": 60.08134365081787,
+     "internal_verified_mb": 60.08134365081787,
+     "internal_seen_entries": 300000.0
+    }
+   ],
+   "slopes": {
+    "slope_rss_bytes_per_record": 506.1,
+    "slope_pyheap_bytes_per_record": 312.2,
+    "slope_verified_bytes_per_record": 210.0
+   },
+   "variant": "tail_only"
+  },
+  {
+   "milestones": [
+    {
+     "records": 50003.0,
+     "rss_mb": 248.76953125,
+     "pyheap_mb": 81.79074096679688,
+     "file_mb": 10.014042854309082,
+     "internal_verified_mb": 10.014042854309082,
+     "internal_seen_entries": 50003.0
+    },
+    {
+     "records": 100003.0,
+     "rss_mb": 301.1953125,
+     "pyheap_mb": 95.70374774932861,
+     "file_mb": 20.027623176574707,
+     "internal_verified_mb": 20.027623176574707,
+     "internal_seen_entries": 100003.0
+    },
+    {
+     "records": 150003.0,
+     "rss_mb": 320.7578125,
+     "pyheap_mb": 111.69004535675049,
+     "file_mb": 30.041203498840332,
+     "internal_verified_mb": 30.041203498840332,
+     "internal_seen_entries": 150003.0
+    },
+    {
+     "records": 200003.0,
+     "rss_mb": 335.98828125,
+     "pyheap_mb": 123.90065383911133,
+     "file_mb": 40.05478382110596,
+     "internal_verified_mb": 40.05478382110596,
+     "internal_seen_entries": 200003.0
+    },
+    {
+     "records": 250003.0,
+     "rss_mb": 356.453125,
+     "pyheap_mb": 138.53107166290283,
+     "file_mb": 50.06836414337158,
+     "internal_verified_mb": 50.06836414337158,
+     "internal_seen_entries": 250003.0
+    },
+    {
+     "records": 300000.0,
+     "rss_mb": 370.29296875,
+     "pyheap_mb": 156.22011852264404,
+     "file_mb": 60.08134365081787,
+     "internal_verified_mb": 60.08134365081787,
+     "internal_seen_entries": 300000.0
+    }
+   ],
+   "slopes": {
+    "slope_rss_bytes_per_record": 509.7,
+    "slope_pyheap_bytes_per_record": 312.2,
+    "slope_verified_bytes_per_record": 210.0
+   },
+   "variant": "tail_only"
+  },
+  {
+   "milestones": [
+    {
+     "records": 50003.0,
+     "rss_mb": 248.5859375,
+     "pyheap_mb": 81.79074096679688,
+     "file_mb": 10.014042854309082,
+     "internal_verified_mb": 10.014042854309082,
+     "internal_seen_entries": 50003.0
+    },
+    {
+     "records": 100003.0,
+     "rss_mb": 301.0078125,
+     "pyheap_mb": 95.70374774932861,
+     "file_mb": 20.027623176574707,
+     "internal_verified_mb": 20.027623176574707,
+     "internal_seen_entries": 100003.0,
+     "snapshot_s": 13.867175947000021,
+     "snapshot_hwm_jump_mb": 537.1015625
+    },
+    {
+     "records": 150003.0,
+     "rss_mb": 499.5390625,
+     "pyheap_mb": 111.69032573699951,
+     "file_mb": 30.041203498840332,
+     "internal_verified_mb": 30.041203498840332,
+     "internal_seen_entries": 150003.0
+    },
+    {
+     "records": 200003.0,
+     "rss_mb": 512.48828125,
+     "pyheap_mb": 123.90088844299316,
+     "file_mb": 40.05478382110596,
+     "internal_verified_mb": 40.05478382110596,
+     "internal_seen_entries": 200003.0,
+     "snapshot_s": 25.46313694,
+     "snapshot_hwm_jump_mb": 426.40234375
+    },
+    {
+     "records": 250003.0,
+     "rss_mb": 785.74609375,
+     "pyheap_mb": 138.53140830993652,
+     "file_mb": 50.06836414337158,
+     "internal_verified_mb": 50.06836414337158,
+     "internal_seen_entries": 250003.0
+    },
+    {
+     "records": 300000.0,
+     "rss_mb": 799.36328125,
+     "pyheap_mb": 156.22045516967773,
+     "file_mb": 60.08134365081787,
+     "internal_verified_mb": 60.08134365081787,
+     "internal_seen_entries": 300000.0,
+     "snapshot_s": 36.57151533299998,
+     "snapshot_hwm_jump_mb": 588.10546875
+    }
+   ],
+   "slopes": {
+    "slope_rss_bytes_per_record": 2310.2,
+    "slope_pyheap_bytes_per_record": 312.2,
+    "slope_verified_bytes_per_record": 210.0
+   },
+   "variant": "with_snapshots"
+  },
+  {
+   "milestones": [
+    {
+     "records": 50003.0,
+     "rss_mb": 248.73046875,
+     "pyheap_mb": 81.79074096679688,
+     "file_mb": 10.014042854309082,
+     "internal_verified_mb": 10.014042854309082,
+     "internal_seen_entries": 50003.0
+    },
+    {
+     "records": 100003.0,
+     "rss_mb": 301.15234375,
+     "pyheap_mb": 95.70374774932861,
+     "file_mb": 20.027623176574707,
+     "internal_verified_mb": 20.027623176574707,
+     "internal_seen_entries": 100003.0,
+     "snapshot_s": 13.233814472000006,
+     "snapshot_hwm_jump_mb": 537.10546875
+    },
+    {
+     "records": 150003.0,
+     "rss_mb": 498.796875,
+     "pyheap_mb": 111.69021320343018,
+     "file_mb": 30.041203498840332,
+     "internal_verified_mb": 30.041203498840332,
+     "internal_seen_entries": 150003.0
+    },
+    {
+     "records": 200003.0,
+     "rss_mb": 512.6328125,
+     "pyheap_mb": 123.90077590942383,
+     "file_mb": 40.05478382110596,
+     "internal_verified_mb": 40.05478382110596,
+     "internal_seen_entries": 200003.0,
+     "snapshot_s": 24.766400358999988,
+     "snapshot_hwm_jump_mb": 426.41796875
+    },
+    {
+     "records": 250003.0,
+     "rss_mb": 785.94140625,
+     "pyheap_mb": 138.53135204315186,
+     "file_mb": 50.06836414337158,
+     "internal_verified_mb": 50.06836414337158,
+     "internal_seen_entries": 250003.0
+    },
+    {
+     "records": 300000.0,
+     "rss_mb": 799.49609375,
+     "pyheap_mb": 156.22039890289307,
+     "file_mb": 60.08134365081787,
+     "internal_verified_mb": 60.08134365081787,
+     "internal_seen_entries": 300000.0,
+     "snapshot_s": 37.33360092000004,
+     "snapshot_hwm_jump_mb": 588.125
+    }
+   ],
+   "slopes": {
+    "slope_rss_bytes_per_record": 2310.1,
+    "slope_pyheap_bytes_per_record": 312.2,
+    "slope_verified_bytes_per_record": 210.0
+   },
+   "variant": "with_snapshots"
+  }
+ ]
+}
