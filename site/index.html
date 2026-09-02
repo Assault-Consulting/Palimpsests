@@ -244,6 +244,37 @@
   .cap p{color:var(--slate);font-size:.96rem;margin:.6rem 0 0}
   .cap .tag{display:inline-block;margin-top:1.1rem;font-family:"IBM Plex Mono",monospace;font-size:.7rem;color:var(--slate-2);border-top:1px solid var(--rule-soft);padding-top:.8rem;width:100%}
   .caps__note{margin-top:26px;font-size:.94rem;color:var(--slate);max-width:74ch;border-left:2px solid var(--patina);padding-left:16px}
+
+  /* Design tenets strip */
+  .tenets{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;margin-top:34px;padding-top:26px;border-top:1px solid var(--rule)}
+  .tenets b{display:block;font-family:"Archivo Expanded",sans-serif;font-weight:600;font-size:.98rem;letter-spacing:-.01em;margin-bottom:.45rem}
+  .tenets p{font-size:.9rem;color:var(--slate);margin:0;line-height:1.55}
+  @media(max-width:760px){.tenets{grid-template-columns:1fr}}
+
+  /* Chain demo (record section) */
+  .cdemo{background:var(--paper);border:1px solid rgba(232,233,227,.14);border-radius:18px;padding:28px 24px 22px;max-width:640px;margin:36px auto 10px;color:var(--ink)}
+  .cdemo-stage{transition:opacity .5s ease}
+  .cdemo-stage.fading{opacity:0}
+  .cdemo-hdr{text-align:center;font-family:"Archivo Expanded","Archivo",sans-serif;font-weight:700;letter-spacing:-.01em;font-size:1.18rem;color:var(--ink);margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px;min-height:1.4em;opacity:0;transition:color .4s ease,opacity .5s ease}
+  .cdemo-hdr .mark{flex-shrink:0;opacity:0;transition:opacity .3s ease}
+  .cdemo-hdr.ok{color:var(--patina-strong);opacity:1}
+  .cdemo-hdr.ok .ok-mark{opacity:1}
+  .cdemo-hdr.bad{color:var(--rust-strong);opacity:1}
+  .cdemo-hdr.bad .bad-mark{opacity:1}
+  .cdemo-note{text-align:center;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.92rem;color:var(--patina-strong);min-height:1.5em;margin-bottom:14px;opacity:0;transform:translateY(4px);transition:opacity .35s ease,transform .35s ease}
+  .cdemo-note.in{opacity:1;transform:none}
+  .cdemo-window{background:linear-gradient(180deg,var(--plate),var(--paper-2));border:1px solid var(--rule);border-radius:14px;padding:4px 18px;min-height:40px}
+  .cdemo-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;padding:13px 0;border-bottom:1px solid var(--rule-soft);opacity:0;transform:translateY(-12px);transition:opacity .4s ease,transform .4s ease;overflow:hidden}
+  .cdemo-row.in{opacity:1;transform:none}
+  .cdemo-row:last-child{border-bottom:none}
+  .cdemo-row .act{flex:1 1 180px;font-size:.93rem;color:var(--ink)}
+  .cdemo-row .hsh{display:inline-flex;align-items:center;gap:7px;flex-shrink:0}
+  .cdemo-row .hsh .s{width:11px;height:11px;border-radius:3px;border:1.5px solid var(--patina);background:var(--patina-soft)}
+  .cdemo-row .hsh .h{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--slate)}
+  @keyframes cdemo-flicker{0%,100%{opacity:1}15%,45%,75%{opacity:.12}30%,60%,90%{opacity:1}}
+  .cdemo-row.flicker{animation:cdemo-flicker .65s steps(1,end)}
+  .cdemo-row.collapsing{transition:max-height .45s ease,opacity .45s ease,padding .45s ease;opacity:0;max-height:0!important;padding-top:0;padding-bottom:0}
+  .cdemo-cap{margin:14px auto 0;max-width:640px;text-align:center;font-size:.82rem;color:#B9BEBB}
   @media(max-width:820px){.caps{grid-template-columns:1fr}}
 
   /* record / provenance */
@@ -253,10 +284,13 @@
   .record .eyebrow{color:#8FBFAF}
   .record .eyebrow::before{background:#8FBFAF}
   .prov{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:44px}
-  .prov__item{border:1px solid rgba(232,233,227,.14);border-radius:13px;padding:22px 22px 24px;background:rgba(232,233,227,.03)}
+  .prov__item{border:1px solid var(--rule);border-radius:13px;padding:22px 22px 24px;background:var(--plate)}
+  .record .prov__item{border-color:rgba(232,233,227,.14);background:rgba(232,233,227,.03)}
   .prov__item h4{font-family:"Archivo Expanded",sans-serif;font-weight:600;font-size:1.02rem;margin:0 0 .5rem;letter-spacing:-.01em}
-  .prov__item p{color:#B9BEBB;font-size:.92rem;margin:0}
-  .prov__item .mono{color:#8FBFAF;font-size:.78rem}
+  .prov__item p{color:var(--slate);font-size:.92rem;margin:0}
+  .record .prov__item p{color:#B9BEBB}
+  .prov__item .mono{color:var(--patina-strong);font-size:.78rem}
+  .record .prov__item .mono{color:#8FBFAF}
   @media(max-width:760px){.prov{grid-template-columns:1fr}}
 
   /* eu regulatory fit */
@@ -432,6 +466,20 @@
         <span class="chip">no network egress</span>
       </div>
     </div>
+    <div class="tenets" data-reveal style="grid-column:1/-1">
+      <div>
+        <b>The workload owns the cycles.</b>
+        <p>The audit costs hashing, not signing — cheap enough for hardware the model already strains, and the difference is measured, not asserted.</p>
+      </div>
+      <div>
+        <b>No clock to trust, no network to lean on.</b>
+        <p>Every timestamp carries its trust level. A device that doesn&rsquo;t know the time says so — an honest unknown instead of an invented moment.</p>
+      </div>
+      <div>
+        <b>The record never blocks the model.</b>
+        <p>Logging can&rsquo;t stall inference. What it guarantees instead: absence is visible — a dropped record is itself a recorded fact.</p>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -471,7 +519,20 @@
     <div class="blk__head" data-reveal>
       <span class="eyebrow">The record</span>
       <h2 class="display">The record beneath the record.</h2>
-      <p>Every request leaves a tamper-evident entry, chained by hash so the log can’t be silently altered — written in a published, frozen wire format, <span class="mono">PALA-1 v1.0</span>, not an internal detail. Five independent implementations, three of them outside the project, reproduce it from the spec and test vectors alone. That’s the record-keeping substrate the EU AI Act’s logging expectations rest on — kept locally, verifiable without revealing what it holds. And the software itself carries the same discipline.</p>
+      <p>Every request leaves a tamper-evident entry, chained by hash so the log can’t be silently altered — written in a published, frozen wire format, <span class="mono">PALA-1 v1.0</span>, not an internal detail. Five independent implementations, three of them outside the project at the time of their runs, reproduce it from the spec and test vectors alone. That’s the record-keeping substrate the EU AI Act’s logging expectations rest on — kept locally, verifiable without revealing what it holds. And since 0.11 the chain reaches outward on your terms: a head can be registered with a transparency service as one signed statement, with the receipt — and what it does and doesn’t prove — on the public record. The software itself carries the same discipline.</p>
+    </div>
+
+    <div class="cdemo" data-reveal aria-label="Animated demonstration: four events are written as hash-chained records, the chain verifies, then one record is deleted and the chain reports itself broken.">
+      <div class="cdemo-stage" id="cd-stage">
+        <div class="cdemo-hdr" id="cd-header">
+          <svg class="mark ok-mark" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10.5l4 4 8-9" stroke="#2C6350" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg class="mark bad-mark" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="#A8412E" stroke-width="2.2" stroke-linecap="round"/></svg>
+          <span id="cd-header-text"></span>
+        </div>
+        <div class="cdemo-note" id="cd-note">&nbsp;</div>
+        <div class="cdemo-window" id="cd-window"></div>
+      </div>
+      <p class="cdemo-cap">Live model of the chain: delete one record and the next hash stops matching. The real verifier answers the same way — <span style="font-family:'IBM Plex Mono',monospace">chain breaks at seq [1, 2]</span>.</p>
     </div>
 
     <div class="prov">
@@ -486,6 +547,10 @@
       <div class="prov__item" data-reveal>
         <h4>Bill of materials</h4>
         <p>An SPDX SBOM ships with the release — the dependency inventory a Cyber Resilience Act review asks for, ready rather than reconstructed.</p>
+      </div>
+      <div class="prov__item" data-reveal>
+        <h4>Transparency bridge · <span class="mono">SCITT</span></h4>
+        <p>One signed statement per published head — no record content leaves the device. Reproduced byte-for-byte twice from the standards alone; one registration, receipt verified, on the record. <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/INTEROP-SCITT.md" rel="noopener">What a receipt proves — and what it doesn’t ↗</a>.</p>
       </div>
       <div class="prov__item" data-reveal>
         <h4>OSPS Baseline L2 · fuzzed in CI</h4>
@@ -509,7 +574,7 @@
     </div>
     <div class="prov__item" data-reveal>
       <h4>Releases that rebuild</h4>
-      <p>Signed with PEP 740 / Sigstore provenance — and reproducible: the v0.10.0 wheel rebuilds byte-for-byte to match the artifact published on PyPI.</p>
+      <p>Signed with PEP 740 / Sigstore provenance — and reproducible: most recently verified on the v0.10.0 wheel, which rebuilds byte-for-byte to match the artifact published on PyPI.</p>
     </div>
     <div class="prov__item" data-reveal>
       <h4>Analysed without pause</h4>
@@ -535,7 +600,7 @@
         <a href="https://eur-lex.europa.eu/eli/reg/2024/1689/oj/eng" rel="noopener">EU AI Act <span class="arr">↗</span></a>
         <span class="reg__cite">Regulation (EU) 2024/1689 · Art. 12</span>
       </div>
-      <p class="reg__note">The hash-chained request log is the <b>automatic record-keeping</b> a high-risk system has to keep — held locally, and verifiable without exposing what it recorded. The <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/compliance/EU-AI-ACT-MAPPING.md" rel="noopener">Article 12 mapping ↗</a> sets out, requirement by requirement, what ships today and what is on the roadmap.</p>
+      <p class="reg__note">The hash-chained request log is the <b>automatic record-keeping</b> a high-risk system has to keep — held locally, and verifiable without exposing what it recorded. The <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/compliance/EU-AI-ACT-MAPPING.md" rel="noopener">Article 12 mapping ↗</a> sets out, requirement by requirement, what ships today — 24 of 27 rows as of 0.11 — and what is on the roadmap.</p>
     </div>
 
     <div class="reg">
@@ -697,6 +762,54 @@
       }, { threshold: 0.14, rootMargin: "0px 0px -8% 0px" });
       els.forEach(function (el) { io.observe(el); });
     }
+
+    // Chain demo (record section).
+    (function () {
+      var stage = document.getElementById('cd-stage');
+      if (!stage) return;
+      var header = document.getElementById('cd-header');
+      var headerText = document.getElementById('cd-header-text');
+      var note = document.getElementById('cd-note');
+      var win = document.getElementById('cd-window');
+      var GENESIS_SEED = '000000...00';
+      function fnv1a(str){var h=0x811c9dc5;for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,0x01000193);}return h>>>0;}
+      function fauxHash(str){var a=fnv1a(str).toString(16).padStart(8,'0');var b=fnv1a(str.split('').reverse().join('')).toString(16).padStart(8,'0');return a.slice(0,6)+'...'+b.slice(0,2);}
+      var steps=['→ User sends a request','→ Assistant calls a tool','→ Tool returns a result','→ Assistant responds'];
+      var notes=['palimpsests: writes EVENT #0 — record header hashed into the chain','palimpsests: writes EVENT #1 — links to the previous record','palimpsests: writes EVENT #2 — body committed as a separate digest','palimpsests: writes EVENT #3 — chain extended'];
+      var deleteNote='palimpsests: record deleted — the next hash no longer matches';
+      var DELETE_INDEX=2;
+      var hashes=[];(function(){var prev=GENESIS_SEED;for(var i=0;i<steps.length;i++){var h=fauxHash(prev+'|EVENT|'+steps[i]);hashes.push(h);prev=h;}})();
+      function sleep(ms){return new Promise(function(res){setTimeout(res,ms);});}
+      function setNote(t){note.classList.remove('in');note.textContent=t;void note.offsetWidth;note.classList.add('in');}
+      function makeRow(text,hash){var row=document.createElement('div');row.className='cdemo-row';var a=document.createElement('span');a.className='act';a.textContent=text;var w=document.createElement('span');w.className='hsh';var sq=document.createElement('span');sq.className='s';var hv=document.createElement('span');hv.className='h';hv.textContent=hash;w.appendChild(sq);w.appendChild(hv);row.appendChild(a);row.appendChild(w);return row;}
+      if (reduce) {
+        for (var i=0;i<steps.length;i++){var r=makeRow(steps[i],hashes[i]);r.classList.add('in');win.appendChild(r);}
+        headerText.textContent='Chain intact';header.className='cdemo-hdr ok';
+        note.textContent='delete any record and the next hash stops matching';note.classList.add('in');
+        return;
+      }
+      async function playOnce(){
+        headerText.textContent='';header.className='cdemo-hdr';
+        note.textContent='\u00A0';note.classList.remove('in');
+        win.innerHTML='';var rows=[];
+        for(var i=0;i<steps.length;i++){setNote(notes[i]);var row=makeRow(steps[i],hashes[i]);win.appendChild(row);rows.push(row);await sleep(30);row.classList.add('in');await sleep(2400);}
+        await sleep(900);
+        headerText.textContent='Chain intact';header.className='cdemo-hdr ok';
+        await sleep(3800);
+        setNote(deleteNote);
+        var victim=rows[DELETE_INDEX];victim.classList.add('flicker');await sleep(650);
+        var h=victim.getBoundingClientRect().height;victim.style.maxHeight=h+'px';victim.classList.remove('flicker');void victim.offsetWidth;victim.classList.add('collapsing');await sleep(470);victim.remove();
+        headerText.textContent='Chain broken';header.className='cdemo-hdr bad';
+        await sleep(4200);
+      }
+      async function loop(){while(true){await playOnce();stage.classList.add('fading');await sleep(550);stage.classList.remove('fading');await sleep(300);}}
+      var started=false;
+      function start(){if(started)return;started=true;loop();}
+      if('IntersectionObserver' in window){
+        var dio=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){start();dio.disconnect();}});},{threshold:0.25});
+        dio.observe(stage);
+      } else { start(); }
+    })();
 
     // Copy install command.
     var btn = document.getElementById("copyBtn");
