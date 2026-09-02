@@ -6,6 +6,169 @@ aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 once it reaches v1.0. Before v1.0, minor versions may include breaking
 API changes.
 
+## [0.11.0] — 2026-09-02
+
+**Additive only — the PALA-1 wire format is unchanged (frozen at v1.0).**
+No envelope byte changes, no `format_version` bump; the core
+`test-vectors.json` is byte-identical to 0.10.0. Three things happen in
+this release. First, the trail stops ending at the device: a chain head
+can be exported as a COSE Signed Statement, registered with a
+transparency service, and the receipt verified — with the construction
+independently reproduced twice and one registration on the public
+record. Second, the writer grows its production duty cycle: key-driven
+container rotation with a policy for months-long chains, a PKCS#11
+anchor store for tier B, bearer auth and real token usage on `serve`,
+and a `pala report` attestation document. Third, this release says
+plainly what its own verifier costs: `AuditReader.verify()` does more
+work than in 0.10.0 on large chains, and that regression is named in
+*Changed* below rather than rounded off.
+
+### Added — the transparency path (SCITT bridge)
+
+- **`palimpsests.audit.pala.scitt`** (#176): one COSE_Sign1 Signed
+  Statement per published head — attached CBOR payload `{head,
+  first_seq, last_seq, "pala-1/v1.0"}`, EdDSA or ES256, built from and
+  verified against the referenced standards. Ships with a published
+  statement vector and a measured D2.8 comparison of chain hashing
+  versus per-record signing. The bridge exports and verifies
+  *statements*; receipts follow the service's own protocol — a stated
+  boundary, so trust in a service is never silently laundered into
+  trust in the format.
+- **A verification task anyone can run** (#177): the statement
+  construction published as an executable task in `docs/interop/`, with
+  the contamination boundary stated — the same discipline the wire
+  format's five runs used.
+- **Bridge runs B1 and B2 on the record** (#191, #193): the statement
+  reproduced byte-for-byte from the RFCs alone, twice, under a stated
+  contamination boundary — each run with its own CBOR and Ed25519
+  implementation. B1 found a conformance defect (below, *Fixed*); B2
+  verified the corrected construction 61/61 and re-derived the `kid`
+  thumbprint independently.
+- **Statement vector v2 with byte-stability expectations** (#192, #194):
+  the reissued vector (331 bytes, EdDSA under the RFC 8032 test key)
+  now carries six byte-stability modes and seven tamper expectations,
+  including Ed25519 signature non-uniqueness (S+L) pinned by an
+  executable test against the exact scalar B2 computed.
+- **Registration run 1** (#195): a statement over the #189 operator
+  chain head registered with the scitt-community SCITT API emulator,
+  receipt verified by the emulator's own verifier **and offline from
+  the published artifacts alone**. Scope stated in the run record:
+  operator ourselves on localhost, single-use ephemeral key, the
+  emulator's own pre-RFC receipt structure. Finding R1-F1: the emulator
+  expects the draft-era CWT-Claims header label where RFC 9597
+  registered a different one; the statement was not bent to match — the
+  emulator received a one-line disclosed patch, and the matter goes
+  upstream.
+- **`docs/INTEROP-SCITT.md`** (#195): what a verified receipt proves —
+  existence-in-time of a head under a named service — and what it does
+  not (content, consistency, completeness, endorsement, growth past the
+  registered head); the verified/reported split; claim templates
+  verbatim, with the words not to use.
+
+### Added — the production duty cycle
+
+- **Container rotation** (#178): `PalaWriter` can cut the container at a
+  record boundary into one verifiable chain across files — the cut is a
+  chain fact, not a filesystem accident.
+- **`RotationPolicy`** (#183): size/record-count triggers with deferral,
+  manifest stitching and resume — a chain that lives for months without
+  manual surgery. `docs/RETENTION.md` gains the trigger arithmetic for a
+  six-month retention duty.
+- **PKCS#11 anchor store** (#179, #180): `anchors_pkcs11` behind a
+  `[pkcs11]` extra, exercised in CI against SoftHSM2 (ADR-0004), with
+  the trust boundary written into `SECURITY.md` and the anchor
+  catalogue. The tier-B *claim* language stays honest: SoftHSM proves
+  the code path; a hardware-token run is a separate, later record.
+- **`serve` hardening for real clients** (#181, #182): opt-in bearer
+  auth with an OpenCode config printer, and `usage` now carries the
+  engine's reported token counters — zeros only where the engine
+  reports nothing, and they stay honest zeros.
+- **`pala report`** (#187, #188): the attestation document as JSON and
+  a self-contained HTML — the §7 answers, the safety section, external
+  pins and digests in one artifact with a single schema owner.
+
+### Added — reader surface for downstream tooling
+
+Driven by the Auditor desktop shell's upstream queue; each is additive
+on `DecodedRecord`/`AuditReader`:
+
+- **`DecodedRecord.record_hash`** (#200) — a record's own hash without
+  re-deriving the chain.
+- **`AuditReader.unloaded_at()`** (#201) — distinguishes a model state
+  never declared from one explicitly unloaded.
+- **`DecodedRecord.detail`** (#202) — the `EVT_DETAIL` payload,
+  surfaced. Found and stated along the way: `KEY_SHRED` carries its own
+  `SHRED_DETAIL` TLV schema, distinct from `EVT_DETAIL`.
+- **`OVERSIGHT_ACK` operator fields and `shredded_targets()`** (#203) —
+  `operator_id`, `disposition`/`disposition_name`, and shred-target
+  resolution mirroring `acknowledged_candidates()`.
+
+### Changed — what `verify()` costs, said plainly (U14, phase 0)
+
+- **`AuditReader.verify()` now does more work than in 0.10.0, and these
+  notes say so rather than round it off.** With the referential
+  advisories added this cycle, `verify()` decodes record bodies across
+  the chain to resolve them; the §7.1 chain check itself remains
+  header-only. Measured consequence, single environment: on a chain of
+  about a million records on a 4 GiB host, the naive full path — open,
+  verify, then build a report without passing the reader — was killed
+  by the OOM killer where 0.10.0 completed. This is a known regression
+  in that configuration. The rework is tracked as U14 with the fix
+  scheduled; no version is promised here. The docstrings describe the
+  current behaviour exactly (#204), and the full performance
+  characterization will be published together with the fix, not before.
+- **`build_report(..., reader=)` (#198) removes the second full decode,
+  and only that.** Passing an already-open reader stops the report from
+  opening and decoding the file again — on large chains the difference
+  between finishing and OOM. It does **not** reduce the peak of the one
+  reader you pass: `path.read_bytes()` and the body-digest pass still
+  run unconditionally inside `build_report()`, as its docstring now
+  states. Calling this parameter a performance fix would be an
+  overclaim; it is an OOM fix for the duplicate-decode path.
+
+### Fixed
+
+- **`unacknowledged_candidates()` is hash-verified, not seq-only**
+  (#199): an `OVERSIGHT_ACK` used to acknowledge whatever record
+  currently sits at the referenced `seq`; it now acknowledges only the
+  record whose hash it names. An acknowledgement of a record that was
+  later replaced no longer counts as an acknowledgement.
+- **SCITT statement conformance** (#192, found by bridge run B1): the
+  protected header gained the `kid` parameter that Section 6 of
+  RFC 9943 requires when neither `x5t` nor `x5chain` is present, plus
+  the payload's content type; the CWT subject now carries the full
+  chain head instead of a truncated one, because services index by it.
+  The statement vector was reissued as v2; both versions and their
+  digests remain on the record.
+- **`serve` claims only what it observes** (#190): the banner and
+  docstrings say *structured* tool loops are recorded, the text-mode
+  visibility limit found by the #189 smoke run is documented instead of
+  implied away (ADR-0005), and shutdown's cancel-before-close seam is
+  covered so a pending call cannot slip out of the chain unrecorded.
+
+### Measured
+
+- **Serialization and integrity cost, independently** (#185): chain
+  hashing versus per-record COSE signing, second run by a co-maintainer
+  under a stated contamination boundary — the multipliers agree with
+  the in-repo harness (45–61× write, 116–168× verify; native
+  primitives, workstation upper bound). Reported as a measurement of
+  two implementations, not a property of the format.
+- **EU AI Act Article 12 recount against main** (#186): 24 of 27
+  mapping rows Shipped, 3 Planned, each row pointing at code and tests
+  on `main`.
+
+### Documentation and maintenance
+
+- **The verification walkthrough, finished against reality** (#205,
+  superseding a parked draft): every command executed against `main`;
+  the exit-code contract taught as it is (`0` needs a matching anchor;
+  no anchor exits `2` on purpose; a single flipped bit exits `1`,
+  demonstrated).
+- Site: Gold assurance section, DOI, five wire-format implementations
+  (#175).
+- Dependency maintenance via the grouped dependabot lane (#196, #197).
+
 ## [0.10.0] — 2026-08-24
 
 **Additive only — the PALA-1 wire format is unchanged (frozen at v1.0).** No
@@ -891,6 +1054,7 @@ Initial release.
   from the OS keychain, falling back to an ephemeral key headless.
 - **CLI** — `chat`, `models`, `engine list` / `engine use`.
 
+[0.11.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.11.0
 [0.10.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.10.0
 [0.9.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.9.0
 [0.8.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.8.0
