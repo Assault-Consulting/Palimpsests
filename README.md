@@ -10,8 +10,11 @@
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Assault-Consulting/Palimpsests/badge)](https://scorecard.dev/viewer/?uri=github.com/Assault-Consulting/Palimpsests)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21978107.svg)](https://doi.org/10.5281/zenodo.21978107)
 
-> **Status: v0.10 — the audit format is the deliverable, and its consumer
-> surface is public.** The **[PALA-1
+> **Status: v0.11 — the audit format is the deliverable, its consumer
+> surface is public, and the trail now reaches transparency services: one
+> signed statement per chain head, construction reproduced byte-for-byte
+> twice, a registration with a verified receipt on the record
+> ([what a receipt proves — and what it doesn't](docs/INTEROP-SCITT.md)).** The **[PALA-1
 > format](docs/specs/pala-1/PALA-1.md)** is **frozen at v1.0**: a
 > self-describing, byte-level audit format with byte-exact test vectors, a CC0
 > reference implementation, a stdlib-only production codec, and the
@@ -478,6 +481,16 @@ the novelty is in this composition and its seams, not in a new inference kernel.
       Schema shipped beside the vectors, `pala segment` for retention, and
       [INTEGRATION-SURFACE](docs/INTEGRATION-SURFACE.md) declaring the
       stability class of every channel.
+- [x] **v0.11 — the trail leaves the island** — the SCITT bridge from
+      construction to registered receipt: one COSE Signed Statement per
+      published head, reproduced byte-for-byte twice from the referenced
+      standards under a stated contamination boundary, a registration run
+      with a receipt verified offline from the published artifacts alone,
+      and [INTEROP-SCITT](docs/INTEROP-SCITT.md) stating what a receipt
+      proves and what it does not. Plus the production duty cycle (container
+      rotation with a policy, a PKCS#11 anchor store, `serve` auth and real
+      token usage, `pala report`), reader surface for downstream tooling,
+      and release notes that name what `verify()` now costs (tracked as U14).
 - [ ] **Later** — assurance tiers B/C (hardware root of trust, external
       witness); a discrete-GPU run (the integrated GPU flatters every
       prefill-saving mechanism, so these ratios compress on fast prefill); a
