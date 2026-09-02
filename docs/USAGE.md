@@ -118,6 +118,74 @@ palimpsests engine --help       # engine subcommands
 
 ---
 
+### Verify a PALA-1 stream without decryption keys
+
+`pala verify` is read-only and needs no decryption key: record headers are
+checked, and each body is checked against the digest bound into its header —
+encrypted bodies are never opened. An auditor can therefore validate a
+copied stream without receiving any key that created it.
+
+The following script writes the smallest stream whose head can be verified
+end to end. Save it as `make_demo.py`:
+
+```python
+from palimpsests.audit.pala_writer import PalaWriter
+
+path = "demo.pala"
+with PalaWriter(path) as writer:
+    writer.genesis()
+    writer.boot()
+    head = writer.anchor()
+
+print(head.hex())
+```
+
+Run it once and keep the printed value. `anchor()` appends an `ANCHOR`
+record and returns the new chain head *including that record* — exactly the
+value an out-of-band anchor store should hold:
+
+```bash
+HEAD=$(python make_demo.py)
+echo "$HEAD"    # 64 hexadecimal characters (differs per run)
+```
+
+The binary `.pala` file stays authoritative; for human review, export a
+JSONL view of the headers:
+
+```bash
+palimpsests pala export demo.pala --out demo.jsonl
+# exported 3 record(s) to demo.jsonl
+```
+
+Give the saved head to the verifier:
+
+```bash
+palimpsests pala verify demo.pala --anchor "$HEAD"
+# consistency: 3 records, chain intact
+# anchor: c3cfe3c1… from manual
+# completeness: chain head matches the supplied anchor
+# witness: no WITNESS records — existence at a point in time is not attested
+```
+
+Exit `0` means the chain is intact **and** its head matches the anchor.
+Without `--anchor` the command still checks internal consistency but exits
+`2` (`PARTIAL`) on purpose: tail truncation, or wholesale replacement by
+another internally consistent file, cannot be detected from the inside, and
+the tool reports that limit instead of passing over it. A break, a gap, a
+violated MUST or a body-digest mismatch exits `1` (`TAMPERED`) — flip a
+single bit to see it:
+
+```bash
+python -c "b = bytearray(open('demo.pala','rb').read()); b[200] ^= 1; open('demo.pala','wb').write(bytes(b))"
+palimpsests pala verify demo.pala --anchor "$HEAD"
+# consistency: BROKEN — chain breaks at seq [1, 2]
+```
+
+The full exit-code contract (`0/1/2/3`) and machine-readable `--json`
+output are described by `palimpsests pala verify --help`.
+
+---
+
 ## 4. Which settings work
 
 ### 4.1. `chat` command settings
