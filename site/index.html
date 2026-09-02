@@ -96,6 +96,7 @@
     --shadow:0 1px 0 rgba(21,24,26,.05), 0 22px 44px -30px rgba(21,24,26,.45);
     --maxw:1140px;
     --pad:clamp(20px,5vw,64px);
+    --rust-strong:#A8412E;
   }
 
   *{box-sizing:border-box}
@@ -468,16 +469,16 @@
     </div>
     <div class="tenets" data-reveal style="grid-column:1/-1">
       <div>
-        <b>The workload owns the cycles.</b>
-        <p>The audit costs hashing, not signing — cheap enough for hardware the model already strains, and the difference is measured, not asserted.</p>
+        <b>The hardware is modest, and its cycles are reserved for the workload and the power budget.</b>
+        <p>So the audit costs hashing, not signing — measured, not asserted — and under pressure the record yields visibly instead of stalling the model: a dropped record is itself a recorded fact.</p>
       </div>
       <div>
-        <b>No clock to trust, no network to lean on.</b>
-        <p>Every timestamp carries its trust level. A device that doesn&rsquo;t know the time says so — an honest unknown instead of an invented moment.</p>
+        <b>No external witness is reachable.</b>
+        <p>No network to lean on, no clock to trust. Every timestamp carries its trust level — a device that doesn&rsquo;t know the time says so, an honest unknown instead of an invented moment.</p>
       </div>
       <div>
-        <b>The record never blocks the model.</b>
-        <p>Logging can&rsquo;t stall inference. What it guarantees instead: absence is visible — a dropped record is itself a recorded fact.</p>
+        <b>The right to verify is separated from the right to read.</b>
+        <p>The chain verifies with no decryption key: bodies are checked against their digests, never opened — an auditor validates what happened without reading what was said.</p>
       </div>
     </div>
   </div>
@@ -546,7 +547,7 @@
       </div>
       <div class="prov__item" data-reveal>
         <h4>Bill of materials</h4>
-        <p>An SPDX SBOM ships with the release — the dependency inventory a Cyber Resilience Act review asks for, ready rather than reconstructed.</p>
+        <p>A machine-readable SBOM ships with the release — the dependency inventory a Cyber Resilience Act review asks for, ready rather than reconstructed.</p>
       </div>
       <div class="prov__item" data-reveal>
         <h4>Transparency bridge · <span class="mono">SCITT</span></h4>
@@ -582,7 +583,7 @@
     </div>
     <div class="prov__item" data-reveal>
       <h4>Citable, permanently</h4>
-      <p>Every release is archived with a persistent identifier — <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">DOI 10.5281/zenodo.21978107 ↗</a> — so the exact code behind a claim can be cited and retrieved.</p>
+      <p>The work behind the code is published as a report with a persistent identifier — <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">DOI 10.5281/zenodo.21978107 ↗</a> — so the design can be cited permanently. The code itself is pinned by release version on PyPI and GitHub.</p>
     </div>
   </div>
 </section>
@@ -736,7 +737,7 @@
     <div class="foot__links">
       <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
       <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
-      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">DOI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
       <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
       <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
     </div>
