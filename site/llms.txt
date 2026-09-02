@@ -15,7 +15,7 @@ Palimpsests is honest about scope: it supplies the runtime primitives that speci
 - [The record](https://palimpsests.dev/#record): a hash-chained request log — tamper-evident, recoverable, and the record-keeping substrate that EU AI Act logging expectations rest on. Five independent implementations reproduce the format from the spec and test vectors alone.
 - [SCITT transparency bridge](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/INTEROP-SCITT.md): one COSE Signed Statement per published chain head — no record content leaves the device. The statement construction was reproduced byte-for-byte twice from the standards alone, and one registration with a verified receipt is on the public record. The document states what a receipt proves and what it does not.
 - [OpenSSF Best Practices: Gold](https://www.bestpractices.dev/projects/13534) — the highest tier of the programme; every criterion is a public registry entry, not a self-declaration.
-- Signed releases (PEP 740 / Sigstore), an SPDX SBOM per build, a published threat model, OSPS Baseline Level 2 self-attestation, and Atheris fuzzing in CI.
+- Signed releases (PEP 740 / Sigstore), a machine-readable SBOM per build, a published threat model, OSPS Baseline Level 2 self-attestation, and Atheris fuzzing in CI.
 - [EU AI Act Article 12 mapping](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/compliance/EU-AI-ACT-MAPPING.md) — a requirement-by-requirement checklist of what ships today (24 of 27 rows as of v0.11) and what is on the roadmap.
 - [EU regulatory fit](https://palimpsests.dev/#eu-law): the specific runtime primitive each act leans on, linked to source text.
 
@@ -25,7 +25,7 @@ Palimpsests is honest about scope: it supplies the runtime primitives that speci
 - [PyPI package](https://pypi.org/project/palimpsests/)
 - [License (Apache-2.0)](https://www.apache.org/licenses/LICENSE-2.0)
 - [Security policy](https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md)
-- [Cite — DOI 10.5281/zenodo.21978107](https://doi.org/10.5281/zenodo.21978107)
+- [Cite the paper — DOI 10.5281/zenodo.21978107](https://doi.org/10.5281/zenodo.21978107)
 
 ## EU acts referenced
 
