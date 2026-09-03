@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: Assault Consulting
 # SPDX-License-Identifier: CC0-1.0
-"""Generate the inference-profile companion vectors (r2 + r3 semantics).
+"""Generate the inference-profile companion vectors (r2–r4 semantics).
 
 Deterministic: fixed key, seq-derived nonces, fixed ids and clocks —
 real crypto, fake entropy. Never do this outside a test vector.
@@ -10,9 +10,10 @@ INCIDENT_CANDIDATE (SAFETY kind 102), OVERSIGHT_ACK (SAFETY kind 103)
 and the KEY_SHRED erasure body (profile §8) — plus one encrypted
 deployment-content EVENT so the shred has a real target — and, from r3,
 the tool-loop records: TOOL_CALL (kind 8), TOOL_RESULT (kind 9) with its
-hash-bound reference, and GUARD_TOOL_LOOP_LIMIT (SAFETY kind 104). The
-r2 records are appended-to, never edited: their bytes are identical to
-the r2 revision of this file. They are a
+hash-bound reference, and GUARD_TOOL_LOOP_LIMIT (SAFETY kind 104) —
+and, from r4, TOOLS_OFFERED_NO_CALL (kind 10): the offer/absence
+boundary record. Prior-revision records are appended-to, never edited:
+their bytes are identical to the revision that introduced them. They are a
 **companion** artifact: `../test-vectors.json` is frozen with the core
 and is not touched by this script or any future one; a byte of it
 changing would invalidate four recorded verification runs. This file
@@ -75,6 +76,11 @@ KIND_TOOL_CALL = 8
 KIND_TOOL_RESULT = 9
 KIND_GUARD_TOOL_LOOP_LIMIT = 104
 OUTCOME_OK = 0
+
+# r4 profile allocations (profile §3.1, kind 10)
+EVT_TOOLS_OFFERED = 0x000F
+EVT_TOOLS_DIGEST = 0x0010
+KIND_TOOLS_OFFERED_NO_CALL = 10
 
 
 def h(b: bytes) -> str:
@@ -327,6 +333,45 @@ prev = emit(
     "anchor_r3",
     header(record_type=R.RT_ANCHOR, seq=11, prev=prev,
            tlvs=[R.tlv(R.TLV_ANCHOR_HEAD, anchored_r3)]),
+    "Anchor over the r3-extended chain.",
+)
+
+# ─── r4: the offer/absence boundary record (profile §3.1, kind 10) ──────
+
+# 12 — EVENT kind 10: TOOLS_OFFERED_NO_CALL. The completion a text-mode
+# loop leaves indistinguishable from no tool use at all: structured
+# tools offered, no structured call produced, no structured tool traffic
+# in the request either. The digest is the §6.2 discipline applied to
+# names — the *sorted* name list as a compact JSON array, UTF-8 — so it
+# is order-independent: the offer is a set.
+offered_names = ["web.search", "calc.multiply"]
+names_canonical = json.dumps(
+    sorted(offered_names), sort_keys=True, separators=(",", ":"),
+    ensure_ascii=False,
+).encode("utf-8")
+offered_body = R.encode_tlvs([
+    R.tlv(EVT_KIND, u16(KIND_TOOLS_OFFERED_NO_CALL)),
+    R.tlv(EVT_TOOLS_OFFERED, u16(len(offered_names))),
+    R.tlv(EVT_TOOLS_DIGEST, hashlib.sha256(names_canonical).digest()),
+])
+prev = emit(
+    "tools_offered_no_call",
+    header(record_type=R.RT_EVENT, seq=12, prev=prev, body=offered_body,
+           tlvs=[R.tlv(R.TLV_ORIGIN_ROLE, b"engine.native")],
+           span_id=SPAN_S1),
+    "TOOLS_OFFERED_NO_CALL (kind 10, r4): the visibility boundary made "
+    "visible — an observation of offer and absence, never an inference "
+    "about what the reply text did. Count in EVT_TOOLS_OFFERED; the "
+    "order-independent canonical name digest in EVT_TOOLS_DIGEST.",
+    body=offered_body,
+)
+
+# 13 — ANCHOR noting the new head
+anchored_r4 = prev
+prev = emit(
+    "anchor_r4",
+    header(record_type=R.RT_ANCHOR, seq=13, prev=prev,
+           tlvs=[R.tlv(R.TLV_ANCHOR_HEAD, anchored_r4)]),
     "Anchor over the extended chain; anchor_head below tracks this tip.",
 )
 
@@ -336,7 +381,7 @@ chain_head = prev
 
 res = R.verify_chain(chain)
 assert res.chain_ok, f"generated chain does not verify: {res}"
-assert res.count == 12
+assert res.count == 14
 assert not res.breaks and not res.gaps and not res.violations
 # the encrypted body round-trips under the spec'd nonce/AAD derivation
 back = AESGCM(KEY).decrypt(R.nonce_for(3), bodies[3][12:],
@@ -345,13 +390,13 @@ assert back == plaintext
 
 out = {
     "$comment": (
-        "Inference-profile companion vectors (r2 + r3). Deterministic; real "
+        "Inference-profile companion vectors (r2-r4). Deterministic; real "
         "crypto, fake entropy — never derive keys or ids like this outside "
         "a test vector. ../test-vectors.json is frozen with the core and "
         "is deliberately untouched by these."
     ),
     "profile": "inference",
-    "profile_revision": "r3",
+    "profile_revision": "r4",
     "generator": "gen_inference_vectors.py",
     "boot_id": h(BOOT_ID),
     "encryption": {
@@ -397,6 +442,16 @@ out = {
         "10": {
             "kind": 104, "kind_name": "GUARD_TOOL_LOOP_LIMIT",
             "iterations": 8, "ref_seq": 8, "ref_hash": h(call_hash),
+        },
+        "12": {
+            "kind": 10, "kind_name": "TOOLS_OFFERED_NO_CALL",
+            "tools_offered": len(offered_names),
+            "tools_digest": hashlib.sha256(names_canonical).digest().hex(),
+            "names_canonicalization": (
+                "sorted names as a JSON array, compact separators, "
+                "non-ASCII preserved, UTF-8, then SHA-256 — "
+                "order-independent: the offer is a set"
+            ),
         },
     },
 }
