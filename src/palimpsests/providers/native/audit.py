@@ -117,8 +117,6 @@ class NativeAudit:
             writer.genesis()
         writer.boot()
         if writer.recovered_tail_bytes:
-            # The resume truncated a torn trailing record (a crash mid-write);
-            # the removal goes on the record right after the cross-boot link.
             writer.recovery_truncated_tail()
 
     @property
@@ -139,18 +137,14 @@ class NativeAudit:
     # ─── sessions ────────────────────────────────────────────────────────
 
     def session_opened(self) -> bytes:
-        """Open a session span and return its ``span_id``.
-
-        The session identifier is ``<boot_id>:<ordinal>`` — unique within
-        the chain even though scheduler ``seq_id`` slots are recycled.
-        """
+        """Open a session span and return its ``span_id``."""
         sid = f"{self._writer.boot_id.hex()}:{next(self._session_ids)}"
         return self._writer.session_start(sid)
 
     def session_closed(self, span_id: bytes) -> None:
         self._writer.session_end(span_id)
 
-    # ─── KV persistence (the session's save/load boundary) ───────────────
+    # ─── KV persistence ──────────────────────────────────────────────────
 
     def kv_saved(self, blob: bytes, span_id: bytes | None) -> None:
         self._writer.kv_save(sha256(blob).digest(), span_id=span_id or b"\x00" * 16)
@@ -233,12 +227,7 @@ class NativeAudit:
         call_hash: bytes | None,
         span_id: bytes | None,
     ) -> None:
-        """The loop cap refused further dispatches (SAFETY 104) — a guard.
-
-        Feeds the same escalation window as every guard refusal: a burst
-        of loop-limit hits becomes an ``INCIDENT_CANDIDATE`` (category 1)
-        through the existing r2 trigger, not through anything new.
-        """
+        """The loop cap refused further dispatches (SAFETY 104) — a guard."""
         rh = self._writer.guard_tool_loop_limit(
             iterations, call_seq=call_seq, call_hash=call_hash,
             span_id=span_id or ZERO16,
@@ -250,17 +239,9 @@ class NativeAudit:
         rh = self._writer.guard_prefix_release(holder_seq, consumer_count)
         self._note_guard(rh)
 
-    # ─── r2 triggers (profile §4, kind 102 — pre-registered) ─────────────
+    # ─── r2 triggers ─────────────────────────────────────────────────────
 
     def _note_guard(self, guard_hash: bytes) -> None:
-        """Feed one guard refusal into the escalation window.
-
-        When the window holds ``guard_escalation_threshold`` refusals, one
-        ``INCIDENT_CANDIDATE`` (category ``GUARD_ESCALATION``) is emitted,
-        referencing the latest refusal by seq+hash, and the window is
-        cleared — "once per window" by construction: the next candidate
-        needs a fresh threshold's worth of refusals.
-        """
         guard_seq = self._writer.seq - 1
         now = self._clock()
         emit_ref: tuple[int, bytes] | None = None
@@ -289,19 +270,7 @@ class NativeAudit:
             )
 
     def self_check(self) -> VerifyResult:
-        """Verify the writer's own chain; a failure goes on that chain.
-
-        Header-only §7.1 verification of the container this adapter is
-        writing — the library checking itself with the same code any
-        auditor runs. A failing result emits an ``INCIDENT_CANDIDATE``
-        (category ``SELF_CHECK_FAILED``, severity 3, not recoverable):
-        the observation is recorded even though the chain it lands on is
-        the one that just failed — the writer's in-memory head is intact,
-        the append is sound, and a verifier will see both the damage and
-        the machine noticing it. Reading a file the writer is appending
-        to is safe at record granularity: writes are whole-record and
-        unbuffered.
-        """
+        """Verify the writer's own chain; a failure goes on that chain."""
         with open(self._writer.path, "rb") as fh:
             blob = fh.read()
         headers = [hb for hb, _ in iter_records(blob)]
@@ -320,15 +289,7 @@ class NativeAudit:
         return res
 
     def anchor_store_failed(self, error: str) -> None:
-        """Report that storing the anchored head out-of-band failed.
-
-        The store write is the caller's operation (the adapter cannot see
-        it), so failures are reported back here. Reaching
-        ``anchor_failure_threshold`` *consecutive* failures emits one
-        ``INCIDENT_CANDIDATE`` (category ``ANCHOR_ANOMALY``); the counter
-        then keeps counting but does not re-emit until a success resets
-        it — a dead store produces one candidate, not one per attempt.
-        """
+        """Report that storing the anchored head out-of-band failed."""
         with self._trigger_lock:
             self._anchor_failures += 1
             emit = self._anchor_failures == self._anchor_threshold
