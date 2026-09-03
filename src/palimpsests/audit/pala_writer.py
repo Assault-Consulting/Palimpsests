@@ -102,6 +102,7 @@ EVT_PAYLOAD_DIGEST = 0x000D  # 32 bytes — digest of canonical args / result (r
 EVT_OUTCOME = 0x000E  # u16 — 0 ok, 1 error, 2 timeout, 3 cancelled (r3)
 EVT_TOOLS_OFFERED = 0x000F  # u16 — structured tools offered in the request (kind 10, r4)
 EVT_TOOLS_DIGEST = 0x0010  # 32 bytes — canonical offered-name list digest (kind 10, r4)
+EVT_SOURCE = 0x0011  # u16 — 0 parsed-from-wire (default, absent), 1 reported-by-client (r5)
 
 # EVT_KIND values — operations (profile §3)
 KIND_MODEL_LOAD = 1
@@ -136,6 +137,10 @@ OUTCOME_OK = 0
 OUTCOME_ERROR = 1
 OUTCOME_TIMEOUT = 2
 OUTCOME_CANCELLED = 3
+
+# r5 — kind 8/9 evidence-source values (EVT_SOURCE; absent tag == 0)
+SOURCE_PARSED_FROM_WIRE = 0
+SOURCE_REPORTED_BY_CLIENT = 1
 
 _TOOL_NAME_MAX = 64
 
@@ -322,17 +327,6 @@ class PalaWriter:
         seg_bytes: int,
         base_path: str | None = None,
     ) -> None:
-        """Segment bookkeeping for the rotation policy (WS-ROT).
-
-        ``_base_path`` stays the construction-time path: successors are
-        named ``<base>.00001``, ``<base>.00002``, … and the manifest —
-        maintained only when a policy is set — lives at
-        ``<base>.segments.json`` in the ``pala-segments/1`` shape the
-        offline knife writes, closed segments only, updated atomically
-        at each cut. Every entry's ``prev_head`` is the head the segment
-        started from, so any closed segment verifies **alone** via
-        ``verify_headers(..., start_prev=...)``.
-        """
         self._rotation = rotation
         self._base_path = base_path if base_path is not None else self._path
         self._seg_records = seg_records
@@ -370,33 +364,7 @@ class PalaWriter:
         assurance_tier: int = TIER_A,
         recover_torn_tail: bool = True,
     ) -> PalaWriter:
-        """Resume an existing chain: adopt its tail head and seq (core §4.2).
-
-        Walks the container to the last **complete** record, adopts
-        ``head = record_hash`` of that record and ``seq = last + 1``, and
-        returns a writer whose first record MUST be ``BOOT`` — the
-        cross-boot link. A new ``boot_id`` is generated (it is a new boot).
-
-        **Torn tail.** A crash mid-write can leave a partial record after
-        the last complete one. Such bytes never entered the chain — their
-        header never hashed into a link — so with ``recover_torn_tail``
-        (the default) they are truncated away and the writer remembers the
-        fact; the adapter records it as a ``RECOVERY_TRUNCATED_TAIL`` event
-        right after ``BOOT`` (profile §3, kind 7). Append-only is not
-        contradicted: what it demands is that the removal be *on the
-        record*, not that bytes which never became a record be kept.
-
-        **What is refused.** An empty file (start fresh instead), a file
-        with no complete record at all, and — deliberately — a file whose
-        bytes *after* the first unparseable point contain further record
-        magic: that is mid-stream damage, not a torn tail, and truncating
-        it would destroy evidence. Such a file is an incident to
-        investigate with the verifier, not to auto-repair.
-
-        The walk is O(file); resume happens once per boot. It performs no
-        chain verification — that is the reader's job (§7); resume needs
-        only the mechanical tail state.
-        """
+        """Resume an existing chain: adopt its tail head and seq (core §4.2)."""
         size = os.path.getsize(path)
         if size == 0:
             raise ValueError("file is empty — use PalaWriter(path) to start a new chain")
@@ -409,15 +377,15 @@ class PalaWriter:
         with open(path, "rb") as fh:
             while off < size:
                 if size - off < FIXED_HEADER_LEN:
-                    break  # not even a fixed header — torn
+                    break
                 fixed = fh.read(FIXED_HEADER_LEN)
                 if fixed[:4] != MAGIC:
-                    break  # unparseable from this offset on
+                    break
                 (hlen,) = struct.unpack_from("<H", fixed, 6)
                 (seq,) = struct.unpack_from("<Q", fixed, 12)
                 (body_len,) = struct.unpack_from("<I", fixed, 120)
                 if hlen < FIXED_HEADER_LEN or off + hlen + body_len > size:
-                    break  # header or body overruns the file — torn
+                    break
                 rest = fh.read(hlen - FIXED_HEADER_LEN)
                 fh.seek(body_len, os.SEEK_CUR)
                 last_header = fixed + rest
@@ -463,7 +431,7 @@ class PalaWriter:
         w._resume_boot_pending = True
         w._recovered_tail_bytes = torn
         w._recovered_tail_offset = last_end
-        w._open_spans = set()  # historic spans are outside this writer's knowledge
+        w._open_spans = set()
         w._path = os.fspath(path)
         w._fh = open(path, "ab", buffering=0)  # noqa: SIM115 — closed in close()
         first = Header.decode(first_header)
@@ -482,8 +450,6 @@ class PalaWriter:
                             and entries
                             and entries[-1].get("head") == first.prev_hash.hex()
                         ):
-                            # The link checks out: this file continues the
-                            # manifest's history — extend it, don't fork it.
                             base = stem
                     except (OSError, ValueError):
                         base = None
@@ -574,6 +540,21 @@ class PalaWriter:
         return encode_tlvs(tlvs)
 
     @staticmethod
+    def _append_source(tlvs: list[tuple[int, bytes]], source: int) -> None:
+        """Append ``EVT_SOURCE`` for non-default sources (r5).
+
+        The default value is expressed by absence: r3/r4 emitters and
+        this writer with ``source=SOURCE_PARSED_FROM_WIRE`` produce the
+        same bytes.
+        """
+        if source not in (SOURCE_PARSED_FROM_WIRE, SOURCE_REPORTED_BY_CLIENT):
+            raise ValueError(
+                "source must be SOURCE_PARSED_FROM_WIRE or SOURCE_REPORTED_BY_CLIENT"
+            )
+        if source == SOURCE_REPORTED_BY_CLIENT:
+            tlvs.append((EVT_SOURCE, struct.pack("<H", source)))
+
+    @staticmethod
     def _origin(role: str, *extra: tuple[int, bytes]) -> list[tuple[int, bytes]]:
         return [(TLV_ORIGIN_ROLE, role.encode("utf-8")), *extra]
 
@@ -597,7 +578,7 @@ class PalaWriter:
         """Close a session span (core §3.1: duration is derived at read time)."""
         return self._emit(RT_SPAN_END, span_id=span_id)
 
-    # ─── §3 events: model and KV operations ─────────────────────────────────
+    # ─── §3 events ──────────────────────────────────────────────────────────
 
     def model_load(
         self,
@@ -608,13 +589,7 @@ class PalaWriter:
         detail: str | None = None,
         span_id: bytes = ZERO16,
     ) -> bytes:
-        """A model became the active origin (EVT_KIND MODEL_LOAD).
-
-        Carries the origin triple so the chain answers "which weights said
-        that?": ``model_digest`` is the loaded artefact's digest (the GGUF file
-        for levels 2–3), ``config_digest`` the memory configuration's
-        (see :func:`canonical_config_digest`). Both are 32 bytes.
-        """
+        """A model became the active origin (EVT_KIND MODEL_LOAD)."""
         if len(model_digest) != 32 or len(config_digest) != 32:
             raise ValueError("model_digest and config_digest must be 32 bytes")
         origin = self._origin(
@@ -642,22 +617,15 @@ class PalaWriter:
         return self._emit(RT_EVENT, tlvs=self._origin(ROLE_KV_STORE), body=body, span_id=span_id)
 
     def prefix_copy(self, token_count: int, *, span_id: bytes = ZERO16) -> bytes:
-        """A shared prefix copied into a session slot (token count = length)."""
         body = self._event_body(KIND_PREFIX_COPY, token_count=token_count)
         return self._emit(RT_EVENT, tlvs=self._origin(ROLE_SCHEDULER), body=body, span_id=span_id)
 
     def prefix_warm(self, *, token_count: int | None = None) -> bytes:
-        """A prefix holder decoded a prefix for sharing (EVT_KIND PREFIX_WARM)."""
         body = self._event_body(KIND_PREFIX_WARM, token_count=token_count)
         return self._emit(RT_EVENT, tlvs=self._origin(ROLE_SCHEDULER), body=body)
 
     def recovery_truncated_tail(self, *, role: str = ROLE_NATIVE) -> bytes:
-        """Record that resume removed a torn trailing record (profile §3, kind 7).
-
-        Only meaningful on a writer produced by :meth:`open_existing` that
-        actually truncated bytes; calling it otherwise raises — a recovery
-        note about nothing would itself be a lie on the record.
-        """
+        """Record that resume removed a torn trailing record (profile §3, kind 7)."""
         if not self._recovered_tail_bytes:
             raise RuntimeError("no torn tail was recovered by this writer")
         body = self._event_body(
@@ -669,18 +637,11 @@ class PalaWriter:
         )
         return self._emit(RT_EVENT, tlvs=self._origin(role), body=body)
 
-    # ─── §4 safety: guard refusals (the audit observes, does not implement) ──
+    # ─── §4 safety ──────────────────────────────────────────────────────────
 
     def guard_prefix_release(
         self, holder_seq: int, consumer_count: int, *, span_id: bytes = ZERO16
     ) -> bytes:
-        """A prefix-holder release was refused while consumers were live.
-
-        The canonical guard: releasing a holder with live consumers would
-        silently perturb their logits, so the scheduler refuses
-        (``PrefixHolderInUseError``). This records the refusal — never the
-        holder's contents.
-        """
         detail = f"holder {holder_seq}: {consumer_count} live consumer(s)"
         body = self._event_body(KIND_GUARD_PREFIX_RELEASE, detail=detail)
         return self._emit(RT_SAFETY, tlvs=self._origin(ROLE_SCHEDULER), body=body, span_id=span_id)
@@ -688,18 +649,10 @@ class PalaWriter:
     def guard_state_reject(
         self, *, detail: str | None = None, span_id: bytes = ZERO16
     ) -> bytes:
-        """A persisted KV blob failed validation before reaching the C parser.
-
-        Takes a ``span_id`` because the reject happens at a session's
-        ``load_state`` boundary — the refusal belongs to that session's
-        span (surfaced by wiring the writer into the engine).
-        """
         body = self._event_body(KIND_GUARD_STATE_REJECT, detail=detail)
         return self._emit(
             RT_SAFETY, tlvs=self._origin(ROLE_KV_STORE), body=body, span_id=span_id
         )
-
-    # ─── r2: the oversight loop (profile §4, kinds 102/103) ─────────────────
 
     def incident_candidate(
         self,
@@ -712,14 +665,7 @@ class PalaWriter:
         detail: str | None = None,
         role: str = ROLE_NATIVE,
     ) -> bytes:
-        """Record that a pre-registered trigger fired (SAFETY kind 102).
-
-        Deliberately not an incident *determination* — that is a legal
-        judgment the log must not fake — but a never-shed observation for
-        a human. ``ref_seq``/``ref_hash`` MAY name the source record and
-        MUST be given together: the hash is what binds the reference past
-        any seq ambiguity (profile r2).
-        """
+        """Record that a pre-registered trigger fired (SAFETY kind 102)."""
         if (ref_seq is None) != (ref_hash is None):
             raise ValueError("ref_seq and ref_hash must be given together")
         if ref_hash is not None and len(ref_hash) != 32:
@@ -747,16 +693,7 @@ class PalaWriter:
         *,
         role: str = ROLE_NATIVE,
     ) -> bytes:
-        """Record a disposition for a candidate (SAFETY kind 103).
-
-        The writer is deliberately dumb here: it validates the *format* of
-        every field and nothing about existence — whether
-        ``candidate_seq``/``candidate_hash`` name a real candidate is the
-        reader's referential-integrity check, reported as an advisory,
-        never a chain violation (profile r2). ``operator_id`` is 16 opaque
-        bytes, pseudonymous by construction: the mapping to a person lives
-        with the deployer, outside the log.
-        """
+        """Record a disposition for a candidate (SAFETY kind 103)."""
         if len(candidate_hash) != 32:
             raise ValueError("candidate_hash must be 32 bytes")
         if len(operator_id) != 16:
@@ -774,7 +711,7 @@ class PalaWriter:
         )
         return self._emit(RT_SAFETY, tlvs=self._origin(role), body=body)
 
-    # ─── r3: tool-loop records (profile §3.1 / §4 kind 104) ─────────────────
+    # ─── r3: tool-loop records ───────────────────────────────────────────────
 
     def tool_call(
         self,
@@ -784,15 +721,9 @@ class PalaWriter:
         detail: str | None = None,
         span_id: bytes = ZERO16,
         role: str = ROLE_NATIVE,
+        source: int = SOURCE_PARSED_FROM_WIRE,
     ) -> bytes:
-        """Record a dispatched tool invocation (EVENT kind 8, r3).
-
-        ``name`` is the registered tool identifier — an identifier, never
-        arguments; arguments enter the log only as ``args_digest``
-        (``canonical_tool_args_digest``). What this records is the
-        dispatch, not a "decision" — whether the dispatch was wise is a
-        judgment the log must not fake (profile §3.1).
-        """
+        """Record a dispatched tool invocation (EVENT kind 8, r3)."""
         raw = name.encode("utf-8")
         if not raw or len(raw) > _TOOL_NAME_MAX:
             raise ValueError(f"tool name must be 1..{_TOOL_NAME_MAX} UTF-8 bytes")
@@ -806,6 +737,7 @@ class PalaWriter:
             tlvs.append((EVT_PAYLOAD_DIGEST, args_digest))
         if detail is not None:
             tlvs.append((EVT_DETAIL, _detail(detail)))
+        self._append_source(tlvs, source)
         return self._emit(
             RT_EVENT, tlvs=self._origin(role), body=encode_tlvs(tlvs), span_id=span_id
         )
@@ -819,16 +751,9 @@ class PalaWriter:
         result_digest: bytes | None = None,
         span_id: bytes = ZERO16,
         role: str = ROLE_NATIVE,
+        source: int = SOURCE_PARSED_FROM_WIRE,
     ) -> bytes:
-        """Record a returned/failed/abandoned invocation (EVENT kind 9, r3).
-
-        The reference pair MUST name the ``TOOL_CALL`` — the hash binds it
-        past any seq ambiguity, the OVERSIGHT_ACK rule reused. The writer
-        validates the *format* only; whether the pair names a real call is
-        the reader's referential-integrity advisory. Latency is the
-        ``monotonic_ns`` delta between the two records — no duration field
-        exists because none is needed (profile §3.1).
-        """
+        """Record a returned/failed/abandoned invocation (EVENT kind 9, r3)."""
         if len(call_hash) != 32:
             raise ValueError("call_hash must be 32 bytes")
         if outcome not in (OUTCOME_OK, OUTCOME_ERROR, OUTCOME_TIMEOUT, OUTCOME_CANCELLED):
@@ -843,6 +768,7 @@ class PalaWriter:
             if len(result_digest) != 32:
                 raise ValueError("result_digest must be 32 bytes")
             tlvs.append((EVT_PAYLOAD_DIGEST, result_digest))
+        self._append_source(tlvs, source)
         return self._emit(
             RT_EVENT, tlvs=self._origin(role), body=encode_tlvs(tlvs), span_id=span_id
         )
@@ -856,18 +782,7 @@ class PalaWriter:
         role: str = ROLE_NATIVE,
         detail: str | None = None,
     ) -> bytes:
-        """Record an offer the completion left untouched (EVENT kind 10, r4).
-
-        An observation of the visibility boundary, never an inference:
-        the request offered ``count`` structured tools
-        (``canonical_tool_names_digest`` of their names in
-        ``tools_digest``) and the completion produced no structured tool
-        call. Whatever the reply text did with the offer is beyond
-        structured audit (profile §3.1); this record turns that
-        emptiness into a fact on the chain. When and whether to emit —
-        e.g. suppressing completions already inside a visible structured
-        loop — is the caller's stated policy, not this method's.
-        """
+        """Record an offer the completion left untouched (EVENT kind 10, r4)."""
         if not 0 <= count <= 0xFFFF:
             raise ValueError("count must fit u16")
         if len(tools_digest) != 32:
@@ -892,14 +807,7 @@ class PalaWriter:
         span_id: bytes = ZERO16,
         role: str = ROLE_NATIVE,
     ) -> bytes:
-        """Record that the tool-loop cap refused further dispatches (SAFETY 104, r3).
-
-        The §4 pattern applied to the loop: the cap refuses rather than let
-        a runaway loop exhaust the engine, and this record observes the
-        refusal — it never implements it. ``call_seq``/``call_hash`` MAY
-        name the last ``TOOL_CALL`` before the cap and MUST be given
-        together. Never shed.
-        """
+        """Record that the tool-loop cap refused further dispatches (SAFETY 104, r3)."""
         if (call_seq is None) != (call_hash is None):
             raise ValueError("call_seq and call_hash must be given together")
         if call_hash is not None and len(call_hash) != 32:
@@ -915,7 +823,7 @@ class PalaWriter:
             RT_SAFETY, tlvs=self._origin(role), body=encode_tlvs(tlvs), span_id=span_id
         )
 
-    # ─── r2: documented erasure (profile §8) ────────────────────────────────
+    # ─── r2: documented erasure ──────────────────────────────────────────────
 
     def key_shred(
         self,
@@ -925,16 +833,7 @@ class PalaWriter:
         target_seqs: list[int] | None = None,
         detail: str | None = None,
     ) -> bytes:
-        """Note a key's destruction, with the erasure documented (§8).
-
-        One record, one operation: the reason/targets/ticket ride the same
-        ``KEY_SHRED`` record that documents the destruction. The body is
-        cleartext by MUST — the note has to outlive every key. This method
-        only *records*; destroying ``K[key_id]`` is the caller's key-store
-        operation, and callers should emit this record inside that
-        operation so the two cannot drift apart. Whether ``target_seqs``
-        name real records under that key is a reader advisory.
-        """
+        """Note a key's destruction, with the erasure documented (§8)."""
         tlvs: list[tuple[int, bytes]] = [(SHRED_REASON, struct.pack("<H", reason))]
         if target_seqs:
             tlvs.append(
@@ -948,7 +847,7 @@ class PalaWriter:
             body=encode_tlvs(tlvs),
         )
 
-    # ─── §5 aggregate: serving statistics over a window ─────────────────────
+    # ─── §5 aggregate ────────────────────────────────────────────────────────
 
     def aggregate(
         self,
@@ -960,12 +859,7 @@ class PalaWriter:
         prefill_saved: int,
         sessions_open: int,
     ) -> bytes:
-        """Serving statistics for a window (cleartext; core §3.2).
-
-        ``prefill_saved`` (``AGG_PREFILL_SAVED``) is deliberate: the library's
-        measured value proposition is avoided re-prefill, and this makes that
-        claim an auditable time series rather than a benchmark artefact.
-        """
+        """Serving statistics for a window (cleartext; core §3.2)."""
         body = encode_tlvs(
             [
                 (AGG_WINDOW_NS, struct.pack("<Q", window_ns)),
@@ -991,16 +885,7 @@ class PalaWriter:
     # ─── anchoring ──────────────────────────────────────────────────────────
 
     def anchor(self) -> bytes:
-        """Note the current head in-chain, and return the head to store.
-
-        Writes an ``ANCHOR`` record whose ``ANCHOR_HEAD`` TLV is the head as of
-        just before it (the head it anchors). The value returned is the *new*
-        head (the tip, including the anchor record itself) — this is what the
-        out-of-band anchor store should hold, so a later completeness check sees
-        ``A == H`` until more records are appended (core §7.2, as clarified: the
-        store holds the current head; an in-chain ANCHOR record is a historical
-        note that may lag).
-        """
+        """Note the current head in-chain, and return the head to store."""
         anchored = self._head
         self._emit(RT_ANCHOR, tlvs=[(TLV_ANCHOR_HEAD, anchored)])
         return self._head
@@ -1009,7 +894,6 @@ class PalaWriter:
 
     @property
     def head(self) -> bytes:
-        """The current chain head (``record_hash`` of the last record)."""
         return self._head
 
     @property
@@ -1018,12 +902,10 @@ class PalaWriter:
 
     @property
     def seq(self) -> int:
-        """The sequence number the next record will receive."""
         return self._seq
 
     @property
     def recovered_tail_bytes(self) -> int:
-        """Bytes removed as a torn tail by :meth:`open_existing` (0 if none)."""
         return self._recovered_tail_bytes
 
     @property
@@ -1032,29 +914,10 @@ class PalaWriter:
 
     @property
     def path(self) -> str:
-        """The container's filesystem path (for self-verification readers)."""
         return self._path
 
     def rotate(self, next_path: str | os.PathLike[str]) -> bytes:
-        """Cut the container at a record boundary; continue in a new file.
-
-        Rotation is a storage operation, invisible to the chain (core
-        §2.4): same boot, same sequence, same head — the next record
-        simply lands in ``next_path``, and the byte concatenation of the
-        segments verifies as one container. No ``BOOT`` is emitted:
-        ``BOOT`` is the cross-boot link (core §4.2), and this is not a
-        new boot.
-
-        Refused while a span **this writer opened** is still open. That
-        is not a wire rule — the boundary is invisible either way — but
-        an operational courtesy to readers who handle segments one at a
-        time: close the span, rotate, reopen. Spans inherited by
-        ``open_existing`` are outside this writer's knowledge and do not
-        block rotation.
-
-        Returns the chain head at the cut — the natural value to anchor
-        or checkpoint for the closed segment.
-        """
+        """Cut the container at a record boundary; continue in a new file."""
         p = os.fspath(next_path)
         with self._lock:
             if not self._started:
@@ -1067,13 +930,6 @@ class PalaWriter:
             return self._rotate_core(p)
 
     def _rotate_core(self, p: str) -> bytes:
-        """The cut itself — caller holds the lock and has cleared the spans.
-
-        With a rotation policy set, the closed segment lands in the
-        ``pala-segments/1`` manifest (closed segments only; the open one
-        is never listed), written atomically via a same-directory
-        replace. Without a policy, this is exactly the #178 behaviour.
-        """
         if os.path.exists(p) and os.path.getsize(p) > 0:
             raise ValueError(
                 "next_path already holds bytes — a rotation starts an empty "
@@ -1101,7 +957,6 @@ class PalaWriter:
         return self._head
 
     def _maybe_rotate_locked(self) -> None:
-        """Post-record policy check; the cut falls between records only."""
         pol = self._rotation
         if pol is None:
             return
@@ -1115,8 +970,6 @@ class PalaWriter:
         if not due:
             return
         if self._open_spans:
-            # Deferred to the span boundary (#178: a cut never severs a
-            # span); performed right after the closing SPAN_END record.
             self._rotation_due = True
             return
         self._rotation_due = False
