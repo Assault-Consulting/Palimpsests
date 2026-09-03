@@ -12,9 +12,18 @@ kramdown-rfc markdown are rendered to RFCXML v3 and plain text by
 directory and fails on a source that does not render — the same
 gate-not-taste posture as the rest of the repo's CI.
 
-There are no sources here yet; the directory carries the pipeline so
-that when a publication cycle opens, the document lands into working
-tooling instead of the tooling landing in a hurry.
+## Sources
+
+- `draft-sparysh-pala-audit-00.md` — *PALA-1: A Tamper-Evident Audit
+  Record Format for Constrained and Disconnected Deployments*. Submitted
+  to the IETF as an Internet-Draft (individual submission) on
+  2026-09-02, posted 2026-09-03, expires 2027-03-07.
+  <https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/>
+
+  The document presents the frozen PALA-1 v1.0 wire format as it is; it
+  does not revise it. Nothing in `docs/specs/pala-1/` changes because a
+  publication document exists, and the test vectors remain the
+  normative artefact for interoperability.
 
 Local build:
 
@@ -24,7 +33,12 @@ gem install kramdown-rfc
 kdrfc -3 standards/draft-<name>.md   # produces .xml and .txt alongside
 ```
 
-Conventions for future sources: one document per file, named exactly as
+Conventions for sources here: one document per file, named exactly as
 its publication name; the rendered `.xml`/`.txt` are build outputs and
 are not committed; content changes follow the repository's PR-and-
 non-author-review convention like every other document.
+
+A submitted revision is immutable — the IETF archive keeps every
+revision permanently and a posted draft cannot be withdrawn. Changes to
+a submitted document therefore land as a new revision, not as an edit
+to the one already posted.
