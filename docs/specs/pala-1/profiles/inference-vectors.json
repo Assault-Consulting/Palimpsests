@@ -1,7 +1,7 @@
 {
-  "$comment": "Inference-profile companion vectors (r2 + r3). Deterministic; real crypto, fake entropy \u2014 never derive keys or ids like this outside a test vector. ../test-vectors.json is frozen with the core and is deliberately untouched by these.",
+  "$comment": "Inference-profile companion vectors (r2-r4). Deterministic; real crypto, fake entropy \u2014 never derive keys or ids like this outside a test vector. ../test-vectors.json is frozen with the core and is deliberately untouched by these.",
   "profile": "inference",
-  "profile_revision": "r3",
+  "profile_revision": "r4",
   "generator": "gen_inference_vectors.py",
   "boot_id": "b0071d000000000000000000000000a2",
   "encryption": {
@@ -128,16 +128,36 @@
     },
     {
       "label": "anchor_r3",
-      "note": "Anchor over the extended chain; anchor_head below tracks this tip.",
+      "note": "Anchor over the r3-extended chain.",
       "seq": 11,
       "record_type": "0x0050",
       "header_len": 192,
       "header_hex": "50414c410100c000500000030b00000000000000b0071d000000000000000000000000a2d82d560f54988256575ac19374f915b43419007004c6e22f7c5e116c8ff1c9370000000000000000000000000000000000000000000000000000000000000000c0f2181902000000c0c06a90a30ac2180000000000000000000000000000000000000000000000000000000000000000000000000000000050002000d82d560f54988256575ac19374f915b43419007004c6e22f7c5e116c8ff1c937",
       "record_hash": "76fd801ba7e34addf6d02f8dc531f36e53b65e9f31565c5561e24e5dadd56cd7"
+    },
+    {
+      "label": "tools_offered_no_call",
+      "note": "TOOLS_OFFERED_NO_CALL (kind 10, r4): the visibility boundary made visible \u2014 an observation of offer and absence, never an inference about what the reply text did. Count in EVT_TOOLS_OFFERED; the order-independent canonical name digest in EVT_TOOLS_DIGEST.",
+      "seq": 12,
+      "record_type": "0x0012",
+      "header_len": 173,
+      "header_hex": "50414c410100ad00120000030c00000000000000b0071d000000000000000000000000a276fd801ba7e34addf6d02f8dc531f36e53b65e9f31565c5561e24e5dadd56cd73131313131313131313131313131313100000000000000000000000000000000003528190200000000037a90a30ac218000000003000000053164559246c644912807e285c0b4ce718517dcd32d99a8601b8f7727b8b8de901000d00656e67696e652e6e6174697665",
+      "record_hash": "a0e2c18a4abd0335e486012c4339385f8a85c2e8f0159e7ec9aa952cb2d269a0",
+      "body_len": 48,
+      "body_hex": "010002000a000f000200020010002000a4c746d1b4239f32c0ea5b109fffd373b7693df02a9e049f9d3573b2a6d08546"
+    },
+    {
+      "label": "anchor_r4",
+      "note": "Anchor over the extended chain; anchor_head below tracks this tip.",
+      "seq": 13,
+      "record_type": "0x0050",
+      "header_len": 192,
+      "header_hex": "50414c410100c000500000030d00000000000000b0071d000000000000000000000000a2a0e2c18a4abd0335e486012c4339385f8a85c2e8f0159e7ec9aa952cb2d269a00000000000000000000000000000000000000000000000000000000000000000407737190200000040458990a30ac2180000000000000000000000000000000000000000000000000000000000000000000000000000000050002000a0e2c18a4abd0335e486012c4339385f8a85c2e8f0159e7ec9aa952cb2d269a0",
+      "record_hash": "df384647b8f56b3c120b7d6d473b4c728d2d8c82188c675ced27b7c9b0526eed"
     }
   ],
-  "chain_head": "76fd801ba7e34addf6d02f8dc531f36e53b65e9f31565c5561e24e5dadd56cd7",
-  "anchor_head": "76fd801ba7e34addf6d02f8dc531f36e53b65e9f31565c5561e24e5dadd56cd7",
+  "chain_head": "df384647b8f56b3c120b7d6d473b4c728d2d8c82188c675ced27b7c9b0526eed",
+  "anchor_head": "df384647b8f56b3c120b7d6d473b4c728d2d8c82188c675ced27b7c9b0526eed",
   "semantics": {
     "$comment": "Decoded r2/r3 body expectations, so a profile-aware reader can check its tag/kind resolution \u2014 the envelope answers above are checkable with any core verifier.",
     "4": {
@@ -186,6 +206,13 @@
       "iterations": 8,
       "ref_seq": 8,
       "ref_hash": "d5fddef61cc220d6eaebd4084742e1040f3c794cd294a56fe3886ceac895893d"
+    },
+    "12": {
+      "kind": 10,
+      "kind_name": "TOOLS_OFFERED_NO_CALL",
+      "tools_offered": 2,
+      "tools_digest": "a4c746d1b4239f32c0ea5b109fffd373b7693df02a9e049f9d3573b2a6d08546",
+      "names_canonicalization": "sorted names as a JSON array, compact separators, non-ASCII preserved, UTF-8, then SHA-256 \u2014 order-independent: the offer is a set"
     }
   }
 }
