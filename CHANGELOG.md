@@ -6,6 +6,33 @@ aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 once it reaches v1.0. Before v1.0, minor versions may include breaking
 API changes.
 
+## [Unreleased]
+
+### Added
+
+- **PALA-1 submitted to the IETF as an Internet-Draft.**
+  `draft-sparysh-pala-audit-00` was uploaded on 2026-09-02 and posted on
+  2026-09-03; it expires 2027-03-07.
+  <https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/>
+
+  This is an **individual submission**, not an IETF standard and not a
+  working-group document. No one has reviewed or approved it; anyone may
+  submit an Internet-Draft. What the submission provides is a dated,
+  citable, permanent URL for a specification that already existed.
+
+  The document presents the frozen v1.0 wire format as it is and does not
+  revise it. `docs/specs/pala-1/PALA-1.md` remains the normative source
+  and `test-vectors.json` remains the interoperability artefact; the
+  I-D is a presentation of both, in RFC form. Nothing in the wire, the
+  vectors or the verification record changes because a publication
+  document now exists.
+
+  The source lands in `standards/`, where the CI spec-build job has been
+  waiting for it. Rendered `.xml` and `.txt` are build outputs and are
+  not committed.
+
+  The submission passed the datatracker's idnits check with no nits.
+
 ## [0.11.0] — 2026-09-02
 
 **Additive only — the PALA-1 wire format is unchanged (frozen at v1.0).**
@@ -1054,6 +1081,7 @@ Initial release.
   from the OS keychain, falling back to an ephemeral key headless.
 - **CLI** — `chat`, `models`, `engine list` / `engine use`.
 
+[Unreleased]: https://github.com/Assault-Consulting/Palimpsests/compare/v0.11.0...HEAD
 [0.11.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.11.0
 [0.10.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.10.0
 [0.9.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.9.0
