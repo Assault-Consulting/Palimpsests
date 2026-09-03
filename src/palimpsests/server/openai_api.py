@@ -58,7 +58,6 @@ import time
 import uuid
 from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass
-
 from palimpsests.engine.messages import ChatChunk
 from palimpsests.server.tool_calls import parse_tool_calls, tools_system_message
 
@@ -339,7 +338,6 @@ def create_app(
                 },
             )
         from hashlib import sha256
-
         from palimpsests.audit.pala_writer import (
             OUTCOME_CANCELLED,
             OUTCOME_ERROR,
@@ -457,7 +455,6 @@ def _args_digest(arguments: dict) -> bytes:
 def _record_tool_results(audit, messages: list, pending: dict) -> None:
     """Bind incoming role:"tool" messages to their recorded calls."""
     from hashlib import sha256
-
     from palimpsests.audit.pala_writer import OUTCOME_OK
 
     for m in messages:
