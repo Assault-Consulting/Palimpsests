@@ -184,6 +184,14 @@ class NativeAudit:
         )
         return self._writer.seq - 1, rh
 
+    def tools_offered_no_call(
+        self, count: int, tools_digest: bytes, span_id: bytes | None
+    ) -> None:
+        """Record the offer/absence boundary (kind 10) for one completion."""
+        self._writer.tools_offered_no_call(
+            count, tools_digest, span_id=span_id or ZERO16
+        )
+
     def tool_result(
         self,
         call_seq: int,

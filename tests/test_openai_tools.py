@@ -176,7 +176,37 @@ def test_endpoint_records_the_loop_into_pala(tmp_path):
     assert ver.chain.chain_ok is True
     assert kinds.count("TOOL_CALL") >= 1
     assert kinds.count("TOOL_RESULT") >= 1
+    # Both turns are structured traffic: turn 1 produced calls, turn 2
+    # carries tool-role messages — the kind-10 advisory must stay silent.
+    assert "TOOLS_OFFERED_NO_CALL" not in kinds
     # the result resolved to its call: no dangling-reference advisories
     codes = {i.code for i in ver.advisory.items}
     assert "reference_unresolved" not in codes
     assert "reference_hash_mismatch" not in codes
+
+
+def test_tools_offered_without_call_leaves_kind_10(tmp_path):
+    from palimpsests.audit.pala_writer import PalaWriter
+    from palimpsests.audit.reader import AuditReader
+    from palimpsests.providers.native.audit import NativeAudit
+
+    log = tmp_path / "offered.pala"
+    audit = NativeAudit(PalaWriter(log))
+    app = create_app(chat_fn=_plain_chat, models_fn=lambda: [], audit=audit)
+    client = TestClient(app)
+    r = client.post(
+        "/v1/chat/completions",
+        json={
+            "model": "m",
+            "messages": [{"role": "user", "content": "hi"}],
+            "tools": TOOLS,
+        },
+    )
+    assert r.status_code == 200
+    audit.writer.close()
+
+    with AuditReader.open(log) as reader:
+        ver = reader.verify()
+        kinds = [dr.kind_name for dr in reader.records() if dr.kind_name]
+    assert ver.chain.chain_ok is True
+    assert kinds.count("TOOLS_OFFERED_NO_CALL") == 1

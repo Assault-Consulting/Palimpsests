@@ -153,3 +153,31 @@ def test_tool_events_carry_the_session_span(tmp_path):
     blob = log.read_bytes()
     hb = [h for h, _ in iter_records(blob)][2]
     assert hb[68:84] == span  # span_id field, per the core layout
+
+
+def test_tools_offered_no_call_round_trip(tmp_path):
+    import struct
+    from palimpsests.audit.pala.codec import decode_tlvs, iter_records
+    from palimpsests.audit.pala_writer import (
+        EVT_KIND,
+        EVT_TOOLS_DIGEST,
+        EVT_TOOLS_OFFERED,
+        KIND_TOOLS_OFFERED_NO_CALL,
+        PalaWriter,
+        canonical_tool_names_digest,
+    )
+
+    p = tmp_path / "t.pala"
+    with PalaWriter(p) as w:
+        w.genesis()
+        w.boot()
+        d = canonical_tool_names_digest(["b.second", "a.first"])
+        w.tools_offered_no_call(2, d)
+
+    _, body = list(iter_records(p.read_bytes()))[-1]
+    tlvs = dict(decode_tlvs(body))
+    assert struct.unpack("<H", tlvs[EVT_KIND])[0] == KIND_TOOLS_OFFERED_NO_CALL
+    assert struct.unpack("<H", tlvs[EVT_TOOLS_OFFERED])[0] == 2
+    assert tlvs[EVT_TOOLS_DIGEST] == d
+    # Order-independent: the offer is a set.
+    assert d == canonical_tool_names_digest(["a.first", "b.second"])
