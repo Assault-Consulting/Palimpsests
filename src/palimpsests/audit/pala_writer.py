@@ -100,6 +100,8 @@ EVT_DISPOSITION = 0x000B  # u16 — 0 ack, 1 dismissed, 2 escalated (r2)
 EVT_TOOL_NAME = 0x000C  # UTF-8 <= 64 bytes — registered tool identifier (r3)
 EVT_PAYLOAD_DIGEST = 0x000D  # 32 bytes — digest of canonical args / result (r3)
 EVT_OUTCOME = 0x000E  # u16 — 0 ok, 1 error, 2 timeout, 3 cancelled (r3)
+EVT_TOOLS_OFFERED = 0x000F  # u16 — structured tools offered in the request (kind 10, r4)
+EVT_TOOLS_DIGEST = 0x0010  # 32 bytes — canonical offered-name list digest (kind 10, r4)
 
 # EVT_KIND values — operations (profile §3)
 KIND_MODEL_LOAD = 1
@@ -111,6 +113,7 @@ KIND_PREFIX_WARM = 6
 KIND_RECOVERY_TRUNCATED_TAIL = 7
 KIND_TOOL_CALL = 8  # r3 — the loop dispatched a tool invocation
 KIND_TOOL_RESULT = 9  # r3 — the invocation returned / failed / was abandoned
+KIND_TOOLS_OFFERED_NO_CALL = 10  # r4 — tools offered, no structured call produced
 # EVT_KIND values — guard refusals (profile §4), from 100 upward
 KIND_GUARD_PREFIX_RELEASE = 100
 KIND_GUARD_STATE_REJECT = 101
@@ -244,6 +247,21 @@ def session_span_id(session_id: str) -> bytes:
     per-session state, which matters under concurrent sessions.
     """
     return sha256(("pala-session:" + session_id).encode("utf-8")).digest()[:16]
+
+
+def canonical_tool_names_digest(names) -> bytes:
+    """Digest of the offered tool-name list for ``EVT_TOOLS_DIGEST`` (r4).
+
+    The §6.2 discipline applied to names: the *sorted* list of names as a
+    JSON array, compact separators, non-ASCII preserved, UTF-8, then
+    SHA-256. Sorting makes the digest order-independent — the offer is a
+    set, and two clients sending the same tools in different order made
+    the same offer.
+    """
+    encoded = json.dumps(
+        sorted(names), sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    ).encode("utf-8")
+    return sha256(encoded).digest()
 
 
 class PalaWriter:
@@ -825,6 +843,42 @@ class PalaWriter:
             if len(result_digest) != 32:
                 raise ValueError("result_digest must be 32 bytes")
             tlvs.append((EVT_PAYLOAD_DIGEST, result_digest))
+        return self._emit(
+            RT_EVENT, tlvs=self._origin(role), body=encode_tlvs(tlvs), span_id=span_id
+        )
+
+    def tools_offered_no_call(
+        self,
+        count: int,
+        tools_digest: bytes,
+        *,
+        span_id: bytes = ZERO16,
+        role: str = ROLE_NATIVE,
+        detail: str | None = None,
+    ) -> bytes:
+        """Record an offer the completion left untouched (EVENT kind 10, r4).
+
+        An observation of the visibility boundary, never an inference:
+        the request offered ``count`` structured tools
+        (``canonical_tool_names_digest`` of their names in
+        ``tools_digest``) and the completion produced no structured tool
+        call. Whatever the reply text did with the offer is beyond
+        structured audit (profile §3.1); this record turns that
+        emptiness into a fact on the chain. When and whether to emit —
+        e.g. suppressing completions already inside a visible structured
+        loop — is the caller's stated policy, not this method's.
+        """
+        if not 0 <= count <= 0xFFFF:
+            raise ValueError("count must fit u16")
+        if len(tools_digest) != 32:
+            raise ValueError("tools_digest must be 32 bytes")
+        tlvs: list[tuple[int, bytes]] = [
+            (EVT_KIND, struct.pack("<H", KIND_TOOLS_OFFERED_NO_CALL)),
+            (EVT_TOOLS_OFFERED, struct.pack("<H", count)),
+            (EVT_TOOLS_DIGEST, tools_digest),
+        ]
+        if detail is not None:
+            tlvs.append((EVT_DETAIL, _detail(detail)))
         return self._emit(
             RT_EVENT, tlvs=self._origin(role), body=encode_tlvs(tlvs), span_id=span_id
         )
