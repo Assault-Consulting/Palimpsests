@@ -113,7 +113,9 @@ class NativeAudit:
         )
         return self._writer.seq - 1, rh
 
-    def tools_offered_no_call(self, count: int, tools_digest: bytes, span_id: bytes | None) -> None:
+    def tools_offered_no_call(
+        self, count: int, tools_digest: bytes, span_id: bytes | None
+    ) -> None:
         self._writer.tools_offered_no_call(count, tools_digest, span_id=span_id or ZERO16)
 
     def tool_result(
@@ -133,7 +135,11 @@ class NativeAudit:
         )
 
     def tool_loop_limited(
-        self, iterations: int, call_seq: int | None, call_hash: bytes | None, span_id: bytes | None,
+        self,
+        iterations: int,
+        call_seq: int | None,
+        call_hash: bytes | None,
+        span_id: bytes | None,
     ) -> None:
         rh = self._writer.guard_tool_loop_limit(
             iterations, call_seq=call_seq, call_hash=call_hash, span_id=span_id or ZERO16,
@@ -160,10 +166,11 @@ class NativeAudit:
                 emit_ref = (ref_seq, ref_hash)
                 self._guards.clear()
         if emit_ref is not None:
+            window_s = self._guard_window_ns // 1_000_000_000
             self._writer.incident_candidate(
                 CAT_GUARD_ESCALATION, 2, recoverable=True,
                 ref_seq=emit_ref[0], ref_hash=emit_ref[1],
-                detail=f"{count} guard refusal(s) within {self._guard_window_ns // 1_000_000_000}s window",
+                detail=f"{count} guard refusal(s) within {window_s}s window",
             )
 
     def self_check(self) -> VerifyResult:
@@ -172,7 +179,10 @@ class NativeAudit:
         headers = [hb for hb, _ in iter_records(blob)]
         res = verify_headers(headers)
         if not res.chain_ok:
-            first = f"breaks={res.breaks[:3]} gaps={res.gaps[:3]} violations={res.violations[:3]}"
+            first = (
+                f"breaks={res.breaks[:3]} gaps={res.gaps[:3]} "
+                f"violations={res.violations[:3]}"
+            )
             self._writer.incident_candidate(
                 CAT_SELF_CHECK_FAILED, 3, recoverable=False,
                 detail=f"self-verification failed over {res.count} record(s): {first}",
