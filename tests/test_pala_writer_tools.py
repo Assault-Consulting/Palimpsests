@@ -225,3 +225,71 @@ def test_kind_10_vector_matches_the_writer(tmp_path):
         sem["tools_digest"]
         == canonical_tool_names_digest(["calc.multiply", "web.search"]).hex()
     )
+
+
+def test_r5_reported_pair_vector_matches_the_writer(tmp_path):
+    """The r5 vectors and the writer describe the same wire shape.
+
+    Three-way pin, the r4 pattern one revision on: (1) the writer's
+    emitted tag set for a ``source=SOURCE_REPORTED_BY_CLIENT`` call and
+    result equals the published seq 14/15 bodies, ``EVT_SOURCE`` value
+    included; (2) the wire-parsed default emits *no* ``EVT_SOURCE`` —
+    seq 8/9 have none, and the writer's default pair has none, so an r3
+    emitter's bytes are unchanged under r5; (3) the semantics block
+    names the source on exactly the reported pair.
+    """
+    from palimpsests.audit.pala_writer import (
+        EVT_SOURCE,
+        SOURCE_PARSED_FROM_WIRE,
+        SOURCE_REPORTED_BY_CLIENT,
+    )
+
+    v = json.loads(VECTORS.read_text())
+
+    def vec_body(seq: int) -> dict[int, bytes]:
+        rec = next(r for r in v["records"] if r["seq"] == seq)
+        return dict(decode_tlvs(bytes.fromhex(rec["body_hex"])))
+
+    p = tmp_path / "r5.pala"
+    with PalaWriter(p) as w:
+        w.genesis()
+        w.boot()
+        wire_call = w.tool_call("fs.read", args_digest=sha256(b"x").digest())
+        w.tool_result(
+            w.seq - 1, wire_call, OUTCOME_OK,
+            result_digest=sha256(b"y").digest(),
+            source=SOURCE_PARSED_FROM_WIRE,
+        )
+        rep_call = w.tool_call(
+            "fs.read",
+            args_digest=sha256(b"x").digest(),
+            source=SOURCE_REPORTED_BY_CLIENT,
+        )
+        w.tool_result(
+            w.seq - 1, rep_call, OUTCOME_OK,
+            result_digest=sha256(b"y").digest(),
+            source=SOURCE_REPORTED_BY_CLIENT,
+        )
+    bodies = [dict(decode_tlvs(b)) for _, b in iter_records(p.read_bytes())][-4:]
+    wire_c, wire_r, rep_c, rep_r = bodies
+
+    # (1) reported pair: tag set and source value equal the vectors'
+    assert set(rep_c) == set(vec_body(14))
+    assert set(rep_r) == set(vec_body(15))
+    assert rep_c[EVT_SOURCE] == vec_body(14)[EVT_SOURCE] == struct.pack("<H", 1)
+    assert rep_r[EVT_SOURCE] == vec_body(15)[EVT_SOURCE] == struct.pack("<H", 1)
+
+    # (2) absent means wire-parsed: neither the writer's default pair nor
+    # the r3 vectors carry the tag — the default path is byte-stable.
+    assert EVT_SOURCE not in wire_c and EVT_SOURCE not in wire_r
+    assert EVT_SOURCE not in vec_body(8) and EVT_SOURCE not in vec_body(9)
+    assert set(rep_c) - set(wire_c) == {EVT_SOURCE}
+    assert set(rep_r) - set(wire_r) == {EVT_SOURCE}
+
+    # (3) the semantics block says so, on exactly the reported pair
+    sem = v["semantics"]
+    assert sem["14"]["source"] == sem["15"]["source"] == SOURCE_REPORTED_BY_CLIENT
+    assert sem["14"]["source_name"] == "reported-by-client"
+    assert "source" not in sem["8"] and "source" not in sem["9"]
+    assert struct.unpack("<Q", vec_body(15)[EVT_REF_SEQ])[0] == 14
+    assert vec_body(15)[EVT_REF_HASH].hex() == sem["15"]["ref_hash"]
