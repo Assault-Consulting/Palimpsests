@@ -161,12 +161,6 @@ def create_app(
                 audit.tool_result(ref[0], ref[1], OUTCOME_CANCELLED, None, None)
             pending.clear()
 
-        # Two seams on purpose: the ASGI shutdown covers well-behaved
-        # exits, and main()'s atexit closer calls the same function again
-        # right before the writer closes — a Windows console Ctrl-C can
-        # take uvicorn down without ever delivering lifespan shutdown
-        # (smoke-run #189: five pending calls, zero CANCELLED on the
-        # record). Idempotent, so double delivery is a no-op.
         app.router.on_shutdown.append(_cancel_pending)
         app.state.cancel_pending = _cancel_pending
 
@@ -216,10 +210,6 @@ def create_app(
         )
 
         if tools:
-            # Parsing needs the whole reply, so with tools the response is
-            # assembled first; streaming then replays it as SSE. Documented
-            # trade: correctness of the tool_calls shape over first-token
-            # latency, in this version.
             text_parts: list[str] = []
             finish = "stop"
             p_tok = c_tok = None
@@ -232,12 +222,6 @@ def create_app(
                     p_tok, c_tok = c.prompt_tokens, c.completion_tokens
             calls, remaining = parse_tool_calls("".join(text_parts))
             if not calls and audit is not None and not _structured_traffic(messages):
-                # The blind zone, made visible (kind 10, r4): tools were
-                # offered, no structured call came back, and the request
-                # itself carried no structured tool traffic either — the
-                # completion a text-mode loop leaves indistinguishable
-                # from no tool use at all. Inside a visible structured
-                # loop this stays silent: the loop is already on record.
                 from palimpsests.audit.pala_writer import (
                     canonical_tool_names_digest,
                 )
@@ -487,7 +471,6 @@ def _record_tool_results(audit, messages: list, pending: dict) -> None:
             ref[0], ref[1], OUTCOME_OK,
             sha256(content.encode("utf-8")).digest(), None,
         )
-    return
 
 
 def _sse_prebuilt(
@@ -522,13 +505,7 @@ def _sse_prebuilt(
 
 
 def default_audit():
-    """The endpoint's own PALA-1 chain at ``<config>/serve.pala``.
-
-    Cross-boot: an existing chain is adopted (the adapter then emits the
-    BOOT link), a missing one starts at GENESIS. Returns a wired
-    ``NativeAudit`` — or None if the audit stack cannot construct, so
-    serving never fails on the recorder.
-    """
+    """The endpoint's own PALA-1 chain at ``<config>/serve.pala``."""
     try:
         from palimpsests.audit.pala_writer import PalaWriter
         from palimpsests.core import default_config_dir
@@ -582,15 +559,13 @@ def main() -> None:
             file=sys.stderr,
         )
         return
-    import uvicorn  # runtime-only: the config printer must not need it
+    import uvicorn
 
     audit = default_audit()
     app = create_app(audit=audit, api_key=args.api_key)
     if audit is not None:
 
         def _close_audit() -> None:
-            # Cancel-before-close, even when the ASGI shutdown never ran
-            # (Windows console Ctrl-C can skip it — see create_app).
             cancel = getattr(app.state, "cancel_pending", None)
             if cancel is not None:
                 cancel()
@@ -601,18 +576,13 @@ def main() -> None:
 
 
 def _opencode_config(host: str, port: int, api_key: str | None) -> str:
-    """The opencode.json provider block for this endpoint, as JSON text.
-
-    Deliberately hard-wired to ``@ai-sdk/openai-compatible`` — the one
-    provider package whose request shape matches what serve implements;
-    "works with OpenCode" means exactly this pairing, nothing looser.
-    """
+    """The opencode.json provider block for this endpoint, as JSON text."""
     try:
         model_ids = list(_default_deps().models_fn())
     except Exception:
         model_ids = []
     if not model_ids:
-        model_ids = ["MODEL_ID"]  # engine unreachable now; replace by hand
+        model_ids = ["MODEL_ID"]
     options: dict = {"baseURL": f"http://{host}:{port}/v1"}
     if api_key:
         options["apiKey"] = api_key
