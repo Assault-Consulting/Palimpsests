@@ -42,6 +42,7 @@ import time
 from collections.abc import Mapping
 from dataclasses import dataclass
 from hashlib import sha256
+
 from palimpsests.audit.pala.codec import (
     FIXED_HEADER_LEN,
     MAGIC,
@@ -102,6 +103,7 @@ EVT_PAYLOAD_DIGEST = 0x000D  # 32 bytes — digest of canonical args / result (r
 EVT_OUTCOME = 0x000E  # u16 — 0 ok, 1 error, 2 timeout, 3 cancelled (r3)
 EVT_TOOLS_OFFERED = 0x000F  # u16 — structured tools offered in the request (kind 10, r4)
 EVT_TOOLS_DIGEST = 0x0010  # 32 bytes — canonical offered-name list digest (kind 10, r4)
+EVT_SOURCE = 0x0011  # u16 — 0 parsed-from-wire (default, absent), 1 reported-by-client (r5)
 
 # EVT_KIND values — operations (profile §3)
 KIND_MODEL_LOAD = 1
@@ -136,6 +138,10 @@ OUTCOME_OK = 0
 OUTCOME_ERROR = 1
 OUTCOME_TIMEOUT = 2
 OUTCOME_CANCELLED = 3
+
+# r5 — kind 8/9 evidence-source values (EVT_SOURCE; absent tag == 0)
+SOURCE_PARSED_FROM_WIRE = 0
+SOURCE_REPORTED_BY_CLIENT = 1
 
 _TOOL_NAME_MAX = 64
 
@@ -574,6 +580,21 @@ class PalaWriter:
         return encode_tlvs(tlvs)
 
     @staticmethod
+    def _append_source(tlvs: list[tuple[int, bytes]], source: int) -> None:
+        """Append ``EVT_SOURCE`` for non-default sources (r5).
+
+        The default value is expressed by absence: r3/r4 emitters and
+        this writer with ``source=SOURCE_PARSED_FROM_WIRE`` produce the
+        same bytes.
+        """
+        if source not in (SOURCE_PARSED_FROM_WIRE, SOURCE_REPORTED_BY_CLIENT):
+            raise ValueError(
+                "source must be SOURCE_PARSED_FROM_WIRE or SOURCE_REPORTED_BY_CLIENT"
+            )
+        if source == SOURCE_REPORTED_BY_CLIENT:
+            tlvs.append((EVT_SOURCE, struct.pack("<H", source)))
+
+    @staticmethod
     def _origin(role: str, *extra: tuple[int, bytes]) -> list[tuple[int, bytes]]:
         return [(TLV_ORIGIN_ROLE, role.encode("utf-8")), *extra]
 
@@ -784,6 +805,7 @@ class PalaWriter:
         detail: str | None = None,
         span_id: bytes = ZERO16,
         role: str = ROLE_NATIVE,
+        source: int = SOURCE_PARSED_FROM_WIRE,
     ) -> bytes:
         """Record a dispatched tool invocation (EVENT kind 8, r3).
 
@@ -791,7 +813,9 @@ class PalaWriter:
         arguments; arguments enter the log only as ``args_digest``
         (``canonical_tool_args_digest``). What this records is the
         dispatch, not a "decision" — whether the dispatch was wise is a
-        judgment the log must not fake (profile §3.1).
+        judgment the log must not fake (profile §3.1). ``source`` (r5)
+        marks how the caller learned of the dispatch; the default emits
+        no tag — byte-identical to r4 output.
         """
         raw = name.encode("utf-8")
         if not raw or len(raw) > _TOOL_NAME_MAX:
@@ -806,6 +830,7 @@ class PalaWriter:
             tlvs.append((EVT_PAYLOAD_DIGEST, args_digest))
         if detail is not None:
             tlvs.append((EVT_DETAIL, _detail(detail)))
+        self._append_source(tlvs, source)
         return self._emit(
             RT_EVENT, tlvs=self._origin(role), body=encode_tlvs(tlvs), span_id=span_id
         )
@@ -819,6 +844,7 @@ class PalaWriter:
         result_digest: bytes | None = None,
         span_id: bytes = ZERO16,
         role: str = ROLE_NATIVE,
+        source: int = SOURCE_PARSED_FROM_WIRE,
     ) -> bytes:
         """Record a returned/failed/abandoned invocation (EVENT kind 9, r3).
 
@@ -827,7 +853,9 @@ class PalaWriter:
         validates the *format* only; whether the pair names a real call is
         the reader's referential-integrity advisory. Latency is the
         ``monotonic_ns`` delta between the two records — no duration field
-        exists because none is needed (profile §3.1).
+        exists because none is needed (profile §3.1). ``source`` (r5)
+        marks how the caller learned of the completion; the default
+        emits no tag — byte-identical to r4 output.
         """
         if len(call_hash) != 32:
             raise ValueError("call_hash must be 32 bytes")
@@ -843,6 +871,7 @@ class PalaWriter:
             if len(result_digest) != 32:
                 raise ValueError("result_digest must be 32 bytes")
             tlvs.append((EVT_PAYLOAD_DIGEST, result_digest))
+        self._append_source(tlvs, source)
         return self._emit(
             RT_EVENT, tlvs=self._origin(role), body=encode_tlvs(tlvs), span_id=span_id
         )
