@@ -181,3 +181,47 @@ def test_tools_offered_no_call_round_trip(tmp_path):
     assert tlvs[EVT_TOOLS_DIGEST] == d
     # Order-independent: the offer is a set.
     assert d == canonical_tool_names_digest(["a.first", "b.second"])
+
+
+def test_kind_10_vector_matches_the_writer(tmp_path):
+    """The r4 vector and the writer describe the same wire shape.
+
+    Three-way pin: the writer's emitted tag set equals the published
+    vector's; the semantics block names kind 10; and the vector's digest
+    equals ``canonical_tool_names_digest`` over the same names in a
+    *different* order — the two independent canonicalizations (generator
+    inline, writer function) cannot drift apart, and the set property
+    is exercised across implementations, not just within one.
+    """
+    import struct
+    from palimpsests.audit.pala import decode_tlvs, iter_records
+    from palimpsests.audit.pala_writer import (
+        EVT_TOOLS_OFFERED,
+        KIND_TOOLS_OFFERED_NO_CALL,
+        PalaWriter,
+        canonical_tool_names_digest,
+    )
+
+    v = json.loads(VECTORS.read_text())
+    rec = next(r for r in v["records"] if r["seq"] == 12)
+    vec_tlvs = dict(decode_tlvs(bytes.fromhex(rec["body_hex"])))
+
+    p = tmp_path / "k10.pala"
+    with PalaWriter(p) as w:
+        w.genesis()
+        w.boot()
+        w.tools_offered_no_call(
+            2, canonical_tool_names_digest(["web.search", "calc.multiply"])
+        )
+    _, body = list(iter_records(p.read_bytes()))[-1]
+    writer_tlvs = dict(decode_tlvs(body))
+
+    assert set(writer_tlvs) == set(vec_tlvs)
+    assert writer_tlvs[EVT_TOOLS_OFFERED] == vec_tlvs[EVT_TOOLS_OFFERED]
+    sem = v["semantics"]["12"]
+    assert sem["kind"] == KIND_TOOLS_OFFERED_NO_CALL
+    assert sem["tools_offered"] == struct.unpack("<H", vec_tlvs[EVT_TOOLS_OFFERED])[0]
+    assert (
+        sem["tools_digest"]
+        == canonical_tool_names_digest(["calc.multiply", "web.search"]).hex()
+    )
