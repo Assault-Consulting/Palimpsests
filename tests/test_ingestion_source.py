@@ -10,13 +10,11 @@ while binding by seq+hash exactly as wire-parsed pairs do.
 """
 from __future__ import annotations
 
-import struct
-
 import pytest
+import struct
 
 fastapi = pytest.importorskip("fastapi")
 from fastapi.testclient import TestClient  # noqa: E402
-
 from palimpsests.audit.pala import decode_tlvs, iter_records  # noqa: E402
 from palimpsests.audit.pala_writer import (  # noqa: E402
     EVT_SOURCE,
