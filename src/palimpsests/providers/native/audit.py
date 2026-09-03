@@ -47,12 +47,14 @@ import time
 from collections import deque
 from collections.abc import Callable
 from hashlib import sha256
+
 from palimpsests.audit.pala import iter_records, verify_headers
 from palimpsests.audit.pala.verify import VerifyResult
 from palimpsests.audit.pala_writer import (
     CAT_ANCHOR_ANOMALY,
     CAT_GUARD_ESCALATION,
     CAT_SELF_CHECK_FAILED,
+    SOURCE_PARSED_FROM_WIRE,
     ZERO16,
     PalaWriter,
 )
@@ -172,15 +174,22 @@ class NativeAudit:
         self._writer.prefix_copy(token_count, span_id=span_id)
 
     def tool_called(
-        self, name: str, args_digest: bytes | None, span_id: bytes | None
+        self,
+        name: str,
+        args_digest: bytes | None,
+        span_id: bytes | None,
+        *,
+        source: int = SOURCE_PARSED_FROM_WIRE,
     ) -> tuple[int, bytes]:
         """Record a dispatched tool invocation; return its (seq, hash).
 
         The pair is what a later ``tool_result`` binds to — the session
         keeps it per pending call and hands it back on completion.
+        ``source`` (r5) marks wire-parsed vs client-reported.
         """
         rh = self._writer.tool_call(
-            name, args_digest=args_digest, span_id=span_id or ZERO16
+            name, args_digest=args_digest, span_id=span_id or ZERO16,
+            source=source,
         )
         return self._writer.seq - 1, rh
 
@@ -199,14 +208,22 @@ class NativeAudit:
         outcome: int,
         result_digest: bytes | None,
         span_id: bytes | None,
-    ) -> None:
-        """Record the invocation's completion, hash-bound to its call."""
-        self._writer.tool_result(
+        *,
+        source: int = SOURCE_PARSED_FROM_WIRE,
+    ) -> bytes:
+        """Record the invocation's completion, hash-bound to its call.
+
+        Returns the result record's hash, so a reporting client can be
+        answered with it. ``source`` (r5) marks wire-parsed vs
+        client-reported.
+        """
+        return self._writer.tool_result(
             call_seq,
             call_hash,
             outcome,
             result_digest=result_digest,
             span_id=span_id or ZERO16,
+            source=source,
         )
 
     def tool_loop_limited(
