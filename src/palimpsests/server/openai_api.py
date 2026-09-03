@@ -221,6 +221,25 @@ def create_app(
                         finish = c.finish_reason
                     p_tok, c_tok = c.prompt_tokens, c.completion_tokens
             calls, remaining = parse_tool_calls("".join(text_parts))
+            if not calls and audit is not None and not _structured_traffic(messages):
+                # The blind zone, made visible (kind 10, r4): tools were
+                # offered, no structured call came back, and the request
+                # itself carried no structured tool traffic either — the
+                # completion a text-mode loop leaves indistinguishable
+                # from no tool use at all. Inside a visible structured
+                # loop this stays silent: the loop is already on record.
+                from palimpsests.audit.pala_writer import (
+                    canonical_tool_names_digest,
+                )
+
+                names = [
+                    (t.get("function") or {}).get("name", "")
+                    for t in tools
+                    if isinstance(t, dict)
+                ]
+                audit.tools_offered_no_call(
+                    len(names), canonical_tool_names_digest(names), None
+                )
             if calls and audit is not None:
                 for pc in calls:
                     pending[pc.id] = audit.tool_called(
@@ -290,6 +309,16 @@ def create_app(
         }
 
     return app
+
+
+def _structured_traffic(messages: list) -> bool:
+    """True if the request already shows a structured tool loop."""
+    for m in messages:
+        if not isinstance(m, dict):
+            continue
+        if m.get("role") == "tool" or m.get("tool_calls"):
+            return True
+    return False
 
 
 def _usage(prompt_tokens: int | None, completion_tokens: int | None) -> dict:
