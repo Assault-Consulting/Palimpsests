@@ -32,6 +32,15 @@ chain is the witness. No prose-mining here, ever: extracting "calls"
 the model never committed as structure would fabricate evidence.
 Accepted follow-up directions are recorded in ADR-0005.
 
+One of them ships here as the ingestion surface (profile r5):
+``POST /v1/pala/events`` lets a client that runs its loop in text
+report its tool events onto the same chain — recorded as kinds 8/9
+carrying ``EVT_SOURCE = reported-by-client``, an evidence-quality mark
+that keeps them forever distinguishable from events this process parsed
+off its own wire. The chain then proves the report happened, what it
+digested, and when — never that the tool actually ran. Bearer-guarded
+like every route.
+
 Authentication is opt-in: this
 binds to localhost by default and is a local tool — pass ``--api-key``
 (or set ``PALIMPSESTS_SERVE_API_KEY``) the moment anything beyond your
@@ -49,6 +58,7 @@ import time
 import uuid
 from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass
+
 from palimpsests.engine.messages import ChatChunk
 from palimpsests.server.tool_calls import parse_tool_calls, tools_system_message
 
@@ -308,6 +318,109 @@ def create_app(
             "usage": _usage(p_tok, c_tok),
         }
 
+    @app.post("/v1/pala/events")
+    def ingest_events(body: dict):
+        """Client-reported tool events, onto the same chain (r5).
+
+        The constructive half of the visibility limit: each reported
+        call and result lands as a kind 8/9 record carrying
+        ``EVT_SOURCE = reported-by-client`` — never to be confused with
+        events parsed from the wire this process mediated. Append-only
+        honesty: events are processed in order and each write is final,
+        so a batch with a bad entry returns per-event errors alongside
+        the results that did land — there is no unwriting. Reported
+        results bind to reported calls through the same pending map the
+        wire path uses; a reported call left unresolved at shutdown is
+        cancelled like a wire one.
+        """
+        if audit is None:
+            return JSONResponse(
+                status_code=503,
+                content={
+                    "error": {
+                        "message": "no audit chain configured on this server",
+                        "type": "server_error",
+                    }
+                },
+            )
+        events = body.get("events")
+        if not isinstance(events, list) or not events:
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "error": {
+                        "message": "'events' must be a non-empty list",
+                        "type": "invalid_request_error",
+                    }
+                },
+            )
+        from hashlib import sha256
+
+        from palimpsests.audit.pala_writer import (
+            OUTCOME_CANCELLED,
+            OUTCOME_ERROR,
+            OUTCOME_OK,
+            OUTCOME_TIMEOUT,
+            SOURCE_REPORTED_BY_CLIENT,
+        )
+
+        outcomes = {
+            "ok": OUTCOME_OK,
+            "error": OUTCOME_ERROR,
+            "timeout": OUTCOME_TIMEOUT,
+            "cancelled": OUTCOME_CANCELLED,
+        }
+        results: list[dict] = []
+        for ev in events:
+            if not isinstance(ev, dict):
+                results.append({"error": "event must be an object"})
+                continue
+            etype = ev.get("type")
+            try:
+                if etype == "tool_call":
+                    call_id = str(ev["id"])
+                    name = str(ev["name"])
+                    if "args_digest" in ev:
+                        digest = bytes.fromhex(ev["args_digest"])
+                    elif "arguments" in ev:
+                        digest = _args_digest(ev["arguments"])
+                    else:
+                        digest = None
+                    seq, rh = audit.tool_called(
+                        name, digest, None, source=SOURCE_REPORTED_BY_CLIENT
+                    )
+                    pending[call_id] = (seq, rh)
+                    results.append(
+                        {"id": call_id, "seq": seq, "record_hash": rh.hex()}
+                    )
+                elif etype == "tool_result":
+                    call_id = str(ev["call_id"])
+                    ref = pending.pop(call_id, None)
+                    if ref is None:
+                        results.append({"id": call_id, "error": "unknown call_id"})
+                        continue
+                    outcome = outcomes.get(str(ev.get("outcome", "ok")))
+                    if outcome is None:
+                        pending[call_id] = ref  # not consumed
+                        results.append({"id": call_id, "error": "unknown outcome"})
+                        continue
+                    if "result_digest" in ev:
+                        digest = bytes.fromhex(ev["result_digest"])
+                    elif "content" in ev:
+                        digest = sha256(str(ev["content"]).encode("utf-8")).digest()
+                    else:
+                        digest = None
+                    rh = audit.tool_result(
+                        ref[0], ref[1], outcome, digest, None,
+                        source=SOURCE_REPORTED_BY_CLIENT,
+                    )
+                    results.append({"id": call_id, "record_hash": rh.hex()})
+                else:
+                    results.append({"error": f"unknown event type: {etype!r}"})
+            except (KeyError, ValueError, TypeError) as exc:
+                results.append({"error": f"invalid event: {exc}"})
+        return {"results": results}
+
     return app
 
 
@@ -360,6 +473,7 @@ def _args_digest(arguments: dict) -> bytes:
 def _record_tool_results(audit, messages: list, pending: dict) -> None:
     """Bind incoming role:"tool" messages to their recorded calls."""
     from hashlib import sha256
+
     from palimpsests.audit.pala_writer import OUTCOME_OK
 
     for m in messages:
@@ -373,6 +487,7 @@ def _record_tool_results(audit, messages: list, pending: dict) -> None:
             ref[0], ref[1], OUTCOME_OK,
             sha256(content.encode("utf-8")).digest(), None,
         )
+    return
 
 
 def _sse_prebuilt(
