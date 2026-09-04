@@ -1,7 +1,7 @@
 # SCITT-bridge Signed Statement — independent verification run
 
 Submission for the task in
-[`docs/interop/SCITT-STATEMENT-VERIFICATION-TASK.md`](../../../../interop/SCITT-STATEMENT-VERIFICATION-TASK.md).
+[`docs/interop/SCITT-STATEMENT-VERIFICATION-TASK.md`](../../../../../interop/SCITT-STATEMENT-VERIFICATION-TASK.md).
 It is a separate axis from this implementer's wire-format run in the
 parent directory: that one reproduced the PALA-1 §8 hashes, this one
 verifies and reproduces the COSE_Sign1 Signed Statement built over the
