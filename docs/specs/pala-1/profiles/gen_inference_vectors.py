@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: Assault Consulting
 # SPDX-License-Identifier: CC0-1.0
-"""Generate the inference-profile companion vectors (r2–r4 semantics).
+"""Generate the inference-profile companion vectors (r2–r5 semantics).
 
 Deterministic: fixed key, seq-derived nonces, fixed ids and clocks —
 real crypto, fake entropy. Never do this outside a test vector.
@@ -12,7 +12,9 @@ deployment-content EVENT so the shred has a real target — and, from r3,
 the tool-loop records: TOOL_CALL (kind 8), TOOL_RESULT (kind 9) with its
 hash-bound reference, and GUARD_TOOL_LOOP_LIMIT (SAFETY kind 104) —
 and, from r4, TOOLS_OFFERED_NO_CALL (kind 10): the offer/absence
-boundary record. Prior-revision records are appended-to, never edited:
+boundary record — and, from r5, a client-reported TOOL_CALL/TOOL_RESULT
+pair carrying EVT_SOURCE = 1 (absent means parsed-from-wire).
+Prior-revision records are appended-to, never edited:
 their bytes are identical to the revision that introduced them. They are a
 **companion** artifact: `../test-vectors.json` is frozen with the core
 and is not touched by this script or any future one; a byte of it
@@ -81,6 +83,11 @@ OUTCOME_OK = 0
 EVT_TOOLS_OFFERED = 0x000F
 EVT_TOOLS_DIGEST = 0x0010
 KIND_TOOLS_OFFERED_NO_CALL = 10
+
+# r5 profile allocations (profile §3.1, source marking on kinds 8/9)
+EVT_SOURCE = 0x0011
+SOURCE_PARSED_FROM_WIRE = 0  # the default — the tag is absent
+SOURCE_REPORTED_BY_CLIENT = 1
 
 
 def h(b: bytes) -> str:
@@ -372,6 +379,65 @@ prev = emit(
     "anchor_r4",
     header(record_type=R.RT_ANCHOR, seq=13, prev=prev,
            tlvs=[R.tlv(R.TLV_ANCHOR_HEAD, anchored_r4)]),
+    "Anchor over the r4-extended chain.",
+)
+
+# ─── r5: the client-reported pair (profile §3.1, EVT_SOURCE) ────────────
+
+# 14 — EVENT kind 8: TOOL_CALL *reported by the client*. Same body
+# shape as seq 8, plus EVT_SOURCE = 1. The tag is present only for the
+# non-default value: seq 8/9 above carry no EVT_SOURCE and mean
+# parsed-from-wire — every r3/r4 record's bytes and meaning are
+# unchanged. Tag order follows the writer: kind, name, digest, source.
+reported_args = b'{"path":"README.md"}'
+reported_call_body = R.encode_tlvs([
+    R.tlv(EVT_KIND, u16(KIND_TOOL_CALL)),
+    R.tlv(EVT_TOOL_NAME, b"fs.read"),
+    R.tlv(EVT_PAYLOAD_DIGEST, hashlib.sha256(reported_args).digest()),
+    R.tlv(EVT_SOURCE, u16(SOURCE_REPORTED_BY_CLIENT)),
+])
+reported_call_hash = emit(
+    "tool_call_reported",
+    header(record_type=R.RT_EVENT, seq=14, prev=prev, body=reported_call_body,
+           tlvs=[R.tlv(R.TLV_ORIGIN_ROLE, b"engine.native")],
+           span_id=SPAN_S1),
+    "TOOL_CALL (kind 8) with EVT_SOURCE = 1 (r5): the client ran its "
+    "loop in text and reported the call through the ingestion surface. "
+    "The chain proves the report and its digest, never that the tool ran "
+    "— an evidence-quality mark, not a trust upgrade.",
+    body=reported_call_body,
+)
+prev = reported_call_hash
+
+# 15 — EVENT kind 9: TOOL_RESULT reported by the client, bound to seq 14
+# by the same seq+hash rule as wire-parsed pairs (the reader's
+# referential advisory does not care about source).
+reported_result = b'# Palimpsests'
+reported_result_body = R.encode_tlvs([
+    R.tlv(EVT_KIND, u16(KIND_TOOL_RESULT)),
+    R.tlv(EVT_REF_SEQ, u64(14)),
+    R.tlv(EVT_REF_HASH, reported_call_hash),
+    R.tlv(EVT_OUTCOME, u16(OUTCOME_OK)),
+    R.tlv(EVT_PAYLOAD_DIGEST, hashlib.sha256(reported_result).digest()),
+    R.tlv(EVT_SOURCE, u16(SOURCE_REPORTED_BY_CLIENT)),
+])
+prev = emit(
+    "tool_result_reported",
+    header(record_type=R.RT_EVENT, seq=15, prev=prev, body=reported_result_body,
+           tlvs=[R.tlv(R.TLV_ORIGIN_ROLE, b"engine.native")],
+           span_id=SPAN_S1),
+    "TOOL_RESULT (kind 9) with EVT_SOURCE = 1 (r5): binds to seq 14 by "
+    "seq and hash exactly as a wire-parsed pair does; the source mark "
+    "travels with each record of the pair, not with the pair.",
+    body=reported_result_body,
+)
+
+# 16 — ANCHOR noting the new head
+anchored_r5 = prev
+prev = emit(
+    "anchor_r5",
+    header(record_type=R.RT_ANCHOR, seq=16, prev=prev,
+           tlvs=[R.tlv(R.TLV_ANCHOR_HEAD, anchored_r5)]),
     "Anchor over the extended chain; anchor_head below tracks this tip.",
 )
 
@@ -381,7 +447,7 @@ chain_head = prev
 
 res = R.verify_chain(chain)
 assert res.chain_ok, f"generated chain does not verify: {res}"
-assert res.count == 14
+assert res.count == 17
 assert not res.breaks and not res.gaps and not res.violations
 # the encrypted body round-trips under the spec'd nonce/AAD derivation
 back = AESGCM(KEY).decrypt(R.nonce_for(3), bodies[3][12:],
@@ -390,13 +456,13 @@ assert back == plaintext
 
 out = {
     "$comment": (
-        "Inference-profile companion vectors (r2-r4). Deterministic; real "
+        "Inference-profile companion vectors (r2-r5). Deterministic; real "
         "crypto, fake entropy — never derive keys or ids like this outside "
         "a test vector. ../test-vectors.json is frozen with the core and "
         "is deliberately untouched by these."
     ),
     "profile": "inference",
-    "profile_revision": "r4",
+    "profile_revision": "r5",
     "generator": "gen_inference_vectors.py",
     "boot_id": h(BOOT_ID),
     "encryption": {
@@ -453,6 +519,23 @@ out = {
                 "order-independent: the offer is a set"
             ),
         },
+        "14": {
+            "kind": 8, "kind_name": "TOOL_CALL",
+            "tool_name": "fs.read",
+            "payload_digest": hashlib.sha256(reported_args).digest().hex(),
+            "source": 1, "source_name": "reported-by-client",
+        },
+        "15": {
+            "kind": 9, "kind_name": "TOOL_RESULT",
+            "ref_seq": 14, "ref_hash": h(reported_call_hash), "outcome": 0,
+            "payload_digest": hashlib.sha256(reported_result).digest().hex(),
+            "source": 1, "source_name": "reported-by-client",
+        },
+        "source_rule": (
+            "EVT_SOURCE (0x0011) is present only for the non-default value 1 "
+            "(reported-by-client); absent means 0 (parsed-from-wire). Seq 8/9 "
+            "carry no EVT_SOURCE and are byte-identical to their r3 form."
+        ),
     },
 }
 
