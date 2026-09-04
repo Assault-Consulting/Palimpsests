@@ -1,7 +1,7 @@
 {
-  "$comment": "Inference-profile companion vectors (r2-r4). Deterministic; real crypto, fake entropy \u2014 never derive keys or ids like this outside a test vector. ../test-vectors.json is frozen with the core and is deliberately untouched by these.",
+  "$comment": "Inference-profile companion vectors (r2-r5). Deterministic; real crypto, fake entropy \u2014 never derive keys or ids like this outside a test vector. ../test-vectors.json is frozen with the core and is deliberately untouched by these.",
   "profile": "inference",
-  "profile_revision": "r4",
+  "profile_revision": "r5",
   "generator": "gen_inference_vectors.py",
   "boot_id": "b0071d000000000000000000000000a2",
   "encryption": {
@@ -148,16 +148,47 @@
     },
     {
       "label": "anchor_r4",
-      "note": "Anchor over the extended chain; anchor_head below tracks this tip.",
+      "note": "Anchor over the r4-extended chain.",
       "seq": 13,
       "record_type": "0x0050",
       "header_len": 192,
       "header_hex": "50414c410100c000500000030d00000000000000b0071d000000000000000000000000a2a0e2c18a4abd0335e486012c4339385f8a85c2e8f0159e7ec9aa952cb2d269a00000000000000000000000000000000000000000000000000000000000000000407737190200000040458990a30ac2180000000000000000000000000000000000000000000000000000000000000000000000000000000050002000a0e2c18a4abd0335e486012c4339385f8a85c2e8f0159e7ec9aa952cb2d269a0",
       "record_hash": "df384647b8f56b3c120b7d6d473b4c728d2d8c82188c675ced27b7c9b0526eed"
+    },
+    {
+      "label": "tool_call_reported",
+      "note": "TOOL_CALL (kind 8) with EVT_SOURCE = 1 (r5): the client ran its loop in text and reported the call through the ingestion surface. The chain proves the report and its digest, never that the tool ran \u2014 an evidence-quality mark, not a trust upgrade.",
+      "seq": 14,
+      "record_type": "0x0012",
+      "header_len": 173,
+      "header_hex": "50414c410100ad00120000030e00000000000000b0071d000000000000000000000000a2df384647b8f56b3c120b7d6d473b4c728d2d8c82188c675ced27b7c9b0526eed313131313131313131313131313131310000000000000000000000000000000080b946190200000080879890a30ac218000000003b0000003cf3c1d04cabb1ed21d91f79dadf09145812cb6b8a88c1e512352e5dd3f3dd6d01000d00656e67696e652e6e6174697665",
+      "record_hash": "a3c8fae5e30da5ecfca8439e9ee3399d52ad5e218ee5a306ab1e2c0dbcf26c19",
+      "body_len": 59,
+      "body_hex": "0100020008000c00070066732e726561640d0020007d6441497d2a000b8143602a7817c90abe7db88e139f89c062a1c36cfe0ad9d6110002000100"
+    },
+    {
+      "label": "tool_result_reported",
+      "note": "TOOL_RESULT (kind 9) with EVT_SOURCE = 1 (r5): binds to seq 14 by seq and hash exactly as a wire-parsed pair does; the source mark travels with each record of the pair, not with the pair.",
+      "seq": 15,
+      "record_type": "0x0012",
+      "header_len": 173,
+      "header_hex": "50414c410100ad00120000030f00000000000000b0071d000000000000000000000000a2a3c8fae5e30da5ecfca8439e9ee3399d52ad5e218ee5a306ab1e2c0dbcf26c193131313131313131313131313131313100000000000000000000000000000000c0fb551902000000c0c9a790a30ac21800000000660000008f8eafd7f6e02970dc75b8f39cadbca4c5faffecdf6ec62004c5dacb0718bf2401000d00656e67696e652e6e6174697665",
+      "record_hash": "96d3b02fdb21e00ca8a53ad7588b611a2b8f9fc403124ab78dd3b7332e362832",
+      "body_len": 102,
+      "body_hex": "010002000900080008000e0000000000000009002000a3c8fae5e30da5ecfca8439e9ee3399d52ad5e218ee5a306ab1e2c0dbcf26c190e00020000000d002000d2ab811b964e7a2e8745f5e429194b2dec0195cd6e9de533571c27c850c9c7e3110002000100"
+    },
+    {
+      "label": "anchor_r5",
+      "note": "Anchor over the extended chain; anchor_head below tracks this tip.",
+      "seq": 16,
+      "record_type": "0x0050",
+      "header_len": 192,
+      "header_hex": "50414c410100c000500000031000000000000000b0071d000000000000000000000000a296d3b02fdb21e00ca8a53ad7588b611a2b8f9fc403124ab78dd3b7332e3628320000000000000000000000000000000000000000000000000000000000000000003e651902000000000cb790a30ac218000000000000000000000000000000000000000000000000000000000000000000000000000000005000200096d3b02fdb21e00ca8a53ad7588b611a2b8f9fc403124ab78dd3b7332e362832",
+      "record_hash": "cd052df29dba6a183e47099dfec0c10855d6c4dd125642c1ebe172ce6272a3df"
     }
   ],
-  "chain_head": "df384647b8f56b3c120b7d6d473b4c728d2d8c82188c675ced27b7c9b0526eed",
-  "anchor_head": "df384647b8f56b3c120b7d6d473b4c728d2d8c82188c675ced27b7c9b0526eed",
+  "chain_head": "cd052df29dba6a183e47099dfec0c10855d6c4dd125642c1ebe172ce6272a3df",
+  "anchor_head": "cd052df29dba6a183e47099dfec0c10855d6c4dd125642c1ebe172ce6272a3df",
   "semantics": {
     "$comment": "Decoded r2/r3 body expectations, so a profile-aware reader can check its tag/kind resolution \u2014 the envelope answers above are checkable with any core verifier.",
     "4": {
@@ -213,6 +244,25 @@
       "tools_offered": 2,
       "tools_digest": "a4c746d1b4239f32c0ea5b109fffd373b7693df02a9e049f9d3573b2a6d08546",
       "names_canonicalization": "sorted names as a JSON array, compact separators, non-ASCII preserved, UTF-8, then SHA-256 \u2014 order-independent: the offer is a set"
-    }
+    },
+    "14": {
+      "kind": 8,
+      "kind_name": "TOOL_CALL",
+      "tool_name": "fs.read",
+      "payload_digest": "7d6441497d2a000b8143602a7817c90abe7db88e139f89c062a1c36cfe0ad9d6",
+      "source": 1,
+      "source_name": "reported-by-client"
+    },
+    "15": {
+      "kind": 9,
+      "kind_name": "TOOL_RESULT",
+      "ref_seq": 14,
+      "ref_hash": "a3c8fae5e30da5ecfca8439e9ee3399d52ad5e218ee5a306ab1e2c0dbcf26c19",
+      "outcome": 0,
+      "payload_digest": "d2ab811b964e7a2e8745f5e429194b2dec0195cd6e9de533571c27c850c9c7e3",
+      "source": 1,
+      "source_name": "reported-by-client"
+    },
+    "source_rule": "EVT_SOURCE (0x0011) is present only for the non-default value 1 (reported-by-client); absent means 0 (parsed-from-wire). Seq 8/9 carry no EVT_SOURCE and are byte-identical to their r3 form."
   }
 }
