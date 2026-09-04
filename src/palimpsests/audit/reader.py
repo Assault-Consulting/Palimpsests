@@ -10,8 +10,10 @@ external dependency is the trusted head, and it arrives only through the
 anchors live.
 
 One walk, shared. The container is scanned once on construction; record
-*bodies* are decoded when a caller asks for records, spans, boots, or
-origins — and, today, also by ``verify()``. A truncated tail (the file
+*bodies* are decoded when a caller asks for records or origins — and,
+today, also by ``verify()``. ``spans()``, ``boots()`` and the safety
+section read headers only (SAFETY bodies alone for the latter) and use
+``verify()``'s cache when it exists (U14). A truncated tail (the file
 ends mid-record) is reported as exactly that (``Diagnosis`` pattern
 ``truncated_tail``, §2.4), never as a chain break at an earlier record.
 
@@ -667,14 +669,84 @@ class AuditReader:
     def records(self) -> Iterator[DecodedRecord]:
         yield from self._decoded_records()
 
+    # ── header-only access (U14 PR-6) ───────────────────────────────────
+    #
+    # The structural views below read header fields only. Before this,
+    # they went through ``_decoded_records()`` and so materialised every
+    # record — body copy, TLV parse, ``DecodedRecord`` — to read
+    # ``boot_id``, ``span_id`` and ``record_type`` out of the header.
+    # When ``verify()`` has already warmed the cache the views use it
+    # (identical objects, identical answers); when it has not, they
+    # decode headers alone. The one body-dependent fact ``boots()``
+    # needs — a ``RECOVERY_TRUNCATED_TAIL`` event — is read by a probe
+    # that looks at the first TLV of a cleartext EVENT body in place,
+    # without copying the body: the profile requires ``EVT_KIND`` to be
+    # present and first (inference §3), so the probe is the same answer
+    # ``decode_record`` gives, at a fraction of the work.
+
+    def _headers_decoded(self) -> Iterator[tuple[int, bytes, Header | None]]:
+        """``(index, header_bytes, Header | None)`` for every record —
+        ``None`` where the header does not decode (unknown version or
+        malformed TLVs), exactly the records the views skip."""
+        cached = self._decoded
+        if cached is not None:
+            for i, (dr, hb) in enumerate(zip(cached, self._headers, strict=True)):
+                yield i, hb, dr.header
+            return
+        for i, hb in enumerate(self._headers):
+            try:
+                yield i, hb, Header.decode(hb)
+            except MalformedRecord:
+                yield i, hb, None
+
+    def _kind_probe(self, index: int, hb: bytes) -> int | None:
+        """``EVT_KIND`` of record ``index`` read in place, or ``None``.
+
+        Same answer as ``decode_record(...).kind`` for the records the
+        profile describes: a cleartext (``key_id = 0``) EVENT/SAFETY body
+        whose first TLV is ``EVT_KIND``. A body that does not open with
+        ``EVT_KIND`` falls back to the full decode so an unusual but
+        well-formed body is never misread; no body is copied on the
+        common path.
+        """
+        cached = self._decoded
+        if cached is not None:
+            return cached[index].kind
+        rtype = struct.unpack_from("<H", hb, 8)[0]
+        if rtype not in _KIND_BEARING:
+            return None
+        key_id = struct.unpack_from("<I", hb, 116)[0]
+        start, end = self._body_spans[index]
+        if key_id != 0 or end - start < 6:
+            return None
+        t, ln = struct.unpack_from("<HH", self._data, start)
+        if t == EVT_KIND and ln >= 2 and start + 4 + ln <= end:
+            return struct.unpack_from("<H", self._data, start + 4)[0]
+        return self._decode(index, hb).kind
+
+    def safety_records(self) -> Iterator[DecodedRecord]:
+        """Every SAFETY record, decoded — and only those.
+
+        The report's safety section and :meth:`acknowledged_candidates`
+        need bodies for SAFETY records alone (candidates and acks are
+        both SAFETY kinds); decoding the whole chain to reach them was
+        the cost this method removes. Uses the warm cache when
+        ``verify()`` has built one.
+        """
+        cached = self._decoded
+        for i, hb in enumerate(self._headers):
+            if struct.unpack_from("<H", hb, 8)[0] != RT_SAFETY:
+                continue
+            yield cached[i] if cached is not None else self._decode(i, hb)
+
     # ── structural views ────────────────────────────────────────────────
     def spans(self) -> list[SpanView]:
         order: list[bytes] = []
         table: dict[bytes, dict] = {}
-        for dr in self._decoded_records():
-            if dr.header is None:
+        for _i, _hb, header in self._headers_decoded():
+            if header is None:
                 continue
-            sid = dr.header.span_id
+            sid = header.span_id
             if sid == ZERO16:
                 continue
             entry = table.get(sid)
@@ -682,12 +754,12 @@ class AuditReader:
                 entry = {"parent": ZERO16, "start": None, "end": None, "seqs": []}
                 table[sid] = entry
                 order.append(sid)
-            entry["seqs"].append(dr.seq)
-            if dr.record_type == RT_SPAN_START:
-                entry["start"] = dr.seq
-                entry["parent"] = dr.header.parent_span_id
-            elif dr.record_type == RT_SPAN_END:
-                entry["end"] = dr.seq
+            entry["seqs"].append(header.seq)
+            if header.record_type == RT_SPAN_START:
+                entry["start"] = header.seq
+                entry["parent"] = header.parent_span_id
+            elif header.record_type == RT_SPAN_END:
+                entry["end"] = header.seq
         out = []
         for sid in order:
             e = table[sid]
@@ -698,26 +770,30 @@ class AuditReader:
     def boots(self) -> list[BootView]:
         order: list[bytes] = []
         table: dict[bytes, dict] = {}
-        for dr in self._decoded_records():
-            if dr.header is None:
+        for i, hb, header in self._headers_decoded():
+            if header is None:
                 continue
-            bid = dr.header.boot_id
+            bid = header.boot_id
             entry = table.get(bid)
             if entry is None:
                 entry = {
-                    "first": dr.seq,
-                    "last": dr.seq,
+                    "first": header.seq,
+                    "last": header.seq,
                     "count": 0,
                     "tt": set(),
                     "recovery": None,
                 }
                 table[bid] = entry
                 order.append(bid)
-            entry["last"] = dr.seq
+            entry["last"] = header.seq
             entry["count"] += 1
-            entry["tt"].add(dr.header.time_trust)
-            if entry["recovery"] is None and dr.kind == KIND_RECOVERY_TRUNCATED_TAIL:
-                entry["recovery"] = dr.seq
+            entry["tt"].add(header.time_trust)
+            if (
+                entry["recovery"] is None
+                and header.record_type == RT_EVENT
+                and self._kind_probe(i, hb) == KIND_RECOVERY_TRUNCATED_TAIL
+            ):
+                entry["recovery"] = header.seq
         return [
             BootView(
                 bid,
@@ -779,9 +855,12 @@ class AuditReader:
         references the same way, through :meth:`_hash_verified_target`,
         so the two cannot disagree about what "acknowledged" means.
         """
+        # Only SAFETY records take part: an ack is SAFETY, and a target
+        # that is anything but a SAFETY INCIDENT_CANDIDATE is not counted
+        # either way — so a map of SAFETY records alone gives the same
+        # set as a map of every record, without decoding every record.
         by_seq: dict[int, tuple[DecodedRecord, bytes]] = {
-            dr.seq: (dr, hb)
-            for dr, hb in zip(self._decoded_records(), self._headers, strict=True)
+            dr.seq: (dr, self._headers[dr.index]) for dr in self.safety_records()
         }
         acknowledged: set[int] = set()
         for dr, _hb in by_seq.values():
