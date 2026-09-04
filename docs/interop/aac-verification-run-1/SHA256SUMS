@@ -1,0 +1,7 @@
+# Upstream pins — action-state-group/agent-action-capsule @ bb648e15d4826ff78e7d71eb4f3cc87ec5e6713c (2026-08-30)
+688955bd8229d67492f6a4a24121c5bdf94a0fb8f0dee1ef35c6af45acf53830  test-vectors/vectors.json
+929aaeebe640ab7ef3e147212ae5efd2c594a990ca0cbbe43e867c58cb5eb232  test-vectors/SHA256SUMS
+# This directory
+09614c91cbe7aca371f11d37d94e3445eceb978f6025160aed9ec3dd079d3e86  aac_verify_ref.py
+91e87c19277639e6125737b4ddf88ea3e7484a6f0294cd165b2f9968c8bd55ff  run_vectors.py
+452db2af964cf2fae74fc866588d9937eea40d163c78989eaaa946eada597e4e  RUN-RECORD.md
