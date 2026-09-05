@@ -94,12 +94,13 @@ palimpsests pala verify serve.pala        # the serve chain in the config dir; v
 palimpsests pala export serve.pala        # JSONL, one record per line
 ```
 
-In the export, reported records are the `kind_name: TOOL_CALL` /
-`TOOL_RESULT` lines whose `body_tlvs` include tag `0x0011` (`EVT_SOURCE`)
-with value `0100` (u16 LE = 1). Wire-parsed pairs carry no `0x0011` tag
-at all — absence is the default, by design (profile §3.1, r5). A named
-`source` field in the reader's decoded records is not there yet; the
-raw tag is the contract.
+In the export, every `TOOL_CALL` / `TOOL_RESULT` line carries `source`
+(`0` parsed-from-wire, `1` reported-by-client) and `source_name`, and
+the decoded record exposes the same two fields (`DecodedRecord.source`
+/ `source_name`). The `0` is stated, not implied: an absent
+`EVT_SOURCE` tag on a kind 8/9 body *means* parsed-from-wire (profile
+§3.1, r5), and the reader says so rather than leaving the field empty.
+The raw tag `0x0011` is still visible in `body_tlvs` when present.
 
 ## Tested
 
