@@ -1,0 +1,198 @@
+{
+  "$comment": "Prefix-consistency companion vectors: the PALA-1 \u00a74.3 tree over record hashes of the inference companion chain, in seq order, and RFC 6962 consistency paths between its prefixes (RFC 9162 \u00a72.1.4.2 verification). Derived; nothing on the wire. test-vectors.json is frozen and untouched.",
+  "format": "pala-consistency-proof/1",
+  "source": "profiles/inference-vectors.json",
+  "source_chain_head": "cd052df29dba6a183e47099dfec0c10855d6c4dd125642c1ebe172ce6272a3df",
+  "records": 17,
+  "leaves": "record_hash of each record, seq order; leaf(d) = SHA-256(0x00 || d)",
+  "roots_by_count": {
+    "0": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "1": "62b440f652e7398b788b52a1dfc6d2f54db2825a5a93ee2dec37816f497f8dff",
+    "2": "a1d869cc166133b359c10933a1a91be0b65c7dc4b59aea74f4cb8d4938f8b3c9",
+    "3": "e7fdfb95d38da4f6e7f483096c5dca4efc74fc30e8d30f592fefc72035dc51bb",
+    "4": "b38f90b83fb36142817ca100bb57a747a86e2c13da6860a4a7d55d89f0590ed7",
+    "5": "491051959f0b494657e69b2858ce425027bd2098e4a34d96f0c69140320fc54f",
+    "6": "6c52ae5cb5127b0a2267b9a25c5b6f991d76ba4b5085a3af4f1055ebcf31104a",
+    "7": "834a308444f094caa258c1bb70b6be1fadcabc9ae0899f089f315e453c93b27a",
+    "8": "3416a214f570bcbf3be28681efe6af8e5efdb81d9f2a2c194b059a63d186468c",
+    "9": "4113d406db41d4561f849ca92326da0bd7ee3ea82138874fb3c6013e441095c1",
+    "10": "d8fb6aa38d9b9e69545dab917fd1ba67617f68ab049529b4b81474050aafd0d6",
+    "11": "f03d608dc6908a782ee2d17315fe905ef428633df76123d5a728d2eed8eb80ac",
+    "12": "63775635139d286964fe5c340aefc014abc336ba2ae781e54ed621f16d8c5267",
+    "13": "130b68238204755632b09bdbd8d9ea81410fd9b2bd0273382e283b83da04a7b6",
+    "14": "2a20d476ffbba250b8be326ae86a7b665aeea3dca673c82f347dcfb2f5d8e33c",
+    "15": "738bbc20ec309386aaf790e950a19b6f6fc446d8a1a255a11c46f653a943cdc5",
+    "16": "5258652ebb4ead05ec39d0eb4279d93d42968387281530041adabe5f7c4a9456",
+    "17": "75ec5d085d4c2043aa4d0b73ee110a843cd74f76db21460d1f5e524114c65c7d"
+  },
+  "proofs": [
+    {
+      "first": 1,
+      "second": 17,
+      "first_root": "62b440f652e7398b788b52a1dfc6d2f54db2825a5a93ee2dec37816f497f8dff",
+      "second_root": "75ec5d085d4c2043aa4d0b73ee110a843cd74f76db21460d1f5e524114c65c7d",
+      "path": [
+        "0331e85f170450606c4b32a45c022be59b64b84c7d0ee6470ef79d9fee1eb05b",
+        "036ac56a3e4047972a38884f4779fe3bd89d5e80e13cf5109c187a223fc19168",
+        "652c4fe39d5363a78d3ab0492353b09f6638081b2a7396b6942c207b75d0ed9a",
+        "0e182af48754396bb738199a18ed16a600a707ca460299cf80119ff5fb58c639",
+        "747a1bbe1009a5e7fc975f830d00137510525d36dd521fc2c2ec5fd4c60e46b5"
+      ]
+    },
+    {
+      "first": 2,
+      "second": 17,
+      "first_root": "a1d869cc166133b359c10933a1a91be0b65c7dc4b59aea74f4cb8d4938f8b3c9",
+      "second_root": "75ec5d085d4c2043aa4d0b73ee110a843cd74f76db21460d1f5e524114c65c7d",
+      "path": [
+        "036ac56a3e4047972a38884f4779fe3bd89d5e80e13cf5109c187a223fc19168",
+        "652c4fe39d5363a78d3ab0492353b09f6638081b2a7396b6942c207b75d0ed9a",
+        "0e182af48754396bb738199a18ed16a600a707ca460299cf80119ff5fb58c639",
+        "747a1bbe1009a5e7fc975f830d00137510525d36dd521fc2c2ec5fd4c60e46b5"
+      ]
+    },
+    {
+      "first": 4,
+      "second": 17,
+      "first_root": "b38f90b83fb36142817ca100bb57a747a86e2c13da6860a4a7d55d89f0590ed7",
+      "second_root": "75ec5d085d4c2043aa4d0b73ee110a843cd74f76db21460d1f5e524114c65c7d",
+      "path": [
+        "652c4fe39d5363a78d3ab0492353b09f6638081b2a7396b6942c207b75d0ed9a",
+        "0e182af48754396bb738199a18ed16a600a707ca460299cf80119ff5fb58c639",
+        "747a1bbe1009a5e7fc975f830d00137510525d36dd521fc2c2ec5fd4c60e46b5"
+      ]
+    },
+    {
+      "first": 7,
+      "second": 17,
+      "first_root": "834a308444f094caa258c1bb70b6be1fadcabc9ae0899f089f315e453c93b27a",
+      "second_root": "75ec5d085d4c2043aa4d0b73ee110a843cd74f76db21460d1f5e524114c65c7d",
+      "path": [
+        "3a0d845e436099b157a2933c8751eb6fd963f309f4fcd62a417e5dd2ddf353e8",
+        "edd729c42d61461f452e25ae370c775ba8309ef14f26b9a14f3b201bd51ba27c",
+        "81689ad555d055d2dd7d8882f06047a5f0378b19f0e9571902f9265a653ab5b7",
+        "b38f90b83fb36142817ca100bb57a747a86e2c13da6860a4a7d55d89f0590ed7",
+        "0e182af48754396bb738199a18ed16a600a707ca460299cf80119ff5fb58c639",
+        "747a1bbe1009a5e7fc975f830d00137510525d36dd521fc2c2ec5fd4c60e46b5"
+      ]
+    },
+    {
+      "first": 8,
+      "second": 17,
+      "first_root": "3416a214f570bcbf3be28681efe6af8e5efdb81d9f2a2c194b059a63d186468c",
+      "second_root": "75ec5d085d4c2043aa4d0b73ee110a843cd74f76db21460d1f5e524114c65c7d",
+      "path": [
+        "0e182af48754396bb738199a18ed16a600a707ca460299cf80119ff5fb58c639",
+        "747a1bbe1009a5e7fc975f830d00137510525d36dd521fc2c2ec5fd4c60e46b5"
+      ]
+    },
+    {
+      "first": 13,
+      "second": 17,
+      "first_root": "130b68238204755632b09bdbd8d9ea81410fd9b2bd0273382e283b83da04a7b6",
+      "second_root": "75ec5d085d4c2043aa4d0b73ee110a843cd74f76db21460d1f5e524114c65c7d",
+      "path": [
+        "fdccf48007841b51269f67d37f407607d3dddcddf4495eb1e1ecc94cd1d08335",
+        "48ac5d79e79fe4289d2ecd9c4a79c3fc5d75fe58d5ff2d83a1394acf9c743abd",
+        "a3790dc92b8b8cf32f5e50cbf0742a1fb22825d344f09e1389e3ff12cb6c58d2",
+        "e34f11c85980e66c9a0fb93674d86088af8c9b79eed2ec940f9fdf6410c93a25",
+        "3416a214f570bcbf3be28681efe6af8e5efdb81d9f2a2c194b059a63d186468c",
+        "747a1bbe1009a5e7fc975f830d00137510525d36dd521fc2c2ec5fd4c60e46b5"
+      ]
+    },
+    {
+      "first": 16,
+      "second": 17,
+      "first_root": "5258652ebb4ead05ec39d0eb4279d93d42968387281530041adabe5f7c4a9456",
+      "second_root": "75ec5d085d4c2043aa4d0b73ee110a843cd74f76db21460d1f5e524114c65c7d",
+      "path": [
+        "747a1bbe1009a5e7fc975f830d00137510525d36dd521fc2c2ec5fd4c60e46b5"
+      ]
+    },
+    {
+      "first": 17,
+      "second": 17,
+      "first_root": "75ec5d085d4c2043aa4d0b73ee110a843cd74f76db21460d1f5e524114c65c7d",
+      "second_root": "75ec5d085d4c2043aa4d0b73ee110a843cd74f76db21460d1f5e524114c65c7d",
+      "path": []
+    },
+    {
+      "first": 4,
+      "second": 8,
+      "first_root": "b38f90b83fb36142817ca100bb57a747a86e2c13da6860a4a7d55d89f0590ed7",
+      "second_root": "3416a214f570bcbf3be28681efe6af8e5efdb81d9f2a2c194b059a63d186468c",
+      "path": [
+        "652c4fe39d5363a78d3ab0492353b09f6638081b2a7396b6942c207b75d0ed9a"
+      ]
+    },
+    {
+      "first": 3,
+      "second": 7,
+      "first_root": "e7fdfb95d38da4f6e7f483096c5dca4efc74fc30e8d30f592fefc72035dc51bb",
+      "second_root": "834a308444f094caa258c1bb70b6be1fadcabc9ae0899f089f315e453c93b27a",
+      "path": [
+        "d1e3d51f85a10339b500eddebaa04ae34e5d463fe9fad9342c2147d8f4dd03fb",
+        "488980d8e78c2a55d13aa3481430bc7ec4f0a255d23025a575c31eaf38dbb76a",
+        "a1d869cc166133b359c10933a1a91be0b65c7dc4b59aea74f4cb8d4938f8b3c9",
+        "6a187ad8ec46fa92f8ffb804e72cd367600aac63e9ea9cfb440a850a353b9b15"
+      ]
+    },
+    {
+      "first": 5,
+      "second": 12,
+      "first_root": "491051959f0b494657e69b2858ce425027bd2098e4a34d96f0c69140320fc54f",
+      "second_root": "63775635139d286964fe5c340aefc014abc336ba2ae781e54ed621f16d8c5267",
+      "path": [
+        "65b9c7c5c36d9348b6b6e4f9c834aaef730ece8885b904e705c041d08419e35a",
+        "21bff98aa353ca178fa2d3fafb824f52a50d904e2dff533d81bf2638857ff6be",
+        "53722a4119bbce4b1af50af671f9494f209ff3b64c696705123652a06af9155a",
+        "b38f90b83fb36142817ca100bb57a747a86e2c13da6860a4a7d55d89f0590ed7",
+        "e34f11c85980e66c9a0fb93674d86088af8c9b79eed2ec940f9fdf6410c93a25"
+      ]
+    }
+  ],
+  "negative": {
+    "$comment": "each MUST verify False",
+    "truncated_path": {
+      "first": 7,
+      "second": 17,
+      "first_root": "834a308444f094caa258c1bb70b6be1fadcabc9ae0899f089f315e453c93b27a",
+      "second_root": "75ec5d085d4c2043aa4d0b73ee110a843cd74f76db21460d1f5e524114c65c7d",
+      "path": [
+        "3a0d845e436099b157a2933c8751eb6fd963f309f4fcd62a417e5dd2ddf353e8",
+        "edd729c42d61461f452e25ae370c775ba8309ef14f26b9a14f3b201bd51ba27c",
+        "81689ad555d055d2dd7d8882f06047a5f0378b19f0e9571902f9265a653ab5b7",
+        "b38f90b83fb36142817ca100bb57a747a86e2c13da6860a4a7d55d89f0590ed7",
+        "0e182af48754396bb738199a18ed16a600a707ca460299cf80119ff5fb58c639"
+      ]
+    },
+    "wrong_first_root": {
+      "first": 7,
+      "second": 17,
+      "first_root": "6c52ae5cb5127b0a2267b9a25c5b6f991d76ba4b5085a3af4f1055ebcf31104a",
+      "second_root": "75ec5d085d4c2043aa4d0b73ee110a843cd74f76db21460d1f5e524114c65c7d",
+      "path": [
+        "3a0d845e436099b157a2933c8751eb6fd963f309f4fcd62a417e5dd2ddf353e8",
+        "edd729c42d61461f452e25ae370c775ba8309ef14f26b9a14f3b201bd51ba27c",
+        "81689ad555d055d2dd7d8882f06047a5f0378b19f0e9571902f9265a653ab5b7",
+        "b38f90b83fb36142817ca100bb57a747a86e2c13da6860a4a7d55d89f0590ed7",
+        "0e182af48754396bb738199a18ed16a600a707ca460299cf80119ff5fb58c639",
+        "747a1bbe1009a5e7fc975f830d00137510525d36dd521fc2c2ec5fd4c60e46b5"
+      ]
+    },
+    "swapped_sizes": {
+      "first": 17,
+      "second": 7,
+      "first_root": "834a308444f094caa258c1bb70b6be1fadcabc9ae0899f089f315e453c93b27a",
+      "second_root": "75ec5d085d4c2043aa4d0b73ee110a843cd74f76db21460d1f5e524114c65c7d",
+      "path": [
+        "3a0d845e436099b157a2933c8751eb6fd963f309f4fcd62a417e5dd2ddf353e8",
+        "edd729c42d61461f452e25ae370c775ba8309ef14f26b9a14f3b201bd51ba27c",
+        "81689ad555d055d2dd7d8882f06047a5f0378b19f0e9571902f9265a653ab5b7",
+        "b38f90b83fb36142817ca100bb57a747a86e2c13da6860a4a7d55d89f0590ed7",
+        "0e182af48754396bb738199a18ed16a600a707ca460299cf80119ff5fb58c639",
+        "747a1bbe1009a5e7fc975f830d00137510525d36dd521fc2c2ec5fd4c60e46b5"
+      ]
+    }
+  }
+}

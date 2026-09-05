@@ -114,6 +114,7 @@ logging.
 | Erasure without integrity loss (privacy) | Cryptographic erasure by per-record key destruction (§4.4); every chain and tree hash verifies unchanged after erasure (GDPR Art. 17 compatible) | Shipped (v0.7) |
 | Performance cost of logging | Measured: audit emission has no measurable throughput cost during inference (lifecycle-level emission against a ~10⁵× writer headroom); per-kind footprint ≈ 181 B/record weighted (`results/audit-overhead-footprint-v0.7.0.md`) | Shipped (v0.7) |
 | Retention guidance from measured bytes/record | docs/RETENTION.md — storage math from the measured per-kind footprint (~181 B/record weighted), archival at segment boundaries, ~4 s/GB resume cost | Shipped (v0.8) |
+| Pruned prefix provably a prefix of the live chain | `pala-consistency-proof/1`: RFC 6962/9162 consistency proofs over the derived §4.3 tree of record hashes — O(log n) nodes, no wire change, verified against roots held outside the file (`docs/specs/pala-1/consistency-proof.md`, companion vectors) | Shipped (0.12) |
 
 ## Human oversight events
 
