@@ -31,10 +31,12 @@ from palimpsests.audit.pala.codec import (
     record_hash,
 )
 from palimpsests.audit.pala.merkle import (
+    consistency_proof,
     leaf_hash,
     merkle_proof,
     merkle_root,
     node_hash,
+    verify_consistency,
     verify_proof,
 )
 from palimpsests.audit.pala.verify import VerifyResult, verify_headers
@@ -54,8 +56,10 @@ __all__ = [
     "encode_tlvs",
     "iter_records",
     "leaf_hash",
+    "consistency_proof",
     "merkle_proof",
     "merkle_root",
+    "verify_consistency",
     "node_hash",
     "nonce_for",
     "open_body",
