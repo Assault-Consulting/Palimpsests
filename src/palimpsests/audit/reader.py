@@ -50,6 +50,7 @@ source for kind names (§10.5 — the ints are imported, never re-typed).
 from __future__ import annotations
 
 import struct
+from array import array
 from collections.abc import Iterator
 from dataclasses import dataclass
 from palimpsests.audit.anchors import (
@@ -225,6 +226,86 @@ def _header_fields(hb: bytes) -> _HeaderFields | None:
     return _HeaderFields(rtype, tt, seq, boot_id, span_id, parent)
 
 
+class _HeaderSeq:
+    """The record headers as a sequence, sliced from the container on
+    access instead of copied out of it once and held (U14, PR-8).
+
+    ``_walk()`` used to append ``bytes(data[off:off + hlen])`` for every
+    record — a persistent Python object of ~160–260 bytes per record,
+    which on a million-record chain was the floor under every other
+    cost. This keeps three machine-word arrays (offset, header length,
+    body length) and materialises a header only when a caller asks for
+    it; the temporary dies with the caller's loop iteration. Every
+    consumer that iterated or indexed ``_headers`` — the verifiers, the
+    views, the report, the proofs and time-health passes — sees exactly
+    the same ``bytes`` values as before.
+    """
+
+    __slots__ = ("_data", "_off", "_hlen", "_blen")
+
+    def __init__(self, data) -> None:
+        self._data = data
+        self._off = array("Q")
+        self._hlen = array("H")
+        self._blen = array("I")
+
+    def _append(self, off: int, hlen: int, blen: int) -> None:
+        self._off.append(off)
+        self._hlen.append(hlen)
+        self._blen.append(blen)
+
+    def __len__(self) -> int:
+        return len(self._off)
+
+    def __getitem__(self, index):
+        if isinstance(index, slice):
+            return [self[i] for i in range(*index.indices(len(self._off)))]
+        off = self._off[index]  # negative indices resolve as on a list
+        return bytes(self._data[off : off + self._hlen[index]])
+
+    def __iter__(self) -> Iterator[bytes]:
+        data, offs, hlens = self._data, self._off, self._hlen
+        for i in range(len(offs)):
+            off = offs[i]
+            yield bytes(data[off : off + hlens[i]])
+
+    def body_span(self, index: int) -> tuple[int, int]:
+        start = self._off[index] + self._hlen[index]
+        return start, start + self._blen[index]
+
+    # In-place reads of the fixed fields the bounded passes need, so
+    # they never materialise a header just to look at two words of it.
+    def record_type_at(self, index: int) -> int:
+        return struct.unpack_from("<H", self._data, self._off[index] + 8)[0]
+
+    def seq_at(self, index: int) -> int:
+        return struct.unpack_from("<Q", self._data, self._off[index] + 12)[0]
+
+    def key_id_at(self, index: int) -> int:
+        return struct.unpack_from("<I", self._data, self._off[index] + 116)[0]
+
+    def fields_at(self, index: int) -> _HeaderFields | None:
+        """:func:`_header_fields` read in place — same accept/reject rule."""
+        off, hlen = self._off[index], self._hlen[index]
+        if hlen < FIXED_HEADER_LEN:
+            return None
+        data = self._data
+        magic, ver, rhlen, rtype, _tier, tt, seq, boot_id, _prev, span_id, parent = (
+            _VIEW_FIELDS.unpack_from(data, off)
+        )
+        if magic != MAGIC or rhlen != hlen or ver != 1:
+            return None
+        pos, end = off + FIXED_HEADER_LEN, off + hlen
+        while pos < end:
+            if pos + 4 > end:
+                return None
+            ln = struct.unpack_from("<H", data, pos + 2)[0]
+            pos += 4 + ln
+            if pos > end:
+                return None
+        return _HeaderFields(rtype, tt, seq, boot_id, span_id, parent)
+
+
 class _LazyRecords:
     """A seq-keyed view over the chain that decodes a record the first
     time it is asked for — the ``by_seq`` mapping the referential checks
@@ -357,8 +438,7 @@ class AuditReader:
         # fallback): a record decoded once on demand is not decoded
         # again by the next caller. The full cache above supersedes it.
         self._partial: dict[int, DecodedRecord] = {}
-        self._headers: list[bytes] = []
-        self._body_spans: list[tuple[int, int]] = []
+        self._headers = _HeaderSeq(data)
         self._truncated = False
         self._truncated_detail: str | None = None
         self._walk()
@@ -423,8 +503,7 @@ class AuditReader:
                 self._truncated = True
                 self._truncated_detail = f"record at offset {off} cut short"
                 break
-            self._headers.append(bytes(data[off : off + hlen]))
-            self._body_spans.append((off + hlen, end))
+            self._headers._append(off, hlen, blen)
             off = end
 
     # ── verification ────────────────────────────────────────────────────
@@ -526,17 +605,18 @@ class AuditReader:
         one) yields the same items in the same order as before.
         """
         headers = self._headers
-        # phase 1 — seq → position, from header offset 12 (§2.1)
+        # phase 1 — seq → position, from header offset 12 (§2.1), in place
+        seq_at = headers.seq_at
         pos_by_seq: dict[int, int] = {}
-        for i, hb in enumerate(headers):
-            pos_by_seq[struct.unpack_from("<Q", hb, 12)[0]] = i
+        for i in range(len(headers)):
+            pos_by_seq[seq_at(i)] = i
         by_seq = _LazyRecords(self, pos_by_seq)
 
         # phase 2 — which records carry a reference: kind probe + record type
         items: list[AdvisoryItem] = []
+        rtype_at = headers.record_type_at
         for i in pos_by_seq.values():
-            hb = headers[i]
-            rtype = struct.unpack_from("<H", hb, 8)[0]
+            rtype = rtype_at(i)
             if rtype == RT_KEY_SHRED:
                 dr = by_seq.at(i)
                 if dr.body_tlvs is not None:
@@ -544,7 +624,7 @@ class AuditReader:
                 continue
             if rtype not in _KIND_BEARING:
                 continue
-            if self._kind_probe(i, hb) not in _REFERENCING_KINDS:
+            if self._kind_probe(i) not in _REFERENCING_KINDS:
                 continue
             # phase 3 — decode the referencing record; its target is
             # decoded on demand inside the check, through ``by_seq``
@@ -764,7 +844,7 @@ class AuditReader:
         return self._decoded
 
     def _decode(self, index: int, hb: bytes) -> DecodedRecord:
-        start, end = self._body_spans[index]
+        start, end = self._headers.body_span(index)
         body = bytes(self._data[start:end]) if end > start else b""
         return decode_record(index, hb, body)
 
@@ -798,26 +878,30 @@ class AuditReader:
     # present and first (inference §3), so the probe is the same answer
     # ``decode_record`` gives, at a fraction of the work.
 
-    def _headers_decoded(self) -> Iterator[tuple[int, bytes, _HeaderFields | None]]:
-        """``(index, header_bytes, fields | None)`` for every record —
+    def _headers_decoded(self) -> Iterator[tuple[int, bytes | None, _HeaderFields | None]]:
+        """``(index, header_bytes | None, fields | None)`` for every record —
         ``None`` where the header does not decode (unknown version or
         malformed TLVs), exactly the records the views skip.
 
-        Yields the full ``Header`` from the cache when the chain is
-        materialised, else a ``_HeaderFields`` view read straight off the
-        bytes with the same accept/reject rule as ``Header.decode`` — the
-        fields the views use, without building a ``Header`` (and its TLV
-        list) per record.
+        Yields the full ``Header`` (and its bytes) from the cache when the
+        chain is materialised, else a ``_HeaderFields`` view read straight
+        off the container with the same accept/reject rule as
+        ``Header.decode`` — the fields the views use, without building a
+        ``Header`` (and its TLV list) per record, and without slicing the
+        header out of the container at all (``header_bytes`` is ``None``
+        on that path).
         """
         cached = self._decoded
         if cached is not None:
             for i, (dr, hb) in enumerate(zip(cached, self._headers, strict=True)):
                 yield i, hb, dr.header
             return
-        for i, hb in enumerate(self._headers):
-            yield i, hb, _header_fields(hb)
+        headers = self._headers
+        fields_at = headers.fields_at
+        for i in range(len(headers)):
+            yield i, None, fields_at(i)
 
-    def _kind_probe(self, index: int, hb: bytes) -> int | None:
+    def _kind_probe(self, index: int, hb: bytes | None = None) -> int | None:
         """``EVT_KIND`` of record ``index`` read in place, or ``None``.
 
         Same answer as ``decode_record(...).kind`` for the records the
@@ -830,12 +914,11 @@ class AuditReader:
         cached = self._decoded
         if cached is not None:
             return cached[index].kind
-        rtype = struct.unpack_from("<H", hb, 8)[0]
-        if rtype not in _KIND_BEARING:
+        headers = self._headers
+        if headers.record_type_at(index) not in _KIND_BEARING:
             return None
-        key_id = struct.unpack_from("<I", hb, 116)[0]
-        start, end = self._body_spans[index]
-        if key_id != 0 or end - start < 6:
+        start, end = headers.body_span(index)
+        if headers.key_id_at(index) != 0 or end - start < 6:
             return None
         t, ln = struct.unpack_from("<HH", self._data, start)
         if t == EVT_KIND and ln >= 2 and start + 4 + ln <= end:
@@ -851,77 +934,85 @@ class AuditReader:
         the cost this method removes. Uses the warm cache when
         ``verify()`` has built one.
         """
-        for i, hb in enumerate(self._headers):
-            if struct.unpack_from("<H", hb, 8)[0] != RT_SAFETY:
+        headers = self._headers
+        rtype_at = headers.record_type_at
+        for i in range(len(headers)):
+            if rtype_at(i) != RT_SAFETY:
                 continue
             yield self._record_at(i)
 
     # ── structural views ────────────────────────────────────────────────
     def spans(self) -> list[SpanView]:
-        order: list[bytes] = []
-        table: dict[bytes, dict] = {}
-        for _i, _hb, header in self._headers_decoded():
-            if header is None:
-                continue
-            sid = header.span_id
-            if sid == ZERO16:
-                continue
-            entry = table.get(sid)
-            if entry is None:
-                entry = {"parent": ZERO16, "start": None, "end": None, "seqs": []}
-                table[sid] = entry
-                order.append(sid)
-            entry["seqs"].append(header.seq)
-            if header.record_type == RT_SPAN_START:
-                entry["start"] = header.seq
-                entry["parent"] = header.parent_span_id
-            elif header.record_type == RT_SPAN_END:
-                entry["end"] = header.seq
-        out = []
-        for sid in order:
-            e = table[sid]
-            start = e["start"] if e["start"] is not None else e["seqs"][0]
-            out.append(SpanView(sid, e["parent"], start, e["end"], list(e["seqs"])))
-        return out
+        return self.structure()[1]
 
     def boots(self) -> list[BootView]:
-        order: list[bytes] = []
-        table: dict[bytes, dict] = {}
-        for i, hb, header in self._headers_decoded():
+        return self.structure()[0]
+
+    def structure(self) -> tuple[list[BootView], list[SpanView]]:
+        """``(boots, spans)`` from one pass over the headers.
+
+        The two views read the same header fields; a caller that wants
+        both (the report does) pays one walk instead of two (U14, PR-8).
+        ``boots()`` and ``spans()`` are each this pass keeping one half.
+        """
+        boot_order: list[bytes] = []
+        boot_table: dict[bytes, dict] = {}
+        span_order: list[bytes] = []
+        span_table: dict[bytes, dict] = {}
+        for i, _hb, header in self._headers_decoded():
             if header is None:
                 continue
+            seq = header.seq
+            rtype = header.record_type
+
             bid = header.boot_id
-            entry = table.get(bid)
+            entry = boot_table.get(bid)
             if entry is None:
-                entry = {
-                    "first": header.seq,
-                    "last": header.seq,
-                    "count": 0,
-                    "tt": set(),
-                    "recovery": None,
-                }
-                table[bid] = entry
-                order.append(bid)
-            entry["last"] = header.seq
+                entry = {"first": seq, "last": seq, "count": 0, "tt": set(), "recovery": None}
+                boot_table[bid] = entry
+                boot_order.append(bid)
+            entry["last"] = seq
             entry["count"] += 1
             entry["tt"].add(header.time_trust)
             if (
                 entry["recovery"] is None
-                and header.record_type == RT_EVENT
-                and self._kind_probe(i, hb) == KIND_RECOVERY_TRUNCATED_TAIL
+                and rtype == RT_EVENT
+                and self._kind_probe(i) == KIND_RECOVERY_TRUNCATED_TAIL
             ):
-                entry["recovery"] = header.seq
-        return [
+                entry["recovery"] = seq
+
+            sid = header.span_id
+            if sid == ZERO16:
+                continue
+            sentry = span_table.get(sid)
+            if sentry is None:
+                sentry = {"parent": ZERO16, "start": None, "end": None, "seqs": []}
+                span_table[sid] = sentry
+                span_order.append(sid)
+            sentry["seqs"].append(seq)
+            if rtype == RT_SPAN_START:
+                sentry["start"] = seq
+                sentry["parent"] = header.parent_span_id
+            elif rtype == RT_SPAN_END:
+                sentry["end"] = seq
+
+        boots = [
             BootView(
                 bid,
-                table[bid]["first"],
-                table[bid]["last"],
-                table[bid]["count"],
-                table[bid]["tt"],
-                table[bid]["recovery"],
+                boot_table[bid]["first"],
+                boot_table[bid]["last"],
+                boot_table[bid]["count"],
+                boot_table[bid]["tt"],
+                boot_table[bid]["recovery"],
             )
-            for bid in order
+            for bid in boot_order
         ]
+        spans = []
+        for sid in span_order:
+            e = span_table[sid]
+            start = e["start"] if e["start"] is not None else e["seqs"][0]
+            spans.append(SpanView(sid, e["parent"], start, e["end"], list(e["seqs"])))
+        return boots, spans
 
     def origin_at(self, seq: int) -> OriginView | None:
         return self._origin_state_at(seq)[0]
