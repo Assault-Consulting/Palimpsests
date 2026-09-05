@@ -82,3 +82,40 @@ the U14 track notes were taken on this same container class and are
 consistent in ratio with the rows above; a run on operator hardware
 (PR-4 of the track) is still the only thing that turns any absolute
 value here into a number worth quoting.
+
+## Addendum — PR-8, the `_walk()` floor (2026-09-05)
+
+`_walk()` copied every header out of the container into its own `bytes`
+and kept all of them; PR-8 replaces that with three offset/length arrays
+and slices a header only when a caller asks for it. The bounded passes
+(`verify()`'s referential pass, the views, the safety section, the
+report's seq bounds) read the two or three words they need in place
+and never slice. `boots()` and `spans()` are one pass (`structure()`),
+which the report uses.
+
+Measured **without** tracemalloc this time — the harness runs under
+`tracemalloc`, which inflates the wall time of allocation-heavy code
+several-fold and is not the right instrument for a change whose point
+is fewer allocations. Fresh process per run, two or three repeats,
+ranges; `calm` profile; PR-7 is `main` at `5a3a10f`.
+
+| chain | metric | PR-7 | PR-8 |
+|---|---|---|---|
+| calm-40k | RSS after `open()` | 41–43 MB | **28 MB** |
+| calm-40k | RSS after `verify()` | 47–48 MB | **34 MB** |
+| calm-40k | `verify()` wall | 0.16–0.18 s | 0.20–0.21 s |
+| calm-250k | RSS after `open()` | 154–156 MB | **73–74 MB** |
+| calm-250k | RSS after `verify()` | 190–191 MB | **110 MB** |
+| calm-250k | `open()` wall | 0.21–0.22 s | 0.16–0.17 s |
+| calm-250k | `verify()` wall | 1.16–1.25 s | 1.20–1.32 s |
+| calm-250k | `build_report(reader=)` wall | 1.02–1.05 s | 1.01–1.05 s |
+
+**Reading it.** The floor drops by ~330 bytes per record — the copied
+header plus its object overhead — which is the slope that turned a
+million records into a SIGKILL. Wall time is flat to slightly worse:
+the one slice per header that `open()` used to do up front now happens
+inside `verify()`'s header pass, so `open()` gets faster and `verify()`
+slower by about the same amount; on 250k the sum is within noise. What
+remains resident after `verify()` at 250k is the seq map for the
+referential pass and the verifier's per-record head list — known,
+bounded, and the subject of the track's remaining items.
