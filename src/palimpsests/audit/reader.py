@@ -97,6 +97,7 @@ from palimpsests.audit.pala_writer import (
     EVT_OPERATOR_ID,
     EVT_REF_HASH,
     EVT_REF_SEQ,
+    EVT_SOURCE,
     KIND_GUARD_PREFIX_RELEASE,
     KIND_GUARD_STATE_REJECT,
     KIND_GUARD_TOOL_LOOP_LIMIT,
@@ -113,6 +114,8 @@ from palimpsests.audit.pala_writer import (
     KIND_TOOL_RESULT,
     KIND_TOOLS_OFFERED_NO_CALL,
     SHRED_TARGET_SEQS,
+    SOURCE_PARSED_FROM_WIRE,
+    SOURCE_REPORTED_BY_CLIENT,
 )
 
 __all__ = [
@@ -174,6 +177,16 @@ _DISP_NAMES = {
     DISP_DISMISSED: "DISMISSED",
     DISP_ESCALATED: "ESCALATED",
 }
+
+# EVT_SOURCE's two values (kinds 8/9, r5) — the evidence-quality mark.
+# Absent on a kind 8/9 body means 0 (profile §3.1): the reader says so
+# explicitly rather than leaving the field None for the default case,
+# because "parsed from the wire" is a claim, not the absence of one.
+_SOURCE_NAMES = {
+    SOURCE_PARSED_FROM_WIRE: "parsed-from-wire",
+    SOURCE_REPORTED_BY_CLIENT: "reported-by-client",
+}
+_SOURCE_BEARING_KINDS = frozenset({KIND_TOOL_CALL, KIND_TOOL_RESULT})
 
 _PREFIX_ABSENT = "chain does not start with a GENESIS record"
 
@@ -369,6 +382,13 @@ class DecodedRecord:
     disposition_name: str | None  # resolved via _DISP_NAMES; None when
     # disposition is None, or is present but not one of the three
     # known values (a record this build cannot fully interpret).
+    source: int | None = None  # EVT_SOURCE on a TOOL_CALL / TOOL_RESULT
+    # body (r5): 0 parsed-from-wire, 1 reported-by-client. On those two
+    # kinds an absent tag decodes as 0 — the profile's "absent means
+    # wire-parsed" — so the field is an int for every decodable kind 8/9
+    # record; None for every other kind, where the mark has no meaning.
+    source_name: str | None = None  # resolved via _SOURCE_NAMES; None
+    # when source is None or an unknown value.
 
 
 @dataclass(frozen=True)
@@ -1174,6 +1194,8 @@ def decode_record(index: int, hb: bytes, body: bytes) -> DecodedRecord:
     operator_id: bytes | None = None
     disposition: int | None = None
     disposition_name: str | None = None
+    source: int | None = None
+    source_name: str | None = None
 
     if header.key_id == 0 and body:
         try:
@@ -1192,6 +1214,12 @@ def decode_record(index: int, hb: bytes, body: bytes) -> DecodedRecord:
                 elif disposition is None and t == EVT_DISPOSITION and len(v) >= 2:
                     disposition = struct.unpack_from("<H", v, 0)[0]
                     disposition_name = _DISP_NAMES.get(disposition)
+                elif source is None and t == EVT_SOURCE and len(v) >= 2:
+                    source = struct.unpack_from("<H", v, 0)[0]
+            if kind in _SOURCE_BEARING_KINDS and source is None:
+                source = SOURCE_PARSED_FROM_WIRE  # absent means 0 (r5)
+            if source is not None:
+                source_name = _SOURCE_NAMES.get(source)
 
     return DecodedRecord(
         header.seq,
@@ -1207,6 +1235,8 @@ def decode_record(index: int, hb: bytes, body: bytes) -> DecodedRecord:
         operator_id,
         disposition,
         disposition_name,
+        source,
+        source_name,
     )
 
 
