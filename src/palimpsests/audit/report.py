@@ -118,17 +118,15 @@ def _structure(reader) -> tuple:
     safety section, which decodes SAFETY records alone.
     """
     ver = reader.verify()
-    boots = reader.boots()
-    spans = reader.spans()
+    boots, spans = reader.structure()
     safety = _safety_section(reader)
     headers = reader._headers
+    n = len(headers)
     witness_pins = [
-        struct.unpack_from("<Q", hb, 12)[0]
-        for hb in headers
-        if struct.unpack_from("<H", hb, 8)[0] == RT_WITNESS
+        headers.seq_at(i) for i in range(n) if headers.record_type_at(i) == RT_WITNESS
     ]
-    first_seq = struct.unpack_from("<Q", headers[0], 12)[0] if headers else None
-    last_seq = struct.unpack_from("<Q", headers[-1], 12)[0] if headers else None
+    first_seq = headers.seq_at(0) if n else None
+    last_seq = headers.seq_at(n - 1) if n else None
     return ver, boots, spans, safety, witness_pins, first_seq, last_seq
 
 
