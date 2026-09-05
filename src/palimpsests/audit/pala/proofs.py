@@ -35,7 +35,8 @@ from palimpsests.audit.pala.codec import (
 from palimpsests.audit.pala.codec import (
     record_hash as _record_hash,
 )
-from palimpsests.audit.pala.merkle import merkle_proof
+from palimpsests.audit.pala.merkle import consistency_proof as merkle_consistency_proof
+from palimpsests.audit.pala.merkle import merkle_proof, merkle_root, verify_consistency
 
 
 @dataclass(frozen=True)
@@ -126,3 +127,103 @@ def range_proofs(reader, lo: int, hi: int) -> list[InclusionProof]:
         if p is not None:
             out.append(p)
     return out
+
+
+# ─── prefix consistency over the whole chain (WS-PROOF) ─────────────────
+#
+# The chain-carried MERKLE records cover windows. Prefix consistency
+# needs one tree over the *whole* chain, so it is **derived**: the §4.3
+# tree whose leaves are every record's hash in seq order, computed by
+# any verifier from headers alone. Nothing is added to the wire; the
+# root is a function of bytes the chain hash already covers. Two
+# verifiers holding two derived roots — an archived prefix's, taken
+# when it was archived, and the live chain's today — can check with
+# O(log n) nodes that the prefix is intact under the live chain, without
+# the archived records, and without re-hashing them. That is the formal
+# half of retention (RETENTION.md §3) and the value the continuation
+# profile's ``SEG_PRIOR_ROOT`` is defined to carry.
+
+CONSISTENCY_FORMAT = "pala-consistency-proof/1"
+
+
+@dataclass(frozen=True)
+class ConsistencyProof:
+    """A prefix-consistency proof between two derived roots of one chain.
+
+    ``first`` and ``second`` are record *counts* (``seq + 1`` of the last
+    record covered), not seqs; ``first <= second``. ``path`` is the RFC
+    6962 consistency path. Derived and unsigned, like a bundle: the
+    chain stays authoritative and the proof re-verifies from the spec
+    alone.
+    """
+
+    first: int
+    second: int
+    first_root: bytes
+    second_root: bytes
+    path: list[bytes]
+
+    def to_json(self) -> dict:
+        return {
+            "format": CONSISTENCY_FORMAT,
+            "tree": "PALA-1 §4.3 over record hashes, seq order, whole chain",
+            "first": self.first,
+            "second": self.second,
+            "first_root": self.first_root.hex(),
+            "second_root": self.second_root.hex(),
+            "path": [h.hex() for h in self.path],
+        }
+
+    @classmethod
+    def from_json(cls, doc: dict) -> ConsistencyProof:
+        if doc.get("format") != CONSISTENCY_FORMAT:
+            raise ValueError(f"not a {CONSISTENCY_FORMAT} document")
+        return cls(
+            first=int(doc["first"]),
+            second=int(doc["second"]),
+            first_root=bytes.fromhex(doc["first_root"]),
+            second_root=bytes.fromhex(doc["second_root"]),
+            path=[bytes.fromhex(h) for h in doc["path"]],
+        )
+
+    def verify(self) -> bool:
+        """The proof against its own roots — RFC 9162 §2.1.4.2. A caller
+        who holds a root from elsewhere (an archive manifest, a receipt)
+        compares it to ``first_root`` / ``second_root`` first; the proof
+        only says the two roots are consistent, never where they came
+        from."""
+        return verify_consistency(
+            self.first, self.second, self.first_root, self.second_root, self.path
+        )
+
+
+def _record_hashes(reader, count: int | None = None) -> list[bytes]:
+    headers = reader._headers
+    n = len(headers) if count is None else count
+    if not 0 <= n <= len(headers):
+        raise IndexError("count exceeds the records present")
+    return [_record_hash(headers[i]) for i in range(n)]
+
+
+def chain_root(reader, count: int | None = None) -> bytes:
+    """The derived root over the first ``count`` records (all, by
+    default): the §4.3 tree over their record hashes in seq order. The
+    empty chain's root is ``SHA-256("")`` per §4.3."""
+    return merkle_root(_record_hashes(reader, count))
+
+
+def consistency_proof(reader, first: int, second: int | None = None) -> ConsistencyProof:
+    """Prove that the first ``first`` records are a prefix of the first
+    ``second`` (default: every record present). Both are counts, not
+    seqs, and ``1 <= first <= second``."""
+    leaves = _record_hashes(reader, second)
+    second_n = len(leaves)
+    if not 1 <= first <= second_n:
+        raise IndexError("first must be in 1..second")
+    return ConsistencyProof(
+        first=first,
+        second=second_n,
+        first_root=merkle_root(leaves[:first]),
+        second_root=merkle_root(leaves),
+        path=merkle_consistency_proof(leaves, first),
+    )
