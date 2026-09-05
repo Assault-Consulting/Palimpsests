@@ -76,6 +76,30 @@ def verify_headers(
 ) -> VerifyResult:
     """Header-only verification per §7.1, with §7.2 when an anchor is given.
 
+    The one-pass form that also returns the advisory channel is
+    :func:`verify_headers_with_advisory`; this is the same pass with the
+    advisory discarded, and every existing caller's contract is unchanged.
+    """
+    return verify_headers_with_advisory(
+        headers, known_types=known_types, expected_head=expected_head, start_prev=start_prev
+    )[0]
+
+
+def verify_headers_with_advisory(
+    headers: Iterable[bytes],
+    *,
+    known_types: frozenset[int] = KNOWN_RECORD_TYPES,
+    expected_head: bytes | None = None,
+    start_prev: bytes | None = None,
+):
+    """§7.1 verdict and the ``IncrementalVerifier`` advisory, from one pass.
+
+    One ``IncrementalVerifier`` accumulates both as it steps; before this
+    the reader stepped a second one over the same headers to read the
+    advisory it had just thrown away (U14, D1). ``step()`` after a halt
+    is a no-op, so feeding every header or stopping at the halt gives the
+    same verdict and the same advisory.
+
     ``expected_head`` is the anchor: the head this chain is supposed to
     have, obtained from **outside** the log — a local anchor store, or the
     head covered by the newest witness receipt. Without it, tail
@@ -94,6 +118,7 @@ def verify_headers(
             break
 
     result = verifier.result()
+    advisory = verifier.advisory()
     seen = verifier.seen
     head = verifier.head
 
@@ -112,4 +137,4 @@ def verify_headers(
                     "replaced, rolled back, or truncated"
                 )
 
-    return result
+    return result, advisory
