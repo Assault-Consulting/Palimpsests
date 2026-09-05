@@ -62,6 +62,22 @@ palimpsests pala verify session.pala \
     --json
 ```
 
+## `pala consistency` / `pala consistency-verify`
+
+Prefix-consistency proofs over the derived tree (`docs/specs/pala-1/consistency-proof.md`):
+
+```
+palimpsests pala consistency <file> --first N [--second M] [--out proof.json]
+palimpsests pala consistency-verify proof.json [--first-root HEX] [--second-root HEX]
+```
+
+`--first` and `--second` are record **counts**. The first command emits
+a `pala-consistency-proof/1` document (exit 0; 3 if the counts exceed
+the records present). The second verifies the path against the roots —
+the document's own, or ones you hold from elsewhere via `--first-root`
+/ `--second-root`, which is the case that means something: exit 0
+`CONSISTENT`, 1 `INCONSISTENT`, 3 unreadable.
+
 ## `--json`
 
 Emits the full result: `consistency`, `completeness` (`checked`, `ok`,
