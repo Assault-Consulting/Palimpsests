@@ -110,6 +110,11 @@ def export_jsonl(
             line["header_undecoded"] = True
         line["kind"] = dr.kind
         line["kind_name"] = dr.kind_name
+        if dr.source is not None:
+            # r5 evidence mark on kinds 8/9; 0 is stated, not implied,
+            # because "parsed from the wire" is itself a claim.
+            line["source"] = dr.source
+            line["source_name"] = dr.source_name
         line["body_len"] = body_len
         if body_len:
             if dr.body_tlvs is not None:
