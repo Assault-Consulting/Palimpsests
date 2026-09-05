@@ -50,6 +50,7 @@ source for kind names (§10.5 — the ints are imported, never re-typed).
 from __future__ import annotations
 
 import struct
+import threading
 from array import array
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -438,6 +439,14 @@ class AuditReader:
         # fallback): a record decoded once on demand is not decoded
         # again by the next caller. The full cache above supersedes it.
         self._partial: dict[int, DecodedRecord] = {}
+        # One re-entrant lock around every cache-filling path (U14, PR-9):
+        # verify(), the full decode, the sparse decode. Concurrent
+        # callers on a cold reader used to each run the whole pass and
+        # each hold their own transient state — N callers, N runs, N
+        # times the memory. Now the first fills the cache and the rest
+        # read it. Re-entrant because verify() reaches _record_at()
+        # through the referential pass on the same thread.
+        self._lock = threading.RLock()
         self._headers = _HeaderSeq(data)
         self._truncated = False
         self._truncated_detail: str | None = None
@@ -520,14 +529,19 @@ class AuditReader:
 
         Cached: the first call pays, every call after it is free.
 
-        Not thread-safe. Two callers arriving on a cold reader each run
-        the passes and each hold their own transient state while they
-        do — N callers, N runs. A caller serving concurrent requests
-        should hold its own lock around this reader.
+        Serialised: concurrent callers on a cold reader queue on the
+        reader's lock; the first runs the passes, the rest return the
+        cached result. A reader is still one file's worth of state — a
+        caller serving many files holds one reader per file.
         """
         if self._verification is not None:
             return self._verification
+        with self._lock:
+            if self._verification is not None:
+                return self._verification
+            return self._verify_locked()
 
+    def _verify_locked(self) -> Verification:
         anchor_reading: AnchorReading | None = None
         anchor_attempts: list[AnchorAttempt] = []
         if self._anchor is not None:
@@ -839,9 +853,13 @@ class AuditReader:
 
     # ── record & body decoding (lazy, cached) ───────────────────────────
     def _decoded_records(self) -> list[DecodedRecord]:
-        if self._decoded is None:
-            self._decoded = [self._decode(i, hb) for i, hb in enumerate(self._headers)]
-        return self._decoded
+        decoded = self._decoded
+        if decoded is not None:
+            return decoded
+        with self._lock:
+            if self._decoded is None:
+                self._decoded = [self._decode(i, hb) for i, hb in enumerate(self._headers)]
+            return self._decoded
 
     def _decode(self, index: int, hb: bytes) -> DecodedRecord:
         start, end = self._headers.body_span(index)
@@ -856,8 +874,11 @@ class AuditReader:
             return cached[index]
         dr = self._partial.get(index)
         if dr is None:
-            dr = self._decode(index, self._headers[index])
-            self._partial[index] = dr
+            with self._lock:
+                dr = self._partial.get(index)
+                if dr is None:
+                    dr = self._decode(index, self._headers[index])
+                    self._partial[index] = dr
         return dr
 
     def records(self) -> Iterator[DecodedRecord]:
