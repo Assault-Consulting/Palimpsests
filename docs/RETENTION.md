@@ -80,9 +80,15 @@ segments that verify as one chain. This gives clean archival units.
   case: it is invisible to the §7.1 chain check and is caught by the
   **anchor**, not by a position-0 violation — see the reader docs.)
 - **Pruning below the retention floor is a deployer action**, outside
-  the log. Formal prefix-consistency (Merkle) proofs across pruned
-  prefixes are roadmap (post-0.8); until then, prune at segment
-  boundaries and keep the anchor for the retained head.
+  the log — and it can now be done with a formal check. Before deleting
+  a prefix, record its derived root (`chain_root(reader, N)`); afterwards, a
+  `pala-consistency-proof/1` between that root and the live chain's
+  shows, with O(log n) nodes and without the deleted records, that
+  what remains is a true continuation of what was removed
+  (`docs/specs/pala-1/consistency-proof.md`). Prune at segment
+  boundaries, keep the anchor for the retained head, and keep the
+  prefix root beside the manifest entry: the root is the archived
+  segment's identity for every later check.
 
 ### Rotation in production (writer-side, 0.11)
 
