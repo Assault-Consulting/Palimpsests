@@ -91,7 +91,7 @@ def _safety_section(reader) -> dict:
     candidates: set[int] = set()
     items: list[dict] = []
     count = 0
-    for rec in reader.records():
+    for rec in reader.safety_records():
         if rec.type_name != "SAFETY":
             continue
         count += 1
@@ -106,6 +106,30 @@ def _safety_section(reader) -> dict:
         "unacknowledged_candidates": len(candidates - acknowledged),
         "items": items,
     }
+
+
+def _structure(reader) -> tuple:
+    """The reader-derived parts of the report, read from headers.
+
+    ``seq`` is the u64 at header offset 12 and ``record_type`` the u16 at
+    offset 8 (§2.1) — the same fields ``DecodedRecord`` exposes, taken
+    from the header bytes the reader already holds instead of from a
+    decoded record per line. Nothing here needs a body except the
+    safety section, which decodes SAFETY records alone.
+    """
+    ver = reader.verify()
+    boots = reader.boots()
+    spans = reader.spans()
+    safety = _safety_section(reader)
+    headers = reader._headers
+    witness_pins = [
+        struct.unpack_from("<Q", hb, 12)[0]
+        for hb in headers
+        if struct.unpack_from("<H", hb, 8)[0] == RT_WITNESS
+    ]
+    first_seq = struct.unpack_from("<Q", headers[0], 12)[0] if headers else None
+    last_seq = struct.unpack_from("<Q", headers[-1], 12)[0] if headers else None
+    return ver, boots, spans, safety, witness_pins, first_seq, last_seq
 
 
 def build_report(
@@ -124,28 +148,27 @@ def build_report(
     ``reader``, when given, is used in place of opening a fresh one.
     Without it, this function always opened its own — even when the
     caller already held one open on the same file. A caller that had
-    already paid to decode the chain (any prior ``verify()``,
-    ``records()``, ``boots()`` or ``spans()`` call warms
-    ``AuditReader``'s own cache) paid that cost a second time here, for
+    already paid to decode the chain (any prior ``verify()`` or
+    ``records()`` call warms ``AuditReader``'s own cache; the structural
+    views no longer do) paid that cost a second time here, for
     no reason but that this function had no way to be handed the first
     reader. On a million-record chain that second decode is the
     difference between finishing and being killed for memory.
 
-    What ``reader`` does **not** save, stated because the paragraph
-    above invites the wrong reading. ``path.read_bytes()`` and the
-    container walk below it run unconditionally, before this parameter
-    is consulted: supplying a reader still costs a full second read of
-    the file into a ``bytes`` object held for the rest of this
-    function — alongside the reader's own mapping of the same file —
-    and the subject digest is then taken over that copy. Nor does it
-    reduce the peak of the reader it is handed; it removes a second
-    reader, not the first one's cost.
+    With ``reader`` given, the file is not read a second time: the
+    subject digest and the container walk run over the bytes the reader
+    already holds (its mapping, for ``open()``), so the only copy of the
+    file in memory is the reader's. The walk itself stays: §2.4
+    well-formedness and the body↔header digest binding are attested
+    here, not assumed, and a header-only chain check cannot see a body
+    swap. Measured, that walk is the cheap part of this function.
 
-    The container walk itself stays: §2.4 well-formedness and the
-    body↔header digest binding are attested here, not assumed, and a
-    header-only chain check cannot see a body swap. Measured, that walk
-    is the cheap part of this function. Reading the file a second time
-    to perform it is not required, and is U14's.
+    What ``reader`` still does not do is reduce the peak of the reader
+    it is handed. ``verify()`` today materialises the whole chain to
+    resolve references; the structural views and the safety section no
+    longer do (they read headers, and decode SAFETY records alone), so
+    once ``verify()`` stops materialising, the report path is already
+    ready for it.
 
     ``reader`` is used exactly as given — never closed here, and never
     re-opened. Closing what you did not open would surprise a caller
@@ -163,7 +186,12 @@ def build_report(
     pair would name one file's identity over another file's verdict.
     """
     path = Path(source)
-    raw = path.read_bytes()
+    # With a reader supplied, the bytes it already holds (a mapping for
+    # ``open()``, the object for ``from_bytes()``) are the bytes; reading
+    # the file a second time doubled the resident set for nothing (U14).
+    # ``sha256`` and the container walk below take a buffer, so the
+    # digest and every count are byte-identical either way.
+    raw = reader._data if reader is not None else path.read_bytes()
 
     # The report's own container walk (K2/K5): §2.4 well-formedness and
     # the body↔header digest binding are attested here, not assumed —
@@ -182,24 +210,12 @@ def build_report(
         malformed = str(e)
 
     if reader is not None:
-        ver = reader.verify()
-        boots = reader.boots()
-        spans = reader.spans()
-        safety = _safety_section(reader)
-        witness_pins = [
-            rec.seq for rec in reader.records() if rec.record_type == RT_WITNESS
-        ]
-        seqs = [rec.seq for rec in reader.records()]
+        ver, boots, spans, safety, witness_pins, first_seq, last_seq = _structure(reader)
     else:
         with AuditReader.open(path, anchor=anchor_source) as opened:
-            ver = opened.verify()
-            boots = opened.boots()
-            spans = opened.spans()
-            safety = _safety_section(opened)
-            witness_pins = [
-                rec.seq for rec in opened.records() if rec.record_type == RT_WITNESS
-            ]
-            seqs = [rec.seq for rec in opened.records()]
+            ver, boots, spans, safety, witness_pins, first_seq, last_seq = _structure(
+                opened
+            )
 
     chain = ver.chain
     version = palimpsests.__version__
@@ -213,8 +229,8 @@ def build_report(
             "records": chain.count,
             "boots": len(boots),
             "spans": len(spans),
-            "first_seq": seqs[0] if seqs else None,
-            "last_seq": seqs[-1] if seqs else None,
+            "first_seq": first_seq,
+            "last_seq": last_seq,
         },
         "verifier": {
             "tool": tool if tool is not None else f"palimpsests {version}",
