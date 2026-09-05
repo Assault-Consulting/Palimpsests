@@ -17,15 +17,17 @@ section read headers only (SAFETY bodies alone for the latter) and use
 ends mid-record) is reported as exactly that (``Diagnosis`` pattern
 ``truncated_tail``, §2.4), never as a chain break at an earlier record.
 
-``verify()`` is not header-only, and this docstring said it was. Two of
-the three things it does are: the §7.1 chain check and the
-``IncrementalVerifier`` advisory pass both read ``self._headers`` and
-touch no body. The third is not. ``_referential_advisories()`` resolves
-an ack to its candidate and a shred to its targets, which needs a
-record's ``kind`` — a body-decoded field carrying inference-profile
-values (``profiles/inference.md`` §3, §4). On a chain of any size that
-is the dominant cost of calling ``verify()``, and it is paid whether or
-not the caller wanted body-level findings.
+``verify()`` is not header-only. Two of the three things it does are:
+the §7.1 chain check and the ``IncrementalVerifier`` advisory come from
+one pass over ``self._headers`` and touch no body. The third is not.
+``_referential_advisories()`` resolves an ack to its candidate and a
+shred to its targets, which needs a record's ``kind`` — a body-decoded
+field carrying inference-profile values (``profiles/inference.md`` §3,
+§4). That pass is bounded (U14): it decodes the records that carry a
+reference and the records they name, found by an in-place probe of
+each body's first TLV, so its cost follows the number of references
+rather than the length of the chain — and it never materialises the
+chain into the decode cache.
 
 The checks themselves belong in this layer: ``inference.md`` §4 asks for
 exactly them, as reader advisories, never chain violations. What is open
@@ -58,7 +60,6 @@ from palimpsests.audit.anchors import (
 )
 from palimpsests.audit.pala.codec import (
     FIXED_HEADER_LEN,
-    KNOWN_RECORD_TYPES,
     MAGIC,
     RT_AGGREGATE,
     RT_ANCHOR,
@@ -82,8 +83,8 @@ from palimpsests.audit.pala.codec import (
     decode_tlvs,
 )
 from palimpsests.audit.pala.codec import record_hash as _record_hash
-from palimpsests.audit.pala.incremental import Advisory, AdvisoryItem, IncrementalVerifier
-from palimpsests.audit.pala.verify import VerifyResult, verify_headers
+from palimpsests.audit.pala.incremental import Advisory, AdvisoryItem
+from palimpsests.audit.pala.verify import VerifyResult, verify_headers_with_advisory
 from palimpsests.audit.pala_writer import (
     DISP_ACKNOWLEDGED,
     DISP_DISMISSED,
@@ -173,6 +174,87 @@ _DISP_NAMES = {
 }
 
 _PREFIX_ABSENT = "chain does not start with a GENESIS record"
+
+# The kinds whose bodies carry an EVT_REF_SEQ/EVT_REF_HASH pair the
+# referential pass resolves (profile §4, r2/r3). KEY_SHRED references by
+# record type, not kind, and is handled beside these.
+_REFERENCING_KINDS = frozenset(
+    {KIND_INCIDENT_CANDIDATE, KIND_OVERSIGHT_ACK, KIND_TOOL_RESULT, KIND_GUARD_TOOL_LOOP_LIMIT}
+)
+
+
+class _HeaderFields:
+    """The header fields the structural views read, unpacked in place."""
+
+    __slots__ = ("record_type", "time_trust", "seq", "boot_id", "span_id", "parent_span_id")
+
+    def __init__(self, record_type, time_trust, seq, boot_id, span_id, parent_span_id):
+        self.record_type = record_type
+        self.time_trust = time_trust
+        self.seq = seq
+        self.boot_id = boot_id
+        self.span_id = span_id
+        self.parent_span_id = parent_span_id
+
+
+_VIEW_FIELDS = struct.Struct("<4sHHHBBQ16s32s16s16s")  # §2.1 prefix, through parent_span_id
+
+
+def _header_fields(hb: bytes) -> _HeaderFields | None:
+    """``Header.decode``'s accept/reject decision and the view fields,
+    without constructing the ``Header``: same magic, ``header_len`` and
+    ``format_version`` checks, and the same TLV bounds walk (§2.2 — a
+    truncated item or one overrunning ``header_len`` rejects), so the
+    set of records the views skip is exactly the set whose ``Header``
+    would not decode."""
+    if len(hb) < FIXED_HEADER_LEN:
+        return None
+    magic, ver, hlen, rtype, _tier, tt, seq, boot_id, _prev, span_id, parent = (
+        _VIEW_FIELDS.unpack_from(hb, 0)
+    )
+    if magic != MAGIC or hlen != len(hb) or ver != 1:
+        return None
+    off, end = FIXED_HEADER_LEN, len(hb)
+    while off < end:
+        if off + 4 > end:
+            return None
+        ln = struct.unpack_from("<H", hb, off + 2)[0]
+        off += 4 + ln
+        if off > end:
+            return None
+    return _HeaderFields(rtype, tt, seq, boot_id, span_id, parent)
+
+
+class _LazyRecords:
+    """A seq-keyed view over the chain that decodes a record the first
+    time it is asked for — the ``by_seq`` mapping the referential checks
+    consume, without the whole-chain decode that used to build it.
+
+    Only ``get`` and ``at`` exist, because those are the two things the
+    checks do: resolve a referenced seq, and read the referencing record.
+    When the reader's full cache is warm, entries come from it.
+    """
+
+    __slots__ = ("_reader", "_pos", "_cache")
+
+    def __init__(self, reader: AuditReader, pos_by_seq: dict[int, int]) -> None:
+        self._reader = reader
+        self._pos = pos_by_seq
+        self._cache: dict[int, tuple[DecodedRecord, bytes]] = {}
+
+    def at(self, index: int) -> DecodedRecord:
+        entry = self._cache.get(index)
+        if entry is None:
+            entry = (self._reader._record_at(index), self._reader._headers[index])
+            self._cache[index] = entry
+        return entry[0]
+
+    def get(self, seq: int) -> tuple[DecodedRecord, bytes] | None:
+        index = self._pos.get(seq)
+        if index is None:
+            return None
+        self.at(index)
+        return self._cache[index]
 
 
 @dataclass(frozen=True)
@@ -270,6 +352,11 @@ class AuditReader:
         self._mmap = None
         self._verification: Verification | None = None
         self._decoded: list[DecodedRecord] | None = None
+        # Sparse decode cache for the bounded paths (verify()'s
+        # referential pass, the safety section, the kind probe's
+        # fallback): a record decoded once on demand is not decoded
+        # again by the next caller. The full cache above supersedes it.
+        self._partial: dict[int, DecodedRecord] = {}
         self._headers: list[bytes] = []
         self._body_spans: list[tuple[int, int]] = []
         self._truncated = False
@@ -344,23 +431,20 @@ class AuditReader:
     def verify(self) -> Verification:
         """The core's three questions, plus the advisory channel.
 
-        The chain check (§7.1) and the ``IncrementalVerifier`` pass are
-        header-only. ``advisory`` additionally carries the referential
-        items from :meth:`_referential_advisories`, which decodes record
-        bodies across the chain to produce them — see the module
-        docstring and U14. On a large chain that pass, not the chain
-        check, is what this call costs.
+        The chain check (§7.1) and the ``IncrementalVerifier`` advisory
+        come from one header pass. ``advisory`` additionally carries the
+        referential items from :meth:`_referential_advisories`, a
+        bounded body pass over the records that carry references and
+        the records they name — see the module docstring and U14. The
+        whole chain is never decoded here; the sparse cache keeps what
+        was decoded for the report path.
 
-        Cached: the first call pays for the whole file, every call after
-        it is free.
+        Cached: the first call pays, every call after it is free.
 
-        Not thread-safe, and the cache is what makes that matter. The
-        window between "is the cache empty" and "the cache is filled"
-        lasts the whole decode, so two callers arriving on a cold reader
-        each run the full decode and each hold their own result while
-        they do — N callers, N decodes, N times the transient memory,
-        and slower than serialising them. A caller serving concurrent
-        requests should hold its own lock around this reader.
+        Not thread-safe. Two callers arriving on a cold reader each run
+        the passes and each hold their own transient state while they
+        do — N callers, N runs. A caller serving concurrent requests
+        should hold its own lock around this reader.
         """
         if self._verification is not None:
             return self._verification
@@ -371,10 +455,10 @@ class AuditReader:
             anchor_reading, anchor_attempts = self._resolve_anchor()
 
         expected = anchor_reading.head if anchor_reading is not None else None
-        chain = verify_headers(self._headers, expected_head=expected)
-        advisory = Advisory(
-            items=self._compute_advisory().items + self._referential_advisories()
+        chain, header_advisory = verify_headers_with_advisory(
+            self._headers, expected_head=expected
         )
+        advisory = Advisory(items=header_advisory.items + self._referential_advisories())
         diagnosis = self._derive_diagnosis(chain)
 
         self._verification = Verification(
@@ -412,12 +496,6 @@ class AuditReader:
         outcome = "answered" if reading is not None else "absent"
         return reading, [AnchorAttempt(kind, detail, outcome, None)]
 
-    def _compute_advisory(self) -> Advisory:
-        v = IncrementalVerifier(known_types=KNOWN_RECORD_TYPES)
-        for hb in self._headers:
-            v.step(hb)
-        return v.advisory()
-
     def _referential_advisories(self) -> list[AdvisoryItem]:
         """Body-level referential integrity — advisory, never a violation.
 
@@ -431,22 +509,46 @@ class AuditReader:
         Cross-boot references resolve naturally: the map is seq-indexed
         over the whole chain, and the r2 loop is explicitly allowed to
         close across a resume.
-        """
-        by_seq: dict[int, tuple[DecodedRecord, bytes]] = {}
-        for dr, hb in zip(self._decoded_records(), self._headers, strict=True):
-            by_seq[dr.seq] = (dr, hb)
 
+        Bounded (U14, PR-7): the pass decodes the records that *carry* a
+        reference and the records they *name* — nothing else. Three
+        phases: the seq→position map comes from header bytes; which
+        records carry a reference comes from the in-place kind probe
+        (a body's first TLV, no copy) and the record type; only those,
+        and the targets they resolve to, are decoded. Cost scales with
+        the number of references, not the length of the chain. If the
+        whole chain is already decoded (a caller asked for ``records()``)
+        that cache is used and nothing is decoded twice.
+
+        The seq map keeps the same semantics as the dict of decoded
+        records it replaces — position of a seq's first occurrence,
+        record of its last — so a chain with duplicated seqs (a broken
+        one) yields the same items in the same order as before.
+        """
+        headers = self._headers
+        # phase 1 — seq → position, from header offset 12 (§2.1)
+        pos_by_seq: dict[int, int] = {}
+        for i, hb in enumerate(headers):
+            pos_by_seq[struct.unpack_from("<Q", hb, 12)[0]] = i
+        by_seq = _LazyRecords(self, pos_by_seq)
+
+        # phase 2 — which records carry a reference: kind probe + record type
         items: list[AdvisoryItem] = []
-        for dr, _hb in by_seq.values():
-            if dr.kind in (
-                KIND_INCIDENT_CANDIDATE,
-                KIND_OVERSIGHT_ACK,
-                KIND_TOOL_RESULT,
-                KIND_GUARD_TOOL_LOOP_LIMIT,
-            ):
-                items.extend(self._check_reference(dr, by_seq))
-            elif dr.record_type == RT_KEY_SHRED and dr.body_tlvs is not None:
-                items.extend(self._check_shred_targets(dr, by_seq))
+        for i in pos_by_seq.values():
+            hb = headers[i]
+            rtype = struct.unpack_from("<H", hb, 8)[0]
+            if rtype == RT_KEY_SHRED:
+                dr = by_seq.at(i)
+                if dr.body_tlvs is not None:
+                    items.extend(self._check_shred_targets(dr, by_seq))
+                continue
+            if rtype not in _KIND_BEARING:
+                continue
+            if self._kind_probe(i, hb) not in _REFERENCING_KINDS:
+                continue
+            # phase 3 — decode the referencing record; its target is
+            # decoded on demand inside the check, through ``by_seq``
+            items.extend(self._check_reference(by_seq.at(i), by_seq))
         return items
 
     def _hash_verified_target(
@@ -666,6 +768,18 @@ class AuditReader:
         body = bytes(self._data[start:end]) if end > start else b""
         return decode_record(index, hb, body)
 
+    def _record_at(self, index: int) -> DecodedRecord:
+        """One record, decoded at most once — from the full cache when a
+        caller has materialised the chain, else from the sparse one."""
+        cached = self._decoded
+        if cached is not None:
+            return cached[index]
+        dr = self._partial.get(index)
+        if dr is None:
+            dr = self._decode(index, self._headers[index])
+            self._partial[index] = dr
+        return dr
+
     def records(self) -> Iterator[DecodedRecord]:
         yield from self._decoded_records()
 
@@ -684,20 +798,24 @@ class AuditReader:
     # present and first (inference §3), so the probe is the same answer
     # ``decode_record`` gives, at a fraction of the work.
 
-    def _headers_decoded(self) -> Iterator[tuple[int, bytes, Header | None]]:
-        """``(index, header_bytes, Header | None)`` for every record —
+    def _headers_decoded(self) -> Iterator[tuple[int, bytes, _HeaderFields | None]]:
+        """``(index, header_bytes, fields | None)`` for every record —
         ``None`` where the header does not decode (unknown version or
-        malformed TLVs), exactly the records the views skip."""
+        malformed TLVs), exactly the records the views skip.
+
+        Yields the full ``Header`` from the cache when the chain is
+        materialised, else a ``_HeaderFields`` view read straight off the
+        bytes with the same accept/reject rule as ``Header.decode`` — the
+        fields the views use, without building a ``Header`` (and its TLV
+        list) per record.
+        """
         cached = self._decoded
         if cached is not None:
             for i, (dr, hb) in enumerate(zip(cached, self._headers, strict=True)):
                 yield i, hb, dr.header
             return
         for i, hb in enumerate(self._headers):
-            try:
-                yield i, hb, Header.decode(hb)
-            except MalformedRecord:
-                yield i, hb, None
+            yield i, hb, _header_fields(hb)
 
     def _kind_probe(self, index: int, hb: bytes) -> int | None:
         """``EVT_KIND`` of record ``index`` read in place, or ``None``.
@@ -722,7 +840,7 @@ class AuditReader:
         t, ln = struct.unpack_from("<HH", self._data, start)
         if t == EVT_KIND and ln >= 2 and start + 4 + ln <= end:
             return struct.unpack_from("<H", self._data, start + 4)[0]
-        return self._decode(index, hb).kind
+        return self._record_at(index).kind
 
     def safety_records(self) -> Iterator[DecodedRecord]:
         """Every SAFETY record, decoded — and only those.
@@ -733,11 +851,10 @@ class AuditReader:
         the cost this method removes. Uses the warm cache when
         ``verify()`` has built one.
         """
-        cached = self._decoded
         for i, hb in enumerate(self._headers):
             if struct.unpack_from("<H", hb, 8)[0] != RT_SAFETY:
                 continue
-            yield cached[i] if cached is not None else self._decode(i, hb)
+            yield self._record_at(i)
 
     # ── structural views ────────────────────────────────────────────────
     def spans(self) -> list[SpanView]:
