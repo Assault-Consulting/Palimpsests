@@ -22,6 +22,8 @@ Commands:
     palimpsests pala selftest       verify this build against the packaged vectors
     palimpsests pala bundle <file>  assemble the evidence bundle (records+proofs)
     palimpsests pala segment <file> split a chain into retention-ready segments
+    palimpsests pala consistency <file> --first N   emit a prefix-consistency proof
+    palimpsests pala consistency-verify <proof>     verify one against its roots
 """
 from __future__ import annotations
 
@@ -825,6 +827,114 @@ def pala_segment_cmd(
         "keep segments.json for as long as any segment lives",
         fg=typer.colors.GREEN,
     )
+
+
+@pala_app.command("consistency")
+def pala_consistency_cmd(
+    file: str = typer.Argument(
+        ..., help="A PALA-1 file container: records concatenated back-to-back (§2.4)."
+    ),
+    first: int = typer.Option(
+        ..., "--first",
+        help="Record COUNT of the archived prefix (seq of its last record + 1).",
+    ),
+    second: int = typer.Option(
+        None, "--second",
+        help="Record COUNT of the later state (default: every record present).",
+    ),
+    out: str = typer.Option(
+        None, "--out", "-o", help="Write the proof JSON here (default: stdout)."
+    ),
+) -> None:
+    """Emit a prefix-consistency proof: the first --first records are a
+    prefix of the first --second, with O(log n) nodes.
+
+    Derived, unsigned, wire untouched: the tree is PALA-1 §4.3 over every
+    record's hash in seq order, computed from headers alone. The document
+    is `pala-consistency-proof/1`; re-verify it with `pala consistency-verify`
+    against roots held elsewhere (an archive manifest, a receipt).
+
+    \b
+    Exit codes:
+      0  proof written
+      3  UNREADABLE — the file could not be used, or --first/--second are
+         outside the records present
+    """
+    from palimpsests.audit.pala.proofs import consistency_proof
+    from palimpsests.audit.reader import AuditReader
+
+    try:
+        with AuditReader.open(file) as reader:
+            proof = consistency_proof(reader, first, second)
+    except OSError as e:
+        typer.echo(f"UNREADABLE: {e}", err=True)
+        raise typer.Exit(EXIT_UNREADABLE) from e
+    except IndexError as e:
+        typer.echo(f"UNREADABLE: {e}", err=True)
+        raise typer.Exit(EXIT_UNREADABLE) from e
+    text = json.dumps(proof.to_json(), indent=2, sort_keys=True) + "\n"
+    if out is None:
+        typer.echo(text, nl=False)
+    else:
+        Path(out).write_text(text, encoding="utf-8")
+        typer.echo(
+            f"consistency proof {proof.first} -> {proof.second} ({len(proof.path)} nodes) "
+            f"written to {out}"
+        )
+
+
+@pala_app.command("consistency-verify")
+def pala_consistency_verify_cmd(
+    proof: str = typer.Argument(..., help="A pala-consistency-proof/1 JSON document."),
+    first_root: str = typer.Option(
+        None, "--first-root",
+        help="Root of the archived prefix held OUTSIDE the proof (64 hex chars); "
+        "must match the proof's first_root.",
+    ),
+    second_root: str = typer.Option(
+        None, "--second-root",
+        help="Root of the later state held OUTSIDE the proof (64 hex chars); "
+        "must match the proof's second_root.",
+    ),
+) -> None:
+    """Verify a prefix-consistency proof against its roots.
+
+    The proof shows two roots are consistent; where those roots came
+    from is the caller's evidence. Pass --first-root / --second-root to
+    check the document's roots against ones you hold independently.
+
+    \b
+    Exit codes:
+      0  CONSISTENT
+      1  INCONSISTENT — the path does not connect the roots, or a supplied
+         root differs from the document's
+      3  UNREADABLE
+    """
+    import json as _json
+    from palimpsests.audit.pala.proofs import ConsistencyProof
+
+    try:
+        doc = _json.loads(Path(proof).read_text(encoding="utf-8"))
+        cp = ConsistencyProof.from_json(doc)
+    except (OSError, ValueError, KeyError, TypeError) as e:
+        typer.echo(f"UNREADABLE: {e}", err=True)
+        raise typer.Exit(EXIT_UNREADABLE) from e
+    given_roots = (("first", first_root, cp.first_root), ("second", second_root, cp.second_root))
+    for label, given, own in given_roots:
+        if given is not None and given.lower() != own.hex():
+            typer.secho(
+                f"INCONSISTENT: --{label}-root differs from the proof's {label}_root",
+                fg=typer.colors.RED, err=True,
+            )
+            raise typer.Exit(EXIT_TAMPERED)
+    if cp.verify():
+        typer.secho(
+            f"CONSISTENT: records 0..{cp.first - 1} are a prefix of 0..{cp.second - 1}",
+            fg=typer.colors.GREEN,
+        )
+        raise typer.Exit(EXIT_VERIFIED)
+    typer.secho("INCONSISTENT: the path does not connect the roots", fg=typer.colors.RED, err=True)
+    raise typer.Exit(EXIT_TAMPERED)
 
 
 @pala_app.command("export")
