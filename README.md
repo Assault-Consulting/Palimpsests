@@ -186,6 +186,13 @@ with its limits — see **[Standards posture](SECURITY.md#standards-posture)**.
 - **Memory mechanisms, exposed not reinvented.** KV-cache quantization, flash
   attention, GPU offload, mmap trade-offs — surfaced as declared capabilities
   per engine, validated (e.g. KV-quant requires flash attention).
+- **A refusal on the chain is evidence the guard worked.** When a guard
+  refuses — a prefix-holder release with live consumers, a tool loop past its
+  cap, a KV blob that fails validation — the refusal itself is written as a
+  `SAFETY` record (never shed under load, hash-chained like everything else).
+  An auditor reading the chain sees not only what the engine did but what it
+  declined to do, and when. Silence would be the failure; the record is the
+  guard's receipt.
 
 ---
 
