@@ -49,6 +49,36 @@ No `package.json`, no dependencies. Then run the serve and point
 OpenCode's provider at it as usual
 (`palimpsests-serve --print-opencode-config`).
 
+## For your coding agent — paste this
+
+If an agent (OpenCode itself, or any other) is setting this up for you,
+give it the block below verbatim. It says what to do and, just as
+importantly, what not to claim.
+
+```text
+Install the Palimpsests audit reporter for OpenCode.
+
+1. Copy `integrations/opencode/palimpsests-audit.js` from the
+   Assault-Consulting/Palimpsests repository into `.opencode/plugins/`
+   (project) or `~/.config/opencode/plugins/` (global). No package.json,
+   no dependencies — do not run npm.
+2. Start the serve: `pip install 'palimpsests[serve]' && palimpsests serve`
+   (default http://127.0.0.1:11435). Point OpenCode's provider at it with
+   `palimpsests-serve --print-opencode-config`.
+3. If the serve runs with `--api-key`, export PALIMPSESTS_SERVE_API_KEY
+   with the same value; export PALIMPSESTS_SERVE_URL only if the port
+   differs from the default.
+4. Run one short session, then check:
+   `palimpsests pala export serve.pala | grep -c '"kind_name":"TOOL_CALL"'`
+   should be > 0 and those lines carry `"source":1`.
+
+Rules: the plugin never blocks or alters a tool; a failed report is logged
+and the tool proceeds. Reported records prove that the client asserted a
+call and a result — not that the tool ran. Do not describe this as
+"tamper-proof tool execution" or "verified tool calls"; describe it as a
+hash-chained record of what the client reported, marked as such.
+```
+
 ## Configure
 
 | Variable | Meaning | Default |

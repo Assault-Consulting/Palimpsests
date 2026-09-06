@@ -100,13 +100,22 @@ def _argmax(logits: np.ndarray) -> int:
     tie-break is identical to the former explicit ``>`` loop: numpy argmax
     returns the index of the *first* maximum, so generation is unchanged.
 
-    numpy is imported lazily here, not at module scope, so importing the
-    scheduler needs only the base install — the native/decode path that
-    actually calls this always has numpy (it ships with llama-cpp-python),
-    while base-only consumers (e.g. the fuzz harness) can import the module
-    without pulling numpy.
+    numpy is imported lazily here, not at module scope, and its absence is
+    not an error: the real backend always has it (it ships with
+    llama-cpp-python), but the demo's stub backend runs on a base install
+    with no numpy at all — the clean-room CI job caught exactly that
+    crash. The pure-Python fallback keeps the same first-maximum tie-break,
+    so generation is identical either way; only the speed differs, and on
+    a stub backend speed is not the point.
     """
-    import numpy as np
+    try:
+        import numpy as np
+    except ModuleNotFoundError:
+        best_i, best_v = 0, None
+        for i, v in enumerate(logits):
+            if best_v is None or v > best_v:
+                best_i, best_v = i, v
+        return best_i
 
     return int(np.asarray(logits).argmax())
 
