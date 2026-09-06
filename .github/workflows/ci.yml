@@ -160,6 +160,40 @@ jobs:
           python gen_inference_vectors.py
           cmp inference-vectors.json /tmp/committed-companion.json && echo "companion vectors reproduce byte-for-byte"
 
+  clean-room:
+    name: clean-room install
+    runs-on: ubuntu-latest
+    # A user with nothing but `pip install palimpsests`. The wheel is built
+    # from this commit and installed into an empty virtualenv in a
+    # directory that is not the checkout, so nothing on sys.path can mask
+    # a missing dependency or a packaging mistake; then the README's own
+    # first three commands run exactly as written. selftest is the build's
+    # own tripwire; the demo and the verify are the user's first minute.
+    # (The first version of this job caught the demo crashing on a base
+    # install with ModuleNotFoundError: numpy.)
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Build the wheel
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build --wheel -o /tmp/dist .
+
+      - name: Install into an empty environment and run the quickstart
+        run: |
+          mkdir -p /tmp/clean-room && cd /tmp/clean-room
+          python -m venv venv
+          ./venv/bin/pip install --quiet /tmp/dist/*.whl
+          ./venv/bin/palimpsests demo
+          ./venv/bin/palimpsests pala verify palimpsests-demo.pala; rc=$?
+          test "$rc" -eq 2 || { echo "expected PARTIAL (2) without an anchor, got $rc"; exit 1; }
+          ./venv/bin/palimpsests pala selftest
+
   ci-complete:
     name: ci-complete
     # The single fan-in context for branch protection. Requiring individual
@@ -171,7 +205,7 @@ jobs:
     # fails unless all of them succeeded — one stable name, reported on
     # every PR, immune to renames above it.
     if: always()
-    needs: [lint, test, coverage, reproducible-build, pala-vectors]
+    needs: [lint, test, coverage, reproducible-build, pala-vectors, clean-room]
     runs-on: ubuntu-latest
     steps:
       - name: Verify all CI jobs succeeded
@@ -181,11 +215,13 @@ jobs:
           echo "coverage:           ${{ needs.coverage.result }}"
           echo "reproducible-build: ${{ needs['reproducible-build'].result }}"
           echo "pala-vectors:       ${{ needs['pala-vectors'].result }}"
+          echo "clean-room:         ${{ needs['clean-room'].result }}"
           if [ "${{ needs.lint.result }}" != "success" ] \
              || [ "${{ needs.test.result }}" != "success" ] \
              || [ "${{ needs.coverage.result }}" != "success" ] \
              || [ "${{ needs['reproducible-build'].result }}" != "success" ] \
-             || [ "${{ needs['pala-vectors'].result }}" != "success" ]; then
+             || [ "${{ needs['pala-vectors'].result }}" != "success" ] \
+             || [ "${{ needs['clean-room'].result }}" != "success" ]; then
             echo "one or more required CI jobs did not succeed"
             exit 1
           fi
