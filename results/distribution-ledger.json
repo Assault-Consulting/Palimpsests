@@ -1,0 +1,33 @@
+{
+  "_comment": "Hand-kept. Things no API can count. One entry per item, with a link. Read by scripts/distribution_metrics.py.",
+  "listings": [],
+  "external_runs": [
+    {
+      "name": "Turak \u2014 external verifier, run 5 + bridge runs B1/B2",
+      "link": "docs/specs/pala-1/independent-runs/turak/"
+    },
+    {
+      "name": "Kurdybaylo \u2014 external verifier",
+      "link": "docs/specs/pala-1/independent-runs/kurdybaylo/"
+    },
+    {
+      "name": "Sharyar Naseem \u2014 Perl 5 verifier (fifth implementation, third external)",
+      "link": "docs/specs/pala-1/CLARIFICATIONS.md#implementation-count"
+    }
+  ],
+  "integrators": [],
+  "publications": [
+    {
+      "name": "draft-sparysh-pala-audit-00 (IETF I-D, posted 2026-09-03)",
+      "link": "https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/"
+    },
+    {
+      "name": "Zenodo article (DOI 10.5281/zenodo.21978107)",
+      "link": "https://doi.org/10.5281/zenodo.21978107"
+    },
+    {
+      "name": "SSRN whitepaper",
+      "link": "docs/"
+    }
+  ]
+}
