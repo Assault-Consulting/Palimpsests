@@ -63,6 +63,9 @@ pip install 'palimpsests[serve]'
 palimpsests serve         # OpenAI-compatible endpoint on http://127.0.0.1:11435/v1
 ```
 
+New here? **[Start here — in plain words](docs/START-HERE.md)**: seven
+words, five minutes, and what enters the chain and what does not.
+
 Compliance mappings, architecture, and the assurance case are one link
 deep: **[AUDIT-ARCHITECTURE](docs/AUDIT-ARCHITECTURE.md)** ·
 **[EU-AI-ACT-MAPPING](docs/compliance/EU-AI-ACT-MAPPING.md)** ·
