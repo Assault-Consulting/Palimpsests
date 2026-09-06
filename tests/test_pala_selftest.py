@@ -33,3 +33,19 @@ def test_cli_exit_code_and_verdict():
     result = runner.invoke(app, ["pala", "selftest"])
     assert result.exit_code == 0, result.output
     assert "sound" in result.output
+
+
+def test_selftest_reports_the_characteristic_and_trips_on_the_slope(monkeypatch):
+    from palimpsests.audit.pala import selftest as st
+
+    result = run_selftest()
+    line = next(ln for ln in result.lines if ln.strip().startswith("characteristic:"))
+    assert "B/record" in line and "rec/s" in line and line.endswith("— ok")
+    assert str(st.CHARACTERISTIC_RECORDS)[:2] in line  # the synthetic chain, not the vectors
+
+    # the tripwire: a slope above the bound fails the selftest by name
+    monkeypatch.setattr(st, "HEAP_BYTES_PER_RECORD_MAX", 1)
+    tripped = run_selftest()
+    assert tripped.ok is False
+    tripped_line = next(ln for ln in tripped.lines if ln.strip().startswith("characteristic:"))
+    assert tripped_line.endswith("— FAIL")
