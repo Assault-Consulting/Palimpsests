@@ -190,7 +190,9 @@ jobs:
           python -m venv venv
           ./venv/bin/pip install --quiet /tmp/dist/*.whl
           ./venv/bin/palimpsests demo
-          ./venv/bin/palimpsests pala verify palimpsests-demo.pala; rc=$?
+          # The runner's shell is `bash -e`: a non-zero exit aborts the step
+          # before `rc=$?` could run. Capture it on the same line instead.
+          rc=0; ./venv/bin/palimpsests pala verify palimpsests-demo.pala || rc=$?
           test "$rc" -eq 2 || { echo "expected PARTIAL (2) without an anchor, got $rc"; exit 1; }
           ./venv/bin/palimpsests pala selftest
 
