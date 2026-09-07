@@ -247,8 +247,9 @@ def test_a_correctly_acked_candidate_is_acknowledged(tmp_path):
         cand = w.incident_candidate(CAT_GUARD_ESCALATION, 2)
         cand_seq = w.seq - 1
         w.oversight_ack(cand_seq, cand, DISP_ACKNOWLEDGED, OPERATOR)
+        ack_seq = w.seq - 1
     with AuditReader.open(log) as reader:
-        assert reader.acknowledged_candidates() == {cand_seq}
+        assert reader.acknowledged_candidates() == {cand_seq: ack_seq}
 
 
 def test_a_candidate_with_no_ack_is_not_acknowledged(tmp_path):
@@ -258,7 +259,7 @@ def test_a_candidate_with_no_ack_is_not_acknowledged(tmp_path):
         w.boot()
         w.incident_candidate(CAT_GUARD_ESCALATION, 2)
     with AuditReader.open(log) as reader:
-        assert reader.acknowledged_candidates() == set()
+        assert reader.acknowledged_candidates() == {}
 
 
 def test_a_hash_mismatched_ack_does_not_acknowledge_its_named_candidate(tmp_path):
@@ -278,7 +279,7 @@ def test_a_hash_mismatched_ack_does_not_acknowledge_its_named_candidate(tmp_path
     with AuditReader.open(log) as reader:
         ver = reader.verify()
         assert [i.code for i in _referential(ver)] == ["reference_hash_mismatch"]
-        assert reader.acknowledged_candidates() == set()
+        assert reader.acknowledged_candidates() == {}
 
 
 def test_an_ack_correctly_bound_to_a_non_candidate_acknowledges_nothing(tmp_path):
@@ -292,7 +293,7 @@ def test_an_ack_correctly_bound_to_a_non_candidate_acknowledges_nothing(tmp_path
         boot_seq = w.seq - 1
         w.oversight_ack(boot_seq, boot_hash, DISP_ACKNOWLEDGED, OPERATOR)
     with AuditReader.open(log) as reader:
-        assert reader.acknowledged_candidates() == set()
+        assert reader.acknowledged_candidates() == {}
 
 
 def test_acknowledgement_across_a_resume_is_seen_too(tmp_path):
@@ -308,8 +309,9 @@ def test_acknowledgement_across_a_resume_is_seen_too(tmp_path):
     with PalaWriter.open_existing(log) as w2:
         w2.boot()
         w2.oversight_ack(cand_seq, cand, DISP_ACKNOWLEDGED, OPERATOR)
+        ack_seq = w2.seq - 1
     with AuditReader.open(log) as reader:
-        assert reader.acknowledged_candidates() == {cand_seq}
+        assert reader.acknowledged_candidates() == {cand_seq: ack_seq}
 
 
 def test_two_candidates_one_acked_one_not(tmp_path):
@@ -322,6 +324,28 @@ def test_two_candidates_one_acked_one_not(tmp_path):
         w.incident_candidate(CAT_GUARD_ESCALATION, 2)
         unacked_seq = w.seq - 1
         w.oversight_ack(acked_seq, acked, DISP_ACKNOWLEDGED, OPERATOR)
+        ack_seq = w.seq - 1
     with AuditReader.open(log) as reader:
-        assert reader.acknowledged_candidates() == {acked_seq}
+        assert reader.acknowledged_candidates() == {acked_seq: ack_seq}
         assert unacked_seq not in reader.acknowledged_candidates()
+
+
+def test_the_last_of_several_resolving_acks_is_kept(tmp_path):
+    """Two hash-correct acks naming the same candidate: the same choice
+    shredded_targets() already makes for a record shredded twice — the
+    later one, in seq order, is what actually holds now, not a history
+    of every attempt."""
+    log = tmp_path / "a.pala"
+    with PalaWriter(log) as w:
+        w.genesis()
+        w.boot()
+        cand = w.incident_candidate(CAT_GUARD_ESCALATION, 2)
+        cand_seq = w.seq - 1
+        w.oversight_ack(cand_seq, cand, DISP_ACKNOWLEDGED, OPERATOR)
+        first_ack_seq = w.seq - 1
+        w.oversight_ack(cand_seq, cand, DISP_ACKNOWLEDGED, OPERATOR)
+        second_ack_seq = w.seq - 1
+    with AuditReader.open(log) as reader:
+        result = reader.acknowledged_candidates()
+        assert result[cand_seq] == second_ack_seq
+        assert result[cand_seq] != first_ack_seq

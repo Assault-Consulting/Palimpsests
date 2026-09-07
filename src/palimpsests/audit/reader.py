@@ -1091,10 +1091,11 @@ class AuditReader:
                 last_was_unload = False
         return current, last_was_unload
 
-    def acknowledged_candidates(self) -> set[int]:
-        """The seq of every ``INCIDENT_CANDIDATE`` with at least one
-        hash-verified ``OVERSIGHT_ACK`` naming it — the r2 loop's
-        positive case.
+    def acknowledged_candidates(self) -> dict[int, int]:
+        """Maps an ``INCIDENT_CANDIDATE``'s seq to the seq of the
+        hash-verified ``OVERSIGHT_ACK`` that acknowledges it — the r2
+        loop's positive case, the same shape :meth:`shredded_targets`
+        already returns for the shred loop's.
 
         Matching on ``EVT_REF_SEQ`` alone would count a candidate
         acknowledged even when the ack's own ``EVT_REF_HASH`` does not
@@ -1103,6 +1104,16 @@ class AuditReader:
         advisory side (:meth:`_check_reference`). This resolves
         references the same way, through :meth:`_hash_verified_target`,
         so the two cannot disagree about what "acknowledged" means.
+
+        A candidate named by more than one resolving ack keeps the
+        last one, in seq order — the same choice
+        :meth:`shredded_targets` makes for a record shredded more than
+        once: what actually holds now, not a history of every attempt.
+
+        Membership alone — ``seq in reader.acknowledged_candidates()``
+        — reads identically to the set this returned before: a caller
+        that only ever checked presence is unaffected. A caller that
+        also wants which ack answered can now read the value.
         """
         # Only SAFETY records take part: an ack is SAFETY, and a target
         # that is anything but a SAFETY INCIDENT_CANDIDATE is not counted
@@ -1111,13 +1122,13 @@ class AuditReader:
         by_seq: dict[int, tuple[DecodedRecord, bytes]] = {
             dr.seq: (dr, self._headers[dr.index]) for dr in self.safety_records()
         }
-        acknowledged: set[int] = set()
+        acknowledged: dict[int, int] = {}
         for dr, _hb in by_seq.values():
             if dr.kind != KIND_OVERSIGHT_ACK:
                 continue
             target = self._hash_verified_target(dr, by_seq)
             if target is not None and target.kind == KIND_INCIDENT_CANDIDATE:
-                acknowledged.add(target.seq)
+                acknowledged[target.seq] = dr.seq
         return acknowledged
 
     def shredded_targets(self) -> dict[int, int]:
