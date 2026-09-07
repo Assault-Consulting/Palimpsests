@@ -103,7 +103,7 @@ def _safety_section(reader) -> dict:
     acknowledged = reader.acknowledged_candidates()
     return {
         "count": count,
-        "unacknowledged_candidates": len(candidates - acknowledged),
+        "unacknowledged_candidates": len(candidates - acknowledged.keys()),
         "items": items,
     }
 
