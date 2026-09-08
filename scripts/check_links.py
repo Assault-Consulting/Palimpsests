@@ -16,6 +16,7 @@ Anchors are checked for existence of the *file*, not of the heading:
 heading slugs differ between renderers, and a false failure there would
 teach people to ignore this check.
 """
+
 from __future__ import annotations
 
 import re
