@@ -28,6 +28,7 @@ Commands:
 from __future__ import annotations
 
 import json
+import palimpsests
 import struct
 import sys
 import typer
@@ -64,12 +65,63 @@ from palimpsests.demo import demo as demo_cmd
 from palimpsests.providers import EngineError
 from pathlib import Path
 
+#: The core is frozen at v1.0; the profile revision is read, not written.
+SPEC_VERSION = "v1.0"
+
+
+def _versions() -> str:
+    """One line: package, frozen core spec, and the profile revision.
+
+    The profile revision is *read* from the packaged companion vectors
+    (``profile_revision``), never written here as a constant: a constant
+    goes stale the first time the profile gains a revision, and the one
+    place that cannot go stale is the artefact that revision produced.
+    The core spec version is a constant because the core is frozen —
+    that is what "frozen" means.
+    """
+    try:
+        from importlib.metadata import version as _dist_version
+
+        pkg = _dist_version("palimpsests")
+    except Exception:  # pragma: no cover - metadata missing in odd installs
+        pkg = palimpsests.__version__
+    profile = "unknown"
+    try:
+        from palimpsests.audit.pala import vectors as _vectors
+
+        profile = _vectors.load("inference").get("profile_revision", "unknown")
+    except Exception:  # pragma: no cover - the vectors ship in the wheel
+        pass
+    return f"palimpsests {pkg} · PALA-1 {SPEC_VERSION} (core, frozen) · inference {profile}"
+
+
+def _version_callback(value: bool) -> None:
+    if value:
+        typer.echo(_versions())
+        raise typer.Exit(code=0)
+
+
 app = typer.Typer(
     name="palimpsests",
     help="A layered local-LLM inference engine.",
     no_args_is_help=True,
     add_completion=False,
 )
+
+
+@app.callback()
+def _root(
+    version: bool = typer.Option(
+        False,
+        "--version",
+        "-V",
+        callback=_version_callback,
+        is_eager=True,
+        help="Print package, core spec and profile versions, and exit.",
+    ),
+) -> None:
+    """A layered local-LLM inference engine."""
+
 
 engine_app = typer.Typer(help="Inspect and switch inference engines.", no_args_is_help=True)
 app.add_typer(engine_app, name="engine")

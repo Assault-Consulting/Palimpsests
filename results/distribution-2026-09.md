@@ -31,6 +31,7 @@ Repository description as shown to a visitor: *Layered local-LLM inference engin
 | listings (upstream docs, awesome-lists, registries) | 0 | — |
 | external verifier runs on record | 3 | Turak — external verifier, run 5 + bridge runs B1/B2; Kurdybaylo — external verifier; Sharyar Naseem — Perl 5 verifier (fifth implementation, third external) |
 | integrators (someone embedded an adapter) | 0 | — |
+| measurements by others | 1 | Serialization and integrity cost (#184) — Oleksandr Verteletskyi, report compiled by Rodion Bakaiev |
 | publications / talks | 3 | draft-sparysh-pala-audit-00 (IETF I-D, posted 2026-09-03); Zenodo article (DOI 10.5281/zenodo.21978107); SSRN whitepaper |
 
 ## Not claimed
@@ -56,3 +57,9 @@ verifier runs on record; no listings; no integrators. And the repository
 description shown on GitHub still reads *"Native L3 serving layer in
 progress"* — a visitor's first sentence, four releases out of date; the
 cheapest item on the plan.
+
+One of those inbound authors turned out not to be drive-by: the #184
+serialization-cost report (`results/serialization-cost-workstation.md`)
+was compiled by `@BakaievRodion`, and now sits on the ledger under
+*measurements by others*. The triage the note asks for should therefore
+start with him.

@@ -1,5 +1,5 @@
 {
-  "_comment": "Hand-kept. Things no API can count. One entry per item, with a link. Read by scripts/distribution_metrics.py.",
+  "_comment": "Hand-kept. Things no API can count. One entry per item, with a link. Read by scripts/distribution_metrics.py. external_runs = independent verification of the format; measurements_by_others = cost/behaviour measurements by people outside the core pair — a different kind of evidence, counted separately.",
   "listings": [],
   "external_runs": [
     {
@@ -28,6 +28,13 @@
     {
       "name": "SSRN whitepaper",
       "link": "docs/"
+    }
+  ],
+  "measurements_by_others": [
+    {
+      "name": "Serialization and integrity cost (#184) \u2014 Oleksandr Verteletskyi, report compiled by Rodion Bakaiev",
+      "link": "results/serialization-cost-workstation.md",
+      "note": "harness not yet pinned in-repo; not citable externally until it is"
     }
   ]
 }
