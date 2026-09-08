@@ -220,6 +220,7 @@ def render(snapshot: dict) -> str:
             ("listings", "listings (upstream docs, awesome-lists, registries)"),
             ("external_runs", "external verifier runs on record"),
             ("integrators", "integrators (someone embedded an adapter)"),
+            ("measurements_by_others", "measurements by others"),
             ("publications", "publications / talks"),
         ):
             items = led.get(key, [])
