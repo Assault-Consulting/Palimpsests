@@ -1,9 +1,9 @@
 # SCITT-bridge Signed Statement — independent verification run
 
 The run called for by
-[`docs/interop/SCITT-STATEMENT-VERIFICATION-TASK.md`](../../../../interop/SCITT-STATEMENT-VERIFICATION-TASK.md),
+[`docs/interop/SCITT-STATEMENT-VERIFICATION-TASK.md`](../../../../../interop/SCITT-STATEMENT-VERIFICATION-TASK.md),
 carried out against
-[`docs/interop/scitt-statement-vector.json`](../../../../interop/scitt-statement-vector.json).
+[`docs/interop/scitt-statement-vector.json`](../../../../../interop/scitt-statement-vector.json).
 
 **Result in one line.** All seven task steps completed. The published
 202-byte statement parses, its Ed25519 signature verifies, its payload
