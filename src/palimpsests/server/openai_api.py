@@ -498,6 +498,7 @@ def _sse_prebuilt(
     elif content:
         yield event({"content": content}, None)
     yield event({}, finish)
+    yield "data: [DONE]\n\n"
 
 
 def default_audit():
