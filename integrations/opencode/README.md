@@ -38,6 +38,29 @@ reported result binds to its call by seq + hash exactly as wire-parsed
 pairs do, so the reader's referential-integrity advisory applies to
 both without caring about source.
 
+## Status on OpenCode 1.18.x — read this before installing
+
+A maintainer traffic run on **1.18.25 and 1.18.31**
+(`docs/specs/pala-1/independent-runs/opencode-traffic-1/`) found the
+plugin loading and announcing itself, then emitting nothing: no report,
+no fetch attempt, and no `report failed` warning — so neither
+`tool.execute.*` nor the `message.part.updated` fallback ran. On those
+versions this plugin records nothing, and no README sentence claims
+otherwise.
+
+What did work in that run is the serve's own boundary record: nine of
+nine tool-offering turns produced a `TOOLS_OFFERED_NO_CALL` event
+without any client cooperation. That path needs no plugin.
+
+Upstream has been moving plugin loading toward a v2 envelope
+(`export default { id, effect }`) while the plugins directory still
+*executes* the plugin function — which matches what we saw: our function
+ran, the hook map it returned was never dispatched. Before rewriting
+against that guess, run [`probe-hooks.js`](probe-hooks.js) beside this
+plugin for five minutes: it reports which surfaces actually fire on your
+version, into a JSONL file, touching nothing else. The rewrite follows
+the probe, not the other way round.
+
 ## Install
 
 Copy [`palimpsests-audit.js`](palimpsests-audit.js) into one of:
@@ -138,4 +161,6 @@ The raw tag `0x0011` is still visible in `body_tlvs` when present.
 live serve on a loopback port with the hook payloads OpenCode passes,
 and asserts: two calls, two results (the duplicate did not land), every
 record marked `reported-by-client`, results bound by seq + hash, `ok`
-via the `after` hook and `error` via the fallback.
+via the `after` hook and `error` via the fallback. That is a test of the
+plugin's logic given the hooks; whether a given OpenCode version calls
+those hooks at all is the question the status section above answers.
