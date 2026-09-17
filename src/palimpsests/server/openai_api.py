@@ -498,7 +498,6 @@ def _sse_prebuilt(
     elif content:
         yield event({"content": content}, None)
     yield event({}, finish)
-    yield "data: [DONE]\n\n"
 
 
 def default_audit():
@@ -557,6 +556,23 @@ def main() -> None:
         )
         return
     import uvicorn
+
+    # Resolve the engine dependencies BEFORE binding the port. They open
+    # the encrypted audit log, which refuses to degrade silently when
+    # SQLCipher is absent (core.open_audit_log) — and that refusal used to
+    # surface as a 500 on the first GET /v1/models, minutes later, to a
+    # client that shows the user nothing. The OpenCode traffic run hit
+    # exactly that: the serve announced itself, then no model could be
+    # listed. The guidance the exception already carries is worth reading,
+    # so print it here and exit rather than starting an endpoint that
+    # cannot answer.
+    from palimpsests.audit import AuditIntegrityError
+
+    try:
+        _default_deps()
+    except AuditIntegrityError as e:
+        print(f"error: {e}", file=sys.stderr)
+        raise SystemExit(1) from e
 
     audit = default_audit()
     app = create_app(audit=audit, api_key=args.api_key)
