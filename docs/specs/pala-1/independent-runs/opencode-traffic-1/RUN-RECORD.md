@@ -142,6 +142,19 @@ fired, and the fallback stayed silent with them. This spans **1.18.25 and
 1.18.31** — the version change mid-run widened the finding rather than
 explaining it. Upstream #25918 / #27900 territory.
 
+> *Investigated after this run.* Upstream has moved plugin loading
+> toward a v2 envelope (`export default { id, effect|setup }`), which
+> the loader decodes; a bare named export of
+> `async ({ client }) => hooks` fails that decode and the failure is
+> swallowed. The plugins *directory* still executes the plugin function
+> — which is exactly the shape observed here: our function ran (the
+> banner is proof), the hook map it returned was never dispatched. That
+> is a hypothesis, not a measurement, so the response is a diagnostic
+> rather than a rewrite: `integrations/opencode/probe-hooks.js` records
+> which surfaces actually fire on a given client version, into a JSONL
+> file, touching nothing else. The plugin is rewritten against that
+> evidence, not against this paragraph.
+
 **2. The serve's own boundary record is the only thing that fired — and
 it fired on every eligible turn.** Nine tool-offering completions, nine
 kind-10 records, no gaps. The endpoint correctly recorded "tools were
@@ -171,6 +184,12 @@ asks for that line; the CLI answers `No such option: --version` and
 offers no `version` subcommand. The version had to be taken from
 `pala selftest` and `palimpsests.__version__`.
 
+> *Resolved after this run.* `main` now has `--version` / `-V` (#239,
+> merged after the run's `b6c845e`): `palimpsests 0.11.0 · PALA-1 v1.0
+> (core, frozen) · inference r5`. The profile revision is read from the
+> packaged vectors rather than written as a constant, so it cannot drift.
+> A repeat of this run should record that line as the task asks.
+
 **7. `PALIMPSESTS_ALLOW_UNENCRYPTED_AUDIT=1` is required for the serve to
 be usable.** Without it — and a plain `[serve]` install has no
 `sqlcipher3` — `GET /v1/models` raises `AuditIntegrityError`, so OpenCode
@@ -180,6 +199,15 @@ touches the encrypted audit DB, so the banner reads "structured tool
 loops recorded to serve.pala" either way. A user following the task text
 verbatim on a machine without the encryption extra hits this before the
 first turn.
+
+> *Being fixed as a result of this run.* The failure was late and mute:
+> the endpoint bound the port, announced itself, and only then raised
+> inside every `GET /v1/models`, so the client showed nothing. The
+> exception already carries the remedy — `palimpsests-serve` now
+> resolves its engine dependencies before binding, prints that message
+> and exits 1 (follow-up PR). The refusal to write a plaintext audit log
+> silently is deliberate and unchanged; what changes is that the
+> operator reads why.
 
 **8. Model-quality observations** (qwen3:8b, real toolset and real
 prompt — not defects in this project, but they shape what a run like this
@@ -206,6 +234,11 @@ directory was therefore written with `pala export -o`, which writes the
 bytes itself; the digest in the Numbers table is what anyone regenerating
 from `run-chain.pala` gets. On Windows, capture with `-o`, not a redirect.
 `run-report.html` was written with `-o` from the start and is unaffected.
+
+> *Being fixed as a result of this run.* The task file's section 3 will
+> say: on Windows capture with `pala export -o`, never a shell redirect,
+> because the console rewrites LF to CRLF and the published digest then
+> cannot be reproduced anywhere else.
 
 ## What this proves, and what it does not
 
