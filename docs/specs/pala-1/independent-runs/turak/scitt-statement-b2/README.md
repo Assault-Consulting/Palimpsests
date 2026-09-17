@@ -1,7 +1,7 @@
 # SCITT-bridge Signed Statement — verification run B2 (vector v2)
 
 Submission for the task in
-[`docs/interop/SCITT-STATEMENT-VERIFICATION-TASK.md`](../../../../interop/SCITT-STATEMENT-VERIFICATION-TASK.md),
+[`docs/interop/SCITT-STATEMENT-VERIFICATION-TASK.md`](../../../../../interop/SCITT-STATEMENT-VERIFICATION-TASK.md),
 run against **vector v2** — the reissue that resolves run
 [B1](../scitt-statement/)'s findings F1, F2 and F4 and rescopes F3.
 
