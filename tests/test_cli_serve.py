@@ -45,3 +45,38 @@ def test_serve_preflights_the_audit_log_before_binding(monkeypatch, capsys):
     err = capsys.readouterr().err
     assert "SQLCipher unavailable" in err
     assert "palimpsests[encryption]" in err
+
+
+def test_serve_preflight_runs_before_the_uvicorn_import(monkeypatch, capsys):
+    """The preflight must come before `import uvicorn`, not after.
+
+    CI found this: the coverage job installs the dev extra, which carries
+    fastapi but not uvicorn, so the import raised ModuleNotFoundError
+    before the preflight could run and the operator got a stack trace
+    about the wrong problem. The two failures have different remedies —
+    a misconfigured audit log is the operator's to fix, a missing uvicorn
+    is an install error — so the one that is actually wrong must be the
+    one reported.
+    """
+    import builtins
+    import sys
+    from palimpsests.audit import AuditIntegrityError
+    from palimpsests.server import openai_api
+
+    real_import = builtins.__import__
+
+    def no_uvicorn(name, *args, **kwargs):
+        if name == "uvicorn":
+            raise ModuleNotFoundError("No module named 'uvicorn'")
+        return real_import(name, *args, **kwargs)
+
+    def boom():
+        raise AuditIntegrityError("SQLCipher unavailable")
+
+    monkeypatch.setattr(builtins, "__import__", no_uvicorn)
+    monkeypatch.setattr(openai_api, "_default_deps", boom)
+    monkeypatch.setattr(sys, "argv", ["palimpsests-serve"])
+    with pytest.raises(SystemExit) as excinfo:
+        openai_api.main()
+    assert excinfo.value.code == 1
+    assert "SQLCipher unavailable" in capsys.readouterr().err
