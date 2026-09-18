@@ -556,6 +556,31 @@ def main() -> None:
             file=sys.stderr,
         )
         return
+    # Resolve the engine dependencies BEFORE anything else this function
+    # does — before importing the server runtime, and well before binding
+    # the port. They open the encrypted audit log, which refuses to
+    # degrade silently when SQLCipher is absent (core.open_audit_log);
+    # that refusal used to surface as a 500 on the first GET /v1/models,
+    # minutes later, to a client that shows the user nothing. The
+    # OpenCode traffic run hit exactly that: the serve announced itself,
+    # then no model could be listed. The guidance the exception already
+    # carries is worth reading, so print it here and exit.
+    #
+    # Ordering matters twice over: a misconfigured audit log is a
+    # configuration error the operator can fix, while a missing uvicorn
+    # is an install error with a different remedy — reporting the one
+    # that is actually wrong means checking ours before importing theirs.
+    # CI caught this: the coverage job installs the dev extra, which has
+    # fastapi but not uvicorn, so the import raised before the preflight
+    # could run.
+    from palimpsests.audit import AuditIntegrityError
+
+    try:
+        _default_deps()
+    except AuditIntegrityError as e:
+        print(f"error: {e}", file=sys.stderr)
+        raise SystemExit(1) from e
+
     import uvicorn
 
     audit = default_audit()
