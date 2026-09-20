@@ -1,12 +1,23 @@
 # Usage — running Palimpsests and which settings work
 
-A practical guide to the current state of the project (v0.3). Level 1
-(Ollama) is the fully documented, end-to-end path below. Levels 2
-(llama.cpp) and 3 (pal-native) exist behind one abstraction — level 3's
-serving skeleton is complete and test-covered against a fake backend, and
-its real in-process backend plus benchmarks are the v0.4 target. Where a
-level-2/3 setting is not yet a stable, user-facing knob, this guide says so
-rather than documenting something that may change.
+A practical guide to what is in the released package and how to drive
+it. All three levels ship: level 1 (Ollama), level 2 (llama.cpp) and
+level 3 (pal-native, the in-process serving loop) sit behind one
+abstraction, and level 3's mechanisms are measured rather than asserted
+— see [results/](../results/) and [POSITIONING.md](POSITIONING.md).
+Where a setting is not yet a stable, user-facing knob, this guide says
+so rather than documenting something that may change.
+
+New to the project? [Start here](START-HERE.md) explains what the audit
+chain is in plain words and walks a five-minute demo. This page is the
+reference underneath it.
+
+Two commands are worth knowing before anything else:
+
+```bash
+palimpsests --version   # package, frozen core spec, profile revision
+palimpsests demo        # an audited agent turn, verified, no model needed
+```
 
 ---
 
@@ -21,7 +32,13 @@ rather than documenting something that may change.
 
 Without a running Ollama daemon, `models` and `chat` return a clean
 error (`engine unavailable`) rather than a traceback — that is the
-expected behavior.
+expected behavior. Over HTTP the same condition is a **503** with
+`code: engine_unavailable` in the OpenAI error shape, not a 500: the
+status says which side is down.
+
+`palimpsests demo` needs none of this — it runs a deterministic stub
+backend, writes a real PALA-1 chain, and verifies it. Use it to check
+an install before touching a model.
 
 For **level 2**, you additionally need the `llama-server` binary from
 llama.cpp on your `PATH` (installed out-of-band — `brew install llama.cpp`,
@@ -61,6 +78,7 @@ extras.
 | `[embeddings]` | local embeddings (numpy) for block memory | works |
 | `[llamacpp]` | level 2 marker (needs the `llama-server` binary on PATH) | works; empty marker; **single-user host only** — see §1 |
 | `[native]` | level 3 real backend (llama-cpp-python) | ships; validated on hardware |
+| `[serve]` | the OpenAI-compatible endpoint (`palimpsests serve`) | works |
 
 Example, with audit-log encryption:
 ```bash
@@ -108,12 +126,39 @@ with their control level and installed state. `engine use` on an engine
 that isn't available in your environment returns a clean error rather than
 a traceback.
 
+### Serve an OpenAI-compatible endpoint
+
+```bash
+pip install 'palimpsests[serve]'
+palimpsests serve                      # http://127.0.0.1:11435/v1
+palimpsests-serve --api-key sk-…       # same server, bearer-guarded
+palimpsests-serve --print-opencode-config
+```
+
+Point any OpenAI-compatible client at that base URL. Structured tool
+loops that cross the endpoint are recorded to `<config>/serve.pala` as
+`TOOL_CALL` / `TOOL_RESULT` pairs; a turn where tools were offered and
+no structured call came back is recorded as `TOOLS_OFFERED_NO_CALL`, so
+the boundary is visible rather than silent.
+
+Bind to localhost and pass `--api-key` the moment anything beyond your
+own shell can reach the port. A serve that cannot open its audit log
+prints the reason and exits `1` before binding — it will not start an
+endpoint it cannot answer from.
+
+Clients that run their tool loop in text can report it onto the same
+chain; see [`integrations/`](../integrations/) for the LiteLLM callback,
+the MCP stdio proxy and the OpenCode plugin, each with its own README
+stating what a reported record does and does not prove.
+
 ### Everything `--help` shows
 
 ```bash
 palimpsests --help              # list of commands
+palimpsests --version           # package · core spec · profile revision
 palimpsests chat --help         # chat options
 palimpsests engine --help       # engine subcommands
+palimpsests pala --help         # the audit-chain tools
 ```
 
 ---
@@ -184,6 +229,23 @@ palimpsests pala verify demo.pala --anchor "$HEAD"
 The full exit-code contract (`0/1/2/3`) and machine-readable `--json`
 output are described by `palimpsests pala verify --help`.
 
+### The rest of the `pala` family
+
+| Command | What it does |
+|---|---|
+| `pala verify` | the three questions — consistency, completeness, witness |
+| `pala export` | JSONL view of the headers; derived, never authoritative |
+| `pala report [--html]` | an attestation document; the verdict lives inside it |
+| `pala bundle` | records + inclusion proofs + verdict in one tar |
+| `pala segment` | cut a chain into retention-ready segments that verify alone |
+| `pala consistency` / `consistency-verify` | prove an archived prefix is still a prefix |
+| `pala selftest` | check this build against the vectors packaged in the wheel |
+
+`pala selftest` also prints a characteristic line — records/s and the
+reader's Python-heap cost per record, with a tripwire — so a
+performance regression in the reader fails the selftest instead of
+going unnoticed. Details for each command: `docs/audit/cli.md`.
+
 ---
 
 ## 4. Which settings work
@@ -219,6 +281,9 @@ tokens rather than an OOM.
 | `XDG_CONFIG_HOME` | — | if set, config → `$XDG_CONFIG_HOME/palimpsests` |
 | `PALIMPSESTS_LLAMACPP_MODEL` | — | path to a GGUF model; enables level 2 (see the level-2 warning in §1) |
 | `PALIMPSESTS_ALLOW_UNENCRYPTED_AUDIT` | — | set to `1` to accept a plaintext (still hash-chained) audit log when SQLCipher is unavailable |
+| `PALIMPSESTS_SERVE_API_KEY` | — | bearer key for `palimpsests serve`; the integrations read the same variable |
+| `PALIMPSESTS_SERVE_URL` | `http://127.0.0.1:11435` | where the integrations look for the serve |
+| `PALIMPSESTS_AUDIT_REPORT` | — | set to `0` to disable client-side reporting in the integrations |
 
 ```bash
 # isolated config (handy for tests / multiple profiles)
@@ -300,17 +365,34 @@ for chunk in engine.chat_stream(model="qwen2.5:7b", messages=messages):
 engine.close()
 ```
 
+### Reading a chain from Python
+
+```python
+from palimpsests.audit.reader import AuditReader
+
+with AuditReader.open("serve.pala") as reader:
+    verdict = reader.verify()
+    print(verdict.chain.count, verdict.chain.chain_ok)
+```
+
+`AuditReader` is the supported consumer surface — header-only, no key
+needed, bounded in memory on large chains. Its stability class and the
+rest of the integration surface are declared in
+[INTEGRATION-SURFACE.md](INTEGRATION-SURFACE.md); the API itself is in
+[docs/audit/reader.md](audit/reader.md).
+
 ### Level-3 stateful sessions (Python)
 
-Level 3 adds stateful sessions with a server-side tool loop and KV
-persistence, behind the same `InferenceEngine` abstraction. The serving
-skeleton is complete and test-covered against a fake backend; the real
-in-process backend is validated on hardware (the `[native]` extra). The
-session API surface — `open_session`, `send`, `append_tool_result`,
-`save_state` / `load_state` — is documented in `ARCHITECTURE.md` and
-exercised in the `tests/test_native_*` suite. Because the on-hardware
-backend and its performance are the v0.4 target, this guide does not yet
-quote level-3 runtime settings as stable user-facing knobs.
+Level 3 adds stateful sessions with a server-side tool loop, shared
+prefix KV and KV persistence, behind the same `InferenceEngine`
+abstraction. The real in-process backend ships behind the `[native]`
+extra and the three mechanisms are measured on 1.5B and 7B — method,
+numbers and limits in [results/](../results/). The session API surface —
+`open_session`, `send`, `append_tool_result`, `save_state` /
+`load_state` — is documented in `ARCHITECTURE.md` and exercised in the
+`tests/test_native_*` suite. Level-3 runtime settings are still not
+quoted here as stable user-facing knobs: what is measured is the
+mechanisms' effect, not a frozen configuration surface.
 
 > **⚠ `load_state` is not yet a validated trust boundary.**
 > The blob it takes is parsed in C by llama.cpp. Today those blobs are
@@ -338,9 +420,14 @@ palimpsests chat qwen2.5:7b -m "..."
 ```
 
 Every operation (`model.call`, `engine.list_models`, `engine.select`)
-is written to an append-only audit log. For now the log can be read
-only via Python (`get_audit_log().recent()`); there is no dedicated CLI
-command to view it yet.
+is written to an append-only audit log — the SQLite one, checked with
+`palimpsests audit verify`. That is a different artifact from a PALA-1
+`.pala` chain: the first is this application's own operational log, the
+second is the portable, independently verifiable format an auditor
+receives. `palimpsests serve` and level 3 write the latter.
+
+The SQLite log can be read from Python (`get_audit_log().recent()`);
+there is no dedicated CLI command to list its rows.
 
 ---
 
@@ -354,10 +441,15 @@ command to view it yet.
 | empty reply from `chat` without `-m` in a terminal | neither `-m` nor a pipe provided | add `-m "..."` or pipe text in |
 | level 2 not available | `llama-server` not on PATH or `PALIMPSESTS_LLAMACPP_MODEL` unset | install llama.cpp, set the model env var |
 | `AuditIntegrityError` on startup | SQLCipher not installed, so the audit log refuses to open unencrypted | `pip install "palimpsests[encryption]"`, or accept plaintext with `PALIMPSESTS_ALLOW_UNENCRYPTED_AUDIT=1` |
+| `palimpsests-serve` prints an error and exits `1` | same cause, caught before the port is bound | the message names both remedies |
+| HTTP `503 engine_unavailable` from the serve | the engine behind it is not running | start Ollama, or point at an engine that is up |
+| `pala verify` exits `2` on a chain you believe is whole | no anchor was supplied, so completeness was not checked | pass `--anchor` / `--anchor-file`; see [anchors.md](audit/anchors.md) |
 
 ---
 
-*This document describes the v0.3 state: level 1 fully documented, level 2
-available, level 3's serving skeleton complete with its real backend and
-benchmarks as the v0.4 target. It is updated as the level-2/3 surfaces
-stabilize into user-facing settings.*
+*This document tracks the released package. Claims here are limited to
+what ships and what has been measured; where a surface is not yet
+stable it is named as such rather than documented as if it were. The
+project's own statements about what it does and does not prove are in
+[SECURITY.md](../SECURITY.md), [ASSURANCE-CASE.md](ASSURANCE-CASE.md)
+and [POSITIONING.md](POSITIONING.md).*
