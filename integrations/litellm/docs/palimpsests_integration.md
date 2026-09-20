@@ -1,15 +1,16 @@
 <!-- SPDX-FileCopyrightText: Assault Consulting -->
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 <!--
-  Staged copy of the page proposed for LiteLLM's documentation, at
-  docs/my-website/docs/observability/palimpsests_integration.md in the
-  BerriAI/litellm repository, following their integration-doc format
-  (Quick Start, SDK usage, Proxy usage, advanced). The SPDX comment
-  block above is ours and is dropped from the upstream copy.
+  Staged copy of the page proposed for LiteLLM's documentation:
+  repository BerriAI/litellm-docs, path
+  docs/observability/palimpsests_integration.md, registered in
+  sidebars.js under "LLM observability platforms". (The docs left the
+  main BerriAI/litellm repository; there is no docs/ directory there
+  any more.) The SPDX block above is ours and is dropped from the
+  upstream copy, as are these comments. No @theme imports: this page
+  uses only tables and code blocks, and unused imports are noise a
+  reviewer sees immediately.
 -->
-import Image from '@theme/IdealImage';
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
 
 # Palimpsests — tamper-evident audit trail
 
@@ -69,9 +70,15 @@ response = litellm.completion(
 3. Verify the chain — no key, no network:
 
 ```shell
-palimpsests pala verify ~/.palimpsests/serve.pala
-palimpsests pala export ~/.palimpsests/serve.pala | grep '"kind_name":"TOOL_CALL"'
+palimpsests pala verify ~/.config/palimpsests/serve.pala
+palimpsests pala export ~/.config/palimpsests/serve.pala \
+  | grep '"kind_name":"TOOL_CALL"'
 ```
+
+Each `TOOL_CALL` and `TOOL_RESULT` line carries `"source": 1` and
+`"source_name": "reported-by-client"`. `pala verify` exits `2`
+(`PARTIAL`) on a chain with no anchor — that is correct, not a failure:
+it means internal consistency was checked and completeness was not.
 
 ## Usage with LiteLLM Proxy
 
