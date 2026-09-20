@@ -20,21 +20,52 @@ has no `docs/` directory any more. The site source is now
 | Their rules | `CONTRIBUTING.md` and `AGENTS.md`, both at the root — read before opening the PR |
 
 The sidebar entry belongs in the **"LLM observability platforms"**
-category, which is alphabetical by file name. Between `opik_integration`
-and `promptlayer_integration`:
+category. That list is **not** alphabetical — it reads `agentops,
+argilla, arize, phoenix, athina, braintrust, grafana_cloud, opik,
+deepeval, helicone, …` — so do not try to place the entry by name.
+**Add a new line directly after `opik_integration`, leaving that line
+in place.** Overwriting a neighbour removes someone else's page from
+the navigation, which is how the first attempt at this went; a
+reviewer reads that as "deleted a competing integration" and closes
+the PR without reading further.
+
+Before:
 
 ```js
+            "observability/grafana_cloud",
+            "observability/opik_integration",
+            "observability/deepeval_integration",
+```
+
+After — one line added, none changed:
+
+```js
+            "observability/grafana_cloud",
             "observability/opik_integration",
             "observability/palimpsests_integration",
-            "observability/promptlayer_integration",
+            "observability/deepeval_integration",
 ```
+
+Check it in the PR's **Files changed** tab before submitting:
+`sidebars.js` must show **+1 / −0**. Any deletion means a neighbour was
+overwritten.
 
 ## Check before submitting
 
-1. **The page renders.** `npm install && npm start` in a fork of
-   `litellm-docs`, then open the page from the sidebar. A Docusaurus
-   build fails on a broken MDX construct, and this page has tables,
-   fenced code and no JSX — but check rather than assume.
+1. **The page renders.** Two ways, in order of cost:
+   - *Cheap and enough for the failure that matters:* compile the page
+     with the site's own MDX compiler. From a checkout of `litellm-docs`
+     after `npm install`, a four-line script calling
+     `@mdx-js/mdx`'s `compile()` on the file catches the
+     valid-Markdown-but-invalid-MDX case, which is what breaks a
+     reviewer's build. Verified this way before the first submission;
+     the page compiled clean, as did a control page.
+   - *Full check:* `npm start` and open the page. Note that a full
+     `npm run build` of this site needs a lot of memory — it was killed
+     twice on a 4 GB container after compiling successfully — so a
+     failure there is not necessarily the page's fault.
+   - The Vercel preview on the PR renders it for free. That is the
+     honest last step: it shows what a reader sees.
 2. **The quickstart does what it says.** The page tells a reader to
    install the callback, run a completion with tools, feed the result
    back, and grep the chain. Run exactly that. Verified on
@@ -52,6 +83,11 @@ and `promptlayer_integration`:
 - It does not quote adoption numbers. There are none worth quoting.
 - It does not mention the OpenCode plugin's state on 1.18.x. That is
   our repository's business, not a LiteLLM reader's.
+
+## Submitted
+
+PR: https://github.com/BerriAI/litellm-docs/pull/1591 (2026-09-20) —
+two files, +140/−0, one page and one sidebar line.
 
 ## The stronger listing, for later
 
