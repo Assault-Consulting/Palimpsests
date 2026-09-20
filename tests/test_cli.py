@@ -18,6 +18,26 @@ from palimpsests.core import UNENCRYPTED_ENV
 from palimpsests.registry import set_registry
 from typer.testing import CliRunner
 
+
+def open_raw(db_path, key):
+    """Open an audit DB with the driver that wrote it.
+
+    ``AuditLog`` encrypts whenever ``sqlcipher3`` is importable and has
+    no plaintext option on a machine that has the extra, so a test that
+    tampers through plain sqlite3 fails on exactly the installs the
+    extra is meant for. This follows the same rule the writer follows.
+    (Duplicated in the two test modules that need it: pytest's import
+    mode here does not make conftest importable by name.)
+    """
+    try:
+        import sqlcipher3
+    except ModuleNotFoundError:
+        return sqlite3.connect(str(db_path))
+    conn = sqlcipher3.connect(str(db_path))  # type: ignore[attr-defined]
+    conn.execute(f"PRAGMA key = \"x'{key.hex()}'\"")
+    return conn
+
+
 BASE = "http://localhost:11434"
 runner = CliRunner()
 
@@ -155,7 +175,7 @@ def test_audit_verify_clean_log_exits_zero(tmp_path):
 
 def test_audit_verify_detects_tampering(tmp_path):
     _seed_log(tmp_path)
-    conn = sqlite3.connect(str(tmp_path / "audit.db"))
+    conn = open_raw(tmp_path / "audit.db", _TEST_KEY)
     conn.execute("UPDATE audit_events SET outcome='denied' WHERE id=1")
     conn.commit()
     conn.close()
@@ -199,7 +219,7 @@ def test_audit_verify_json_output(tmp_path):
 
 def test_audit_verify_json_reports_tampering(tmp_path):
     _seed_log(tmp_path)
-    conn = sqlite3.connect(str(tmp_path / "audit.db"))
+    conn = open_raw(tmp_path / "audit.db", _TEST_KEY)
     conn.execute("DELETE FROM audit_events WHERE id=1")
     conn.commit()
     conn.close()
@@ -217,7 +237,7 @@ def test_audit_verify_does_not_disturb_the_anchor(tmp_path, _isolated_keychain):
     _seed_log(tmp_path)
     anchored = _isolated_keychain["anchor"]
 
-    conn = sqlite3.connect(str(tmp_path / "audit.db"))
+    conn = open_raw(tmp_path / "audit.db", _TEST_KEY)
     conn.execute("UPDATE audit_events SET outcome='denied' WHERE id=1")
     conn.commit()
     conn.close()
