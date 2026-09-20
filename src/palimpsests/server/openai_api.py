@@ -123,6 +123,37 @@ def create_app(
 
     app = FastAPI(title="Palimpsests", docs_url=None, redoc_url=None)
 
+    # An engine that cannot be reached is not a bug in this process, and
+    # a traceback is the wrong way to say so: a clean-room run of the
+    # serve answered GET /v1/models with a 500 because Ollama was not
+    # running, which tells an operator nothing and tells a client to
+    # retry a broken server. Map the engine's own vocabulary onto the
+    # OpenAI error shape instead, so a compatible client surfaces the
+    # sentence rather than choking on it.
+    #
+    # Scope, stated rather than implied: this covers failures raised
+    # before a response starts. A stream that dies mid-body cannot be
+    # given a status it has already sent — that case ends the SSE and is
+    # visible in the chain, not here.
+    from palimpsests.providers.errors import (
+        EngineError,
+        EngineUnavailable,
+        ModelNotFound,
+    )
+
+    @app.exception_handler(EngineError)
+    async def _engine_error(request, exc):
+        if isinstance(exc, EngineUnavailable):
+            status, etype, code = 503, "server_error", "engine_unavailable"
+        elif isinstance(exc, ModelNotFound):
+            status, etype, code = 404, "invalid_request_error", "model_not_found"
+        else:
+            status, etype, code = 502, "server_error", "engine_error"
+        return JSONResponse(
+            status_code=status,
+            content={"error": {"message": str(exc), "type": etype, "code": code}},
+        )
+
     if api_key is not None:
         import hmac
 
@@ -147,17 +178,30 @@ def create_app(
                 )
             return await call_next(request)
     # Dispatched tool calls awaiting results: id -> the TOOL_CALL's
-    # (seq, hash), so a later request's results bind to their calls.
-    pending: dict[str, tuple[int, bytes]] = {}
+    # (seq, hash, source), so a later request's results bind to their
+    # calls — and so a result carries the same evidence-quality mark the
+    # call did. A pair whose halves disagree about their own provenance
+    # would be a reader's problem forever.
+    pending: dict[str, tuple[int, bytes, int]] = {}
 
     if audit is not None:
         def _cancel_pending() -> None:
+            """Close every dispatched call that never came back.
+
+            The outcome is this process's own observation — no result
+            arrived before shutdown — but the *record* belongs to the
+            pair its call opened, so it carries the call's source. A
+            reported call closed by an unmarked cancellation would leave
+            one pair with two provenances, which no reader can resolve.
+            """
             from palimpsests.audit.pala_writer import OUTCOME_CANCELLED
 
             if not pending:
                 return
-            for ref in pending.values():
-                audit.tool_result(ref[0], ref[1], OUTCOME_CANCELLED, None, None)
+            for seq, call_hash, source in pending.values():
+                audit.tool_result(
+                    seq, call_hash, OUTCOME_CANCELLED, None, None, source=source
+                )
             pending.clear()
 
         app.router.on_shutdown.append(_cancel_pending)
@@ -235,11 +279,16 @@ def create_app(
                 )
             if calls and audit is not None:
                 for pc in calls:
-                    pending[pc.id] = audit.tool_called(
+                    from palimpsests.audit.pala_writer import (
+                        SOURCE_PARSED_FROM_WIRE,
+                    )
+
+                    seq, rh = audit.tool_called(
                         pc.name,
                         _args_digest(pc.arguments),
                         None,
                     )
+                    pending[pc.id] = (seq, rh, SOURCE_PARSED_FROM_WIRE)
             if stream:
                 return StreamingResponse(
                     _sse_prebuilt(
@@ -371,7 +420,7 @@ def create_app(
                     seq, rh = audit.tool_called(
                         name, digest, None, source=SOURCE_REPORTED_BY_CLIENT
                     )
-                    pending[call_id] = (seq, rh)
+                    pending[call_id] = (seq, rh, SOURCE_REPORTED_BY_CLIENT)
                     results.append(
                         {"id": call_id, "seq": seq, "record_hash": rh.hex()}
                     )
@@ -393,8 +442,7 @@ def create_app(
                     else:
                         digest = None
                     rh = audit.tool_result(
-                        ref[0], ref[1], outcome, digest, None,
-                        source=SOURCE_REPORTED_BY_CLIENT,
+                        ref[0], ref[1], outcome, digest, None, source=ref[2],
                     )
                     results.append({"id": call_id, "record_hash": rh.hex()})
                 else:
@@ -466,7 +514,7 @@ def _record_tool_results(audit, messages: list, pending: dict) -> None:
         content = str(m.get("content", ""))
         audit.tool_result(
             ref[0], ref[1], OUTCOME_OK,
-            sha256(content.encode("utf-8")).digest(), None,
+            sha256(content.encode("utf-8")).digest(), None, source=ref[2],
         )
 
 
