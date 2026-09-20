@@ -89,8 +89,10 @@ class _FakeAudit:
         self.calls.append(name)
         return (len(self.calls), b"h" * 32)
 
-    def tool_result(self, seq, call_hash, outcome, result_digest, span):
-        self.results.append((seq, outcome))
+    def tool_result(self, seq, call_hash, outcome, result_digest, span, *, source=0):
+        # source mirrors NativeAudit: a result carries the mark of the
+        # call it closes, so the pair never disagrees with itself.
+        self.results.append((seq, outcome, source))
 
 
 def _tool_chat_fn(**kwargs):
@@ -123,6 +125,47 @@ def test_pending_calls_cancel_on_the_atexit_seam_idempotently():
     assert audit.calls == ["write"]
 
     app.state.cancel_pending()
-    assert audit.results == [(1, OUTCOME_CANCELLED)]
+    # The cancellation carries the call's own source (0, parsed from this
+    # process's wire) — a pair must not disagree about its provenance.
+    assert audit.results == [(1, OUTCOME_CANCELLED, 0)]
     app.state.cancel_pending()  # a second delivery changes nothing
-    assert audit.results == [(1, OUTCOME_CANCELLED)]
+    assert audit.results == [(1, OUTCOME_CANCELLED, 0)]
+
+
+def test_unreachable_engine_is_503_not_500():
+    """An engine that is not running is the engine's news, not a crash.
+
+    A clean-room run of the serve answered GET /v1/models with a 500 and
+    a traceback because Ollama was not up. That tells an operator
+    nothing and tells a compatible client to retry a broken server. The
+    status now says which side is unavailable, in the error shape those
+    clients already parse.
+    """
+    from palimpsests.providers.errors import EngineUnavailable
+
+    def _dead_models():
+        raise EngineUnavailable("cannot reach Ollama at http://localhost:11434")
+
+    app = create_app(chat_fn=_chat_fn, models_fn=_dead_models)
+    with TestClient(app, raise_server_exceptions=False) as client:
+        r = client.get("/v1/models")
+    assert r.status_code == 503
+    body = r.json()["error"]
+    assert body["code"] == "engine_unavailable"
+    assert "cannot reach Ollama" in body["message"]
+
+
+def test_missing_model_is_404():
+    from palimpsests.providers.errors import ModelNotFound
+
+    def _chat_fn(**kwargs):
+        raise ModelNotFound("ghost", "ollama")
+
+    app = create_app(chat_fn=_chat_fn, models_fn=lambda: ["demo"])
+    with TestClient(app, raise_server_exceptions=False) as client:
+        r = client.post(
+            "/v1/chat/completions",
+            json={"model": "ghost", "messages": [{"role": "user", "content": "hi"}]},
+        )
+    assert r.status_code == 404
+    assert r.json()["error"]["code"] == "model_not_found"
