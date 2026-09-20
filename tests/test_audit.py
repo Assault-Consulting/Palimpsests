@@ -18,6 +18,26 @@ from palimpsests.audit import (
 )
 from pathlib import Path
 
+
+def open_raw(db_path, key):
+    """Open an audit DB with the driver that wrote it.
+
+    ``AuditLog`` encrypts whenever ``sqlcipher3`` is importable and has
+    no plaintext option on a machine that has the extra, so a test that
+    tampers through plain sqlite3 fails on exactly the installs the
+    extra is meant for. This follows the same rule the writer follows.
+    (Duplicated in the two test modules that need it: pytest's import
+    mode here does not make conftest importable by name.)
+    """
+    try:
+        import sqlcipher3
+    except ModuleNotFoundError:
+        return sqlite3.connect(str(db_path))
+    conn = sqlcipher3.connect(str(db_path))  # type: ignore[attr-defined]
+    conn.execute(f"PRAGMA key = \"x'{key.hex()}'\"")
+    return conn
+
+
 # ─── key management ──────────────────────────────────────────────────────
 
 
@@ -142,13 +162,13 @@ def test_anchor_every_must_be_positive(tmp_path: Path) -> None:
 # ─── the hash chain ──────────────────────────────────────────────────────
 
 
-def _raw_rows(db: Path) -> list[tuple]:
+def _raw_rows(db: Path, key: bytes) -> list[tuple]:
     """Read the chain columns directly, bypassing AuditLog entirely.
 
     Tests that tamper must act like an attacker: through the file, not
     through the class whose API deliberately offers no mutation.
     """
-    conn = sqlite3.connect(str(db))
+    conn = open_raw(db, key)
     try:
         return conn.execute(
             "SELECT id, prev_hash, row_hash FROM audit_events ORDER BY id ASC"
@@ -158,21 +178,23 @@ def _raw_rows(db: Path) -> list[tuple]:
 
 
 def test_first_row_chains_from_genesis(tmp_path: Path) -> None:
-    log = AuditLog(tmp_path / "a.db", generate_key(), allow_unencrypted=True)
+    key = generate_key()
+    log = AuditLog(tmp_path / "a.db", key, allow_unencrypted=True)
     try:
         log.record(operation="model.call", tool_name="x", outcome="success")
-        rows = _raw_rows(tmp_path / "a.db")
+        rows = _raw_rows(tmp_path / "a.db", key)
         assert rows[0][1] == GENESIS
     finally:
         log.close()
 
 
 def test_each_row_links_to_its_predecessor(tmp_path: Path) -> None:
-    log = AuditLog(tmp_path / "a.db", generate_key(), allow_unencrypted=True)
+    key = generate_key()
+    log = AuditLog(tmp_path / "a.db", key, allow_unencrypted=True)
     try:
         for i in range(4):
             log.record(operation="model.call", tool_name=f"c{i}", outcome="success")
-        rows = _raw_rows(tmp_path / "a.db")
+        rows = _raw_rows(tmp_path / "a.db", key)
         # Pairwise neighbours: the offset slice is deliberately one shorter,
         # so strict=False is the intent, not an oversight.
         for prev_row, row in zip(rows, rows[1:], strict=False):
@@ -220,19 +242,20 @@ def test_open_and_close_without_writing_leaves_anchor_alone(
     and destroying the very evidence it was asked to examine.
     """
     db = tmp_path / "a.db"
-    writer = AuditLog(db, generate_key(), allow_unencrypted=True)
+    key = generate_key()
+    writer = AuditLog(db, key, allow_unencrypted=True)
     writer.record(operation="model.call", tool_name="x", outcome="success")
     writer.close()
     anchored = _isolated_keychain["anchor"]
     assert anchored is not None
 
     # An attacker rewrites history. The anchor still names the real head.
-    conn = sqlite3.connect(str(db))
+    conn = open_raw(db, key)
     conn.execute("UPDATE audit_events SET outcome='denied' WHERE id=1")
     conn.commit()
     conn.close()
 
-    reader = AuditLog(db, generate_key(), allow_unencrypted=True)
+    reader = AuditLog(db, key, allow_unencrypted=True)
     assert not reader.verify().ok
     reader.close()
 
@@ -246,7 +269,8 @@ def test_open_and_close_without_writing_leaves_anchor_alone(
 def test_verify_detects_modified_row(tmp_path: Path) -> None:
     """Rewriting a field must be evident — this is the core claim."""
     db = tmp_path / "a.db"
-    log = AuditLog(db, generate_key(), allow_unencrypted=True)
+    key = generate_key()
+    log = AuditLog(db, key, allow_unencrypted=True)
     try:
         log.record(operation="model.call", tool_name="a", outcome="denied")
         log.record(operation="model.call", tool_name="b", outcome="success")
@@ -254,12 +278,12 @@ def test_verify_detects_modified_row(tmp_path: Path) -> None:
         log.close()
 
     # The attacker: flip a refusal into a success, leaving hashes alone.
-    conn = sqlite3.connect(str(db))
+    conn = open_raw(db, key)
     conn.execute("UPDATE audit_events SET outcome='success' WHERE tool_name='a'")
     conn.commit()
     conn.close()
 
-    log2 = AuditLog(db, generate_key(), allow_unencrypted=True)
+    log2 = AuditLog(db, key, allow_unencrypted=True)
     try:
         result = log2.verify()
         assert not result.ok
@@ -272,19 +296,20 @@ def test_verify_detects_modified_row(tmp_path: Path) -> None:
 def test_verify_detects_deleted_row(tmp_path: Path) -> None:
     """Excising an inconvenient event must break the chain."""
     db = tmp_path / "a.db"
-    log = AuditLog(db, generate_key(), allow_unencrypted=True)
+    key = generate_key()
+    log = AuditLog(db, key, allow_unencrypted=True)
     try:
         for i in range(3):
             log.record(operation="model.call", tool_name=f"c{i}", outcome="success")
     finally:
         log.close()
 
-    conn = sqlite3.connect(str(db))
+    conn = open_raw(db, key)
     conn.execute("DELETE FROM audit_events WHERE tool_name='c1'")
     conn.commit()
     conn.close()
 
-    log2 = AuditLog(db, generate_key(), allow_unencrypted=True)
+    log2 = AuditLog(db, key, allow_unencrypted=True)
     try:
         result = log2.verify()
         assert not result.ok
@@ -297,18 +322,19 @@ def test_verify_detects_deleted_row(tmp_path: Path) -> None:
 def test_verify_detects_null_field_forgery(tmp_path: Path) -> None:
     """None and "" must hash differently, or a null can be forged into text."""
     db = tmp_path / "a.db"
-    log = AuditLog(db, generate_key(), allow_unencrypted=True)
+    key = generate_key()
+    log = AuditLog(db, key, allow_unencrypted=True)
     try:
         log.record(operation="engine.select", tool_name="x", outcome="success")
     finally:
         log.close()
 
-    conn = sqlite3.connect(str(db))
+    conn = open_raw(db, key)
     conn.execute("UPDATE audit_events SET engine_id='' WHERE id=1")
     conn.commit()
     conn.close()
 
-    log2 = AuditLog(db, generate_key(), allow_unencrypted=True)
+    log2 = AuditLog(db, key, allow_unencrypted=True)
     try:
         assert not log2.verify().ok
     finally:
@@ -328,8 +354,14 @@ def test_verify_detects_wholesale_replacement(
     boundary stated in SECURITY.md — so after the forged writes we restore
     the anchor the legitimate process last stored.
     """
+    # One key for all three opens: the replacement this models is an
+    # attacker who holds the encryption key but not keychain write
+    # access, which is exactly the boundary SECURITY.md draws. Three
+    # different keys would model a different (and impossible) attacker
+    # and, with SQLCipher present, simply fails to open the file.
+    key = generate_key()
     db = tmp_path / "a.db"
-    log = AuditLog(db, generate_key(), allow_unencrypted=True)
+    log = AuditLog(db, key, allow_unencrypted=True)
     try:
         log.record(operation="model.call", tool_name="incriminating", outcome="denied")
     finally:
@@ -339,12 +371,12 @@ def test_verify_detects_wholesale_replacement(
     assert real_anchor is not None
 
     db.unlink()
-    forged = AuditLog(db, generate_key(), allow_unencrypted=True)
+    forged = AuditLog(db, key, allow_unencrypted=True)
     forged.record(operation="model.call", tool_name="innocuous", outcome="success")
     forged.close()
     _isolated_keychain["anchor"] = real_anchor  # attacker cannot reach the keychain
 
-    log2 = AuditLog(db, generate_key(), allow_unencrypted=True)
+    log2 = AuditLog(db, key, allow_unencrypted=True)
     try:
         result = log2.verify()
         assert not result.ok
