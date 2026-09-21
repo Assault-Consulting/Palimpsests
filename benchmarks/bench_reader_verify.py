@@ -43,11 +43,78 @@ import tracemalloc
 from pathlib import Path
 
 
+def _rss_source() -> str:
+    """Which counter _vmrss_mb() reads on this platform, recorded with the numbers.
+
+    The two are close but not the same quantity: Linux VmRSS counts the
+    resident pages of the process; Windows WorkingSetSize counts the
+    pages currently in its working set, which the OS trims more eagerly
+    under pressure. Before/after on one machine compare cleanly either
+    way; a Linux figure and a Windows figure do not, and the report has
+    to say which one it holds.
+    """
+    if sys.platform.startswith("linux"):
+        return "linux VmRSS"
+    if sys.platform == "win32":
+        return "windows WorkingSetSize"
+    return "unavailable"
+
+
 def _vmrss_mb() -> float:
-    for line in Path("/proc/self/status").read_text().splitlines():
-        if line.startswith("VmRSS:"):
-            return int(line.split()[1]) / 1024.0
+    """Resident memory of this process in MiB, or -1.0 where it cannot be read.
+
+    Never raises: a benchmark that dies measuring itself reports nothing.
+    (The first version read /proc unconditionally and crashed outright on
+    Windows, where an external hardware run was the only machine
+    available.)
+    """
+    if sys.platform.startswith("linux"):
+        try:
+            for line in Path("/proc/self/status").read_text().splitlines():
+                if line.startswith("VmRSS:"):
+                    return int(line.split()[1]) / 1024.0
+        except OSError:
+            return -1.0
+        return -1.0
+    if sys.platform == "win32":
+        return _windows_working_set_mb()
     return -1.0
+
+
+def _windows_working_set_mb() -> float:
+    import ctypes
+    from ctypes import wintypes
+
+    class _Counters(ctypes.Structure):
+        _fields_ = [
+            ("cb", wintypes.DWORD),
+            ("PageFaultCount", wintypes.DWORD),
+            ("PeakWorkingSetSize", ctypes.c_size_t),
+            ("WorkingSetSize", ctypes.c_size_t),
+            ("QuotaPeakPagedPoolUsage", ctypes.c_size_t),
+            ("QuotaPagedPoolUsage", ctypes.c_size_t),
+            ("QuotaPeakNonPagedPoolUsage", ctypes.c_size_t),
+            ("QuotaNonPagedPoolUsage", ctypes.c_size_t),
+            ("PagefileUsage", ctypes.c_size_t),
+            ("PeakPagefileUsage", ctypes.c_size_t),
+        ]
+
+    try:
+        k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        k32.GetCurrentProcess.restype = wintypes.HANDLE
+        k32.K32GetProcessMemoryInfo.argtypes = [
+            wintypes.HANDLE, ctypes.POINTER(_Counters), wintypes.DWORD,
+        ]
+        k32.K32GetProcessMemoryInfo.restype = wintypes.BOOL
+        counters = _Counters()
+        counters.cb = ctypes.sizeof(_Counters)
+        if not k32.K32GetProcessMemoryInfo(
+            k32.GetCurrentProcess(), ctypes.byref(counters), counters.cb
+        ):
+            return -1.0
+        return counters.WorkingSetSize / 2**20
+    except (OSError, AttributeError):
+        return -1.0
 
 
 def run_one(fixture: Path) -> dict[str, float]:
@@ -132,6 +199,8 @@ def measure(fixture: Path, repeats: int) -> dict:
         "repeats": repeats,
         "metrics": agg,
         "composition": composition,
+        "rss_source": _rss_source(),
+        "platform": sys.platform,
         "canonical": False,
         "note": "container/laptop runs are non-canonical; ratios travel, absolutes do not",
     }
