@@ -40,6 +40,9 @@ confusion cost a round on the OpenCode integration.
 
 Exit status is 1 if any probe is RED, 0 otherwise. SKIP never fails the
 run, and never counts as green: the report says so, with the reason.
+
+How to set it up, run it, read it, and what to do on red or grey:
+docs/SURFACE-CHECKER.md.
 """
 
 from __future__ import annotations
