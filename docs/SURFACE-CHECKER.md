@@ -109,7 +109,11 @@ runs in a row is a question about the machine, not a reassurance.
 3. **The integration's README gets a warning the same day** — one
    paragraph: "on version X as of date Y, no record arrives; see the
    report". Do not wait for a fix before warning.
-4. **Diagnose separately, not in a hurry.** For OpenCode: put
+4. **Diagnose separately, not in a hurry.** Before concluding a surface
+   broke, check for leftover client processes from an earlier run:
+   a killed `opencode run` can leave instances behind that make the
+   next run hang in a way that looks exactly like a dead surface (seen
+   on Windows: four stale processes, one holding 1.35 GB). For OpenCode: put
    [`integrations/opencode/probe-hooks.js`](../integrations/opencode/probe-hooks.js)
    beside the plugin and see which callbacks arrive (instructions in
    [the plugin README](../integrations/opencode/README.md)).
@@ -121,7 +125,8 @@ What the Detail line usually means on red:
 | Detail | Most likely |
 |---|---|
 | `1 call(s), 0 result(s)` | the client stopped delivering the result (e.g. LiteLLM no longer passes `role: tool` messages to the hook) |
-| `0 call(s), 0 result(s)` with completions reached | the client's hooks do not fire — the OpenCode 1.18 case |
+| `0 call(s), 0 result(s)` with completions reached | the client reached the model but no tool was reported. Either its hooks did not fire, or **the model never called a tool** — which the stub model rules out here, so in this checker it points at the hooks. On real traffic the second is common (see the OpenCode run records) and must be ruled out before blaming the surface |
+| `1 call(s), 0 result(s)` on OpenCode specifically | `tool.execute.after` did not fire **and** the `message.part.updated` fallback did not deliver — on 1.18.31 the fallback is what carries results, so this means the fallback surface changed |
 | `sources [0]` instead of `[1]` | the record arrived without the reported-by-client mark — a defect in **our** code, not the surface |
 | `probe crashed: …` | the probe itself failed — probably the client API it calls has changed |
 
