@@ -40,26 +40,48 @@ both without caring about source.
 
 ## Status on OpenCode 1.18.x — read this before installing
 
-A maintainer traffic run on **1.18.25 and 1.18.31**
-(`docs/specs/pala-1/independent-runs/opencode-traffic-1/`) found the
-plugin loading and announcing itself, then emitting nothing: no report,
-no fetch attempt, and no `report failed` warning — so neither
-`tool.execute.*` nor the `message.part.updated` fallback ran. On those
-versions this plugin records nothing, and no README sentence claims
-otherwise.
+Two maintainer traffic runs, recorded in
+`docs/specs/pala-1/independent-runs/`:
 
-What did work in that run is the serve's own boundary record: nine of
-nine tool-offering turns produced a `TOOLS_OFFERED_NO_CALL` event
-without any client cooperation. That path needs no plugin.
+| | run 1 (`opencode-traffic-1`) | run 2 (`opencode-traffic-2`) |
+|---|---|---|
+| versions | 1.18.25 → 1.18.31 | 1.18.31 |
+| reported pairs on the chain | 0 | **1** — `read`, outcome `error`, bound by seq and hash |
+| `tool.execute.before` | no report arrived | **fired** (probe) |
+| `tool.execute.after` | — | **did not fire** |
+| path the result took | — | the `message.part.updated` fallback |
 
-Upstream has been moving plugin loading toward a v2 envelope
-(`export default { id, effect }`) while the plugins directory still
-*executes* the plugin function — which matches what we saw: our function
-ran, the hook map it returned was never dispatched. Before rewriting
-against that guess, run [`probe-hooks.js`](probe-hooks.js) beside this
-plugin for five minutes: it reports which surfaces actually fire on your
-version, into a JSONL file, touching nothing else. The rewrite follows
-the probe, not the other way round.
+So on 1.18.31 **the plugin works, but not through its primary path**:
+the call arrives from `tool.execute.before`, the result through the
+fallback, and the pair lands correctly bound. Keep the fallback — it is
+the only reason the result arrived.
+
+Three limits, stated rather than generalised:
+
+- **One pair, and it was an error.** The fallback is proven here for a
+  failed call only — the case upstream #27900 describes. Whether it also
+  delivers *successful* results when `after` stays silent has not been
+  observed yet.
+- **Run 1 is not yet explained.** There the model did execute tools and
+  the plugin sent nothing at all, on a version where `before` has since
+  been seen to fire. The most likely difference is that the plugin's
+  environment variables did not reach the OpenCode process; that is a
+  hypothesis, not a finding.
+- **Few tool calls happen at all** on a machine where OpenCode injects
+  an external skills catalogue into its system prompt: in run 2 the
+  prompt grew from ~9.6k to ~16.6k characters and small local models
+  declined to use OpenCode's own tools. That is upstream behaviour, not
+  this plugin — but it is why a session may produce no pairs.
+
+What works regardless of the client is the serve's own boundary record:
+a `TOOLS_OFFERED_NO_CALL` event for every turn where tools were offered
+and nothing structured came back (9 of 9 in run 1, 19 in run 2). That
+path needs no plugin.
+
+To see what fires on *your* version, run
+[`probe-hooks.js`](probe-hooks.js) beside this plugin for five minutes:
+it records which callbacks arrive, into a JSONL file, touching nothing
+else.
 
 ## Install
 
