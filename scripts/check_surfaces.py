@@ -174,6 +174,41 @@ def _version(cmd: list[str]) -> str | None:
         return "?"
 
 
+def _run_tree(cmd: list[str], *, cwd: Path, env: dict, timeout: float) -> bool:
+    """Run a client command; on timeout kill the whole process tree.
+
+    ``subprocess.run(timeout=)`` kills only the direct child. OpenCode
+    spawns children that outlive it, and a leftover instance makes the
+    next run hang in a way indistinguishable from a dead surface — on
+    Windows a traffic run found four stale processes, one holding
+    1.35 GB. A checker that poisons its own next sample is worse than
+    none. Returns False if the command timed out.
+    """
+    kwargs: dict = {"cwd": cwd, "env": env, "stdout": subprocess.DEVNULL,
+                    "stderr": subprocess.DEVNULL}
+    if os.name == "nt":
+        kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+    else:
+        kwargs["start_new_session"] = True
+    proc = subprocess.Popen(cmd, **kwargs)
+    try:
+        proc.wait(timeout=timeout)
+        return True
+    except subprocess.TimeoutExpired:
+        if os.name == "nt":
+            subprocess.run(["taskkill", "/F", "/T", "/PID", str(proc.pid)],
+                           capture_output=True, check=False)
+        else:
+            import signal
+
+            try:
+                os.killpg(proc.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+        proc.wait(timeout=30)
+        return False
+
+
 # ── probes ──────────────────────────────────────────────────────────────
 
 
@@ -275,11 +310,16 @@ def probe_opencode(workdir: Path) -> Result:
             json.dumps({"palimpsests": {"type": "api", "key": serve.api_key}}))
         env = dict(os.environ, HOME=str(home), PALIMPSESTS_SERVE_URL=serve.url,
                    PALIMPSESTS_SERVE_API_KEY=serve.api_key)
-        try:
-            subprocess.run(["opencode", "run", "read NOTES.md"], cwd=repo, env=env,
-                           capture_output=True, text=True, timeout=180)
-        except subprocess.TimeoutExpired:
-            pass  # the completion count below says whether it got anywhere
+        # The completion count below says whether it got anywhere; a
+        # timeout is not itself a verdict. OpenCode hangs on the first run
+        # after its provider baseURL changes (seen three times in a traffic
+        # run) and a retry usually succeeds — the probe points it at a new
+        # port every time, so allow exactly one retry before judging.
+        if not _run_tree(["opencode", "run", "read NOTES.md"],
+                         cwd=repo, env=env, timeout=180):
+            if serve.completions == 0:
+                _run_tree(["opencode", "run", "read NOTES.md"],
+                          cwd=repo, env=env, timeout=180)
         return _verdict("opencode", version, serve.pairs(), REPORTED, serve.completions)
 
 
