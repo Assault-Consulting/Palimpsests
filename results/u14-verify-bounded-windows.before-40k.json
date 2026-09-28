@@ -1,0 +1,327 @@
+[
+  {
+    "fixture": "calm-40000.pala",
+    "bytes": 8418766,
+    "repeats": 3,
+    "metrics": {
+      "pyheap_after_open_mb": {
+        "min": 13.218,
+        "max": 13.252,
+        "median": 13.252,
+        "n": 3
+      },
+      "pyheap_after_verify_mb": {
+        "min": 64.15,
+        "max": 64.179,
+        "median": 64.179,
+        "n": 3
+      },
+      "pyheap_peak_open_mb": {
+        "min": 13.218,
+        "max": 13.252,
+        "median": 13.252,
+        "n": 3
+      },
+      "pyheap_peak_verify_mb": {
+        "min": 67.418,
+        "max": 67.447,
+        "median": 67.447,
+        "n": 3
+      },
+      "records": {
+        "min": 40000.0,
+        "max": 40000.0,
+        "median": 40000.0,
+        "n": 3
+      },
+      "rss_after_open_mb": {
+        "min": 62.68,
+        "max": 63.441,
+        "median": 62.82,
+        "n": 3
+      },
+      "rss_after_report_mb": {
+        "min": 229.199,
+        "max": 229.574,
+        "median": 229.227,
+        "n": 3
+      },
+      "rss_after_verify_mb": {
+        "min": 227.363,
+        "max": 227.855,
+        "median": 227.391,
+        "n": 3
+      },
+      "t_chain_only_s": {
+        "min": 0.109,
+        "max": 0.125,
+        "median": 0.109,
+        "n": 3
+      },
+      "t_open_s": {
+        "min": 0.297,
+        "max": 0.297,
+        "median": 0.297,
+        "n": 3
+      },
+      "t_referential_derived_s": {
+        "min": 2.547,
+        "max": 3.156,
+        "median": 2.703,
+        "n": 3
+      },
+      "t_report_with_reader_s": {
+        "min": 0.766,
+        "max": 0.828,
+        "median": 0.781,
+        "n": 3
+      },
+      "t_verify_full_s": {
+        "min": 2.656,
+        "max": 3.265,
+        "median": 2.828,
+        "n": 3
+      }
+    },
+    "composition": {
+      "profile": "calm",
+      "requested_records": 40000,
+      "written_records": 40000,
+      "bytes": 8418766,
+      "counts": {
+        "AGGREGATE": 197,
+        "ANCHOR": 1,
+        "BOOT": 1,
+        "GENESIS": 1,
+        "KV_SAVE": 38902,
+        "MODEL_LOAD": 1,
+        "SESSION_END": 39,
+        "SESSION_START": 40,
+        "TOOL_CALL": 409,
+        "TOOL_RESULT": 409
+      },
+      "referential_records": 0,
+      "referential_share": 0.0,
+      "generation_seconds": 0.36,
+      "generator": "benchmarks/gen_reader_fixtures.py"
+    },
+    "rss_source": "windows WorkingSetSize",
+    "platform": "win32",
+    "canonical": false,
+    "note": "container/laptop runs are non-canonical; ratios travel, absolutes do not"
+  },
+  {
+    "fixture": "toolheavy-40000.pala",
+    "bytes": 8960229,
+    "repeats": 3,
+    "metrics": {
+      "pyheap_after_open_mb": {
+        "min": 13.411,
+        "max": 13.411,
+        "median": 13.411,
+        "n": 3
+      },
+      "pyheap_after_verify_mb": {
+        "min": 69.502,
+        "max": 69.502,
+        "median": 69.502,
+        "n": 3
+      },
+      "pyheap_peak_open_mb": {
+        "min": 13.412,
+        "max": 13.412,
+        "median": 13.412,
+        "n": 3
+      },
+      "pyheap_peak_verify_mb": {
+        "min": 72.77,
+        "max": 72.77,
+        "median": 72.77,
+        "n": 3
+      },
+      "records": {
+        "min": 40002.0,
+        "max": 40002.0,
+        "median": 40002.0,
+        "n": 3
+      },
+      "rss_after_open_mb": {
+        "min": 62.965,
+        "max": 63.137,
+        "median": 63.086,
+        "n": 3
+      },
+      "rss_after_report_mb": {
+        "min": 248.191,
+        "max": 248.426,
+        "median": 248.395,
+        "n": 3
+      },
+      "rss_after_verify_mb": {
+        "min": 242.25,
+        "max": 242.453,
+        "median": 242.352,
+        "n": 3
+      },
+      "t_chain_only_s": {
+        "min": 0.109,
+        "max": 0.125,
+        "median": 0.109,
+        "n": 3
+      },
+      "t_open_s": {
+        "min": 0.313,
+        "max": 0.343,
+        "median": 0.328,
+        "n": 3
+      },
+      "t_referential_derived_s": {
+        "min": 3.61,
+        "max": 4.047,
+        "median": 3.875,
+        "n": 3
+      },
+      "t_report_with_reader_s": {
+        "min": 0.797,
+        "max": 1.0,
+        "median": 0.828,
+        "n": 3
+      },
+      "t_verify_full_s": {
+        "min": 3.719,
+        "max": 4.156,
+        "median": 4.0,
+        "n": 3
+      }
+    },
+    "composition": {
+      "profile": "toolheavy",
+      "requested_records": 40000,
+      "written_records": 40002,
+      "bytes": 8960229,
+      "counts": {
+        "ANCHOR": 1,
+        "BOOT": 1,
+        "GENESIS": 1,
+        "INCIDENT_CANDIDATE": 5714,
+        "KV_SAVE": 5714,
+        "OVERSIGHT_ACK": 5714,
+        "SESSION_START": 1,
+        "TOOL_CALL": 11428,
+        "TOOL_RESULT": 11428
+      },
+      "referential_records": 11428,
+      "referential_share": 0.285686,
+      "generation_seconds": 0.36,
+      "generator": "benchmarks/gen_reader_fixtures.py"
+    },
+    "rss_source": "windows WorkingSetSize",
+    "platform": "win32",
+    "canonical": false,
+    "note": "container/laptop runs are non-canonical; ratios travel, absolutes do not"
+  },
+  {
+    "fixture": "encrypted-40000.pala",
+    "bytes": 8159904,
+    "repeats": 3,
+    "metrics": {
+      "pyheap_after_open_mb": {
+        "min": 12.789,
+        "max": 12.789,
+        "median": 12.789,
+        "n": 3
+      },
+      "pyheap_after_verify_mb": {
+        "min": 45.795,
+        "max": 45.795,
+        "median": 45.795,
+        "n": 3
+      },
+      "pyheap_peak_open_mb": {
+        "min": 12.79,
+        "max": 12.79,
+        "median": 12.79,
+        "n": 3
+      },
+      "pyheap_peak_verify_mb": {
+        "min": 49.062,
+        "max": 49.062,
+        "median": 49.062,
+        "n": 3
+      },
+      "records": {
+        "min": 40000.0,
+        "max": 40000.0,
+        "median": 40000.0,
+        "n": 3
+      },
+      "rss_after_open_mb": {
+        "min": 61.656,
+        "max": 62.062,
+        "median": 61.656,
+        "n": 3
+      },
+      "rss_after_report_mb": {
+        "min": 158.949,
+        "max": 159.285,
+        "median": 159.246,
+        "n": 3
+      },
+      "rss_after_verify_mb": {
+        "min": 158.742,
+        "max": 159.059,
+        "median": 158.957,
+        "n": 3
+      },
+      "t_chain_only_s": {
+        "min": 0.094,
+        "max": 0.125,
+        "median": 0.094,
+        "n": 3
+      },
+      "t_open_s": {
+        "min": 0.328,
+        "max": 0.437,
+        "median": 0.343,
+        "n": 3
+      },
+      "t_referential_derived_s": {
+        "min": 2.078,
+        "max": 2.906,
+        "median": 2.141,
+        "n": 3
+      },
+      "t_report_with_reader_s": {
+        "min": 0.531,
+        "max": 0.844,
+        "median": 0.75,
+        "n": 3
+      },
+      "t_verify_full_s": {
+        "min": 2.172,
+        "max": 3.031,
+        "median": 2.235,
+        "n": 3
+      }
+    },
+    "composition": {
+      "profile": "encrypted",
+      "requested_records": 40000,
+      "written_records": 40000,
+      "bytes": 8159904,
+      "counts": {
+        "BOOT": 1,
+        "EVENT_SEALED": 39998,
+        "GENESIS": 1
+      },
+      "referential_records": 0,
+      "referential_share": 0.0,
+      "generation_seconds": 1.17,
+      "generator": "benchmarks/gen_reader_fixtures.py"
+    },
+    "rss_source": "windows WorkingSetSize",
+    "platform": "win32",
+    "canonical": false,
+    "note": "container/laptop runs are non-canonical; ratios travel, absolutes do not"
+  }
+]
