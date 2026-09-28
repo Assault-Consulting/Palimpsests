@@ -1,0 +1,49 @@
+﻿== date
+2026-09-28 17:13:50Z
+== before
+d70a61a440660f53cc243f2e6fad27926cfaee4c
+== after
+2b1321f17fce4f5f3802d0ccd187585eb76a954f
+== os
+Caption     : Майкрософт Windows 11 Pro
+Version     : 10.0.26200
+BuildNumber : 26200
+== cpu
+Name                      : Intel(R) Core(TM) Ultra 9 185H
+NumberOfCores             : 16
+NumberOfLogicalProcessors : 22
+MaxClockSpeed             : 2500
+== memory
+31,5 GB installed
+== power
+Power Scheme GUID: 381b4222-f694-41f0-9685-ff5bb260df2e  (Збалансований)
+== python
+Python 3.12.10
+
+== background load at run time ==
+﻿== background load snapshot (run taken with these present) ==
+2026-09-28 16:57:30Z
+Name               WS_MB CPU      
+----               ----- ---      
+Memory Compression  1200          
+chrome               757 179,46875
+vmmemWSL             714          
+Code                 552 20,578125
+Code                 428 620,71875
+Code                 391 4,359375 
+Code                 387 18,890625
+chrome               386 37,921875
+chrome               361 192,125  
+MsMpEng              348          
+Code                 334 186,3125 
+chrome               319 58,484375
+== memory ==
+installed : 31,5 GB
+free      : 14,4 GB
+committed : 17,1 GB
+== process groups ==
+Name    Count
+----    -----
+other     311
+browser    43
+docker     12

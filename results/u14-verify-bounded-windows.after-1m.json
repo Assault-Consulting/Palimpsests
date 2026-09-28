@@ -1,0 +1,113 @@
+[
+  {
+    "fixture": "calm-1000000.pala",
+    "bytes": 210471082,
+    "repeats": 3,
+    "metrics": {
+      "pyheap_after_open_mb": {
+        "min": 13.987,
+        "max": 13.987,
+        "median": 13.987,
+        "n": 3
+      },
+      "pyheap_after_verify_mb": {
+        "min": 43.772,
+        "max": 43.772,
+        "median": 43.772,
+        "n": 3
+      },
+      "pyheap_peak_open_mb": {
+        "min": 13.988,
+        "max": 13.988,
+        "median": 13.988,
+        "n": 3
+      },
+      "pyheap_peak_verify_mb": {
+        "min": 145.913,
+        "max": 145.913,
+        "median": 145.913,
+        "n": 3
+      },
+      "records": {
+        "min": 1000000.0,
+        "max": 1000000.0,
+        "median": 1000000.0,
+        "n": 3
+      },
+      "rss_after_open_mb": {
+        "min": 241.02,
+        "max": 242.066,
+        "median": 241.059,
+        "n": 3
+      },
+      "rss_after_report_mb": {
+        "min": 568.742,
+        "max": 579.254,
+        "median": 570.285,
+        "n": 3
+      },
+      "rss_after_verify_mb": {
+        "min": 568.715,
+        "max": 568.781,
+        "median": 568.73,
+        "n": 3
+      },
+      "t_chain_only_s": {
+        "min": 3.579,
+        "max": 4.5,
+        "median": 3.672,
+        "n": 3
+      },
+      "t_open_s": {
+        "min": 6.765,
+        "max": 8.031,
+        "median": 7.844,
+        "n": 3
+      },
+      "t_referential_derived_s": {
+        "min": 39.015,
+        "max": 41.969,
+        "median": 41.172,
+        "n": 3
+      },
+      "t_report_with_reader_s": {
+        "min": 44.484,
+        "max": 45.312,
+        "median": 44.719,
+        "n": 3
+      },
+      "t_verify_full_s": {
+        "min": 42.594,
+        "max": 46.469,
+        "median": 44.844,
+        "n": 3
+      }
+    },
+    "composition": {
+      "profile": "calm",
+      "requested_records": 1000000,
+      "written_records": 1000000,
+      "bytes": 210471082,
+      "counts": {
+        "AGGREGATE": 4947,
+        "ANCHOR": 1,
+        "BOOT": 1,
+        "GENESIS": 1,
+        "KV_SAVE": 972578,
+        "MODEL_LOAD": 1,
+        "SESSION_END": 999,
+        "SESSION_START": 1000,
+        "TOOL_CALL": 10236,
+        "TOOL_RESULT": 10236
+      },
+      "referential_records": 0,
+      "referential_share": 0.0,
+      "generation_seconds": 14.16,
+      "generator": "benchmarks/gen_reader_fixtures.py"
+    },
+    "rss_source": "windows WorkingSetSize",
+    "platform": "win32",
+    "canonical": false,
+    "note": "container/laptop runs are non-canonical; ratios travel, absolutes do not"
+  }
+]

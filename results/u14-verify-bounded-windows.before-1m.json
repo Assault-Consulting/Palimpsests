@@ -1,0 +1,113 @@
+[
+  {
+    "fixture": "calm-1000000.pala",
+    "bytes": 210471082,
+    "repeats": 3,
+    "metrics": {
+      "pyheap_after_open_mb": {
+        "min": 322.698,
+        "max": 322.698,
+        "median": 322.698,
+        "n": 3
+      },
+      "pyheap_after_verify_mb": {
+        "min": 1593.239,
+        "max": 1593.239,
+        "median": 1593.239,
+        "n": 3
+      },
+      "pyheap_peak_open_mb": {
+        "min": 322.698,
+        "max": 322.698,
+        "median": 322.698,
+        "n": 3
+      },
+      "pyheap_peak_verify_mb": {
+        "min": 1690.448,
+        "max": 1690.448,
+        "median": 1690.448,
+        "n": 3
+      },
+      "records": {
+        "min": 1000000.0,
+        "max": 1000000.0,
+        "median": 1000000.0,
+        "n": 3
+      },
+      "rss_after_open_mb": {
+        "min": 934.859,
+        "max": 935.078,
+        "median": 934.953,
+        "n": 3
+      },
+      "rss_after_report_mb": {
+        "min": 4776.934,
+        "max": 4778.953,
+        "median": 4778.555,
+        "n": 3
+      },
+      "rss_after_verify_mb": {
+        "min": 4767.391,
+        "max": 4767.719,
+        "median": 4767.574,
+        "n": 3
+      },
+      "t_chain_only_s": {
+        "min": 2.906,
+        "max": 3.438,
+        "median": 2.969,
+        "n": 3
+      },
+      "t_open_s": {
+        "min": 13.875,
+        "max": 14.625,
+        "median": 14.562,
+        "n": 3
+      },
+      "t_referential_derived_s": {
+        "min": 98.718,
+        "max": 104.578,
+        "median": 103.249,
+        "n": 3
+      },
+      "t_report_with_reader_s": {
+        "min": 18.078,
+        "max": 20.938,
+        "median": 20.719,
+        "n": 3
+      },
+      "t_verify_full_s": {
+        "min": 101.687,
+        "max": 107.484,
+        "median": 106.687,
+        "n": 3
+      }
+    },
+    "composition": {
+      "profile": "calm",
+      "requested_records": 1000000,
+      "written_records": 1000000,
+      "bytes": 210471082,
+      "counts": {
+        "AGGREGATE": 4947,
+        "ANCHOR": 1,
+        "BOOT": 1,
+        "GENESIS": 1,
+        "KV_SAVE": 972578,
+        "MODEL_LOAD": 1,
+        "SESSION_END": 999,
+        "SESSION_START": 1000,
+        "TOOL_CALL": 10236,
+        "TOOL_RESULT": 10236
+      },
+      "referential_records": 0,
+      "referential_share": 0.0,
+      "generation_seconds": 14.16,
+      "generator": "benchmarks/gen_reader_fixtures.py"
+    },
+    "rss_source": "windows WorkingSetSize",
+    "platform": "win32",
+    "canonical": false,
+    "note": "container/laptop runs are non-canonical; ratios travel, absolutes do not"
+  }
+]
