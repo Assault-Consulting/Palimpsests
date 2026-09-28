@@ -90,6 +90,45 @@ first, RFC 3161 as the offline fallback), a separate track. In our
 words: *the head becomes bound to a hardware identity that cannot be
 copied off the host* — not "legal non-repudiation".
 
+## Amendment (2026-09-28) — the mechanism requires an authenticated session
+
+Found while integrating the anchor source into a downstream reader, and
+measured on SoftHSM 2.6.1 before anything was changed.
+
+The claim above — a head the host *can read but not silently rewrite* —
+held only on the path that logs in to the token. Without a PIN it failed
+twice over:
+
+- **Silently absent.** The stored object was private by the token's
+  default, so an unauthenticated session could not see it, and the
+  reader reported *absent* while the anchor sat on the token.
+- **Steerable.** PKCS#11 lets any host process open a read-write public
+  session without a PIN and create a *public* data object under the same
+  label. An unauthenticated read then returned that object as the
+  answer: a completeness check against a head chosen by an unprivileged
+  local process.
+
+Making the object public would repair the first and worsen the second:
+measured, a no-PIN session then destroyed and replaced the anchor, and
+the reader returned the replacement — the rewrite tier B exists to
+prevent.
+
+So the tier-B *mechanism* is: **a private object, read through an
+authenticated session.** Concretely:
+
+- `Pkcs11Anchor.current_head()` refuses without a PIN, as an
+  `AnchorSourceError` naming the reason, rather than answering.
+- `Pkcs11AnchorStore` writes the object with `CKA_PRIVATE` set
+  explicitly, not by the token's default.
+- A reader with the PIN that finds more than one object under the label
+  still raises. That error is the evidence of a planted decoy; it is
+  deliberately not "fixed" by filtering the lookup to private objects,
+  which would answer correctly and hide the attempt.
+- The store refuses, and destroys nothing, when more than one object
+  already sits under the label. It used to clear every match before
+  writing — which would have erased a planted decoy on the next ordinary
+  write, and the evidence with it.
+
 ## Consequences
 
 - New extra ``[pkcs11]``; new module ``audit/anchors_pkcs11.py``; no
