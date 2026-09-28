@@ -88,8 +88,24 @@ class _TokenHandle:
             message, source_kind=self.source_kind, source_detail=self.source_detail
         )
 
-    def _token(self):
-        pkcs11, _, _ = _pkcs11()
+    def _pkcs11_for_reading(self):
+        """``_pkcs11()`` for the read path, where a missing extra is one
+        failed link rather than a failed check.
+
+        ``ChainedAnchorSource`` records an ``AnchorSourceError`` as that
+        link's outcome and consults the next source. ``Pkcs11Unavailable``
+        is a ``RuntimeError``, so it used to escape the chain and leave
+        every other source unconsulted — a packaging state breaking
+        availability-first resolution. The store keeps the loud error: a
+        caller *writing* an anchor must not get a quiet per-link outcome.
+        """
+        try:
+            return _pkcs11()
+        except Pkcs11Unavailable as e:
+            raise self._error(str(e)) from e
+
+    def _token(self, *, reading: bool = False):
+        pkcs11, _, _ = self._pkcs11_for_reading() if reading else _pkcs11()
         try:
             lib = pkcs11.lib(self._module_path)
         except Exception as e:
@@ -99,9 +115,9 @@ class _TokenHandle:
         except Exception as e:
             raise self._error(f"token {self._token_label!r} not found: {e}") from e
 
-    def _session(self, *, rw: bool):
-        _, _, _ = _pkcs11()
-        token = self._token()
+    def _session(self, *, rw: bool, reading: bool = False):
+        _, _, _ = self._pkcs11_for_reading() if reading else _pkcs11()
+        token = self._token(reading=reading)
         try:
             return token.open(rw=rw, user_pin=self._user_pin)
         except Exception as e:
@@ -126,6 +142,18 @@ class Pkcs11Anchor(_TokenHandle):
     with a 32-byte value answers. Anything else raises
     ``AnchorSourceError``: present but unreadable must never degrade
     into silently absent.
+
+    **A PIN is required.** The anchor is a private object, invisible to an
+    unauthenticated session — so without a PIN a genuine anchor reads as
+    *absent*. Worse, PKCS#11 lets any host process open a read-write
+    public session and create a *public* object under the same label,
+    which an unauthenticated read then returns as the answer: measured on
+    SoftHSM 2.6.1, a no-PIN reader answered with a head planted by a
+    process that held no PIN. ADR-0004's tier-B claim — a head the host
+    can read but cannot silently rewrite — holds only on the
+    authenticated path, so the unauthenticated one refuses. The
+    constructor keeps accepting ``user_pin=None`` so the refusal happens
+    where every other unreadable source fails: at ``current_head()``.
     """
 
     def __init__(
@@ -141,8 +169,15 @@ class Pkcs11Anchor(_TokenHandle):
         )
 
     def current_head(self) -> AnchorReading | None:
-        _, Attribute, _ = _pkcs11()
-        with self._session(rw=False) as session:
+        _, Attribute, _ = self._pkcs11_for_reading()
+        if self._user_pin is None:
+            raise self._error(
+                "no PIN: a private anchor object is invisible to an "
+                "unauthenticated session, and a public object under the "
+                "same label can be planted by any host process without "
+                "one — pass user_pin"
+            )
+        with self._session(rw=False, reading=True) as session:
             objects = self._find(session)
             if not objects:
                 return None
@@ -175,6 +210,17 @@ class Pkcs11AnchorStore(_TokenHandle):
     a concurrent reader can observe is *absent*, never torn. ``meta``
     is accepted for interface compatibility and not persisted: the
     token object is the head, nothing else.
+
+    The object is written **private** explicitly, not by whatever the
+    token defaults to: a public object is rewritable by any host process
+    without a PIN, which is the thing tier B exists to prevent.
+
+    With more than one object already under the label the store refuses
+    and destroys nothing. Two objects mean something other than this
+    store wrote there — a planted decoy beside the genuine anchor — and
+    the reader's ambiguity error is the operator's only evidence of it.
+    Clearing every match before writing would erase that evidence on the
+    next ordinary write.
     """
 
     def __init__(
@@ -196,7 +242,14 @@ class Pkcs11AnchorStore(_TokenHandle):
             raise ValueError(f"anchor head must be {_HEAD_LEN} bytes, got {len(head)}")
         _, Attribute, ObjectClass = _pkcs11()
         with self._session(rw=True) as session:
-            for obj in self._find(session):
+            existing = self._find(session)
+            if len(existing) > 1:
+                raise self._error(
+                    f"{len(existing)} objects match label {self._object_label!r} — "
+                    "refusing to overwrite: more than one object means something "
+                    "else wrote here, and removing them would erase the evidence"
+                )
+            for obj in existing:
                 try:
                     obj.destroy()
                 except Exception as e:
@@ -209,6 +262,7 @@ class Pkcs11AnchorStore(_TokenHandle):
                         Attribute.APPLICATION: _APPLICATION,
                         Attribute.VALUE: head,
                         Attribute.TOKEN: True,
+                        Attribute.PRIVATE: True,
                     }
                 )
             except Exception as e:
