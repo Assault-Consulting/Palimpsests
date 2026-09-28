@@ -172,17 +172,24 @@ def build_report(
     re-opened. Closing what you did not open would surprise a caller
     who still wants to use it afterward; that stays their
     responsibility, the same as it always was for a reader they
-    themselves opened. ``anchor_source`` is ignored when ``reader`` is
-    given: the reader's own anchor, set at the time *it* was opened,
-    is what a shared reader already answers with, and silently
-    substituting a different one here would verify against an anchor
-    the caller never asked this call to use.
+    themselves opened. ``reader`` and ``anchor_source`` together raise
+    ``ValueError``: a shared reader answers with the anchor it was opened
+    with, so the one passed here could not be honoured — and it used to
+    be dropped silently, handing back a report checked against a
+    different anchor than the caller named. Pass the anchor when opening
+    the reader, or pass no reader.
 
     ``reader`` must be open on the same bytes as ``source`` names. This
     is not checked — the caller already holds both and is the only one
     in a position to know they agree; a report built from a mismatched
     pair would name one file's identity over another file's verdict.
     """
+    if reader is not None and anchor_source is not None:
+        raise ValueError(
+            "build_report: pass anchor_source or reader, not both — a shared "
+            "reader answers with the anchor it was opened with, so this "
+            "anchor_source would be ignored; open the reader with it instead"
+        )
     path = Path(source)
     # With a reader supplied, the bytes it already holds (a mapping for
     # ``open()``, the object for ``from_bytes()``) are the bytes; reading

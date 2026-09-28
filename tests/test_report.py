@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import json
+import pytest
 from palimpsests.audit.pala_writer import PalaWriter
 from palimpsests.audit.report import REPORT_FORMAT, build_report
 
@@ -193,18 +194,30 @@ def test_a_passed_reader_is_not_closed_by_build_report(tmp_path):
         reader.close()
 
 
-def test_a_passed_reader_s_own_anchor_is_used_over_anchor_source(tmp_path):
+def test_a_passed_reader_answers_with_its_own_anchor(tmp_path):
     from palimpsests.audit.anchors import ManualAnchor
     from palimpsests.audit.reader import AuditReader
 
     log = _chain(tmp_path)
     head = build_report(log).data["chain"]["head"]
 
-    # The reader is opened against the real head; anchor_source here
-    # names an anchor that does not exist and must be ignored — passing
-    # a reader means the reader's own anchor decides, not this parameter.
+    # The anchor is given where the reader is opened, and that is what
+    # the report is checked against.
     with AuditReader.open(log, anchor=ManualAnchor(head)) as reader:
-        report = build_report(
-            log, anchor_source=ManualAnchor("00" * 32), reader=reader
-        ).data
+        report = build_report(log, reader=reader).data
     assert report["completeness"]["complete_to_anchor"] is True
+
+
+def test_a_reader_and_a_different_anchor_source_are_refused(tmp_path):
+    # This combination used to return a report checked against the
+    # reader's anchor while the caller had named another — the named one
+    # was dropped without a word. Refusing it is a behaviour change only
+    # for callers who were already getting a silently wrong answer.
+    from palimpsests.audit.anchors import ManualAnchor
+    from palimpsests.audit.reader import AuditReader
+
+    log = _chain(tmp_path)
+    head = build_report(log).data["chain"]["head"]
+    with AuditReader.open(log, anchor=ManualAnchor(head)) as reader:
+        with pytest.raises(ValueError, match="not both"):
+            build_report(log, anchor_source=ManualAnchor("00" * 32), reader=reader)
