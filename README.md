@@ -10,10 +10,11 @@
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Assault-Consulting/Palimpsests/badge)](https://scorecard.dev/viewer/?uri=github.com/Assault-Consulting/Palimpsests)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21978107.svg)](https://doi.org/10.5281/zenodo.21978107)
 
-> **Status: v0.11 — the audit format is the deliverable, its consumer
-> surface is public, and the trail now reaches transparency services: one
-> signed statement per chain head, construction reproduced byte-for-byte
-> twice, a registration with a verified receipt on the record
+> **Status: v0.12 — the audit format is the deliverable. The reader now
+> verifies a million-record chain in bounded memory (measured on hardware:
+> 4.8 GB → 0.57 GB), a prefix of a chain can be proven a prefix without
+> shipping the rest, and the chain records the tool loops it cannot see
+> as well as the ones it can
 > ([what a receipt proves — and what it doesn't](docs/INTEROP-SCITT.md)).** The **[PALA-1
 > format](docs/specs/pala-1/PALA-1.md)** is **frozen at v1.0**: a
 > self-describing, byte-level audit format with byte-exact test vectors, a CC0
@@ -196,6 +197,7 @@ with its limits — see **[Standards posture](SECURITY.md#standards-posture)**.
   An auditor reading the chain sees not only what the engine did but what it
   declined to do, and when. Silence would be the failure; the record is the
   guard's receipt.
+
 
 ---
 
@@ -501,6 +503,14 @@ the novelty is in this composition and its seams, not in a new inference kernel.
       rotation with a policy, a PKCS#11 anchor store, `serve` auth and real
       token usage, `pala report`), reader surface for downstream tooling,
       and release notes that name what `verify()` now costs (tracked as U14).
+- [x] **v0.12 — the reader keeps up, and the chain sees the edges** —
+      `AuditReader.verify()` bounded (at a million records 4.8 GB → 0.57 GB
+      resident, measured on hardware against 0.11), prefix-consistency
+      proofs with `pala consistency`, `TOOLS_OFFERED_NO_CALL` and
+      client-reported tool events marked as such, reporting integrations
+      for OpenCode, LiteLLM and MCP with their limits stated, a fix for a
+      PKCS#11 anchor that answered without a PIN, and the IETF
+      Internet-Draft.
 - [ ] **Later** — assurance tiers B/C (hardware root of trust, external
       witness); a discrete-GPU run (the integrated GPU flatters every
       prefill-saving mechanism, so these ratios compress on fast prefill); a
