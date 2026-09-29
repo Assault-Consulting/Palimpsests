@@ -247,8 +247,27 @@ def main() -> None:
     name = f"{args.profile}-{args.records}"
     fixture = args.out / f"{name}.pala"
     fixture.unlink(missing_ok=True)  # a generator owns its output
+    if args.profile == "encrypted":
+        # Fail before writing anything. Without this the profile opened the
+        # file, wrote the unsealed prelude, and only then hit the missing
+        # extra — leaving a partial .pala (zero bytes on Windows, the
+        # prelude elsewhere) that looks exactly like a fixture. The U14
+        # hardware run found one.
+        try:
+            import cryptography  # noqa: F401, PLC0415
+        except ModuleNotFoundError:
+            raise SystemExit(
+                "error: the 'encrypted' profile seals bodies and needs the [pala] "
+                "extra: pip install -e '.[pala]'"
+            ) from None
     t0 = time.monotonic()
-    counts = PROFILES[args.profile](fixture, args.records)
+    try:
+        counts = PROFILES[args.profile](fixture, args.records)
+    except BaseException:
+        # Whatever stopped generation, the file on disk is not a fixture.
+        # A benchmark run on it would report numbers about nothing.
+        fixture.unlink(missing_ok=True)
+        raise
     dt = time.monotonic() - t0
 
     total = sum(counts.values())
