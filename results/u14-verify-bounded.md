@@ -119,3 +119,48 @@ slower by about the same amount; on 250k the sum is within noise. What
 remains resident after `verify()` at 250k is the seq map for the
 referential pass and the verifier's per-record head list — known,
 bounded, and the subject of the track's remaining items.
+
+## Addendum — PR-4, the hardware run (2026-09-28)
+
+The run this file kept waiting for is in: `u14-verify-bounded-windows.md`,
+on an Intel Core Ultra 9 185H under Windows 11, `v0.11.0` against `main`
+minutes apart on one machine, with the 1 000 000-record chain this
+container could not finish.
+
+**Those are the numbers to quote**, with the three qualifiers that
+travel with them: measured on hardware, by a maintainer rather than an
+independent party, and in Windows *working set*, which is close to but
+not the same quantity as the Linux VmRSS in this file. The harness
+still stamps `"canonical": false` on every result it writes — correctly,
+since a script cannot know what machine it runs on — and that flag is
+left as it is. This paragraph is the judgement it defers to.
+
+At one million records: resident memory after `verify()` 4767 → 569 MB,
+Python-heap peak 1690 → 146 MB, `verify()` 102–107 → 43–46 s.
+
+That run reported two regressions at equal prominence. Both were checked
+here before the release, with `v0.11.0` and `main` run **interleaved on
+one machine** so that background load falls on both halves alike:
+
+- **"Chain pass alone, 24 % slower" is not reproduced as an effect of
+  the code.** The function behind it did change between the two points
+  (`verify_headers` now delegates to the one-pass form that also builds
+  the advisory), so the suspicion was fair. Interleaved, five repeats
+  each, 200 000 records: `v0.11.0` 0.70 s and 0.67 s, `main` 0.68 s and
+  0.71 s — inside the spread of either. The Windows halves ran minutes
+  apart under a load the run itself recorded (43 browser processes,
+  Docker, Ollama, a WSL VM), and their ranges nearly touch. Read it as
+  that machine's noise until an interleaved run on hardware says
+  otherwise.
+- **"`build_report(reader=)` 2.2× slower" is real, and it is cost that
+  moved rather than cost that grew.** In `v0.11.0`, `verify()` left the
+  whole chain decoded in memory and the report's boot and span views
+  read from it. `verify()` no longer materialises the chain — that is
+  where the eightfold memory reduction comes from — so the report walks
+  the headers itself: profiled at 200 000 records, `structure()` is about
+  60 % of the report's time after a `verify()`. Verify and report
+  together are still faster than before (120–128 s → 87–92 s at 1M on
+  the hardware run). The repair is to fold the structural views into the
+  single pass `verify()` already makes and keep them beside the verdict;
+  it is scheduled for 0.13 rather than done in the release that closes
+  the memory regression.
