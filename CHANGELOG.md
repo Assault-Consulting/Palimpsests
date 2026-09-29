@@ -8,30 +8,189 @@ API changes.
 
 ## [Unreleased]
 
-### Added
+## [0.12.0] — 2026-09-29
 
-- **PALA-1 submitted to the IETF as an Internet-Draft.**
-  `draft-sparysh-pala-audit-00` was uploaded on 2026-09-02 and posted on
-  2026-09-03; it expires 2027-03-07.
-  <https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/>
+**Additive for the wire — the PALA-1 core is unchanged (frozen at v1.0).**
+No envelope byte changes, no `format_version` bump; the core
+`test-vectors.json` is byte-identical to 0.11.0. The inference profile
+gains two additive revisions (r4, r5), each with regenerated companion
+vectors. Four things happen in this release. The reader's cost
+regression from 0.11 is closed and measured on hardware. A security
+defect in the PKCS#11 anchor source is fixed. The chain starts to see
+tool loops that run outside the serve, and says plainly how much it
+sees. And a prefix of a chain can now be proven a prefix without
+shipping the chain.
 
-  This is an **individual submission**, not an IETF standard and not a
-  working-group document. No one has reviewed or approved it; anyone may
-  submit an Internet-Draft. What the submission provides is a dated,
-  citable, permanent URL for a specification that already existed.
+This release contains **two breaking API changes** and **one behaviour
+change**, all listed under *Changed*. Under 0.x that makes it a minor
+release.
 
-  The document presents the frozen v1.0 wire format as it is and does not
-  revise it. `docs/specs/pala-1/PALA-1.md` remains the normative source
-  and `test-vectors.json` remains the interoperability artefact; the
-  I-D is a presentation of both, in RFC form. Nothing in the wire, the
-  vectors or the verification record changes because a publication
-  document now exists.
+### Security
 
-  The source lands in `standards/`, where the CI spec-build job has been
-  waiting for it. Rendered `.xml` and `.txt` are build outputs and are
-  not committed.
+- **A PKCS#11 anchor read without a PIN could answer with a head planted
+  by any host process** (#260). `Pkcs11AnchorStore` did not set
+  `CKA_PRIVATE`, so the token's default applied (`True` on SoftHSM),
+  and an unauthenticated session could not see the genuine anchor: the
+  reader reported *absent* while the anchor sat on the token. Worse,
+  PKCS#11 lets any process open a read-write public session without a
+  PIN and create a public object under the same label, which the
+  unauthenticated read then returned as the answer. Measured on
+  SoftHSM 2.6.1 and reproduced independently before the fix. Now:
+  `Pkcs11Anchor.current_head()` refuses without a PIN; the store writes
+  the object private explicitly; a reader with the PIN that finds more
+  than one object still raises — that error is the evidence of a
+  planted decoy and is deliberately not filtered away; and the store
+  refuses, destroying nothing, when a decoy is already present, instead
+  of erasing it on the next write. ADR-0004 carries an amendment: the
+  tier-B mechanism is *a private object, read through an authenticated
+  session*. Found while integrating 0.11.0 into Auditor.
 
-  The submission passed the datatracker's idnits check with no nits.
+### Fixed — the reader's cost (U14)
+
+- **`AuditReader.verify()` is bounded** (#224, #225, #226, #227). 0.11
+  shipped a named regression: `verify()` decoded every record to
+  resolve the few that reference others, and on a million-record chain
+  that ended in SIGKILL. Now one header pass yields the verdict and the
+  advisory together; the referential pass decodes only the records that
+  reference something and the records they name; headers live in three
+  offset arrays instead of a copied `bytes` each; and the decode cache
+  is filled under a lock, so concurrent first use decodes once, not
+  once per thread. Every answer is byte-identical to 0.11's.
+- **Measured on hardware** (#262): Intel Core Ultra 9 185H, Windows 11,
+  `v0.11.0` against this release on one machine. At 1 000 000 records,
+  resident memory after `verify()` 4767 → 569 MB, Python-heap peak
+  1690 → 146 MB, `verify()` 102–107 → 43–46 s. A maintainer run, in
+  Windows working set; `results/u14-verify-bounded.md` says which
+  figures to quote and why.
+- **`pala selftest` prints a characteristic line** (#231) — records/s
+  and the reader's Python-heap cost per record over a 20 000-record
+  synthetic chain, with a tripwire at 512 bytes per record, so the next
+  regression of this class fails the selftest instead of reaching a
+  user.
+
+### Fixed — other
+
+- **A PKCS#11 link in an anchor chain no longer takes the whole chain
+  down** (#260). `Pkcs11Unavailable` escaped `ChainedAnchorSource` when
+  the `[pkcs11]` extra was missing, leaving every other source
+  unconsulted; on the read path it is now that link's error, and the
+  chain continues.
+- **`palimpsests-serve` checks its audit log before binding the port**
+  (#248). Without SQLCipher the endpoint used to start, announce itself,
+  and then fail inside every `GET /v1/models`. It now prints the reason
+  and both remedies and exits 1.
+- **An unreachable engine is a 503, not a 500** (#250), in the OpenAI
+  error shape: `engine_unavailable`, `model_not_found` (404), or
+  `engine_error` (502).
+- **A cancellation carries its call's source** (#250). The `cancelled`
+  result written at shutdown for a client-reported call was unmarked, so
+  one pair could carry two provenances.
+- **The suite passes with the encryption extra installed** (#249). Ten
+  tests tampered with the audit database through plain `sqlite3` and
+  failed on exactly the installs `[encryption]` exists for.
+- **The fixture generator writes nothing it cannot finish** (#263).
+- Four broken relative links in the SCITT run records (#246).
+
+### Added — tool loops the serve cannot see (WS-INT)
+
+- **`TOOLS_OFFERED_NO_CALL`** (kind 10, profile r4; #211, #213): a turn
+  where tools were offered and no structured call came back is recorded
+  as exactly that. The boundary of what the serve observes is on the
+  chain rather than silent.
+- **`POST /v1/pala/events`** and **`EVT_SOURCE`** (profile r5; #214,
+  #215): a client whose model runs its tool loop in text can report the
+  calls and results it executed. They land as kinds 8/9 marked
+  `reported-by-client`, forever distinguishable from events the serve
+  parsed off its own wire. The chain proves the report and when — not
+  that a tool ran. `DecodedRecord` exposes `source` and `source_name`
+  (#229).
+- **Three reporting integrations** (#216, #234): an OpenCode plugin, a
+  LiteLLM callback, and an MCP stdio proxy, each dependency-free, each
+  never blocking the client, each with a README saying what a reported
+  record does and does not prove. See *Known limits*.
+- **`probe-hooks.js`** (#248) — a no-op OpenCode plugin that records
+  which callbacks actually fire on a given version.
+
+### Added — proofs
+
+- **Prefix-consistency proofs** (#228, #230): RFC 6962 / 9162
+  consistency proofs over a chain's record hashes, and
+  `pala consistency` / `pala consistency-verify`. Eleven published proof
+  vectors with negative cases beside them; the suite checks the
+  construction against the RFC 6962 algorithm for every pair of sizes
+  up to 70 records.
+  An archive can show that the chain it holds is a prefix of a later
+  one without handing over the later one.
+
+### Added — tooling
+
+- **`palimpsests --version`** (#239) — package, frozen core spec, and
+  the profile revision read from the packaged vectors rather than
+  written as a constant.
+- **`scripts/check_surfaces.py`** (#254, #258) — a weekly check that the
+  clients we integrate with still deliver what the adapters rely on,
+  GREEN / RED / SKIP, with RED reserved for a surface that changed and
+  SKIP for a machine that could not reach it. `docs/SURFACE-CHECKER.md`.
+- **`scripts/check_links.py`** (#239), now run by CI (#259).
+- **The reader benchmark measures memory on Windows** (#255).
+- **`scripts/distribution_metrics.py`** and a dated baseline (#235).
+
+### Added — documentation and standards
+
+- **PALA-1 submitted to the IETF as an Internet-Draft** (#212).
+  `draft-sparysh-pala-audit-00`, uploaded 2026-09-02, posted
+  2026-09-03, expires 2027-03-07:
+  <https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/>. An
+  **individual submission** — not an IETF standard and not a
+  working-group document; no one has reviewed or approved it. It
+  presents the frozen v1.0 format as it is; `PALA-1.md` remains the
+  normative source and `test-vectors.json` the interoperability
+  artefact. It passed the datatracker's idnits check with no nits.
+- **`docs/START-HERE.md`** (#233) — the plain-words entry point.
+- **`docs/USAGE.md` brought up to what ships** (#251); it had described
+  the v0.3 state.
+- ISO/IEC 24970 bounded-storage mapping (#217); a retention-continuation
+  profile design, for review, no code (#219); AAC interoperability
+  run 1 (#223); a LiteLLM docs page and its submission recipe (#252,
+  #253).
+
+### Added — evidence on the record
+
+- **Two OpenCode traffic runs** (#247, #258). The second produced the
+  first reported-by-client pair on a chain, and showed the serve's
+  requests identical to direct model requests.
+- **U14 on hardware** (#262), above.
+- **Serialization-cost measurement** (#238, #239), in `results/`, with
+  who measured and who compiled stated separately.
+
+### Changed
+
+- **Breaking:** `AuditReader.acknowledged_candidates()` returns
+  `dict[candidate_seq, ack_seq]` instead of a `set` (#236). Membership
+  and iteration still work; set algebra on the old return value does
+  not.
+- **Breaking:** `Pkcs11Anchor.current_head()` raises `AnchorSourceError`
+  when constructed without a PIN (#260). It used to return `None` or a
+  planted head; see *Security*.
+- **Behaviour:** `build_report(reader=…, anchor_source=…)` raises
+  `ValueError` (#261). The `anchor_source` used to be dropped silently.
+- **CI** (#259): the suite also runs with the encryption extra; the
+  clean-room job starts the serve and requires a clean 503 from an
+  engine that is not there; relative Markdown links are checked.
+
+### Known limits
+
+- **OpenCode is not a "works with".** On 1.18.31 the plugin's call
+  arrives through `tool.execute.before` and its result through the
+  `message.part.updated` fallback; `tool.execute.after` does not fire.
+  The fallback is proven for one failed call only. See the plugin README.
+- **LiteLLM and MCP** are tested against a live serve, not yet on real
+  traffic.
+- **`build_report(reader=)` is slower than in 0.11** — cost moved out
+  of `verify()` rather than cost that grew; verify and report together
+  are faster. Folding the structural views into `verify()`'s single
+  pass is scheduled.
+- The hardware numbers are a maintainer's run, not an independent one.
 
 ## [0.11.0] — 2026-09-02
 
@@ -1081,7 +1240,8 @@ Initial release.
   from the OS keychain, falling back to an ephemeral key headless.
 - **CLI** — `chat`, `models`, `engine list` / `engine use`.
 
-[Unreleased]: https://github.com/Assault-Consulting/Palimpsests/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/Assault-Consulting/Palimpsests/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.12.0
 [0.11.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.11.0
 [0.10.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.10.0
 [0.9.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.9.0
