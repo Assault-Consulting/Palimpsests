@@ -20,6 +20,14 @@ Palimpsests is honest about scope: it supplies the runtime primitives that speci
 - [EU regulatory fit](https://palimpsests.dev/#eu-law): the specific runtime primitive each act leans on, linked to source text.
 - [Internet-Draft draft-sparysh-pala-audit](https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/) — PALA-1 described in an individual submission with Informational status; not an IETF standard and not a working-group document. The specification in the repository remains normative.
 
+## Pages
+
+- [PALA-1](https://palimpsests.dev/pala-1/): the audit format — Portable Append-only Log for Audit — frozen at v1.0, the verification runs on record, the Internet-Draft, and the name.
+- [Verify without reading](https://palimpsests.dev/verify-without-reading/): how anyone checks that no record was altered, removed or reordered, with no decryption key; what the check proves and what it needs.
+- [EU AI Act Article 12](https://palimpsests.dev/eu-ai-act-article-12/): what Articles 12, 19, 26(6) and 99 ask, when they apply, and what a tamper-evident local log does and does not cover. Not legal advice.
+- [Air-gapped](https://palimpsests.dev/air-gapped/): inference and the audit log on hardware you control, time without a trusted clock, anchors without a network, measured numbers and what is not claimed.
+- [Integrations](https://palimpsests.dev/integrations/): LiteLLM, MCP and OpenCode tool calls on the chain, marked as reported by the client, with each adapter's status and limits.
+
 ## Links
 
 - [Source (GitHub)](https://github.com/Assault-Consulting/Palimpsests)
