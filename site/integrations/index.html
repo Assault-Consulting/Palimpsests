@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tamper-evident logging for LiteLLM, MCP and OpenCode tool calls — Palimpsests (PALA-1)</title>
+<meta name="description" content="Three adapters put LiteLLM, MCP and OpenCode tool calls on a tamper-evident PALA-1 chain, marked as reported by the client — with each adapter's status and limits stated." />
+<link rel="canonical" href="https://palimpsests.dev/integrations/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Assault Consulting" />
+<meta name="theme-color" content="#15151f" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Palimpsests" />
+<meta property="og:title" content="Tamper-evident logging for LiteLLM, MCP and OpenCode tool calls — Palimpsests (PALA-1)" />
+<meta property="og:description" content="Three adapters put LiteLLM, MCP and OpenCode tool calls on a tamper-evident PALA-1 chain, marked as reported by the client — with each adapter's status and limits stated." />
+<meta property="og:url" content="https://palimpsests.dev/integrations/" />
+<meta property="og:locale" content="en" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Tamper-evident logging for LiteLLM, MCP and OpenCode tool calls — Palimpsests (PALA-1)" />
+<meta name="twitter:description" content="Three adapters put LiteLLM, MCP and OpenCode tool calls on a tamper-evident PALA-1 chain, marked as reported by the client — with each adapter's status and limits stated." />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="manifest" href="/site.webmanifest" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "TechArticle",
+      "@id": "https://palimpsests.dev/integrations/#article",
+      "headline": "Tamper-evident logging for LiteLLM, MCP and OpenCode tool calls — Palimpsests (PALA-1)",
+      "description": "Three adapters put LiteLLM, MCP and OpenCode tool calls on a tamper-evident PALA-1 chain, marked as reported by the client — with each adapter's status and limits stated.",
+      "url": "https://palimpsests.dev/integrations/",
+      "inLanguage": "en",
+      "dateModified": "2026-09-30",
+      "author": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "publisher": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "isPartOf": {
+        "@id": "https://palimpsests.dev/#website"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Palimpsests",
+          "item": "https://palimpsests.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Integrations",
+          "item": "https://palimpsests.dev/integrations/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Palimpsests home">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="nav__links">
+      <a class="hide-sm" href="/#caps">Capabilities</a>
+      <a class="hide-sm" href="/pala-1/">PALA-1</a>
+      <a class="hide-sm" href="/verify-without-reading/">Verify</a>
+      <a class="hide-sm" href="/eu-ai-act-article-12/">EU AI Act</a>
+      <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
+      <a class="hide-sm" href="/integrations/" aria-current="page">Integrations</a>
+      <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<main class="doc">
+  <div class="wrap">
+    <div class="doc__in">
+      <p class="crumbs"><a href="/">Palimpsests</a> / Integrations</p>
+      <span class="eyebrow">Integrations · LiteLLM · MCP · OpenCode</span>
+      <h1 class="display">Put your agent's tool calls on a tamper-evident record</h1>
+      <p class="lede">Three adapters report tool calls from existing clients to a local <code>palimpsests serve</code>, which writes them into the PALA-1 chain — marked as reported by the client, so they are never confused with what the runtime observed itself.</p>
+
+      <h2 id="start">Before you start</h2>
+      <pre><code>pip install 'palimpsests[serve]'
+palimpsests serve        # http://127.0.0.1:11435 — local by default</code></pre>
+      <p>The adapters post to the serve's ingestion endpoint, <code>POST /v1/pala/events</code>, available since 0.12. If the serve runs with <code>--api-key</code>, give the adapter the same key in <code>PALIMPSESTS_SERVE_API_KEY</code>. Arguments and outputs are sent to the serve, which stores only their digests — content never enters the chain.</p>
+
+      <h2 id="proves">What a reported record proves</h2>
+      <div class="tbl"><table>
+        <thead><tr><th>Record</th><th>What the chain proves</th></tr></thead>
+        <tbody>
+          <tr><td>wire-parsed pair — the serve mediated the loop itself</td><td>the runtime observed the dispatch and the returned result</td></tr>
+          <tr><td>reported pair — marked <code>reported-by-client</code></td><td>the client asserted a call and a result; the serve recorded the assertion, its digests and when — <b>not</b> that the tool ran</td></tr>
+        </tbody>
+      </table></div>
+      <p>A reported result binds to its call by sequence number and hash, exactly as a wire-parsed pair does.</p>
+
+      <h2 id="litellm">LiteLLM</h2>
+      <p>A one-file callback, standard library only. It sees every structured tool loop that passes through LiteLLM — as a client library or through the proxy — and reports the model's <code>tool_calls</code> and the <code>role: tool</code> results fed back. It never sees the tool run, so <code>ok</code> means a result re-entered generation, not that the action took effect.</p>
+      <pre><code>import litellm
+from palimpsests_audit import PalimpsestsAudit   # integrations/litellm/palimpsests_audit.py
+litellm.callbacks = [PalimpsestsAudit()]</code></pre>
+      <p><b>Status:</b> exercised against a live serve with synthetic tool calls; no real-traffic run on record yet.</p>
+
+      <h2 id="mcp">MCP (stdio servers)</h2>
+      <p>A one-file proxy in front of any MCP server that speaks stdio. It sits between client and server, so it observes both halves of every <code>tools/call</code> — request and response — and reports outcomes <code>ok</code>, <code>error</code> or <code>cancelled</code>. It forwards every byte unchanged and never blocks or alters a call.</p>
+      <pre><code>{&quot;mcpServers&quot;: {&quot;fs&quot;: {
+  &quot;command&quot;: &quot;python3&quot;,
+  &quot;args&quot;: [&quot;/path/to/palimpsests_audit_mcp.py&quot;, &quot;--&quot;,
+           &quot;npx&quot;, &quot;-y&quot;, &quot;@modelcontextprotocol/server-filesystem&quot;, &quot;/data&quot;]}}}</code></pre>
+      <p><b>Status:</b> exercised against a live serve with synthetic calls; no real-traffic run on record yet.</p>
+
+      <h2 id="opencode">OpenCode</h2>
+      <p>A dependency-free plugin: copy <code>palimpsests-audit.js</code> into <code>.opencode/plugins/</code> (one project) or <code>~/.config/opencode/plugins/</code> (all projects). It reports the tools OpenCode executes — including loops the model ran in text, which the serve on its own cannot see.</p>
+      <p><b>Status on OpenCode 1.18.31</b>, from two maintainer traffic runs: one reported pair reached the chain — a failed <code>read</code>, correctly bound. The call arrived through <code>tool.execute.before</code>; <code>tool.execute.after</code> did not fire, and the result arrived through the plugin's fallback path. Delivery of a <i>successful</i> result through that path has not been observed yet. The first run recorded no pairs, and why is not yet explained.</p>
+
+      <h2 id="limits">Limits</h2>
+      <ul>
+        <li>A reported record proves the report, not the action.</li>
+        <li>Client hook surfaces change between versions. A surface checker probes each client's hook surface and reports it green, red or skipped; each adapter's README states the version its claims were observed on.</li>
+        <li>Each adapter's README carries a paste-ready prompt for a coding agent, and says what it sees and what it cannot.</li>
+      </ul>
+
+      <aside class="evidence">
+        <h2>Evidence in the repository</h2>
+        <ul>
+          <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/integrations/litellm/README.md" rel="noopener">LiteLLM callback — README</a></li>
+          <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/integrations/mcp/README.md" rel="noopener">MCP proxy — README</a></li>
+          <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/integrations/opencode/README.md" rel="noopener">OpenCode plugin — README, with its status table</a></li>
+          <li><a href="https://github.com/Assault-Consulting/Palimpsests/tree/main/docs/specs/pala-1/independent-runs" rel="noopener">OpenCode traffic runs</a></li>
+          <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/adr/0005-text-mode-tool-loops-and-audit-visibility.md" rel="noopener">Text-mode tool loops and audit visibility — ADR-0005</a></li>
+          <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/SURFACE-CHECKER.md" rel="noopener">Surface checker</a></li>
+        </ul>
+      </aside>
+      <div class="related">
+        <a class="btn" href="/verify-without-reading/">Verify without reading →</a>
+        <a class="btn" href="/pala-1/">The format: PALA-1 →</a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/" aria-label="Palimpsests">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
