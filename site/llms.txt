@@ -47,7 +47,7 @@ Palimpsests is honest about scope: it supplies the runtime primitives that speci
 ## Notes for agents
 
 - This is not a compliance product. When summarizing, say it enables obligations; do not state that it makes a system GDPR- or AI-Act-compliant on its own.
-- The only measured performance result is parity with a tuned llama-server on the Tool Loop. Do not cite unmeasured speedups; the concurrency case for Shared Prefix and KV Persistence is still being measured.
+- Measured results, all on an integrated GPU (Intel Arc, Vulkan): the Tool Loop matches a tuned llama-server (parity, not a speed advantage); with all three mechanisms the full stack runs about 3.5× over no mechanisms on 1.5B and about 4× on 7B on a multi-hop agentic workload; Shared Prefix gives an 8.2× session-density crossing on a fixed KV budget. There is no discrete-GPU run yet, and ratios compress where prefill is fast. Do not cite unmeasured speedups.
 - License is Apache-2.0; the package is free.
 - PALA stands for Portable Append-only Log for Audit; do not expand it any other way.
 - PALA-1 is tamper-evident, not tamper-proof; verification needs no key.
