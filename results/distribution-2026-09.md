@@ -29,10 +29,12 @@ Repository description as shown to a visitor: *Layered local-LLM inference engin
 | What | Count | Items |
 |---|---|---|
 | listings (upstream docs, awesome-lists, registries) | 0 | — |
-| external verifier runs on record | 3 | Turak — external verifier, run 5 + bridge runs B1/B2; Kurdybaylo — external verifier; Sharyar Naseem — Perl 5 verifier (fifth implementation, third external) |
+| external verifier runs on record | 3 | Bakaev — external verifier, run 3 (first external); Kurdybaylo — external verifier, run 4 (freeze candidate); Turak — external verifier, run 5 (Perl 5, fifth implementation) + bridge runs B1/B2 |
 | integrators (someone embedded an adapter) | 0 | — |
 | measurements by others | 1 | Serialization and integrity cost (#184) — Oleksandr Verteletskyi, report compiled by Rodion Bakaiev |
 | publications / talks | 3 | draft-sparysh-pala-audit-00 (IETF I-D, posted 2026-09-03); Zenodo article (DOI 10.5281/zenodo.21978107); SSRN whitepaper |
+
+*Corrected 2026-09-30:* the snapshot as taken attributed the Perl 5 verifier to the wrong person. The fifth implementation (Perl 5) is run 5, by Turak; the third external run on record is run 3, by Bakaev — see `docs/specs/pala-1/INDEPENDENT-VERIFICATION.md`. The count is unchanged.
 
 ## Not claimed
 

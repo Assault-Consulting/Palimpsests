@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Palimpsests — local-first LLM inference with a tamper-evident record</title>
-<meta name="description" content="An Apache-2.0 inference engine for regulated and air-gapped deployments. Runs language models on hardware you control and writes a hash-chained record of every request." />
+<title>Palimpsests (PALA-1) — local LLM inference with a tamper-evident audit log</title>
+<meta name="description" content="Apache-2.0 LLM inference for air-gapped and regulated deployments. Every request lands in a tamper-evident audit log that anyone can verify without the decryption key." />
 
 <!-- Discoverability / indexing (Google, Bing, AI agents). -->
 <link rel="canonical" href="https://palimpsests.dev/" />
@@ -15,8 +15,8 @@
 <!-- Open Graph -->
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Palimpsests" />
-<meta property="og:title" content="Palimpsests — local-first LLM inference with a tamper-evident record" />
-<meta property="og:description" content="An Apache-2.0 inference engine for regulated and air-gapped deployments. Runs language models on hardware you control and keeps a tamper-evident, hash-chained record of every request." />
+<meta property="og:title" content="Palimpsests (PALA-1) — local LLM inference with a tamper-evident audit log" />
+<meta property="og:description" content="Apache-2.0 LLM inference for air-gapped and regulated deployments. Every request lands in a tamper-evident audit log that anyone can verify without the decryption key." />
 <meta property="og:url" content="https://palimpsests.dev/" />
 <meta property="og:image" content="https://palimpsests.dev/og-cover.png" />
 <meta property="og:image:width" content="1200" />
@@ -26,8 +26,8 @@
 
 <!-- Twitter / X -->
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Palimpsests — local-first LLM inference with a tamper-evident record" />
-<meta name="twitter:description" content="On-prem, air-gapped inference with a hash-chained audit trail. Apache-2.0." />
+<meta name="twitter:title" content="Palimpsests (PALA-1) — local LLM inference with a tamper-evident audit log" />
+<meta name="twitter:description" content="On-prem, air-gapped LLM inference with a tamper-evident audit log (PALA-1). Apache-2.0." />
 <meta name="twitter:image" content="https://palimpsests.dev/og-cover.png" />
 
 <!-- Icons / manifest -->
@@ -62,11 +62,13 @@
       "name": "Palimpsests",
       "applicationCategory": "DeveloperApplication",
       "operatingSystem": "Linux, macOS, Windows",
-      "description": "A local-first LLM inference engine for regulated and air-gapped deployments. It runs language models entirely on hardware you control and writes a tamper-evident, hash-chained record of every request. It supplies runtime primitives that EU obligations rest on (data residency, record-keeping, supply-chain integrity); it does not by itself make a deployment compliant.",
+      "description": "A local-first LLM inference engine for regulated and air-gapped deployments. It runs language models entirely on hardware you control and writes a tamper-evident, hash-chained record of every request. It supplies runtime primitives that EU obligations rest on (data residency, record-keeping, supply-chain integrity); it does not by itself make a deployment compliant. Its audit format, PALA-1 (Portable Append-only Log for Audit), is frozen at v1.0 and verifiable without the decryption key.",
       "url": "https://palimpsests.dev/",
       "downloadUrl": "https://pypi.org/project/palimpsests/",
       "installUrl": "https://pypi.org/project/palimpsests/",
       "codeRepository": "https://github.com/Assault-Consulting/Palimpsests",
+      "sameAs": ["https://github.com/Assault-Consulting/Palimpsests", "https://pypi.org/project/palimpsests/"],
+      "citation": {"@type": "CreativeWork", "name": "draft-sparysh-pala-audit — PALA-1: A Tamper-Evident Audit Record Format for Constrained and Disconnected Deployments (Internet-Draft, individual submission)", "url": "https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/"},
       "programmingLanguage": "Python",
       "license": "https://www.apache.org/licenses/LICENSE-2.0",
       "isAccessibleForFree": true,
@@ -453,7 +455,7 @@
 <section class="band">
   <div class="wrap band__in">
     <div data-reveal>
-      <span class="eyebrow">The constraint</span>
+      <span class="eyebrow">Air-gapped · on-prem · no network egress</span>
       <h2 class="display">For data that isn’t allowed to travel.</h2>
     </div>
     <div data-reveal>
@@ -486,7 +488,7 @@
 
 <section class="blk wrap" id="caps">
   <div class="blk__head" data-reveal>
-    <span class="eyebrow">Capabilities</span>
+    <span class="eyebrow">Local LLM inference · shared prefix · tool loop · KV persistence</span>
     <h2 class="display">Three things the engine keeps in place.</h2>
     <p>The recurring idea: hold computed state instead of rebuilding it. Each is a named lever — measured on real hardware, not asserted.</p>
   </div>
@@ -518,9 +520,10 @@
 <section class="record blk" id="record">
   <div class="wrap">
     <div class="blk__head" data-reveal>
-      <span class="eyebrow">The record</span>
+      <span class="eyebrow">Tamper-evident audit log · PALA-1 v1.0</span>
       <h2 class="display">The record beneath the record.</h2>
-      <p>Every request leaves a tamper-evident entry, chained by hash so the log can’t be silently altered — written in a published, frozen wire format, <span class="mono">PALA-1 v1.0</span>, not an internal detail. Five independent implementations, three of them outside the project at the time of their runs, reproduce it from the spec and test vectors alone. That’s the record-keeping substrate the EU AI Act’s logging expectations rest on — kept locally, verifiable without revealing what it holds. And since 0.11 the chain reaches outward on your terms: a head can be registered with a transparency service as one signed statement, with the receipt — and what it does and doesn’t prove — on the public record. The software itself carries the same discipline.</p>
+      <p>Every request leaves a tamper-evident entry, chained by hash so the log can’t be silently altered — written in a published, frozen wire format, <span class="mono">PALA-1 v1.0</span>: a <b>Portable Append-only Log for Audit</b> that any machine can verify offline, without a key, and that no one owns. Five independent implementations, three of them outside the project at the time of their runs, reproduce it from the spec and test vectors alone. That’s the record-keeping substrate the EU AI Act’s logging expectations rest on — kept locally, verifiable without revealing what it holds. It cuts both ways, by design: the record shows what your system did, whether or not it did the right thing — which is why it can be believed.</p>
+      <p>And since 0.11 the chain reaches outward on your terms: a head can be registered with a transparency service as one signed statement, with the receipt — and what it does and doesn’t prove — on the public record. The format is also described in an individual <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft ↗</a> for anyone to review; the specification in the repository remains normative. The software itself carries the same discipline.</p>
     </div>
 
     <div class="cdemo" data-reveal aria-label="Animated demonstration: four events are written as hash-chained records, the chain verifies, then one record is deleted and the chain reports itself broken.">
@@ -563,7 +566,7 @@
 
 <section class="blk wrap" id="gold">
   <div class="blk__head" data-reveal>
-    <span class="eyebrow">Assurance</span>
+    <span class="eyebrow">OpenSSF Gold · reviewed changes · reproducible releases</span>
     <h2 class="display">Gold, on the public record.</h2>
     <p>Palimpsests holds the OpenSSF Best Practices <b>Gold</b> badge — the highest tier of the programme, and the first held by a project founded by a team from Ukraine. It is not a self-declaration: every criterion is a <a href="https://www.bestpractices.dev/projects/13534" rel="noopener">public registry entry ↗</a> anyone can open and check against this repository.</p>
   </div>
@@ -590,18 +593,18 @@
 
 <section class="blk wrap" id="eu-law">
   <div class="blk__head" data-reveal>
-    <span class="eyebrow">EU regulatory fit</span>
+    <span class="eyebrow">EU AI Act Art. 12 · GDPR · CRA · DORA · NIS2</span>
     <h2 class="display">Built for the EU AI Act — and the regulation around it.</h2>
-    <p>Palimpsests supplies the runtime primitive each act leans on — residency, record-keeping, or supply-chain integrity — as a property you can point to, not a promise. Every title links to the source text on EUR-Lex.</p>
+    <p>The EU AI Act asks high-risk systems to keep their own records. Palimpsests keeps them in a form anyone can check — without needing to read them. Across the wider framework it supplies the runtime primitive each act leans on — residency, record-keeping, or supply-chain integrity — as a property you can point to, not a promise. Every title links to the source text on EUR-Lex.</p>
   </div>
 
   <div class="reglist" data-reveal>
     <div class="reg">
       <div class="reg__act">
         <a href="https://eur-lex.europa.eu/eli/reg/2024/1689/oj/eng" rel="noopener">EU AI Act <span class="arr">↗</span></a>
-        <span class="reg__cite">Regulation (EU) 2024/1689 · Art. 12</span>
+        <span class="reg__cite">Regulation (EU) 2024/1689, as amended · Art. 12, 26(6), 99(4)</span>
       </div>
-      <p class="reg__note">The hash-chained request log is the <b>automatic record-keeping</b> a high-risk system has to keep — held locally, and verifiable without exposing what it recorded. The <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/compliance/EU-AI-ACT-MAPPING.md" rel="noopener">Article 12 mapping ↗</a> sets out, requirement by requirement, what ships today — 24 of 27 rows as of 0.11 — and what is on the roadmap.</p>
+      <p class="reg__note">High-risk systems must record events automatically (Art. 12), and deployers must keep those logs for at least six months (Art. 26(6)) — from 2 December 2027, or 2 August 2028 for AI in regulated products. Palimpsests supplies that <b>automatic record-keeping</b>: held locally, verifiable without exposing what it recorded. Breaches of these duties fall under Article 99(4) — up to €15 million or 3% of worldwide annual turnover, and for SMEs the lower of the two. The <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/compliance/EU-AI-ACT-MAPPING.md" rel="noopener">Article 12 mapping ↗</a> sets out, requirement by requirement, what ships today — 24 of 27 rows as of 0.12 — and what is on the roadmap.</p>
     </div>
 
     <div class="reg">
@@ -640,7 +643,7 @@
 
 <section class="blk wrap" id="boundary">
   <div class="blk__head" data-reveal>
-    <span class="eyebrow">Where the runtime stops</span>
+    <span class="eyebrow">What Palimpsests does not do</span>
     <h2 class="display">A clean division of responsibility.</h2>
     <p>A clear split is the credential a regulated buyer looks for. Palimpsests carries the runtime obligations; you own the ones that belong to your deployment.</p>
   </div>
@@ -689,7 +692,7 @@
       </ul>
     </div>
   </div>
-  <p class="bound__foot" data-reveal>Palimpsests is <b>compliance-grade runtime infrastructure</b>: it carries residency, record-keeping, and supply-chain integrity, so your team can focus on the obligations that are yours to own.</p>
+  <p class="bound__foot" data-reveal>Palimpsests is <b>compliance-grade runtime infrastructure</b>: it carries residency, record-keeping, and supply-chain integrity, so your team can focus on the obligations that are yours to own. Legally, every one of these obligations stays yours as provider or deployer, and fines under Article 99 attach to them. The record is evidence of how you met them, not a substitute for meeting them.</p>
 </section>
 
 <section class="start" id="start">
@@ -738,6 +741,7 @@
       <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
       <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
       <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
       <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
       <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
     </div>

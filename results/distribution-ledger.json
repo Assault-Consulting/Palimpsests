@@ -3,16 +3,16 @@
   "listings": [],
   "external_runs": [
     {
-      "name": "Turak \u2014 external verifier, run 5 + bridge runs B1/B2",
-      "link": "docs/specs/pala-1/independent-runs/turak/"
+      "name": "Bakaev \u2014 external verifier, run 3 (first external)",
+      "link": "docs/specs/pala-1/INDEPENDENT-VERIFICATION.md#5-record-of-the-run"
     },
     {
-      "name": "Kurdybaylo \u2014 external verifier",
+      "name": "Kurdybaylo \u2014 external verifier, run 4 (freeze candidate)",
       "link": "docs/specs/pala-1/independent-runs/kurdybaylo/"
     },
     {
-      "name": "Sharyar Naseem \u2014 Perl 5 verifier (fifth implementation, third external)",
-      "link": "docs/specs/pala-1/CLARIFICATIONS.md#implementation-count"
+      "name": "Turak \u2014 external verifier, run 5 (Perl 5, fifth implementation) + bridge runs B1/B2",
+      "link": "docs/specs/pala-1/independent-runs/turak/"
     }
   ],
   "integrators": [],
