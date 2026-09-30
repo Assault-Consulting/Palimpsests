@@ -16,7 +16,8 @@
 > shipping the rest, and the chain records the tool loops it cannot see
 > as well as the ones it can
 > ([what a receipt proves — and what it doesn't](docs/INTEROP-SCITT.md)).** The **[PALA-1
-> format](docs/specs/pala-1/PALA-1.md)** is **frozen at v1.0**: a
+> format](docs/specs/pala-1/PALA-1.md)** — *Portable Append-only Log for
+> Audit* — is **frozen at v1.0**: a
 > self-describing, byte-level audit format with byte-exact test vectors, a CC0
 > reference implementation, a stdlib-only production codec, and the
 > three-question `palimpsests pala verify` CLI — with **five independent
