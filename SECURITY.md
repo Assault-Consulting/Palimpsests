@@ -77,9 +77,9 @@ defeat it — is in [`docs/ASSURANCE-CASE.md`](docs/ASSURANCE-CASE.md).
 
 ### Security review
 
-An internal security review of the full source tree, the CI and release
-workflows, and the published PyPI artifact was performed in **July 2026**
-(manual review of the audit subsystem, key management, process lifecycle,
+An internal, AI-assisted security review of the full source tree, the CI
+and release workflows, and the published PyPI artifact was performed in
+**July 2026** (review of the audit subsystem, key management, process lifecycle,
 native backend, KV store, context memory, and CLI, plus Bandit SAST). Its
 scope, findings, severities, and remediation status are documented in
 [`docs/security/AUDIT-2026-07.md`](docs/security/AUDIT-2026-07.md): the

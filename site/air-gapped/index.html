@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Air-gapped LLM inference with a verifiable audit trail — Palimpsests (PALA-1)</title>
+<meta name="description" content="Run LLM inference and keep a tamper-evident audit log on hardware you control, with no network egress — verifiable offline, anchored without a network." />
+<link rel="canonical" href="https://palimpsests.dev/air-gapped/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Assault Consulting" />
+<meta name="theme-color" content="#15151f" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Palimpsests" />
+<meta property="og:title" content="Air-gapped LLM inference with a verifiable audit trail — Palimpsests (PALA-1)" />
+<meta property="og:description" content="Run LLM inference and keep a tamper-evident audit log on hardware you control, with no network egress — verifiable offline, anchored without a network." />
+<meta property="og:url" content="https://palimpsests.dev/air-gapped/" />
+<meta property="og:locale" content="en" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Air-gapped LLM inference with a verifiable audit trail — Palimpsests (PALA-1)" />
+<meta name="twitter:description" content="Run LLM inference and keep a tamper-evident audit log on hardware you control, with no network egress — verifiable offline, anchored without a network." />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="manifest" href="/site.webmanifest" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "TechArticle",
+      "@id": "https://palimpsests.dev/air-gapped/#article",
+      "headline": "Air-gapped LLM inference with a verifiable audit trail — Palimpsests (PALA-1)",
+      "description": "Run LLM inference and keep a tamper-evident audit log on hardware you control, with no network egress — verifiable offline, anchored without a network.",
+      "url": "https://palimpsests.dev/air-gapped/",
+      "inLanguage": "en",
+      "dateModified": "2026-09-30",
+      "author": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "publisher": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "isPartOf": {
+        "@id": "https://palimpsests.dev/#website"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Palimpsests",
+          "item": "https://palimpsests.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Air-gapped",
+          "item": "https://palimpsests.dev/air-gapped/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Palimpsests home">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="nav__links">
+      <a class="hide-sm" href="/#caps">Capabilities</a>
+      <a class="hide-sm" href="/pala-1/">PALA-1</a>
+      <a class="hide-sm" href="/verify-without-reading/">Verify</a>
+      <a class="hide-sm" href="/eu-ai-act-article-12/">EU AI Act</a>
+      <a class="hide-sm" href="/air-gapped/" aria-current="page">Air-gapped</a>
+      <a class="hide-sm" href="/integrations/">Integrations</a>
+      <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<main class="doc">
+  <div class="wrap">
+    <div class="doc__in">
+      <p class="crumbs"><a href="/">Palimpsests</a> / Air-gapped</p>
+      <span class="eyebrow">Air-gapped · on-prem · no network egress</span>
+      <h1 class="display">Air-gapped LLM inference with a verifiable audit trail</h1>
+      <p class="lede">Palimpsests runs the model, its attention state and its log on the machine where the data already sits. No network egress is needed to answer a request — or to verify the record.</p>
+
+      <h2 id="local">What stays local</h2>
+      <p>The model runs through llama.cpp (or a local Ollama daemon); attention state is held and restored in-process; every request lands in a hash-chained log on the same host. Nothing is uploaded and nothing is phoned home. What you export is a record that can be verified without exposing what it recorded.</p>
+
+      <h2 id="time">Time without a trusted clock</h2>
+      <p>Every timestamp carries its trust level — <code>UNKNOWN</code>, <code>UNSYNCED</code>, <code>HW_RTC</code> or <code>NTP_SYNCED</code>. A device that does not know the time says so: an <code>UNKNOWN</code> record carries no wall-clock value at all. Ordering never depends on the clock; it is carried by sequence numbers in the chain.</p>
+
+      <h2 id="anchors">Anchors without a network</h2>
+      <p>The chain alone proves that nothing inside it changed. Proving that nothing was cut off the end needs the latest head kept somewhere else — an anchor.</p>
+      <div class="tbl"><table>
+        <thead><tr><th>Anchor</th><th>Where the head lives</th></tr></thead>
+        <tbody>
+          <tr><td>File</td><td>a file you control, outside the log</td></tr>
+          <tr><td>PKCS#11 token (since 0.11)</td><td>a data object on a hardware token the host can read but cannot silently rewrite</td></tr>
+          <tr><td>SCITT transparency service (since 0.11)</td><td>one signed statement per published head, only when your policy allows the link — no record content leaves the device</td></tr>
+        </tbody>
+      </table></div>
+      <p class="note">The token is the mechanism; a claim about a particular deployment depends on the token actually used.</p>
+
+      <h2 id="measured">Measured on modest hardware</h2>
+      <ul>
+        <li><b>Engine:</b> on an Intel Arc integrated GPU (Vulkan), with 1.5B and 7B models, the tool loop runs at parity with a hand-tuned <code>llama-server</code> — in-process, with no server to run.</li>
+        <li><b>Verifier:</b> a one-million-record chain on an Intel Core Ultra 9 185H machine (Windows 11) — working set after <code>verify()</code> 4.77 GB in 0.11, 0.57 GB in 0.12; <code>verify()</code> time 102–107 s, then 43–46 s.</li>
+      </ul>
+
+      <h2 id="not-claimed">What we don't claim</h2>
+      <p>There is no discrete-GPU run yet: an integrated GPU flatters every mechanism that saves prefill, so these ratios compress where prefill is fast. The audit log's implementation has not been independently pen-tested.</p>
+
+      <aside class="evidence">
+        <h2>Evidence in the repository</h2>
+        <ul>
+          <li><a href="https://github.com/Assault-Consulting/Palimpsests/tree/main/results" rel="noopener">Benchmark results and method</a></li>
+          <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/results/u14-verify-bounded-windows.md" rel="noopener">verify() on Windows hardware, before and after</a></li>
+          <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/INTEROP-SCITT.md" rel="noopener">SCITT bridge — what a receipt proves and what it doesn't</a></li>
+          <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/adr/0004-tier-b-pkcs11-anchor-and-signing.md" rel="noopener">Hardware-token anchor — ADR-0004</a></li>
+        </ul>
+      </aside>
+      <div class="related">
+        <a class="btn" href="/verify-without-reading/">Verify without reading →</a>
+        <a class="btn" href="/pala-1/">The format: PALA-1 →</a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/" aria-label="Palimpsests">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

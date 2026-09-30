@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Verify an AI audit log without reading it — Palimpsests (PALA-1)</title>
+<meta name="description" content="PALA-1 separates the right to verify a log from the right to read it: anyone can check that no record was altered, removed or reordered, with no decryption key." />
+<link rel="canonical" href="https://palimpsests.dev/verify-without-reading/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Assault Consulting" />
+<meta name="theme-color" content="#15151f" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Palimpsests" />
+<meta property="og:title" content="Verify an AI audit log without reading it — Palimpsests (PALA-1)" />
+<meta property="og:description" content="PALA-1 separates the right to verify a log from the right to read it: anyone can check that no record was altered, removed or reordered, with no decryption key." />
+<meta property="og:url" content="https://palimpsests.dev/verify-without-reading/" />
+<meta property="og:locale" content="en" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Verify an AI audit log without reading it — Palimpsests (PALA-1)" />
+<meta name="twitter:description" content="PALA-1 separates the right to verify a log from the right to read it: anyone can check that no record was altered, removed or reordered, with no decryption key." />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="manifest" href="/site.webmanifest" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "TechArticle",
+      "@id": "https://palimpsests.dev/verify-without-reading/#article",
+      "headline": "Verify an AI audit log without reading it — Palimpsests (PALA-1)",
+      "description": "PALA-1 separates the right to verify a log from the right to read it: anyone can check that no record was altered, removed or reordered, with no decryption key.",
+      "url": "https://palimpsests.dev/verify-without-reading/",
+      "inLanguage": "en",
+      "dateModified": "2026-09-30",
+      "author": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "publisher": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "isPartOf": {
+        "@id": "https://palimpsests.dev/#website"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Palimpsests",
+          "item": "https://palimpsests.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Verify without reading",
+          "item": "https://palimpsests.dev/verify-without-reading/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Palimpsests home">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="nav__links">
+      <a class="hide-sm" href="/#caps">Capabilities</a>
+      <a class="hide-sm" href="/pala-1/">PALA-1</a>
+      <a class="hide-sm" href="/verify-without-reading/" aria-current="page">Verify</a>
+      <a class="hide-sm" href="/eu-ai-act-article-12/">EU AI Act</a>
+      <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
+      <a class="hide-sm" href="/integrations/">Integrations</a>
+      <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<main class="doc">
+  <div class="wrap">
+    <div class="doc__in">
+      <p class="crumbs"><a href="/">Palimpsests</a> / Verify without reading</p>
+      <span class="eyebrow">Key-free verification · PALA-1</span>
+      <h1 class="display">Verify an AI audit log without reading it</h1>
+      <p class="lede">PALA-1 separates the right to verify a log from the right to read it. Anyone can check that no record was altered, removed or reordered — with no decryption key, and without opening a single record body.</p>
+
+      <h2 id="how">How it works</h2>
+      <p>Every record's header carries a SHA-256 digest of its body, and names the hash of the record before it. Verification walks the headers — one hash per record — and checks each body against the digest bound into its header. Bodies are never decrypted, so the key that protects their content is never needed, and never handed over.</p>
+
+      <h2 id="questions">Three questions, answered separately</h2>
+      <div class="tbl"><table>
+        <thead><tr><th>Question</th><th>From the file alone</th><th>Needs</th></tr></thead>
+        <tbody>
+          <tr><td>Was any record altered, removed or reordered?</td><td>yes or no, with the first bad record named</td><td>nothing</td></tr>
+          <tr><td>Is this the whole chain, or was the end cut off?</td><td>only with an anchor</td><td>the latest head, kept outside the file</td></tr>
+          <tr><td>Did this history exist before a certain time?</td><td>only with a witness</td><td>a signed statement from someone else</td></tr>
+        </tbody>
+      </table></div>
+      <p class="note">A question that was not checked is reported as not checked — never as passed.</p>
+
+      <h2 id="try">Try it</h2>
+      <pre><code>pip install palimpsests
+palimpsests demo                                # writes and verifies a small audited run
+palimpsests pala verify palimpsests-demo.pala   # the auditor's check — no key needed</code></pre>
+      <p>Exit codes: <code>0</code> verified · <code>1</code> tampered · <code>2</code> partial — intact, but no anchor was supplied, so a cut-off end would not have been detected · <code>3</code> unreadable.</p>
+
+      <h2 id="limits">Limits, stated</h2>
+      <p>Tamper-evident means a change is detectable, not impossible. An attacker who holds both the encryption key and write access to wherever the anchor is kept can forge the chain and its anchor together. Catching that needs a commitment outside the host — a hardware token or an external transparency service; see <a href="/air-gapped/#anchors">anchors without a network</a>.</p>
+
+      <aside class="evidence">
+        <h2>Evidence in the repository</h2>
+        <ul>
+          <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/specs/pala-1/PALA-1.md" rel="noopener">Verification rules — PALA-1.md §7</a></li>
+          <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/START-HERE.md" rel="noopener">Start here, in plain words</a></li>
+          <li><a href="https://github.com/Assault-Consulting/Palimpsests/tree/main/docs/specs/pala-1/verification-kit" rel="noopener">Verification kit</a></li>
+          <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Threat model — SECURITY.md</a></li>
+        </ul>
+      </aside>
+      <div class="related">
+        <a class="btn" href="/pala-1/">The format: PALA-1 →</a>
+        <a class="btn" href="/eu-ai-act-article-12/">EU AI Act Article 12 →</a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/" aria-label="Palimpsests">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
