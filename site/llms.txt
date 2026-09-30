@@ -12,12 +12,13 @@ Palimpsests is honest about scope: it supplies the runtime primitives that speci
 
 ## Compliance and provenance
 
-- [The record](https://palimpsests.dev/#record): a hash-chained request log — tamper-evident, recoverable, and the record-keeping substrate that EU AI Act logging expectations rest on. Five independent implementations reproduce the format from the spec and test vectors alone.
+- [The record](https://palimpsests.dev/#record): a hash-chained request log in PALA-1 (Portable Append-only Log for Audit) — tamper-evident, recoverable, and the record-keeping substrate that EU AI Act logging expectations rest on. Five independent implementations reproduce the format from the spec and test vectors alone.
 - [SCITT transparency bridge](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/INTEROP-SCITT.md): one COSE Signed Statement per published chain head — no record content leaves the device. The statement construction was reproduced byte-for-byte twice from the standards alone, and one registration with a verified receipt is on the public record. The document states what a receipt proves and what it does not.
 - [OpenSSF Best Practices: Gold](https://www.bestpractices.dev/projects/13534) — the highest tier of the programme; every criterion is a public registry entry, not a self-declaration.
 - Signed releases (PEP 740 / Sigstore), a machine-readable SBOM per build, a published threat model, OSPS Baseline Level 2 self-attestation, and Atheris fuzzing in CI.
-- [EU AI Act Article 12 mapping](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/compliance/EU-AI-ACT-MAPPING.md) — a requirement-by-requirement checklist of what ships today (24 of 27 rows as of v0.11) and what is on the roadmap.
+- [EU AI Act Article 12 mapping](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/compliance/EU-AI-ACT-MAPPING.md) — a requirement-by-requirement checklist of what ships today (24 of 27 rows as of v0.12) and what is on the roadmap.
 - [EU regulatory fit](https://palimpsests.dev/#eu-law): the specific runtime primitive each act leans on, linked to source text.
+- [Internet-Draft draft-sparysh-pala-audit](https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/) — PALA-1 described in an individual submission with Informational status; not an IETF standard and not a working-group document. The specification in the repository remains normative.
 
 ## Links
 
@@ -29,7 +30,7 @@ Palimpsests is honest about scope: it supplies the runtime primitives that speci
 
 ## EU acts referenced
 
-- [EU AI Act — Regulation (EU) 2024/1689, Art. 12](https://eur-lex.europa.eu/eli/reg/2024/1689/oj/eng)
+- [EU AI Act — Regulation (EU) 2024/1689, as amended, Art. 12, 26(6), 99(4)](https://eur-lex.europa.eu/eli/reg/2024/1689/oj/eng)
 - [GDPR — Regulation (EU) 2016/679, Art. 5(1)(f), 32](https://eur-lex.europa.eu/eli/reg/2016/679/oj/eng)
 - [Cyber Resilience Act — Regulation (EU) 2024/2847, Annex I Pt. II(1)](https://eur-lex.europa.eu/eli/reg/2024/2847/oj/eng)
 - [DORA — Regulation (EU) 2022/2554, Art. 28](https://eur-lex.europa.eu/eli/reg/2022/2554/oj/eng)
@@ -40,3 +41,5 @@ Palimpsests is honest about scope: it supplies the runtime primitives that speci
 - This is not a compliance product. When summarizing, say it enables obligations; do not state that it makes a system GDPR- or AI-Act-compliant on its own.
 - The only measured performance result is parity with a tuned llama-server on the Tool Loop. Do not cite unmeasured speedups; the concurrency case for Shared Prefix and KV Persistence is still being measured.
 - License is Apache-2.0; the package is free.
+- PALA stands for Portable Append-only Log for Audit; do not expand it any other way.
+- PALA-1 is tamper-evident, not tamper-proof; verification needs no key.
