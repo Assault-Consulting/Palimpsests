@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>EU AI Act Article 12 logging for self-hosted LLMs — Palimpsests (PALA-1)</title>
+<meta name="description" content="What Article 12, Article 26(6) and Article 99 of the EU AI Act ask of high-risk AI systems, when they apply, and what a tamper-evident local log does and does not cover." />
+<link rel="canonical" href="https://palimpsests.dev/eu-ai-act-article-12/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Assault Consulting" />
+<meta name="theme-color" content="#15151f" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Palimpsests" />
+<meta property="og:title" content="EU AI Act Article 12 logging for self-hosted LLMs — Palimpsests (PALA-1)" />
+<meta property="og:description" content="What Article 12, Article 26(6) and Article 99 of the EU AI Act ask of high-risk AI systems, when they apply, and what a tamper-evident local log does and does not cover." />
+<meta property="og:url" content="https://palimpsests.dev/eu-ai-act-article-12/" />
+<meta property="og:locale" content="en" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="EU AI Act Article 12 logging for self-hosted LLMs — Palimpsests (PALA-1)" />
+<meta name="twitter:description" content="What Article 12, Article 26(6) and Article 99 of the EU AI Act ask of high-risk AI systems, when they apply, and what a tamper-evident local log does and does not cover." />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="manifest" href="/site.webmanifest" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "TechArticle",
+      "@id": "https://palimpsests.dev/eu-ai-act-article-12/#article",
+      "headline": "EU AI Act Article 12 logging for self-hosted LLMs — Palimpsests (PALA-1)",
+      "description": "What Article 12, Article 26(6) and Article 99 of the EU AI Act ask of high-risk AI systems, when they apply, and what a tamper-evident local log does and does not cover.",
+      "url": "https://palimpsests.dev/eu-ai-act-article-12/",
+      "inLanguage": "en",
+      "dateModified": "2026-09-30",
+      "author": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "publisher": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "isPartOf": {
+        "@id": "https://palimpsests.dev/#website"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Palimpsests",
+          "item": "https://palimpsests.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "EU AI Act Article 12",
+          "item": "https://palimpsests.dev/eu-ai-act-article-12/"
+        }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Does Palimpsests make us compliant with the EU AI Act?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No — and be wary of anything that claims to. Fines under Article 99 attach to your obligations as a provider or deployer, most of which no runtime can carry for you. Palimpsests carries one of them well: automatic, verifiable record-keeping. The log is evidence of how you met your obligations, not a substitute for meeting them."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is our system high-risk?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "That classification is yours to make, against Article 6 and Annex III. Palimpsests cannot answer it for you."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is this page legal advice?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. It summarises the text of the Regulation as amended; the source text on EUR-Lex governs."
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Palimpsests home">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="nav__links">
+      <a class="hide-sm" href="/#caps">Capabilities</a>
+      <a class="hide-sm" href="/pala-1/">PALA-1</a>
+      <a class="hide-sm" href="/verify-without-reading/">Verify</a>
+      <a class="hide-sm" href="/eu-ai-act-article-12/" aria-current="page">EU AI Act</a>
+      <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
+      <a class="hide-sm" href="/integrations/">Integrations</a>
+      <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<main class="doc">
+  <div class="wrap">
+    <div class="doc__in">
+      <p class="crumbs"><a href="/">Palimpsests</a> / EU AI Act Article 12</p>
+      <span class="eyebrow">EU AI Act · Art. 12, 19, 26(6), 99</span>
+      <h1 class="display">EU AI Act Article 12: automatic logging for high-risk AI systems</h1>
+      <p class="lede">High-risk AI systems must record events automatically over their lifetime, and those logs must be kept. Palimpsests supplies that record-keeping as a tamper-evident log on your own hardware; the rest of the Act stays with you.</p>
+
+      <h2 id="asks">What the Act asks</h2>
+      <ul>
+        <li><b>Article 12</b> — a high-risk system must technically allow the automatic recording of events over its lifetime.</li>
+        <li><b>Article 19</b> — providers keep the logs under their control for at least six months.</li>
+        <li><b>Article 26(6)</b> — deployers keep the logs under their control for at least six months.</li>
+      </ul>
+
+      <h2 id="when">When it applies</h2>
+      <p>As amended by Regulation (EU) 2026/1744 (the Digital Omnibus on AI):</p>
+      <div class="tbl"><table>
+        <thead><tr><th>Scope</th><th>Applies from</th></tr></thead>
+        <tbody>
+          <tr><td>High-risk systems listed in Annex III</td><td>2 December 2027</td></tr>
+          <tr><td>High-risk AI in products covered by Annex I</td><td>2 August 2028</td></tr>
+        </tbody>
+      </table></div>
+
+      <h2 id="article-99">What is at stake — Article 99</h2>
+      <div class="tbl"><table>
+        <thead><tr><th>Breach</th><th>Up to</th><th>SMEs and start-ups</th></tr></thead>
+        <tbody>
+          <tr><td>Prohibited practices (Art. 5)</td><td>€35M or 7% of worldwide annual turnover</td><td>the lower of the two</td></tr>
+          <tr><td>Obligations of providers, deployers and other operators, including the high-risk requirements (Art. 99(4))</td><td>€15M or 3%</td><td>the lower of the two; also small mid-caps (Art. 99(6a))</td></tr>
+          <tr><td>Incorrect, incomplete or misleading information to authorities (Art. 99(5))</td><td>€7.5M or 1%</td><td>the lower of the two; also small mid-caps</td></tr>
+        </tbody>
+      </table></div>
+      <p>For other undertakings the higher of the two figures applies. These are ceilings, set by national authorities case by case; the circumstances they weigh include the degree of cooperation and the measures taken to mitigate harm (Art. 99(7)). Logging obligations fall in the €15M / 3% tier — the €35M / 7% tier is for prohibited practices only.</p>
+
+      <h2 id="covers">What Palimpsests covers — and what it doesn't</h2>
+      <p><b>Covers:</b> automatic event recording (Article 12); support for keeping those records through retention — segmentation, rotation and prefix proofs; and integrity that anyone can verify without the decryption key.</p>
+      <p><b>Does not cover:</b> risk management (Art. 9), data governance (Art. 10), technical documentation (Art. 11), transparency (Art. 13), human oversight (Art. 14), accuracy and robustness (Art. 15), quality management (Art. 17), or conformity assessment (Art. 43).</p>
+      <p>The <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/compliance/EU-AI-ACT-MAPPING.md" rel="noopener">Article 12 mapping</a> sets out, requirement by requirement, what ships today — 24 of 27 rows as of 0.12 — and what is planned.</p>
+
+      <h2 id="evidence">Evidence you can hand over</h2>
+      <p>When an authority asks for logs, what matters is whether the record itself can be believed. A PALA-1 chain can be verified by the authority on its own machine, from a published specification, without your decryption key — see <a href="/verify-without-reading/">verify without reading</a>.</p>
+
+      <h2 id="faq">Questions</h2>
+      <h3>Does Palimpsests make us compliant with the EU AI Act?</h3>
+      <p>No — and be wary of anything that claims to. Fines under Article 99 attach to your obligations as a provider or deployer, most of which no runtime can carry for you. Palimpsests carries one of them well: automatic, verifiable record-keeping. The log is evidence of how you met your obligations, not a substitute for meeting them.</p>
+      <h3>Is our system high-risk?</h3>
+      <p>That classification is yours to make, against Article 6 and Annex III. Palimpsests cannot answer it for you.</p>
+      <h3>Is this page legal advice?</h3>
+      <p>No. It summarises the text of the Regulation as amended; the source text on EUR-Lex governs.</p>
+
+      <aside class="evidence">
+        <h2>Evidence in the repository</h2>
+        <ul>
+          <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/compliance/EU-AI-ACT-MAPPING.md" rel="noopener">Article 12 mapping</a></li>
+          <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/compliance/24970-MAPPING.md" rel="noopener">ISO/IEC 24970 mapping</a></li>
+          <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/RETENTION.md" rel="noopener">Retention, archival and pruning</a></li>
+          <li><a href="https://eur-lex.europa.eu/eli/reg/2024/1689/oj/eng" rel="noopener">Regulation (EU) 2024/1689 on EUR-Lex</a></li>
+        </ul>
+      </aside>
+      <p class="doc__foot">Not legal advice. Figures and dates as of 30 September 2026; source: Regulation (EU) 2024/1689 as amended by Regulation (EU) 2026/1744, on EUR-Lex.</p>
+      <div class="related">
+        <a class="btn" href="/verify-without-reading/">Verify without reading →</a>
+        <a class="btn" href="/air-gapped/">Air-gapped deployments →</a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/" aria-label="Palimpsests">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
