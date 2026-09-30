@@ -82,8 +82,18 @@ for, and what the A2 invariant test demonstrates by counterfactual).
 Consequences, stated: within the PALA-1 envelope a stronger chain
 digest is **framed alongside** — a TLV, a witness path over a wider
 hash — never substituted at the frozen offsets; substituting the link
-itself is a new envelope (a "PALA-2" event), not a new version of this
-one. Credit: Oleksii Turak, question 2 of PR #170.
+itself would be a new envelope, not a new version of this one. Credit:
+Oleksii Turak, question 2 of PR #170.
+
+## C-7 — Name
+
+PALA stands for **Portable Append-only Log for Audit**. *Portable*: a
+PALA-1 log verifies on any machine, offline, with no key material.
+*Append-only*: records are only ever added to a hash chain. *For
+audit*: that is its purpose. The expansion is non-normative and changes
+no verifier's answer. The format is not tied to any one implementation;
+Palimpsests is its reference runtime. Earlier documents, including
+draft-sparysh-pala-audit-00, use the name without expansion.
 
 ## Implementation count
 
