@@ -1126,11 +1126,10 @@ ecosystem as a signed statement. The layers are complementary, and the
 practical relation is the anchoring path of {{transparency}}.
 
 **Statement construction and binding.**
-{{I-D.mih-sokolov-scitt-payload-binding}} extracts, as a reusable
-profile, the construction that systems anchoring structured records to a
-transparency service repeatedly re-derive: a canonical payload form, a
-content-derived identifier, receipt binding in the unprotected header,
-and typed digest references between records. Its envelope conventions
+{{I-D.mih-sokolov-scitt-payload-binding}} specifies how a Signed
+Statement declares the canonicalization applied to its payload, and
+leaves payload formats, serialization and structure out of scope. Its
+envelope conventions
 -- `alg`, `kid` or `x5chain`, and a content type in the protected
 header -- are the ones the statement of {{transparency}} follows.
 {{I-D.nobuo-scitt-protected-object-binding}} defines a common model for
@@ -1421,6 +1420,8 @@ This section is to be removed before publication as an RFC.
 - References: corrected an empty co-author entry and missing
   publication months introduced by the -00 build.
 - Related work: added signed syslog {{RFC5848}} and the systemd
-  journal's Forward Secure Sealing.
+  journal's Forward Secure Sealing; the description of
+  {{I-D.mih-sokolov-scitt-payload-binding}} follows its -05 reframing
+  as a canonicalization declaration.
 - Added {{audit}}, the relationship to the agent auditing architecture.
 - The expansion of the name PALA is stated.
