@@ -9,8 +9,11 @@ Publication tooling for specification documents: sources written in
 kramdown-rfc markdown are rendered to RFCXML v3 and plain text by
 `kdrfc` (with `xml2rfc` doing the final rendering). The CI job
 (`.github/workflows/spec-build.yml`) builds every `draft-*.md` in this
-directory and fails on a source that does not render — the same
-gate-not-taste posture as the rest of the repo's CI.
+directory, checks that every literal block survives into the rendered
+text verbatim (`check_render.py`), and fails on either — the same
+gate-not-taste posture as the rest of the repo's CI. The rendered
+`.xml` and `.txt` are uploaded as the `rendered-drafts` workflow
+artifact.
 
 ## Sources
 
@@ -25,6 +28,12 @@ gate-not-taste posture as the rest of the repo's CI.
   publication document exists, and the test vectors remain the
   normative artefact for interoperability.
 
+- `draft-sparysh-pala-audit-01.md` — the next revision, in preparation:
+  literal blocks restored, references corrected, related work on signed
+  syslog (RFC 5848) and systemd journal Forward Secure Sealing, and a
+  section relating PALA-1 to `draft-kuehlewind-audit-architecture`.
+  Its "Changes from -00" appendix lists every change.
+
 Local build:
 
 ```bash
@@ -37,6 +46,16 @@ Conventions for sources here: one document per file, named exactly as
 its publication name; the rendered `.xml`/`.txt` are build outputs and
 are not committed; content changes follow the repository's PR-and-
 non-author-review convention like every other document.
+
+**Submit what CI rendered, nothing else.** The file uploaded to the
+datatracker is the `.xml` from the `rendered-drafts` artifact of the
+commit being submitted. The -00 upload was rendered outside CI, by a
+kramdown-rfc version that reads a line of three backticks as an inline
+code span rather than a fence: seven literal blocks, including the
+verification pseudocode, were flattened into running text, and its
+reference list was built from hand-written stubs. Sources use `~~~`
+fences, and `check_render.py` fails a source whose blocks do not
+survive.
 
 A submitted revision is immutable — the IETF archive keeps every
 revision permanently and a posted draft cannot be withdrawn. Changes to
