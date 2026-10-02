@@ -17,7 +17,10 @@ guards the revision being prepared. It fails when:
   2. any non-blank line of a literal block in the source does not appear in
      the rendered text verbatim, internal indentation included (the renderer
      may add a fixed left margin, nothing else);
-  3. a fence marker leaks into the rendered text.
+  3. a fence marker leaks into the rendered text;
+  4. markdown table syntax leaks into the rendered text -- a table that
+     follows a closing fence with no blank line is read as paragraph text
+     (the -01 posted text has one such table, in its test-vector section).
 """
 
 import re
@@ -25,8 +28,9 @@ import sys
 from pathlib import Path
 
 # Posted revisions: archived by the IETF, immutable -- skipped.
-POSTED = {"draft-sparysh-pala-audit-00.md"}
+POSTED = {"draft-sparysh-pala-audit-00.md", "draft-sparysh-pala-audit-01.md"}
 FENCE = re.compile(r"^(```|~~~)\s*$")
+TABLE_RULE = re.compile(r"\|\s*:?-{3,}:?\s*\|")  # a markdown |---| row
 MARGINS = ("", "   ")  # xml2rfc artwork indent; 0 when the block is too wide
 
 
@@ -51,7 +55,10 @@ def main(src_path: str, txt_path: str) -> int:
         return 0
     src = Path(src_path).read_text(encoding="utf-8")
     txt = Path(txt_path).read_text(encoding="utf-8")
-    rendered = {t.rstrip() for t in txt.splitlines()}
+    # split on "\n" only: xml2rfc output carries form feeds at page breaks,
+    # and splitlines() would count them as lines and misreport line numbers.
+    txt_lines = txt.split("\n")
+    rendered = {t.rstrip() for t in txt_lines}
     errors = []
     found = blocks(src)
     for start, fence, lines in found:
@@ -60,9 +67,11 @@ def main(src_path: str, txt_path: str) -> int:
         for n, line in lines:
             if line and not any(m + line in rendered for m in MARGINS):
                 errors.append(f"{src_path}:{n}: not in render verbatim: {line!r}")
-    for i, t in enumerate(txt.splitlines(), 1):
+    for i, t in enumerate(txt_lines, 1):
         if "```" in t or t.strip() == "~~~":
             errors.append(f"{txt_path}:{i}: fence marker leaked into render")
+        if TABLE_RULE.search(t):
+            errors.append(f"{txt_path}:{i}: markdown table syntax leaked into render")
     total = sum(1 for *_, ls in found for _, text in ls if text)
     if errors:
         print("\n".join(errors))
