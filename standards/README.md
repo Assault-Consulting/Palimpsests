@@ -82,3 +82,20 @@ the next revision and, where a check can catch its class, by
   every hash are intact, and the vectors themselves are published
   separately. `check_render.py` now fails on leaked table syntax. Fix:
   a blank line, in the next revision.
+
+## Queued for -02
+
+Fixes and additions accumulated for the next revision; none is reason
+enough on its own to post one.
+
+- Test vectors: a blank line before the vector-chain table (the -01
+  defect above).
+- Implementation status: the Agent Action Capsule verification run
+  against `draft-mih-scitt-agent-action-capsule-05`, once it is on the
+  record; the reciprocal run, if it happens.
+- Transparency services: the head-to-head consistency proof
+  (`pala consistency`) as the way a later published head is shown to
+  extend an earlier one.
+- Before rendering: re-check every Internet-Draft description against
+  the revision its reference now resolves to; references follow the
+  latest revision, descriptions do not.
