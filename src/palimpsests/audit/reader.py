@@ -126,6 +126,7 @@ __all__ = [
     "SpanView",
     "BootView",
     "OriginView",
+    "OriginState",
     "decode_record",
 ]
 
@@ -420,6 +421,21 @@ class OriginView:
 
 
 @dataclass(frozen=True)
+class OriginState:
+    """The origin in force at a seq, and whether it was ended by an unload.
+
+    ``origin`` is what :meth:`AuditReader.origin_at` returns;
+    ``unloaded`` is what :meth:`AuditReader.unloaded_at` returns. Both
+    come from one walk: a caller that needs both — to tell "declared,
+    then unloaded" from "never declared", which ``origin=None`` alone
+    cannot — used to walk the chain twice.
+    """
+
+    origin: OriginView | None
+    unloaded: bool
+
+
+@dataclass(frozen=True)
 class Diagnosis:
     """One primary diagnosis, derived from chain + anchor (first match wins).
 
@@ -453,6 +469,7 @@ class AuditReader:
         self._file = None
         self._mmap = None
         self._verification: Verification | None = None
+        self._structure: tuple[list[BootView], list[SpanView]] | None = None
         self._decoded: list[DecodedRecord] | None = None
         # Sparse decode cache for the bounded paths (verify()'s
         # referential pass, the safety section, the kind probe's
@@ -995,16 +1012,40 @@ class AuditReader:
         The two views read the same header fields; a caller that wants
         both (the report does) pays one walk instead of two (U14, PR-8).
         ``boots()`` and ``spans()`` are each this pass keeping one half.
+
+        Computed once per reader and kept, like :meth:`verify`'s result:
+        the chain a reader holds does not change under it. Callers get
+        fresh outer lists, so appending to one cannot change what the
+        next caller sees.
         """
+        cached = self._structure
+        if cached is None:
+            with self._lock:
+                cached = self._structure
+                if cached is None:
+                    cached = self._structure = self._structure_pass()
+        return list(cached[0]), list(cached[1])
+
+    def _structure_pass(self) -> tuple[list[BootView], list[SpanView]]:
         boot_order: list[bytes] = []
         boot_table: dict[bytes, dict] = {}
         span_order: list[bytes] = []
         span_table: dict[bytes, dict] = {}
+        # A RECOVERY_TRUNCATED_TAIL is "the first record after BOOT"
+        # (inference profile §3), which is also what ``recovery_seq`` says
+        # it reports. So exactly one record per boot is probed — the one
+        # following its BOOT. Probing every EVENT until one matched cost a
+        # body read per record on any chain that never crashed (nearly all
+        # of them); dropping it cut a report's time after verify() by about
+        # a quarter at 200 000 records (U14).
+        recovery_candidate = -1
         for i, _hb, header in self._headers_decoded():
             if header is None:
                 continue
             seq = header.seq
             rtype = header.record_type
+            if rtype == RT_BOOT:
+                recovery_candidate = i + 1
 
             bid = header.boot_id
             entry = boot_table.get(bid)
@@ -1016,7 +1057,7 @@ class AuditReader:
             entry["count"] += 1
             entry["tt"].add(header.time_trust)
             if (
-                entry["recovery"] is None
+                i == recovery_candidate
                 and rtype == RT_EVENT
                 and self._kind_probe(i) == KIND_RECOVERY_TRUNCATED_TAIL
             ):
@@ -1072,6 +1113,17 @@ class AuditReader:
         one that needs to render the two states differently now can.
         """
         return self._origin_state_at(seq)[1]
+
+    def origin_state_at(self, seq: int) -> OriginState:
+        """:meth:`origin_at` and :meth:`unloaded_at` from a single walk.
+
+        Each of those is a walk over the chain up to ``seq``; a caller
+        rendering the three origin states (declared / unloaded / never
+        declared) needs both and used to pay for two. Additive: the two
+        methods keep their signatures and remain views over the same walk.
+        """
+        origin, unloaded = self._origin_state_at(seq)
+        return OriginState(origin, unloaded)
 
     def _origin_state_at(self, seq: int) -> tuple[OriginView | None, bool]:
         current: OriginView | None = None
