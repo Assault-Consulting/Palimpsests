@@ -1,0 +1,133 @@
+
+=== vectors/capsule ===
+55/94 agree
+  reference-derived  2/5
+  spec-derived       53/61
+  unlabelled         0/28
+  capsule_id identical: 94/94
+  recorded RFC 8785 preimage reproduced byte-for-byte: 47/47
+DIFF   pos-v4-jcs-chain-committed                                 -                 info-count 0/1
+DIFF   neg-v3-format-version-unsupported                          spec-derived      derived.ledger_mode standalone/chained; info-count 0/1
+DIFF   neg-v4-chain-tampered                                      -                 info-count 0/1
+DIFF   neg-v4-canonicalization-missing                            spec-derived      derived.ledger_mode standalone/chained; info-count 0/1
+DIFF   neg-v4-canonicalization-jcs-n                              spec-derived      derived.ledger_mode standalone/chained; info-count 0/1
+DIFF   neg-v4-canonicalization-non-string                         spec-derived      derived.ledger_mode standalone/chained; info-count 0/1
+DIFF   neg-v2-canonicalization-absent                             spec-derived      derived.effect_mode not_applicable/confirmed; findings [(1, 'error'), (1, 'error')]/[(1, 'error')]
+DIFF   neg-v2-canonicalization-null                               spec-derived      derived.effect_mode not_applicable/confirmed; findings [(1, 'error'), (1, 'error')]/[(1, 'error')]
+AGREE  pos-executed-confirmed                                     spec-derived      
+AGREE  pos-blocked                                                spec-derived      
+AGREE  pos-denied                                                 spec-derived      
+AGREE  pos-hitl-dispatched                                        spec-derived      
+AGREE  pos-deferred                                               spec-derived      
+AGREE  pos-errored                                                spec-derived      
+AGREE  pos-timeout-pre-dispatch                                   spec-derived      
+AGREE  pos-timeout-post-dispatch                                  spec-derived      
+AGREE  pos-confirmed-runtime-claimed                              spec-derived      
+AGREE  pos-dispatched-unconfirmed-required                        spec-derived      
+AGREE  pos-not-applicable-absent                                  spec-derived      
+AGREE  pos-planned-carve                                          spec-derived      
+AGREE  pos-failed-required                                        spec-derived      
+AGREE  pos-reverted-required                                      spec-derived      
+AGREE  pos-unknown-effect-attestation                             spec-derived      
+AGREE  pos-unknown-verdict-class                                  spec-derived      
+AGREE  pos-unknown-effect-type                                    spec-derived      
+AGREE  pos-supersedes-chain                                       spec-derived      
+DIFF   pos-concurrent-supersedes                                  spec-derived      findings [(6, 'warning')]/[]; info-count 0/1
+AGREE  pos-cross-party-full-bilateral                             spec-derived      
+AGREE  pos-cross-party-acknowledged-receipt                       spec-derived      
+AGREE  pos-cross-party-unilateral-fallback                        spec-derived      
+AGREE  neg-cross-party-overclaim                                  spec-derived      
+AGREE  pos-disposition-approver-counterparty                      spec-derived      
+AGREE  neg-confirmed-without-response                             spec-derived      
+AGREE  neg-float-in-digest-field                                  spec-derived      
+AGREE  neg-unsafe-integer-in-digest-field                         spec-derived      
+AGREE  neg-attestation-present-when-not-applicable                spec-derived      
+AGREE  neg-attestation-missing-when-required                      spec-derived      
+AGREE  neg-never-dispatch-conflict                                spec-derived      
+AGREE  neg-capsule-id-mismatch                                    spec-derived      
+AGREE  neg-chain-missing-parent                                   spec-derived      
+AGREE  neg-approver-invalid                                       spec-derived      
+AGREE  honesty-dishonest-human-disposed                           spec-derived      
+AGREE  neg-format-version-unknown                                 spec-derived      
+AGREE  neg-never-dispatch-with-dispatched-effect                  spec-derived      
+AGREE  neg-never-dispatch-confirmed-no-response                   spec-derived      
+AGREE  canonical-array-preserved-not-sorted                       spec-derived      
+AGREE  canonical-bool-and-deep-nesting                            spec-derived      
+AGREE  canonical-integer-at-safe-max                              spec-derived      
+AGREE  canonical-integer-at-safe-min                              spec-derived      
+AGREE  canonical-integer-negative                                 spec-derived      
+AGREE  canonical-integer-zero                                     spec-derived      
+AGREE  canonical-key-nfc-vs-nfd                                   spec-derived      
+AGREE  canonical-key-sort-utf16-vs-codepoint                      spec-derived      
+AGREE  canonical-nested-member-named-capsule-id                   spec-derived      
+AGREE  canonical-nested-member-named-chain                        spec-derived      
+AGREE  canonical-string-escapes                                   spec-derived      
+DIFF   reference-absent                                           -                 ok False/True; findings [(1, 'error')]/[]; info-count 0/1
+DIFF   reference-bad-capsule-id                                   -                 info-count 0/1
+DIFF   reference-boolean-digest                                   -                 findings [(1, 'error'), (1, 'error')]/[(1, 'error')]; info-count 0/1
+DIFF   reference-duplicate-parent                                 -                 findings [(1, 'error'), (6, 'error')]/[(6, 'error')]; info-count 0/1
+DIFF   reference-empty                                            -                 ok False/True; findings [(1, 'error')]/[]; info-count 0/1
+DIFF   reference-empty-algorithm                                  -                 findings [(1, 'error'), (1, 'error')]/[(1, 'error')]; info-count 0/1
+DIFF   reference-empty-digest                                     -                 findings [(1, 'error'), (1, 'error')]/[(1, 'error')]; info-count 0/1
+DIFF   reference-external-capsule                                 -                 ok False/True; findings [(1, 'error')]/[]; info-count 0/1
+DIFF   reference-future-extension                                 -                 ok False/True; findings [(1, 'error')]/[]; info-count 0/1
+DIFF   reference-future-purpose                                   -                 ok False/True; findings [(1, 'error')]/[]; info-count 1/2
+DIFF   reference-local-only-envelope-fields                       -                 ok False/True; findings [(1, 'error')]/[]; info-count 0/1
+DIFF   reference-missing-type                                     -                 findings [(1, 'error'), (1, 'error')]/[(1, 'error')]; info-count 0/1
+DIFF   reference-mixed-checks                                     -                 findings [(1, 'error'), (1, 'error'), (6, 'error')]/[(1, 'error'), (6, 'error')]; info-count 1/2
+DIFF   reference-nonobject-reference                              -                 findings [(1, 'error'), (1, 'error')]/[(1, 'error')]; info-count 0/1
+DIFF   reference-nonstring-purpose                                -                 findings [(1, 'error'), (1, 'error')]/[(1, 'error')]; info-count 0/1
+DIFF   reference-null-coordinates                                 -                 findings [(1, 'error'), (1, 'error')]/[(1, 'error')]; info-count 0/1
+DIFF   reference-null-digest                                      -                 findings [(1, 'error'), (1, 'error')]/[(1, 'error')]; info-count 0/1
+DIFF   reference-null-references                                  -                 info-count 0/1
+DIFF   reference-object-references                                -                 findings [(1, 'error'), (1, 'error')]/[(1, 'error')]; info-count 0/1
+DIFF   reference-opaque-proof                                     -                 ok False/True; findings [(1, 'error')]/[]; info-count 0/1
+DIFF   reference-partial-coordinates                              -                 findings [(1, 'error'), (1, 'error')]/[(1, 'error')]; info-count 0/1
+DIFF   reference-same-hex-other-algorithm                         -                 ok False/True; findings [(1, 'error')]/[]; info-count 0/1
+DIFF   reference-same-hex-other-type                              -                 ok False/True; findings [(1, 'error'), (6, 'error')]/[]; info-count 0/1
+DIFF   reference-tampered-after-seal                              -                 findings [(1, 'error'), (2, 'error')]/[(2, 'error')]; info-count 0/1
+DIFF   reference-unknown-type-algorithm                           -                 ok False/True; findings [(1, 'error')]/[]; info-count 0/1
+DIFF   reference-unregistered-capsule-token                       -                 ok False/True; findings [(1, 'error'), (6, 'error')]/[]; info-count 0/1
+AGREE  spec-derived-flat-payload-digest                           spec-derived      
+AGREE  spec-derived-nested-payload-digest                         spec-derived      
+AGREE  spec-derived-unicode-payload-digest                        spec-derived      
+DIFF   spec-derived-v4-chain                                      spec-derived      info-count 0/1
+AGREE  spec-derived-v4-null-empty-members                         spec-derived      
+AGREE  neg-v4-canonicalization-null                               spec-derived      
+AGREE  neg-v4-canonicalization-empty                              spec-derived      
+DIFF   pos-v05-spec-version-chain-committed                       reference-derived info-count 0/1
+DIFF   pos-v05-chain-follows                                      reference-derived info-count 0/1
+AGREE  pos-v05-effect-inference-completion-host-served            reference-derived 
+DIFF   pos-v05-reference-counterparty-half                        reference-derived ok False/True; findings [(1, 'error')]/[]; info-count 0/1
+AGREE  pos-v05-reference-ran-under                                reference-derived 
+
+JSON-DIGEST group (canonical-*): capsule_id byte-identical 11/11
+
+=== provenance-mode-vectors (separate corpus; never merged with the headline) ===
+2/24 agree
+  unlabelled         2/24
+  capsule_id identical: 24/24
+DIFF   neg-provenance-mode-backfilled-missing-fields              -                 derived.provenance_mode None/backfilled; derived.provenance_time_rung None/self_attested; findings [(9, 'error')]/[(9, 'error'), (9, 'error'), (9, 'error'), (9, 'error')]
+DIFF   neg-provenance-mode-backfilled-missing-fields-v05          -                 derived.provenance_mode None/backfilled; derived.provenance_time_rung None/self_attested; findings [(9, 'error')]/[(9, 'error'), (9, 'error'), (9, 'error'), (9, 'error')]
+DIFF   neg-provenance-mode-contemporaneous-orphaned-fields        -                 ok True/False; derived.provenance_mode None/contemporaneous; findings []/[(9, 'error')]
+DIFF   neg-provenance-mode-contemporaneous-orphaned-fields-v05    -                 ok True/False; derived.provenance_mode None/contemporaneous; findings []/[(9, 'error')]
+AGREE  neg-provenance-mode-invalid-mode                           -                 
+AGREE  neg-provenance-mode-invalid-mode-v05                       -                 
+DIFF   neg-provenance-mode-invalid-time-rung                      -                 derived.provenance_mode None/backfilled; derived.provenance_time_rung None/self_attested
+DIFF   neg-provenance-mode-invalid-time-rung-v05                  -                 derived.provenance_mode None/backfilled; derived.provenance_time_rung None/self_attested
+DIFF   neg-provenance-mode-source-ref-missing-subfield            -                 derived.provenance_mode None/backfilled; derived.provenance_time_rung None/self_attested
+DIFF   neg-provenance-mode-source-ref-missing-subfield-v05        -                 derived.provenance_mode None/backfilled; derived.provenance_time_rung None/self_attested
+DIFF   neg-provenance-mode-source-ref-not-object                  -                 derived.provenance_mode None/backfilled; derived.provenance_time_rung None/self_attested
+DIFF   neg-provenance-mode-source-ref-not-object-v05              -                 derived.provenance_mode None/backfilled; derived.provenance_time_rung None/self_attested
+DIFF   neg-provenance-mode-time-laundering                        -                 derived.provenance_mode None/backfilled; derived.provenance_time_rung None/self_attested
+DIFF   neg-provenance-mode-time-laundering-v05                    -                 derived.provenance_mode None/backfilled; derived.provenance_time_rung None/self_attested
+DIFF   neg-provenance-mode-time-rung-overclaim                    -                 derived.provenance_mode None/backfilled; derived.provenance_time_rung None/self_attested
+DIFF   neg-provenance-mode-time-rung-overclaim-v05                -                 derived.provenance_mode None/backfilled; derived.provenance_time_rung None/self_attested
+DIFF   pos-chain-duplicates-collapsed-once                        -                 derived.provenance_mode None/backfilled; derived.provenance_time_rung None/self_attested; info-count 0/1
+DIFF   pos-chain-duplicates-collapsed-once-v05                    -                 derived.provenance_mode None/backfilled; derived.provenance_time_rung None/self_attested; info-count 0/1
+DIFF   pos-chain-duplicates-parent-backfilled                     -                 derived.provenance_mode None/backfilled; derived.provenance_time_rung None/self_attested; derived.provenance_mode None/backfilled; derived.provenance_time_rung None/self_attested; info-count 0/2
+DIFF   pos-chain-duplicates-parent-backfilled-v05                 -                 derived.provenance_mode None/backfilled; derived.provenance_time_rung None/self_attested; derived.provenance_mode None/backfilled; derived.provenance_time_rung None/self_attested; info-count 0/2
+DIFF   pos-provenance-mode-backfilled                             -                 derived.provenance_mode None/backfilled; derived.provenance_time_rung None/self_attested
+DIFF   pos-provenance-mode-backfilled-v05                         -                 derived.provenance_mode None/backfilled; derived.provenance_time_rung None/self_attested
+DIFF   pos-provenance-mode-witnessed-corroborated                 -                 derived.provenance_mode None/backfilled; derived.provenance_time_rung None/witnessed
+DIFF   pos-provenance-mode-witnessed-corroborated-v05             -                 derived.provenance_mode None/backfilled; derived.provenance_time_rung None/witnessed

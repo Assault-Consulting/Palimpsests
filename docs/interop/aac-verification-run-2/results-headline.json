@@ -1,0 +1,4527 @@
+{
+ "capsule": [
+  {
+   "name": "pos-v4-jcs-chain-committed",
+   "provenance": null,
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [
+     {
+      "check": 6,
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store",
+      "severity": "info"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "neg-v3-format-version-unsupported",
+   "provenance": "spec-derived",
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "note": "format_version must be exactly the string '4' (2, 5.1, 6)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "code": "unsupported_format_version",
+      "detail": "format_version '3' is not supported; only \"4\" is defined (§5.1)",
+      "severity": "error"
+     },
+     {
+      "check": 6,
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store",
+      "severity": "info"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": false,
+   "reasons": [
+    "derived.ledger_mode standalone/chained",
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "neg-v4-chain-tampered",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 2,
+      "severity": "error",
+      "note": "capsule_id does not recompute over plain JCS of the Capsule"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 2,
+      "code": "capsule_id_mismatch",
+      "detail": "recomputed 11388ff50848e0811b01a7732b9f0b4da12d441ab51f451556bbe30443f2168a != carried 862024869f00481bb4f59d9528a45c2d4885f64c5222a9324a38ac2c2cd119f2",
+      "severity": "error"
+     },
+     {
+      "check": 6,
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store",
+      "severity": "info"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "neg-v4-canonicalization-missing",
+   "provenance": "spec-derived",
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "note": "canonicalization_id must be exactly the string 'jcs'; absent, null, non-string, empty, unknown and 'jcs-n' declarations fail closed (2, 5.1, 6)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "code": "canonicalization_id_missing",
+      "detail": "format_version '4' REQUIRES canonicalization_id='jcs' (§5.1)",
+      "severity": "error"
+     },
+     {
+      "check": 6,
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store",
+      "severity": "info"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": false,
+   "reasons": [
+    "derived.ledger_mode standalone/chained",
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "neg-v4-canonicalization-jcs-n",
+   "provenance": "spec-derived",
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "note": "canonicalization_id must be exactly the string 'jcs'; absent, null, non-string, empty, unknown and 'jcs-n' declarations fail closed (2, 5.1, 6)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "code": "canonicalization_profile_mismatch",
+      "detail": "format_version '4' REQUIRES canonicalization_id='jcs' (§5.1)",
+      "severity": "error"
+     },
+     {
+      "check": 6,
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store",
+      "severity": "info"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": false,
+   "reasons": [
+    "derived.ledger_mode standalone/chained",
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "neg-v4-canonicalization-non-string",
+   "provenance": "spec-derived",
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "note": "canonicalization_id must be exactly the string 'jcs'; absent, null, non-string, empty, unknown and 'jcs-n' declarations fail closed (2, 5.1, 6)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "code": "canonicalization_id_not_string",
+      "detail": "canonicalization_id MUST be a string (§5.1)",
+      "severity": "error"
+     },
+     {
+      "check": 6,
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store",
+      "severity": "info"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": false,
+   "reasons": [
+    "derived.ledger_mode standalone/chained",
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "neg-v2-canonicalization-absent",
+   "provenance": "spec-derived",
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "note": "format_version must be exactly the string '4' (2, 5.1, 6)"
+     },
+     {
+      "check": 1,
+      "severity": "error",
+      "note": "canonicalization_id must be exactly the string 'jcs'; absent, null, non-string, empty, unknown and 'jcs-n' declarations fail closed (2, 5.1, 6)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "code": "unsupported_format_version",
+      "detail": "format_version '2' is not supported; only \"4\" is defined (§5.1)",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "confirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": false,
+   "agree_loose": false,
+   "reasons": [
+    "derived.effect_mode not_applicable/confirmed",
+    "findings [(1, 'error'), (1, 'error')]/[(1, 'error')]"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "neg-v2-canonicalization-null",
+   "provenance": "spec-derived",
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "note": "format_version must be exactly the string '4' (2, 5.1, 6)"
+     },
+     {
+      "check": 1,
+      "severity": "error",
+      "note": "canonicalization_id must be exactly the string 'jcs'; absent, null, non-string, empty, unknown and 'jcs-n' declarations fail closed (2, 5.1, 6)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "code": "unsupported_format_version",
+      "detail": "format_version '2' is not supported; only \"4\" is defined (§5.1)",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "confirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": false,
+   "agree_loose": false,
+   "reasons": [
+    "derived.effect_mode not_applicable/confirmed",
+    "findings [(1, 'error'), (1, 'error')]/[(1, 'error')]"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "pos-executed-confirmed",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "confirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "confirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "pos-blocked",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "pos-denied",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "pos-hitl-dispatched",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "pos-deferred",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "pos-errored",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "dispatched_unconfirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "dispatched_unconfirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "pos-timeout-pre-dispatch",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "pos-timeout-post-dispatch",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "dispatched_unconfirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "dispatched_unconfirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "pos-confirmed-runtime-claimed",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "confirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "confirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "pos-dispatched-unconfirmed-required",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "dispatched_unconfirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "dispatched_unconfirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "pos-not-applicable-absent",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "pos-planned-carve",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "pos-failed-required",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "dispatched_unconfirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "dispatched_unconfirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "pos-reverted-required",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "dispatched_unconfirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "dispatched_unconfirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "pos-unknown-effect-attestation",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [
+     {
+      "check": 8,
+      "severity": "info",
+      "note": "unregistered effect_attestation 'tee_anchored': informational"
+     },
+     {
+      "check": 8,
+      "severity": "info",
+      "note": "unknown effect_attestation graded no stronger than runtime_claimed (5.3)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "confirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [
+     {
+      "check": 8,
+      "code": "unknown_registry_value",
+      "detail": "effect.effect_attestation='tee_anchored' is not a seeded effect_attestation value; informational, not rejected (§12)",
+      "severity": "info"
+     },
+     {
+      "check": 8,
+      "code": "effect_attestation_graded_floor",
+      "detail": "unknown effect_attestation graded no stronger than 'runtime_claimed' (§5.2)",
+      "severity": "info"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "confirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "pos-unknown-verdict-class",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [
+     {
+      "check": 8,
+      "severity": "info",
+      "note": "unregistered verdict_class value 'custom_review': informational"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [
+     {
+      "check": 8,
+      "code": "unknown_registry_value",
+      "detail": "disposition.verdict_class='custom_review' is not a seeded verdict_class value; informational, not rejected (§12)",
+      "severity": "info"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "pos-unknown-effect-type",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [
+     {
+      "check": 8,
+      "severity": "info",
+      "note": "unregistered effect.type value 'teleport_goods': informational"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "confirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [
+     {
+      "check": 8,
+      "code": "unknown_registry_value",
+      "detail": "effect.type='teleport_goods' is not a seeded effect.type value; informational, not rejected (§12)",
+      "severity": "info"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "confirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "pos-supersedes-chain",
+   "provenance": "spec-derived",
+   "kind": "store",
+   "store": true,
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "confirmed",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "confirmed",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "pos-concurrent-supersedes",
+   "provenance": "spec-derived",
+   "kind": "store",
+   "store": true,
+   "ours": {
+    "ok": true,
+    "findings": [
+     {
+      "check": 6,
+      "severity": "warning",
+      "note": "concurrent supersedes: an earlier Capsule in ledger order already supersedes this parent"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [
+     {
+      "check": 6,
+      "code": "concurrent_supersedes",
+      "detail": "a later supersedes over parent e0a1ac498236518f6e6869c95410dba84900f7c6c085205f2685b9f7d90c7da9; the earliest is authoritative (§5.4.4)",
+      "severity": "info"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": false,
+   "reasons": [
+    "findings [(6, 'warning')]/[]",
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "pos-cross-party-full-bilateral",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone",
+     "cross_party_rung": "full_bilateral"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "cross_party_rung": "full_bilateral",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "pos-cross-party-acknowledged-receipt",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone",
+     "cross_party_rung": "acknowledged_receipt"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "cross_party_rung": "acknowledged_receipt",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "pos-cross-party-unilateral-fallback",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone",
+     "cross_party_rung": "unilateral_fallback"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "cross_party_rung": "unilateral_fallback",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "neg-cross-party-overclaim",
+   "provenance": "spec-derived",
+   "kind": "overclaim",
+   "ours": {
+    "ok": true,
+    "findings": [
+     {
+      "check": 7,
+      "severity": "info",
+      "note": "assurance_overclaim: assurance.cross_party_rung declared 'full_bilateral', derived 'unilateral_fallback' (5.4.1)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone",
+     "cross_party_rung": "unilateral_fallback"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [
+     {
+      "check": 7,
+      "code": "assurance_overclaim",
+      "detail": "claimed cross_party_rung 'full_bilateral' but verifier derived 'unilateral_fallback' (§5.3 Cross-party assurance)",
+      "severity": "info"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "cross_party_rung": "unilateral_fallback",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "pos-disposition-approver-counterparty",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "neg-confirmed-without-response",
+   "provenance": "spec-derived",
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 3,
+      "severity": "error",
+      "note": "effect.status confirmed without a well-formed response_digest (5.3)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "dispatched_unconfirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 3,
+      "code": "confirmed_without_response",
+      "detail": "effect.status 'confirmed' requires a 64-hex response_digest (§5.2)",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "dispatched_unconfirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "neg-float-in-digest-field",
+   "provenance": "spec-derived",
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "note": "digest-bearing field cannot be digested: floating-point value in a digest-bearing field: 12.5"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "confirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "code": "float_in_digest_field",
+      "detail": "floating-point value at effect.amount; §5.1 forbids it",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "confirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "neg-unsafe-integer-in-digest-field",
+   "provenance": "spec-derived",
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "note": "digest-bearing field cannot be digested: integer outside the IEEE-754 safe range: 9007199254740992"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "confirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "code": "unsafe_integer_in_digest_field",
+      "detail": "integer outside the JS-safe range (+/-9007199254740991) at effect.amount; large integers MUST be exact decimal strings for cross-impl digest reproducibility (impl guard ahead of -00; see -01 flag)",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "confirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "neg-attestation-present-when-not-applicable",
+   "provenance": "spec-derived",
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 5,
+      "severity": "error",
+      "note": "effect_attestation MUST be absent for not_applicable / planned (5.3)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 5,
+      "code": "effect_attestation_present",
+      "detail": "effect_attestation MUST be absent for effect_mode 'not_applicable' (§5.2)",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "neg-attestation-missing-when-required",
+   "provenance": "spec-derived",
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 5,
+      "severity": "error",
+      "note": "effect_attestation REQUIRED for effect_mode dispatched_unconfirmed (5.3 Table 5)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "dispatched_unconfirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 5,
+      "code": "effect_attestation_missing",
+      "detail": "effect_attestation REQUIRED for effect_mode 'dispatched_unconfirmed' (§5.2)",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "dispatched_unconfirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "neg-never-dispatch-conflict",
+   "provenance": "spec-derived",
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 4,
+      "severity": "error",
+      "note": "never-dispatching verdict_class 'blocked' with derived effect_mode 'dispatched_unconfirmed' (5.5.2)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "dispatched_unconfirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 4,
+      "code": "verdict_effect_conflict",
+      "detail": "verdict_class 'blocked' never dispatches, but derived effect_mode is 'dispatched_unconfirmed' (§5.4.2)",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "dispatched_unconfirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "neg-capsule-id-mismatch",
+   "provenance": "spec-derived",
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 2,
+      "severity": "error",
+      "note": "capsule_id does not recompute over plain JCS of the Capsule"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "confirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 2,
+      "code": "capsule_id_mismatch",
+      "detail": "recomputed 87934d0f5b09e29ab0ea570574b9e94d07f58b861b53b491c848d7b1bdb6e528 != carried 5b7c4ff1bcf4364e0dd8c8b65eddddbb1d6102f27bed3ad1a3595cba51d3502a",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "confirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "neg-chain-missing-parent",
+   "provenance": "spec-derived",
+   "kind": "store",
+   "store": true,
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 6,
+      "severity": "error",
+      "note": "chain parent not present in the store (check 6)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "confirmed",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 6,
+      "code": "chain_parent_missing",
+      "detail": "chain parent 9999999999999999999999999999999999999999999999999999999999999999 not found in the store (§6)",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "confirmed",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "neg-approver-invalid",
+   "provenance": "spec-derived",
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "note": "disposition.approver outside the closed enum {human, policy, counterparty}: not a conforming Capsule (5.5)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "code": "approver_invalid",
+      "detail": "disposition.approver MUST be human|policy|counterparty (§5.4); got 'vendor_bot'",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "honesty-dishonest-human-disposed",
+   "provenance": "spec-derived",
+   "kind": "honesty",
+   "ours": {
+    "ok": true,
+    "findings": [
+     {
+      "check": null,
+      "severity": "warning",
+      "note": "human_disposed true with a non-human approver: asserted defensively (5.5, 6)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "confirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [
+     {
+      "check": null,
+      "code": "dishonest_human_disposed",
+      "detail": "human_disposed=true with a non-human approver (§5.4). Structurally unconstructable by a conforming producer; reported as a non-gating defensive warning, not a §6 gating check.",
+      "severity": "warning"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "confirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "neg-format-version-unknown",
+   "provenance": "spec-derived",
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "note": "format_version must be exactly the string '4' (2, 5.1, 6)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "code": "unsupported_format_version",
+      "detail": "format_version '1' is not supported; only \"4\" is defined (§5.1)",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "neg-never-dispatch-with-dispatched-effect",
+   "provenance": "spec-derived",
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 4,
+      "severity": "error",
+      "note": "never-dispatching verdict_class 'blocked' with derived effect_mode 'dispatched_unconfirmed' (5.5.2)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "dispatched_unconfirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 4,
+      "code": "verdict_effect_conflict",
+      "detail": "verdict_class 'blocked' never dispatches, but derived effect_mode is 'dispatched_unconfirmed' (§5.4.2)",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "dispatched_unconfirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "neg-never-dispatch-confirmed-no-response",
+   "provenance": "spec-derived",
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 3,
+      "severity": "error",
+      "note": "effect.status confirmed without a well-formed response_digest (5.3)"
+     },
+     {
+      "check": 4,
+      "severity": "error",
+      "note": "never-dispatching verdict_class 'denied' with derived effect_mode 'dispatched_unconfirmed' (5.5.2)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "dispatched_unconfirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 3,
+      "code": "confirmed_without_response",
+      "detail": "effect.status 'confirmed' requires a 64-hex response_digest (§5.2)",
+      "severity": "error"
+     },
+     {
+      "check": 4,
+      "code": "verdict_effect_conflict",
+      "detail": "verdict_class 'denied' never dispatches, but derived effect_mode is 'dispatched_unconfirmed' (§5.4.2)",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "dispatched_unconfirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "canonical-array-preserved-not-sorted",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "canonical-bool-and-deep-nesting",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "canonical-integer-at-safe-max",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "canonical-integer-at-safe-min",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "canonical-integer-negative",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "canonical-integer-zero",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "canonical-key-nfc-vs-nfd",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "canonical-key-sort-utf16-vs-codepoint",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "canonical-nested-member-named-capsule-id",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "canonical-nested-member-named-chain",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "canonical-string-escapes",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "reference-absent",
+   "provenance": null,
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [
+     {
+      "check": 6,
+      "severity": "info",
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store"
+     }
+    ],
+    "derived": {
+     "effect_mode": "not_applicable",
+     "attestation_mode": "self_attested",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "reference-bad-capsule-id",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "code": "reference_malformed",
+      "detail": "references[0].digest MUST be an AAC Capsule ID for agent-action-capsule/SHA-256 (§5.5.5)"
+     },
+     {
+      "check": 6,
+      "severity": "info",
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store"
+     }
+    ],
+    "derived": {
+     "effect_mode": "not_applicable",
+     "attestation_mode": "self_attested",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": false,
+   "reasons": [
+    "ok True/False",
+    "findings []/[(1, 'error')]",
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "reference-boolean-digest",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "note": "references[0] is not a typed digest reference: type, digest_alg and digest must all be non-empty strings (5.5.5, CPB-05 section 8)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "code": "reference_malformed",
+      "detail": "references[0].digest MUST be a non-empty string (§5.5.5)"
+     },
+     {
+      "check": 6,
+      "severity": "info",
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store"
+     }
+    ],
+    "derived": {
+     "effect_mode": "not_applicable",
+     "attestation_mode": "self_attested",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "reference-duplicate-parent",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 6,
+      "severity": "error",
+      "note": "references entry duplicates chain.parent_capsule_id (5.5.5 boundary rule, check 6)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 6,
+      "severity": "info",
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store"
+     },
+     {
+      "check": 6,
+      "severity": "error",
+      "code": "reference_duplicates_chain_parent",
+      "detail": "references[0] duplicates chain.parent_capsule_id (§5.5.5)"
+     }
+    ],
+    "derived": {
+     "effect_mode": "not_applicable",
+     "attestation_mode": "self_attested",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "reference-empty",
+   "provenance": null,
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [
+     {
+      "check": 6,
+      "severity": "info",
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store"
+     }
+    ],
+    "derived": {
+     "effect_mode": "not_applicable",
+     "attestation_mode": "self_attested",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "reference-empty-algorithm",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "note": "references[0] is not a typed digest reference: type, digest_alg and digest must all be non-empty strings (5.5.5, CPB-05 section 8)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "code": "reference_malformed",
+      "detail": "references[0].digest_alg MUST be a non-empty string (§5.5.5)"
+     },
+     {
+      "check": 6,
+      "severity": "info",
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store"
+     }
+    ],
+    "derived": {
+     "effect_mode": "not_applicable",
+     "attestation_mode": "self_attested",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "reference-empty-digest",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "note": "references[0] is not a typed digest reference: type, digest_alg and digest must all be non-empty strings (5.5.5, CPB-05 section 8)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "code": "reference_malformed",
+      "detail": "references[0].digest MUST be a non-empty string (§5.5.5)"
+     },
+     {
+      "check": 6,
+      "severity": "info",
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store"
+     }
+    ],
+    "derived": {
+     "effect_mode": "not_applicable",
+     "attestation_mode": "self_attested",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "reference-external-capsule",
+   "provenance": null,
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [
+     {
+      "check": 6,
+      "severity": "info",
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store"
+     }
+    ],
+    "derived": {
+     "effect_mode": "not_applicable",
+     "attestation_mode": "self_attested",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "reference-future-extension",
+   "provenance": null,
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [
+     {
+      "check": 6,
+      "severity": "info",
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store"
+     }
+    ],
+    "derived": {
+     "effect_mode": "not_applicable",
+     "attestation_mode": "self_attested",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "reference-future-purpose",
+   "provenance": null,
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [
+     {
+      "check": 8,
+      "severity": "info",
+      "note": "unregistered citation_purpose value 'example-purpose': informational"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [
+     {
+      "check": 6,
+      "severity": "info",
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store"
+     },
+     {
+      "check": 8,
+      "severity": "info",
+      "code": "unknown_registry_value",
+      "detail": "references[0].citation_purpose is not seeded; informational, not rejected (§12)"
+     }
+    ],
+    "derived": {
+     "effect_mode": "not_applicable",
+     "attestation_mode": "self_attested",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 1/2"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "reference-local-only-envelope-fields",
+   "provenance": null,
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [
+     {
+      "check": 6,
+      "severity": "info",
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store"
+     }
+    ],
+    "derived": {
+     "effect_mode": "not_applicable",
+     "attestation_mode": "self_attested",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "reference-missing-type",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "note": "references[0] is not a typed digest reference: type, digest_alg and digest must all be non-empty strings (5.5.5, CPB-05 section 8)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "code": "reference_malformed",
+      "detail": "references[0].type MUST be a non-empty string (§5.5.5)"
+     },
+     {
+      "check": 6,
+      "severity": "info",
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store"
+     }
+    ],
+    "derived": {
+     "effect_mode": "not_applicable",
+     "attestation_mode": "self_attested",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "reference-mixed-checks",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "note": "REQUIRED string field missing or mistyped: operator"
+     },
+     {
+      "check": 6,
+      "severity": "error",
+      "note": "references entry duplicates chain.parent_capsule_id (5.5.5 boundary rule, check 6)"
+     },
+     {
+      "check": 8,
+      "severity": "info",
+      "note": "unregistered citation_purpose value 'example-purpose': informational"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "code": "field_not_string",
+      "detail": "operator MUST be a string (§5.1)"
+     },
+     {
+      "check": 6,
+      "severity": "info",
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store"
+     },
+     {
+      "check": 6,
+      "severity": "error",
+      "code": "reference_duplicates_chain_parent",
+      "detail": "references[0] duplicates chain.parent_capsule_id (§5.5.5)"
+     },
+     {
+      "check": 8,
+      "severity": "info",
+      "code": "unknown_registry_value",
+      "detail": "references[0].citation_purpose is not seeded; informational, not rejected (§12)"
+     }
+    ],
+    "derived": {
+     "effect_mode": "not_applicable",
+     "attestation_mode": "self_attested",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 1/2"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "reference-nonobject-reference",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "note": "references[0] is not an object (5.5.5)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "code": "reference_malformed",
+      "detail": "references[0] MUST be an object (§5.5.5)"
+     },
+     {
+      "check": 6,
+      "severity": "info",
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store"
+     }
+    ],
+    "derived": {
+     "effect_mode": "not_applicable",
+     "attestation_mode": "self_attested",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "reference-nonstring-purpose",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "note": "references[0].citation_purpose must be a string (5.5.5)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "code": "reference_malformed",
+      "detail": "references[0].citation_purpose MUST be a non-empty string (§5.5.5)"
+     },
+     {
+      "check": 6,
+      "severity": "info",
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store"
+     }
+    ],
+    "derived": {
+     "effect_mode": "not_applicable",
+     "attestation_mode": "self_attested",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "reference-null-coordinates",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "note": "references[0].log_coordinates must be {log_id: string, leaf_index: non-negative integer, inclusion_proof}} as a unit (5.5.6)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "code": "reference_log_coordinates_malformed",
+      "detail": "references[0].log_coordinates MUST be an object (§5.5.5)"
+     },
+     {
+      "check": 6,
+      "severity": "info",
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store"
+     }
+    ],
+    "derived": {
+     "effect_mode": "not_applicable",
+     "attestation_mode": "self_attested",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "reference-null-digest",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "note": "references[0] is not a typed digest reference: type, digest_alg and digest must all be non-empty strings (5.5.5, CPB-05 section 8)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "code": "reference_malformed",
+      "detail": "references[0].digest MUST be a non-empty string (§5.5.5)"
+     },
+     {
+      "check": 6,
+      "severity": "info",
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store"
+     }
+    ],
+    "derived": {
+     "effect_mode": "not_applicable",
+     "attestation_mode": "self_attested",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "reference-null-references",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "note": "references must be an array (5.5.5)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "code": "references_malformed",
+      "detail": "references MUST be an array (§5.5.5)"
+     },
+     {
+      "check": 6,
+      "severity": "info",
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store"
+     }
+    ],
+    "derived": {
+     "effect_mode": "not_applicable",
+     "attestation_mode": "self_attested",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "reference-object-references",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "note": "references must be an array (5.5.5)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "code": "references_malformed",
+      "detail": "references MUST be an array (§5.5.5)"
+     },
+     {
+      "check": 6,
+      "severity": "info",
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store"
+     }
+    ],
+    "derived": {
+     "effect_mode": "not_applicable",
+     "attestation_mode": "self_attested",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "reference-opaque-proof",
+   "provenance": null,
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [
+     {
+      "check": 6,
+      "severity": "info",
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store"
+     }
+    ],
+    "derived": {
+     "effect_mode": "not_applicable",
+     "attestation_mode": "self_attested",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "reference-partial-coordinates",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "note": "references[0].log_coordinates must be {log_id: string, leaf_index: non-negative integer, inclusion_proof}} as a unit (5.5.6)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "code": "reference_log_coordinates_malformed",
+      "detail": "references[0].log_coordinates requires inclusion_proof (§5.5.5)"
+     },
+     {
+      "check": 6,
+      "severity": "info",
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store"
+     }
+    ],
+    "derived": {
+     "effect_mode": "not_applicable",
+     "attestation_mode": "self_attested",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "reference-same-hex-other-algorithm",
+   "provenance": null,
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [
+     {
+      "check": 6,
+      "severity": "info",
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store"
+     }
+    ],
+    "derived": {
+     "effect_mode": "not_applicable",
+     "attestation_mode": "self_attested",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "reference-same-hex-other-type",
+   "provenance": null,
+   "kind": "positive",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 6,
+      "severity": "error",
+      "note": "references entry duplicates chain.parent_capsule_id (5.5.5 boundary rule, check 6)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [
+     {
+      "check": 6,
+      "severity": "info",
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store"
+     }
+    ],
+    "derived": {
+     "effect_mode": "not_applicable",
+     "attestation_mode": "self_attested",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": false,
+   "reasons": [
+    "ok False/True",
+    "findings [(6, 'error')]/[]",
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "reference-tampered-after-seal",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 2,
+      "severity": "error",
+      "note": "capsule_id does not recompute over plain JCS of the Capsule"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 2,
+      "severity": "error",
+      "code": "capsule_id_mismatch",
+      "detail": "recomputed f651121f788b96677705c5a50b4de376a72f5dd585d4dd13d208eec5db1505cf != carried 2727a6f4f3c559bcf6aa4dd6930f6103afb2a755e93959db3cebcfbe623eff9f"
+     },
+     {
+      "check": 6,
+      "severity": "info",
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store"
+     }
+    ],
+    "derived": {
+     "effect_mode": "not_applicable",
+     "attestation_mode": "self_attested",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "reference-unknown-type-algorithm",
+   "provenance": null,
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [
+     {
+      "check": 6,
+      "severity": "info",
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store"
+     }
+    ],
+    "derived": {
+     "effect_mode": "not_applicable",
+     "attestation_mode": "self_attested",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "reference-unregistered-capsule-token",
+   "provenance": null,
+   "kind": "positive",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 6,
+      "severity": "error",
+      "note": "references entry duplicates chain.parent_capsule_id (5.5.5 boundary rule, check 6)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [
+     {
+      "check": 6,
+      "severity": "info",
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store"
+     }
+    ],
+    "derived": {
+     "effect_mode": "not_applicable",
+     "attestation_mode": "self_attested",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": false,
+   "reasons": [
+    "ok False/True",
+    "findings [(6, 'error')]/[]",
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "spec-derived-flat-payload-digest",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "spec-derived-nested-payload-digest",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "spec-derived-unicode-payload-digest",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "spec-derived-v4-chain",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [
+     {
+      "check": 6,
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store",
+      "severity": "info"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "spec-derived-v4-null-empty-members",
+   "provenance": "spec-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true,
+   "preimage_in_recorded_set": true
+  },
+  {
+   "name": "neg-v4-canonicalization-null",
+   "provenance": "spec-derived",
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "note": "canonicalization_id must be exactly the string 'jcs'; absent, null, non-string, empty, unknown and 'jcs-n' declarations fail closed (2, 5.1, 6)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "code": "canonicalization_id_not_string",
+      "detail": "canonicalization_id MUST be a string (§5.1)",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "neg-v4-canonicalization-empty",
+   "provenance": "spec-derived",
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "severity": "error",
+      "note": "canonicalization_id must be exactly the string 'jcs'; absent, null, non-string, empty, unknown and 'jcs-n' declarations fail closed (2, 5.1, 6)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 1,
+      "code": "canonicalization_profile_mismatch",
+      "detail": "format_version '4' REQUIRES canonicalization_id='jcs' (§5.1)",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "pos-v05-spec-version-chain-committed",
+   "provenance": "reference-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [
+     {
+      "check": 6,
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store",
+      "severity": "info"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "pos-v05-chain-follows",
+   "provenance": "reference-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [
+     {
+      "check": 6,
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store",
+      "severity": "info"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "pos-v05-effect-inference-completion-host-served",
+   "provenance": "reference-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "confirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "confirmed",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "pos-v05-reference-counterparty-half",
+   "provenance": "reference-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [
+     {
+      "check": 6,
+      "code": "chain_check_store_level",
+      "detail": "chain parent-existence and concurrent-supersedes are store-level checks (§6); not run without a store",
+      "severity": "info"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "pos-v05-reference-ran-under",
+   "provenance": "reference-derived",
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true
+  }
+ ],
+ "provenance_mode": [
+  {
+   "name": "neg-provenance-mode-backfilled-missing-fields",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 9,
+      "severity": "error",
+      "note": "mode 'backfilled' without a well-formed provenance_mode block; missing or malformed: source_ref, source_asserted_at, imported_at, import_batch (5.4.3, check 9)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 9,
+      "code": "provenance_mode_missing_required_field",
+      "detail": "provenance_mode.source_ref is REQUIRED when mode='backfilled' (§5.3(bis) Provenance mode)",
+      "severity": "error"
+     },
+     {
+      "check": 9,
+      "code": "provenance_mode_missing_required_field",
+      "detail": "provenance_mode.source_asserted_at is REQUIRED when mode='backfilled' (§5.3(bis) Provenance mode)",
+      "severity": "error"
+     },
+     {
+      "check": 9,
+      "code": "provenance_mode_missing_required_field",
+      "detail": "provenance_mode.import_batch is REQUIRED when mode='backfilled' (§5.3(bis) Provenance mode)",
+      "severity": "error"
+     },
+     {
+      "check": 9,
+      "code": "provenance_mode_missing_required_field",
+      "detail": "provenance_mode.imported_at is REQUIRED when mode='backfilled' (§5.3(bis) Provenance mode)",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone",
+     "provenance_mode": "backfilled",
+     "provenance_time_rung": "self_attested"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "findings [(9, 'error')]/[(9, 'error'), (9, 'error'), (9, 'error'), (9, 'error')]"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "neg-provenance-mode-backfilled-missing-fields-v05",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 9,
+      "severity": "error",
+      "note": "mode 'backfilled' without a well-formed provenance_mode block; missing or malformed: source_ref, source_asserted_at, imported_at, import_batch (5.4.3, check 9)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 9,
+      "code": "provenance_mode_missing_required_field",
+      "detail": "provenance_mode.source_ref is REQUIRED when mode='backfilled' (§5.3(bis) Provenance mode)",
+      "severity": "error"
+     },
+     {
+      "check": 9,
+      "code": "provenance_mode_missing_required_field",
+      "detail": "provenance_mode.source_asserted_at is REQUIRED when mode='backfilled' (§5.3(bis) Provenance mode)",
+      "severity": "error"
+     },
+     {
+      "check": 9,
+      "code": "provenance_mode_missing_required_field",
+      "detail": "provenance_mode.import_batch is REQUIRED when mode='backfilled' (§5.3(bis) Provenance mode)",
+      "severity": "error"
+     },
+     {
+      "check": 9,
+      "code": "provenance_mode_missing_required_field",
+      "detail": "provenance_mode.imported_at is REQUIRED when mode='backfilled' (§5.3(bis) Provenance mode)",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone",
+     "provenance_mode": "backfilled",
+     "provenance_time_rung": "self_attested"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "findings [(9, 'error')]/[(9, 'error'), (9, 'error'), (9, 'error'), (9, 'error')]"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "neg-provenance-mode-contemporaneous-orphaned-fields",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 9,
+      "code": "provenance_mode_invalid",
+      "detail": "provenance_mode fields ['source_ref'] are meaningful only when mode='backfilled' (§5.3(bis) Provenance mode)",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone",
+     "provenance_mode": "contemporaneous"
+    }
+   },
+   "agree": false,
+   "agree_loose": false,
+   "reasons": [
+    "ok True/False",
+    "findings []/[(9, 'error')]"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "neg-provenance-mode-contemporaneous-orphaned-fields-v05",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 9,
+      "code": "provenance_mode_invalid",
+      "detail": "provenance_mode fields ['source_ref'] are meaningful only when mode='backfilled' (§5.3(bis) Provenance mode)",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone",
+     "provenance_mode": "contemporaneous"
+    }
+   },
+   "agree": false,
+   "agree_loose": false,
+   "reasons": [
+    "ok True/False",
+    "findings []/[(9, 'error')]"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "neg-provenance-mode-invalid-mode",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 9,
+      "severity": "error",
+      "note": "provenance_mode.mode must be 'contemporaneous' or 'backfilled' (5.4.3)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 9,
+      "code": "provenance_mode_invalid",
+      "detail": "provenance_mode.mode MUST be one of ['backfilled', 'contemporaneous'] (§5.3(bis) Provenance mode); got 'fabricated'",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "neg-provenance-mode-invalid-mode-v05",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 9,
+      "severity": "error",
+      "note": "provenance_mode.mode must be 'contemporaneous' or 'backfilled' (5.4.3)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 9,
+      "code": "provenance_mode_invalid",
+      "detail": "provenance_mode.mode MUST be one of ['backfilled', 'contemporaneous'] (§5.3(bis) Provenance mode); got 'fabricated'",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "neg-provenance-mode-invalid-time-rung",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 9,
+      "severity": "error",
+      "note": "provenance_mode.time_rung must be 'self_attested' or 'witnessed' (5.4.3)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 9,
+      "code": "provenance_mode_invalid",
+      "detail": "provenance_mode.time_rung MUST be one of ['self_attested', 'witnessed'] (§5.3(bis) Provenance mode); got 'notarized'",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone",
+     "provenance_mode": "backfilled",
+     "provenance_time_rung": "self_attested"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "neg-provenance-mode-invalid-time-rung-v05",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 9,
+      "severity": "error",
+      "note": "provenance_mode.time_rung must be 'self_attested' or 'witnessed' (5.4.3)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 9,
+      "code": "provenance_mode_invalid",
+      "detail": "provenance_mode.time_rung MUST be one of ['self_attested', 'witnessed'] (§5.3(bis) Provenance mode); got 'notarized'",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone",
+     "provenance_mode": "backfilled",
+     "provenance_time_rung": "self_attested"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "neg-provenance-mode-source-ref-missing-subfield",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 9,
+      "severity": "error",
+      "note": "mode 'backfilled' without a well-formed provenance_mode block; missing or malformed: source_ref (5.4.3, check 9)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 9,
+      "code": "provenance_mode_source_ref_malformed",
+      "detail": "provenance_mode.source_ref.digest MUST be a non-empty string (§5.3(bis) Provenance mode)",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone",
+     "provenance_mode": "backfilled",
+     "provenance_time_rung": "self_attested"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "neg-provenance-mode-source-ref-missing-subfield-v05",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 9,
+      "severity": "error",
+      "note": "mode 'backfilled' without a well-formed provenance_mode block; missing or malformed: source_ref (5.4.3, check 9)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 9,
+      "code": "provenance_mode_source_ref_malformed",
+      "detail": "provenance_mode.source_ref.digest MUST be a non-empty string (§5.3(bis) Provenance mode)",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone",
+     "provenance_mode": "backfilled",
+     "provenance_time_rung": "self_attested"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "neg-provenance-mode-source-ref-not-object",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 9,
+      "severity": "error",
+      "note": "mode 'backfilled' without a well-formed provenance_mode block; missing or malformed: source_ref (5.4.3, check 9)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 9,
+      "code": "provenance_mode_source_ref_malformed",
+      "detail": "provenance_mode.source_ref MUST be a JSON object when present (§5.3(bis) Provenance mode)",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone",
+     "provenance_mode": "backfilled",
+     "provenance_time_rung": "self_attested"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "neg-provenance-mode-source-ref-not-object-v05",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 9,
+      "severity": "error",
+      "note": "mode 'backfilled' without a well-formed provenance_mode block; missing or malformed: source_ref (5.4.3, check 9)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 9,
+      "code": "provenance_mode_source_ref_malformed",
+      "detail": "provenance_mode.source_ref MUST be a JSON object when present (§5.3(bis) Provenance mode)",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone",
+     "provenance_mode": "backfilled",
+     "provenance_time_rung": "self_attested"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "neg-provenance-mode-time-laundering",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 9,
+      "severity": "error",
+      "note": "imported_at is byte-equal to source_asserted_at: the laundering shape (5.4.3, check 9)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 9,
+      "code": "provenance_time_laundering_shape",
+      "detail": "provenance_mode.imported_at equals source_asserted_at on a backfilled record; this is the shape a laundering producer would construct to make an import look contemporaneous (§5.3(bis) Provenance mode)",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone",
+     "provenance_mode": "backfilled",
+     "provenance_time_rung": "self_attested"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "neg-provenance-mode-time-laundering-v05",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 9,
+      "severity": "error",
+      "note": "imported_at is byte-equal to source_asserted_at: the laundering shape (5.4.3, check 9)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 9,
+      "code": "provenance_time_laundering_shape",
+      "detail": "provenance_mode.imported_at equals source_asserted_at on a backfilled record; this is the shape a laundering producer would construct to make an import look contemporaneous (§5.3(bis) Provenance mode)",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone",
+     "provenance_mode": "backfilled",
+     "provenance_time_rung": "self_attested"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "neg-provenance-mode-time-rung-overclaim",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 9,
+      "severity": "error",
+      "note": "time_rung 'witnessed' without a well-formed references[] entry citing citation_purpose 'corroborates_source_time' (5.4.3, check 9)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 9,
+      "code": "provenance_time_rung_overclaim",
+      "detail": "provenance_mode.time_rung='witnessed' claimed without a well-formed references[] entry citing citation_purpose='corroborates_source_time' (§5.3(bis) Provenance mode)",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone",
+     "provenance_mode": "backfilled",
+     "provenance_time_rung": "self_attested"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "neg-provenance-mode-time-rung-overclaim-v05",
+   "provenance": null,
+   "kind": "negative",
+   "ours": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 9,
+      "severity": "error",
+      "note": "time_rung 'witnessed' without a well-formed references[] entry citing citation_purpose 'corroborates_source_time' (5.4.3, check 9)"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": false,
+    "findings": [
+     {
+      "check": 9,
+      "code": "provenance_time_rung_overclaim",
+      "detail": "provenance_mode.time_rung='witnessed' claimed without a well-formed references[] entry citing citation_purpose='corroborates_source_time' (§5.3(bis) Provenance mode)",
+      "severity": "error"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone",
+     "provenance_mode": "backfilled",
+     "provenance_time_rung": "self_attested"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "pos-chain-duplicates-collapsed-once",
+   "provenance": null,
+   "kind": "store",
+   "store": true,
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [
+     {
+      "check": 9,
+      "code": "duplicate_collapsed",
+      "detail": "chain.relation='duplicates' over parent ed3cdeca453ee37e40bbeeee0f582f579873fa690a6af2d729578595b287d378; verifiers and downstream evidence evaluators MUST count this pair once, the contemporaneous parent governing (§5.3(bis) Provenance mode)",
+      "severity": "info"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained",
+     "provenance_mode": "backfilled",
+     "provenance_time_rung": "self_attested"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "pos-chain-duplicates-collapsed-once-v05",
+   "provenance": null,
+   "kind": "store",
+   "store": true,
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [
+     {
+      "check": 9,
+      "code": "duplicate_collapsed",
+      "detail": "chain.relation='duplicates' over parent 33309c97203d757cfc6afd58e4183323962b5053d21fa69942661f6dc501baf5; verifiers and downstream evidence evaluators MUST count this pair once, the contemporaneous parent governing (§5.3(bis) Provenance mode)",
+      "severity": "info"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained",
+     "provenance_mode": "backfilled",
+     "provenance_time_rung": "self_attested"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 0/1"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "pos-chain-duplicates-parent-backfilled",
+   "provenance": null,
+   "kind": "store",
+   "store": true,
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [
+     {
+      "check": 9,
+      "code": "duplicate_collapsed",
+      "detail": "chain.relation='duplicates' over parent 9e71f9139b7a1e45ffec6b9e665b2bfffca7d42076b361e175030a1c3aa0e86c; verifiers and downstream evidence evaluators MUST count this pair once, the contemporaneous parent governing (§5.3(bis) Provenance mode)",
+      "severity": "info"
+     },
+     {
+      "check": 9,
+      "code": "duplicate_parent_not_contemporaneous",
+      "detail": "chain.relation='duplicates' parent 9e71f9139b7a1e45ffec6b9e665b2bfffca7d42076b361e175030a1c3aa0e86c is itself provenance_mode.mode='backfilled'; 'duplicates' is defined to cite the contemporaneous record (§5.3(bis) Provenance mode)",
+      "severity": "info"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained",
+     "provenance_mode": "backfilled",
+     "provenance_time_rung": "self_attested"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 0/2"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "pos-chain-duplicates-parent-backfilled-v05",
+   "provenance": null,
+   "kind": "store",
+   "store": true,
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [
+     {
+      "check": 9,
+      "code": "duplicate_collapsed",
+      "detail": "chain.relation='duplicates' over parent e08ac71ad0fe01360df5459adf8011ece0c6009ba11bc631fbdfe711cdd98457; verifiers and downstream evidence evaluators MUST count this pair once, the contemporaneous parent governing (§5.3(bis) Provenance mode)",
+      "severity": "info"
+     },
+     {
+      "check": 9,
+      "code": "duplicate_parent_not_contemporaneous",
+      "detail": "chain.relation='duplicates' parent e08ac71ad0fe01360df5459adf8011ece0c6009ba11bc631fbdfe711cdd98457 is itself provenance_mode.mode='backfilled'; 'duplicates' is defined to cite the contemporaneous record (§5.3(bis) Provenance mode)",
+      "severity": "info"
+     }
+    ],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "chained",
+     "provenance_mode": "backfilled",
+     "provenance_time_rung": "self_attested"
+    }
+   },
+   "agree": false,
+   "agree_loose": true,
+   "reasons": [
+    "info-count 0/2"
+   ],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "pos-provenance-mode-backfilled",
+   "provenance": null,
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone",
+     "provenance_mode": "backfilled",
+     "provenance_time_rung": "self_attested"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "pos-provenance-mode-backfilled-v05",
+   "provenance": null,
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone",
+     "provenance_mode": "backfilled",
+     "provenance_time_rung": "self_attested"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "pos-provenance-mode-witnessed-corroborated",
+   "provenance": null,
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone",
+     "provenance_mode": "backfilled",
+     "provenance_time_rung": "witnessed"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true
+  },
+  {
+   "name": "pos-provenance-mode-witnessed-corroborated-v05",
+   "provenance": null,
+   "kind": "positive",
+   "ours": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone"
+    }
+   },
+   "theirs": {
+    "ok": true,
+    "findings": [],
+    "derived": {
+     "attestation_mode": "self_attested",
+     "effect_mode": "not_applicable",
+     "ledger_mode": "standalone",
+     "provenance_mode": "backfilled",
+     "provenance_time_rung": "witnessed"
+    }
+   },
+   "agree": true,
+   "agree_loose": true,
+   "reasons": [],
+   "capsule_id_identical": true
+  }
+ ]
+}
