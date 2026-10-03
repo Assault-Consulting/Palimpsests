@@ -32,7 +32,12 @@ source .venv/bin/activate
 
 pip install -e ".[serve]" litellm
 npm install -g opencode-ai
+npm install -g @anthropic-ai/claude-code   # for the claude-code probe
 ```
+
+The `claude-code` probe needs no Anthropic account: it points the
+client at a stand-in model on a loopback port, and what it checks is
+the hook path from the client to the serve.
 
 Check everything is in place:
 
