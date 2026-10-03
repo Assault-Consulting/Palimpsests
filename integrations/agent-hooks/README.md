@@ -15,6 +15,10 @@ adapter is written against what the hook really sends on the version
 installed today, not against documentation — and the documentation
 already disagrees with itself on one field.
 
+**Results for Claude Code 2.1.288 and Codex CLI 0.160.0 are in
+[PROBE-RESULTS.md](PROBE-RESULTS.md)**, including two ways a hook fails
+silently and one result the adapter must not record as a success.
+
 ## What the probe answers
 
 | Question | Why it matters |
@@ -62,9 +66,7 @@ fails (a missing file is enough).
 
 ### Codex
 
-Hooks are off by default in Codex: enable them in
-`~/.codex/config.toml` as its hooks documentation describes, then put
-in `~/.codex/hooks.json`:
+Hooks are on by default in Codex 0.160.0. Put in `~/.codex/hooks.json`:
 
 ```json
 {
@@ -75,8 +77,10 @@ in `~/.codex/hooks.json`:
 }
 ```
 
-Restart Codex fully so it reloads both files, run `/hooks` to confirm,
-and do the same turn: read, run, run something that fails.
+Restart Codex, then **open `/hooks` in an interactive session and trust
+the new hooks** — Codex does not run a hook until it has been trusted,
+and skips an untrusted one without a word. Then do the same turn: read,
+run, run something that fails.
 
 ### Read the result
 
