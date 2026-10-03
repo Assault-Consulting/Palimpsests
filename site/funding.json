@@ -1,0 +1,107 @@
+{
+  "version": "v1.0.0",
+  "entity": {
+    "type": "individual",
+    "role": "maintainer",
+    "name": "Andrii Sparysh",
+    "email": "as@assault.consulting",
+    "phone": "",
+    "description": "Lead maintainer of Palimpsests and author of the PALA-1 audit log format and its IETF Internet-Draft. Embedded and systems engineer based in Kyiv, Ukraine. The project's code and specification are owned by Assault Consulting LLC (Kyiv); this manifest requests funding for maintainer work on it, with the owner's consent.",
+    "webpageUrl": {
+      "url": "https://palimpsests.dev",
+      "wellKnown": ""
+    }
+  },
+  "projects": [
+    {
+      "guid": "palimpsests",
+      "name": "Palimpsests / PALA-1",
+      "description": "PALA-1 is an open byte-level wire format for append-only, hash-chained, selectively disclosable logs. A chain verifies offline and without the decryption key: bodies are checked against their digests, never opened, so the right to verify is separated from the right to read. The format is frozen at v1.0; five independent implementations, three of them made outside the project, reproduce every published value from the specification text and test vectors alone. It is described in IETF Internet-Draft draft-sparysh-pala-audit and can register a chain head with a SCITT transparency service. Palimpsests is the reference implementation: a local-first LLM runtime that writes every request into a PALA-1 chain. OpenSSF Best Practices Gold.",
+      "webpageUrl": {
+        "url": "https://palimpsests.dev",
+        "wellKnown": ""
+      },
+      "repositoryUrl": {
+        "url": "https://github.com/Assault-Consulting/Palimpsests",
+        "wellKnown": "https://github.com/Assault-Consulting/Palimpsests/blob/main/.well-known/funding-manifest-urls"
+      },
+      "licenses": [
+        "spdx:Apache-2.0",
+        "spdx:CC0-1.0"
+      ],
+      "tags": [
+        "audit-log",
+        "tamper-evident",
+        "append-only",
+        "transparency",
+        "verification",
+        "local-first",
+        "air-gapped",
+        "ietf",
+        "eu-ai-act",
+        "llm-inference"
+      ]
+    }
+  ],
+  "funding": {
+    "channels": [
+      {
+        "guid": "bank-usd",
+        "type": "bank",
+        "address": "USD bank transfer to Ukraine. Bank details on request: as@assault.consulting",
+        "description": "Transfer to the maintainer's personal USD account in Ukraine. Please email first; full bank details are sent by email."
+      }
+    ],
+    "plans": [
+      {
+        "guid": "maintenance",
+        "status": "active",
+        "name": "Ongoing maintenance",
+        "description": "Maintainer time for reviews, releases, security fixes, dependency upkeep and the self-service verification kit, so the frozen format and its reference verifier stay correct and reproducible.",
+        "amount": 30000,
+        "currency": "USD",
+        "frequency": "yearly",
+        "channels": [
+          "bank-usd"
+        ]
+      },
+      {
+        "guid": "security-review",
+        "status": "active",
+        "name": "Independent security review",
+        "description": "An external review of the PALA-1 specification and the reference verifier, with every finding fixed or recorded as an accepted risk in public.",
+        "amount": 12000,
+        "currency": "USD",
+        "frequency": "one-time",
+        "channels": [
+          "bank-usd"
+        ]
+      },
+      {
+        "guid": "constrained-hardware",
+        "status": "active",
+        "name": "Cost on constrained hardware",
+        "description": "Measure writer and verifier throughput and memory across Linux, Windows and macOS, x86 and ARM, and low-RAM profiles under a pre-registered protocol; publish raw results.",
+        "amount": 8000,
+        "currency": "USD",
+        "frequency": "one-time",
+        "channels": [
+          "bank-usd"
+        ]
+      },
+      {
+        "guid": "standards",
+        "status": "active",
+        "name": "Standards and interoperability",
+        "description": "Revisions of the Internet-Draft, cross-verification runs with independent implementations of related IETF drafts, and remote participation in IETF meetings.",
+        "amount": 10000,
+        "currency": "USD",
+        "frequency": "yearly",
+        "channels": [
+          "bank-usd"
+        ]
+      }
+    ],
+    "history": []
+  }
+}
