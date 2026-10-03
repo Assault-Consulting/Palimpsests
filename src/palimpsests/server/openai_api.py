@@ -166,6 +166,24 @@ def create_app(
             supplied = request.headers.get("authorization", "")
             expected = f"Bearer {api_key}"
             if not hmac.compare_digest(supplied, expected):
+                if (
+                    request.url.path.startswith("/v1/pala/hooks/")
+                    and supplied.strip() in ("", "Bearer")
+                ):
+                    # The one refusal worth naming in our own log. An agent's
+                    # HTTP hook that names an environment variable in its
+                    # header but not in `allowedEnvVars` sends an empty
+                    # bearer — silently, and since a hook never blocks the
+                    # agent, nothing on that side shows every report being
+                    # refused. Measured on Claude Code 2.1.288.
+                    import logging
+
+                    logging.getLogger("palimpsests.serve").warning(
+                        "hook report refused: empty bearer on %s — if the agent's "
+                        "hook header uses $PALIMPSESTS_SERVE_API_KEY, list that "
+                        "variable in the hook's allowedEnvVars",
+                        request.url.path,
+                    )
                 return JSONResponse(
                     status_code=401,
                     content={
@@ -349,6 +367,33 @@ def create_app(
             ],
             "usage": _usage(p_tok, c_tok),
         }
+
+    if audit is not None:
+        from palimpsests.server.agent_hooks import HookIngest
+
+        hooks = HookIngest(audit, pending)
+    else:
+        hooks = None
+
+    @app.post("/v1/pala/hooks/claude")
+    def claude_hook(body: dict):
+        """Agent tool hooks in the Claude schema (Claude Code HTTP hooks).
+
+        See ``palimpsests.server.agent_hooks``. Every reply the agent sees
+        carries no decision, so the tool always proceeds.
+        """
+        if hooks is None:
+            return JSONResponse(
+                status_code=503,
+                content={
+                    "error": {
+                        "message": "no audit chain configured on this server",
+                        "type": "server_error",
+                    }
+                },
+            )
+        status, reply = hooks.handle(body)
+        return JSONResponse(status_code=status, content=reply)
 
     @app.post("/v1/pala/events")
     def ingest_events(body: dict):

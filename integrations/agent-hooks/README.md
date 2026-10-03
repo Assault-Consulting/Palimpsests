@@ -96,10 +96,71 @@ anything else.
 **Remove the probe hooks afterwards.** They are harmless, but a hook you
 forget about is one more thing that runs on every tool call.
 
-## What comes next
+## Claude Code — recording the tool loop
 
-The adapter: a `POST /v1/pala/hooks/claude` route in `palimpsests serve`
-for HTTP hooks, and a `palimpsests-hook` command for clients that only
-run command hooks (Codex). Both land the events as `TOOL_CALL` /
-`TOOL_RESULT` marked `reported-by-client` — proof that the agent
-reported a call and a result, and when; not that the tool ran.
+`palimpsests serve` accepts Claude Code's hooks directly: the route
+`POST /v1/pala/hooks/claude` takes `PreToolUse`, `PostToolUse` and
+`PostToolUseFailure` as Claude Code sends them, and writes each call and
+its result as `TOOL_CALL` / `TOOL_RESULT` marked `reported-by-client`.
+No script runs on your side — Claude Code posts the event itself.
+
+1. Run the serve with a key:
+
+   ```bash
+   export PALIMPSESTS_SERVE_API_KEY=sk-…        # any secret of your choosing
+   palimpsests-serve --api-key "$PALIMPSESTS_SERVE_API_KEY"
+   ```
+
+2. Add to `~/.claude/settings.json` (merge with any `hooks` you have),
+   and start Claude Code from a shell where the same variable is set:
+
+   ```json
+   {
+     "hooks": {
+       "PreToolUse":         [{ "matcher": "*", "hooks": [{ "type": "http", "url": "http://127.0.0.1:11435/v1/pala/hooks/claude", "headers": { "Authorization": "Bearer $PALIMPSESTS_SERVE_API_KEY" }, "allowedEnvVars": ["PALIMPSESTS_SERVE_API_KEY"] }] }],
+       "PostToolUse":        [{ "matcher": "*", "hooks": [{ "type": "http", "url": "http://127.0.0.1:11435/v1/pala/hooks/claude", "headers": { "Authorization": "Bearer $PALIMPSESTS_SERVE_API_KEY" }, "allowedEnvVars": ["PALIMPSESTS_SERVE_API_KEY"] }] }],
+       "PostToolUseFailure": [{ "matcher": "*", "hooks": [{ "type": "http", "url": "http://127.0.0.1:11435/v1/pala/hooks/claude", "headers": { "Authorization": "Bearer $PALIMPSESTS_SERVE_API_KEY" }, "allowedEnvVars": ["PALIMPSESTS_SERVE_API_KEY"] }] }]
+     }
+   }
+   ```
+
+   **`allowedEnvVars` is not optional.** Claude Code fills `$VAR` in a
+   header only for variables listed there; for any other it sends an
+   empty value, says nothing, and — since a hook never blocks the agent —
+   every report is refused while the agent works normally. The serve
+   names this case in its own log: `hook report refused: empty bearer`.
+
+3. Check the chain:
+
+   ```bash
+   palimpsests pala export ~/.config/palimpsests/serve.pala | grep '"kind_name":"TOOL_'
+   ```
+
+   Every line carries `"source": 1`, `"source_name": "reported-by-client"`.
+
+**What lands, and what it proves.** The call's input and the result
+are digested — JSON with sorted keys, compact, UTF-8, SHA-256, the
+profile's canonical form — and only the digests are written; content
+never enters the chain. A failed call (`PostToolUseFailure`) closes its
+pair as `error`. A result whose call the serve never saw is recorded as
+a call followed by its result, so nothing is left unpaired. The chain
+proves that Claude Code reported a call and a result, and when — not
+that the tool ran.
+
+**Contract.** The route never blocks a tool and never changes one:
+every reply carries no decision. Other hook events (prompts, sessions)
+are accepted and ignored. Re-delivered events do not create duplicates.
+
+**Where the record lives.** On the machine running the serve, which is
+the machine running the agent — wherever the model itself runs.
+
+**Watched by** the `claude-code` probe in `scripts/check_surfaces.py`:
+the real client, a stand-in model, these exact hook settings. It goes
+red if either side of the arrangement changes.
+
+## Codex
+
+Codex sends the same hook shape, but only as a command hook, and a
+failed call reaches the hook exactly like a successful one
+([probe results](PROBE-RESULTS.md)). Its adapter waits on how such a
+result is recorded: not as `ok`, which nothing in the hook supports.

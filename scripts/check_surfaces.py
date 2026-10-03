@@ -184,8 +184,8 @@ def _run_tree(cmd: list[str], *, cwd: Path, env: dict, timeout: float) -> bool:
     1.35 GB. A checker that poisons its own next sample is worse than
     none. Returns False if the command timed out.
     """
-    kwargs: dict = {"cwd": cwd, "env": env, "stdout": subprocess.DEVNULL,
-                    "stderr": subprocess.DEVNULL}
+    kwargs: dict = {"cwd": cwd, "env": env, "stdin": subprocess.DEVNULL,
+                    "stdout": subprocess.DEVNULL, "stderr": subprocess.DEVNULL}
     if os.name == "nt":
         kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
     else:
@@ -323,7 +323,54 @@ def probe_opencode(workdir: Path) -> Result:
         return _verdict("opencode", version, serve.pairs(), REPORTED, serve.completions)
 
 
-PROBES = {"litellm": probe_litellm, "mcp": probe_mcp, "opencode": probe_opencode}
+def probe_claude_code(workdir: Path) -> Result:
+    """Claude Code's HTTP hooks still deliver a tool pair the serve can bind.
+
+    Real client, stand-in model (scripts/_anthropic_stub.py): the client
+    runs the Read itself and fires PreToolUse / PostToolUse as HTTP hooks
+    at the serve's /v1/pala/hooks/claude, with the bearer taken from the
+    environment through allowedEnvVars — the configuration the README
+    gives users, so a change on either side of it turns this red.
+    """
+    version = _version(["claude", "--version"])
+    if version is None:
+        return Result("claude-code", "SKIP", detail="claude not on PATH")
+    sys.path.insert(0, str(ROOT / "scripts"))
+    from _anthropic_stub import AnthropicStub
+
+    home = workdir / "home"
+    (home / ".claude").mkdir(parents=True)
+    repo = workdir / "scratch"
+    repo.mkdir()
+    (repo / "NOTES.md").write_text("hello\n")
+    with StubServe(workdir) as serve, AnthropicStub(str(repo / "NOTES.md")) as model:
+        hook = [{"matcher": "*", "hooks": [{
+            "type": "http",
+            "url": serve.url + "/v1/pala/hooks/claude",
+            "headers": {"Authorization": "Bearer $PALIMPSESTS_SERVE_API_KEY"},
+            "allowedEnvVars": ["PALIMPSESTS_SERVE_API_KEY"],
+        }]}]
+        (home / ".claude" / "settings.json").write_text(json.dumps({
+            "hooks": {"PreToolUse": hook, "PostToolUse": hook, "PostToolUseFailure": hook},
+            "permissions": {"allow": ["Read"]},
+        }))
+        env = dict(os.environ, HOME=str(home), ANTHROPIC_BASE_URL=model.url,
+                   ANTHROPIC_API_KEY="sk-surface-stub",
+                   PALIMPSESTS_SERVE_API_KEY=serve.api_key,
+                   CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC="1", DISABLE_TELEMETRY="1")
+        _run_tree(["claude", "-p", "read NOTES.md"], cwd=repo, env=env, timeout=180)
+        # The stand-in model plays the part of "completions" here: zero
+        # tool-bearing requests means the client never got as far as
+        # offering tools — this machine's problem, not the surface's.
+        return _verdict("claude-code", version, serve.pairs(), REPORTED, model.tool_requests)
+
+
+PROBES = {
+    "litellm": probe_litellm,
+    "mcp": probe_mcp,
+    "opencode": probe_opencode,
+    "claude-code": probe_claude_code,
+}
 
 
 # ── report ──────────────────────────────────────────────────────────────
