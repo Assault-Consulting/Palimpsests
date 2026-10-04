@@ -45,5 +45,3 @@ Without an anchor, the last command reports that completeness wasn't checked and
 Someone who holds both the encryption key and write access to the anchor can rebuild the chain and the anchor together. That's why the format is called tamper-evident and not tamper-proof, and why it helps to keep the anchor off the machine that writes the log.
 
 The format, its specification and its independent implementations are described on [PALA-1](https://palimpsests.dev/pala-1/). A longer explanation of the check is on [verify without reading](https://palimpsests.dev/verify-without-reading/).
-
-*Written with AI assistance and checked against the project repository and a real run.*
