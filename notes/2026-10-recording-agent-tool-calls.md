@@ -50,5 +50,3 @@ The LiteLLM and MCP adapters have been tested against a live server with made-up
 Client hook interfaces change between versions, so each adapter's README says which version its behaviour was checked on.
 
 Setup details and limits for all three are on [integrations](https://palimpsests.dev/integrations/). How to check the resulting log without the key is on [verify without reading](https://palimpsests.dev/verify-without-reading/).
-
-*Written with AI assistance and checked against the project repository.*
