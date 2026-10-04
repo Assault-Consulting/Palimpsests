@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>EU AI Act Article 12: what it asks of AI you run yourself — Palimpsests notes</title>
+<meta name="description" content="Which systems the logging rules cover, what the articles require, when they start and how the fines work, in plain language." />
+<link rel="canonical" href="https://palimpsests.dev/notes/eu-ai-act-article-12-self-hosted-ai/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Andrii Sparysh" />
+<meta name="theme-color" content="#15151f" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Palimpsests" />
+<meta property="og:title" content="EU AI Act Article 12: what it asks of AI you run yourself — Palimpsests notes" />
+<meta property="og:description" content="Which systems the logging rules cover, what the articles require, when they start and how the fines work, in plain language." />
+<meta property="og:url" content="https://palimpsests.dev/notes/eu-ai-act-article-12-self-hosted-ai/" />
+<meta property="og:locale" content="en" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="EU AI Act Article 12: what it asks of AI you run yourself — Palimpsests notes" />
+<meta name="twitter:description" content="Which systems the logging rules cover, what the articles require, when they start and how the fines work, in plain language." />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BlogPosting",
+      "@id": "https://palimpsests.dev/notes/eu-ai-act-article-12-self-hosted-ai/#post",
+      "headline": "EU AI Act Article 12: what it asks of AI you run yourself",
+      "description": "Which systems the logging rules cover, what the articles require, when they start and how the fines work, in plain language.",
+      "url": "https://palimpsests.dev/notes/eu-ai-act-article-12-self-hosted-ai/",
+      "mainEntityOfPage": "https://palimpsests.dev/notes/eu-ai-act-article-12-self-hosted-ai/",
+      "datePublished": "2026-10-04",
+      "dateModified": "2026-10-04",
+      "inLanguage": "en",
+      "keywords": [
+        "eu-ai-act",
+        "logging",
+        "compliance"
+      ],
+      "author": {
+        "@type": "Person",
+        "name": "Andrii Sparysh"
+      },
+      "publisher": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "isPartOf": {
+        "@id": "https://palimpsests.dev/notes/#blog"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Palimpsests",
+          "item": "https://palimpsests.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Notes",
+          "item": "https://palimpsests.dev/notes/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "EU AI Act Article 12: what it asks of AI you run yourself",
+          "item": "https://palimpsests.dev/notes/eu-ai-act-article-12-self-hosted-ai/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Palimpsests home">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="nav__links">
+      <a class="hide-sm" href="/#caps">Capabilities</a>
+      <a class="hide-sm" href="/pala-1/">PALA-1</a>
+      <a class="hide-sm" href="/verify-without-reading/">Verify</a>
+      <a class="hide-sm" href="/eu-ai-act-article-12/">EU AI Act</a>
+      <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
+      <a class="hide-sm" href="/integrations/">Integrations</a>
+      <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<main class="doc">
+  <div class="wrap">
+    <div class="doc__in">
+<p class="crumbs"><a href="/">Palimpsests</a> / <a href="/notes/">Notes</a></p>
+<span class="eyebrow">Note · 4 October 2026 · Andrii Sparysh</span>
+<h1 class="display">EU AI Act Article 12: what it asks of AI you run yourself</h1>
+<p>Running a language model on your own servers keeps the data at home. It doesn't change what the EU AI Act asks of the system itself. If the system is classed as high-risk, it has to keep logs, and those logs have to last.</p>
+<p>This note goes through the parts of the Act that matter for logging. It's a summary, not legal advice.</p>
+<h2 id="which-systems-are-covered">Which systems are covered</h2>
+<p>The logging rules apply to high-risk AI systems. Annex III of the Act lists them by area of use, including hiring, credit scoring, education, access to essential services and critical infrastructure. AI built into products that are already regulated, such as some medical devices, comes under Annex I instead.</p>
+<p>The classification is yours to make. The test is in Article 6 and Annex III, and if the answer isn't clear, get a lawyer to settle it before any engineering work starts.</p>
+<h2 id="what-the-articles-require">What the articles require</h2>
+<p>Article 12 says a high-risk system must be able to record events automatically for as long as it's in use. The system writes its own logs. Notes kept by a person don't count.</p>
+<p>Two other articles say how long the logs stay. Article 19 covers the provider, meaning the company that builds or supplies the system. Article 26(6) covers the deployer, the company that uses it. Both must keep the logs they control for at least six months.</p>
+<p>Nowhere does the text say the logs must be tamper-proof. It does expect them to be useful later, when someone tries to reconstruct what happened. A log that could have been edited without leaving a trace is weak for that job.</p>
+<h2 id="when-the-rules-start">When the rules start</h2>
+<p>The Digital Omnibus on AI, Regulation (EU) 2026/1744, moved the dates. For systems listed in Annex III the obligations apply from 2 December 2027. For AI inside products covered by Annex I, they apply from 2 August 2028.</p>
+<p>That sounds like plenty of time. It's less than it looks, because logs can only be shown once they exist, and six months of retention means six months of the system running with logging switched on.</p>
+<h2 id="how-the-fines-work">How the fines work</h2>
+<p>Article 99 sets the ceilings. Breaking the obligations for high-risk systems, logging included, can cost up to €15 million or 3% of worldwide annual turnover. A large company faces the higher of the two figures. A small or medium-sized company, start-ups included, faces the lower one.</p>
+<p>There are two other levels. Prohibited practices can cost up to €35 million or 7%, and they have nothing to do with logging. Giving authorities incorrect or misleading information can cost up to €7.5 million or 1%.</p>
+<p>All of these are maximums. National authorities set the actual amount case by case and take into account things like cooperation and what was done to limit harm.</p>
+<h2 id="what-a-usable-log-looks-like">What a usable log looks like</h2>
+<p>A few properties make a log much easier to rely on when the question finally comes:</p>
+<ul>
+  <li>every request, model action and tool call is written automatically;</li>
+  <li>each entry is linked to the one before it, so an edit or a deletion shows up when the log is checked;</li>
+  <li>the latest link is also stored somewhere else, which is the only way to notice records removed from the end;</li>
+  <li>someone can check all of this without reading the content, which matters when prompts contain personal data.</li>
+</ul>
+<p>Logging is a single obligation. Risk management, human oversight, data governance and technical documentation are separate ones, and no logging tool covers them for you.</p>
+<p>The articles, dates and fine levels are collected on one page: <a href="https://palimpsests.dev/eu-ai-act-article-12/">EU AI Act Article 12</a>. Our own runtime handles the logging part for models running on your hardware: <a href="https://palimpsests.dev/">palimpsests.dev</a>.</p>
+<p><i>Written with AI assistance and checked against the regulation and the project repository.</i></p>
+<div class="related">
+  <a class="btn" href="/notes/">All notes →</a>
+  <a class="btn" href="/">Palimpsests →</a>
+</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/" aria-label="Palimpsests">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="/notes/">Notes</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
