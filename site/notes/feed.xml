@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+  <title>Palimpsests notes</title>
+  <link>https://palimpsests.dev/notes/</link>
+  <atom:link href="https://palimpsests.dev/notes/feed.xml" rel="self" type="application/rss+xml" />
+  <description>Short notes on audit logs for AI systems, the EU AI Act and running language models on your own hardware.</description>
+  <language>en</language>
+  <lastBuildDate>Sun, 04 Oct 2026 09:00:00 +0000</lastBuildDate>
+  <item>
+    <title>EU AI Act Article 12: what it asks of AI you run yourself</title>
+    <link>https://palimpsests.dev/notes/eu-ai-act-article-12-self-hosted-ai/</link>
+    <guid isPermaLink="true">https://palimpsests.dev/notes/eu-ai-act-article-12-self-hosted-ai/</guid>
+    <pubDate>Sun, 04 Oct 2026 09:00:00 +0000</pubDate>
+    <category>eu-ai-act</category>
+    <category>logging</category>
+    <category>compliance</category>
+    <description>Which systems the logging rules cover, what the articles require, when they start and how the fines work, in plain language.</description>
+    <content:encoded><![CDATA[<p>Running a language model on your own servers keeps the data at home. It doesn't change what the EU AI Act asks of the system itself. If the system is classed as high-risk, it has to keep logs, and those logs have to last.</p>
+<p>This note goes through the parts of the Act that matter for logging. It's a summary, not legal advice.</p>
+<h2 id="which-systems-are-covered">Which systems are covered</h2>
+<p>The logging rules apply to high-risk AI systems. Annex III of the Act lists them by area of use, including hiring, credit scoring, education, access to essential services and critical infrastructure. AI built into products that are already regulated, such as some medical devices, comes under Annex I instead.</p>
+<p>The classification is yours to make. The test is in Article 6 and Annex III, and if the answer isn't clear, get a lawyer to settle it before any engineering work starts.</p>
+<h2 id="what-the-articles-require">What the articles require</h2>
+<p>Article 12 says a high-risk system must be able to record events automatically for as long as it's in use. The system writes its own logs. Notes kept by a person don't count.</p>
+<p>Two other articles say how long the logs stay. Article 19 covers the provider, meaning the company that builds or supplies the system. Article 26(6) covers the deployer, the company that uses it. Both must keep the logs they control for at least six months.</p>
+<p>Nowhere does the text say the logs must be tamper-proof. It does expect them to be useful later, when someone tries to reconstruct what happened. A log that could have been edited without leaving a trace is weak for that job.</p>
+<h2 id="when-the-rules-start">When the rules start</h2>
+<p>The Digital Omnibus on AI, Regulation (EU) 2026/1744, moved the dates. For systems listed in Annex III the obligations apply from 2 December 2027. For AI inside products covered by Annex I, they apply from 2 August 2028.</p>
+<p>That sounds like plenty of time. It's less than it looks, because logs can only be shown once they exist, and six months of retention means six months of the system running with logging switched on.</p>
+<h2 id="how-the-fines-work">How the fines work</h2>
+<p>Article 99 sets the ceilings. Breaking the obligations for high-risk systems, logging included, can cost up to €15 million or 3% of worldwide annual turnover. A large company faces the higher of the two figures. A small or medium-sized company, start-ups included, faces the lower one.</p>
+<p>There are two other levels. Prohibited practices can cost up to €35 million or 7%, and they have nothing to do with logging. Giving authorities incorrect or misleading information can cost up to €7.5 million or 1%.</p>
+<p>All of these are maximums. National authorities set the actual amount case by case and take into account things like cooperation and what was done to limit harm.</p>
+<h2 id="what-a-usable-log-looks-like">What a usable log looks like</h2>
+<p>A few properties make a log much easier to rely on when the question finally comes:</p>
+<ul>
+  <li>every request, model action and tool call is written automatically;</li>
+  <li>each entry is linked to the one before it, so an edit or a deletion shows up when the log is checked;</li>
+  <li>the latest link is also stored somewhere else, which is the only way to notice records removed from the end;</li>
+  <li>someone can check all of this without reading the content, which matters when prompts contain personal data.</li>
+</ul>
+<p>Logging is a single obligation. Risk management, human oversight, data governance and technical documentation are separate ones, and no logging tool covers them for you.</p>
+<p>The articles, dates and fine levels are collected on one page: <a href="https://palimpsests.dev/eu-ai-act-article-12/">EU AI Act Article 12</a>. Our own runtime handles the logging part for models running on your hardware: <a href="https://palimpsests.dev/">palimpsests.dev</a>.</p>
+<p><i>Written with AI assistance and checked against the regulation and the project repository.</i></p>]]></content:encoded>
+  </item>
+  <item>
+    <title>How to check an AI log without reading it</title>
+    <link>https://palimpsests.dev/notes/checking-an-ai-log-without-reading-it/</link>
+    <guid isPermaLink="true">https://palimpsests.dev/notes/checking-an-ai-log-without-reading-it/</guid>
+    <pubDate>Sun, 04 Oct 2026 09:00:00 +0000</pubDate>
+    <category>audit-log</category>
+    <category>security</category>
+    <category>verification</category>
+    <description>Why the person who checks an AI system&#x27;s log often shouldn&#x27;t read it, and how a hash-chained format makes that possible.</description>
+    <content:encoded><![CDATA[<p>Prompts sent to a language model often contain things people would rather keep private, such as names or medical details. When someone later needs to confirm that the log of those prompts is intact, they usually don't need to see any of it. Most of the time they shouldn't.</p>
+<p>The common way to protect a log is to encrypt it. Then, to check it, you hand over the key. It works, but it gives the person doing the check far more than they asked for.</p>
+<h2 id="two-permissions-instead-of-one">Two permissions instead of one</h2>
+<p>In PALA-1, the format Palimpsests writes, every record has a header and a body. The body holds the content and can be encrypted. The header holds a SHA-256 hash of the body and the hash of the previous record.</p>
+<p>To check the log you only need the headers. You go through them in order and confirm two things for each record: that its body still matches the hash in its header, and that it points to the record before it. If anything was changed, removed or moved, one of those links breaks. The bodies are never decrypted.</p>
+<p>So reading the log and checking it become separate permissions. You can give one without giving the other.</p>
+<h2 id="what-a-check-can-tell-you">What a check can tell you</h2>
+<p>From the file alone, a check answers one question. Was anything inside it altered? If so, it names the first record where the chain breaks.</p>
+<p>It can't tell you whether records were removed from the end. A shortened chain is still a valid chain. To notice that, the latest hash has to be kept somewhere outside the log, for example in a file you control or on a hardware token. That stored copy is called an anchor. With it, the check can also confirm that the log is complete.</p>
+<p>Proving that the log existed by a certain date needs something else again: a signed statement from an outside witness.</p>
+<p>A good verifier keeps these answers apart. If it was given no anchor, it should say completeness wasn't checked. A green result in that situation invites people to believe something nobody verified.</p>
+<h2 id="trying-it">Trying it</h2>
+<p>The Palimpsests package has a demo that writes a small log and checks it:</p>
+<pre><code>pip install palimpsests
+palimpsests demo
+palimpsests pala verify palimpsests-demo.pala</code></pre>
+<p>Without an anchor, the last command reports that completeness wasn't checked and exits with code 2. Pass the right hash with <code>--anchor</code> and it exits with 0. Change one byte in the middle of the file and it exits with 1, naming the records where the chain broke.</p>
+<h2 id="where-this-stops">Where this stops</h2>
+<p>Someone who holds both the encryption key and write access to the anchor can rebuild the chain and the anchor together. That's why the format is called tamper-evident and not tamper-proof, and why it helps to keep the anchor off the machine that writes the log.</p>
+<p>The format, its specification and its independent implementations are described on <a href="https://palimpsests.dev/pala-1/">PALA-1</a>. A longer explanation of the check is on <a href="https://palimpsests.dev/verify-without-reading/">verify without reading</a>.</p>
+<p><i>Written with AI assistance and checked against the project repository and a real run.</i></p>]]></content:encoded>
+  </item>
+  <item>
+    <title>Recording the tool calls your agent already makes</title>
+    <link>https://palimpsests.dev/notes/recording-agent-tool-calls/</link>
+    <guid isPermaLink="true">https://palimpsests.dev/notes/recording-agent-tool-calls/</guid>
+    <pubDate>Sun, 04 Oct 2026 09:00:00 +0000</pubDate>
+    <category>ai-agents</category>
+    <category>litellm</category>
+    <category>mcp</category>
+    <description>Adapters for LiteLLM, MCP servers and OpenCode that put tool calls on a tamper-evident log, and what such a record proves.</description>
+    <content:encoded><![CDATA[<p>When an agent calls a tool, it does something real. It might read a file or send a message on someone's behalf. Those calls are what people look at first when something goes wrong, and they're often the worst-recorded part of the system.</p>
+<p>Most agents already send their tool calls through something you run. That might be a gateway like LiteLLM, an MCP server or a coding agent like OpenCode. Version 0.12 of Palimpsests added small adapters for these. Each one passes the tool calls it sees to a local Palimpsests server, which writes them into a hash-chained log.</p>
+<h2 id="setting-up-the-server">Setting up the server</h2>
+<pre><code>pip install 'palimpsests[serve]'
+palimpsests serve</code></pre>
+<p>By default the server listens on 127.0.0.1:11435. It stores hashes of the arguments and results, not the content itself. If you start it with an API key, give the adapters the same key in the PALIMPSESTS_SERVE_API_KEY variable.</p>
+<h2 id="litellm">LiteLLM</h2>
+<p>The LiteLLM adapter is one Python file, registered as a callback. It sees the tool calls the model asks for and the results that come back into the conversation:</p>
+<pre><code>import litellm
+from palimpsests_audit import PalimpsestsAudit
+litellm.callbacks = [PalimpsestsAudit()]</code></pre>
+<p>It never sees the tool itself run. A result marked ok only means it went back to the model.</p>
+<h2 id="mcp-servers">MCP servers</h2>
+<p>For MCP servers that talk over standard input and output, the adapter is a small proxy. You put it in front of the server command in your client's configuration. Sitting in the middle, it sees both the request and the response of every tool call. It passes every byte through unchanged and never blocks a call.</p>
+<h2 id="opencode">OpenCode</h2>
+<p>OpenCode gets a plugin: a single JavaScript file you copy into .opencode/plugins/ for one project, or ~/.config/opencode/plugins/ for all of them. It reports the tools OpenCode actually runs. That includes calls the model wrote as plain text, which a server on its own wouldn't recognise.</p>
+<h2 id="what-these-records-prove">What these records prove</h2>
+<p>Records from an adapter are marked as reported by the client. They show what the client said happened and when, and that nobody changed the report afterwards. They don't prove the tool actually ran. The server keeps them apart from the calls it handled itself, so anyone reading the log can tell the two kinds apart.</p>
+<h2 id="where-things-stand">Where things stand</h2>
+<p>The LiteLLM and MCP adapters have been tested against a live server with made-up tool calls. Neither has been run on real traffic yet. For OpenCode 1.18.31, one reported call from a real session has reached the log. It was a failed file read, and it was recorded correctly. We haven't yet seen a successful result arrive the same way.</p>
+<p>Client hook interfaces change between versions, so each adapter's README says which version its behaviour was checked on.</p>
+<p>Setup details and limits for all three are on <a href="https://palimpsests.dev/integrations/">integrations</a>. How to check the resulting log without the key is on <a href="https://palimpsests.dev/verify-without-reading/">verify without reading</a>.</p>
+<p><i>Written with AI assistance and checked against the project repository.</i></p>]]></content:encoded>
+  </item>
+  <item>
+    <title>Running a language model on an isolated network, with a log you can prove</title>
+    <link>https://palimpsests.dev/notes/llm-on-an-isolated-network/</link>
+    <guid isPermaLink="true">https://palimpsests.dev/notes/llm-on-an-isolated-network/</guid>
+    <pubDate>Sun, 04 Oct 2026 09:00:00 +0000</pubDate>
+    <category>air-gapped</category>
+    <category>llm</category>
+    <category>audit-log</category>
+    <description>What changes when an LLM runs with no network at all: installing it, timestamps, anchors and checking the log offline.</description>
+    <content:encoded><![CDATA[<p>Some networks are cut off from the internet on purpose. Hospitals and defence sites are the usual examples. If a language model has to work inside one, it can't call a hosted API, and the services that normally back up a log aren't there either. You lose cloud logging, public time servers and any online way to timestamp a record.</p>
+<p>Palimpsests was built for exactly this. The model, its working state and the log all stay on the machine that holds the data. Here's what that looks like in practice.</p>
+<h2 id="getting-the-software-in">Getting the software in</h2>
+<p>The machine has no internet, so the packages travel on a drive. On a connected computer, download them with pip. Then install from that folder on the isolated machine:</p>
+<pre><code>pip download palimpsests -d ./wheels
+pip install --no-index --find-links ./wheels palimpsests</code></pre>
+<p>Releases are signed and ship with a list of their dependencies (an SBOM). You can check what you're carrying in before it crosses over.</p>
+<h2 id="time-you-can-t-fully-trust">Time you can't fully trust</h2>
+<p>Isolated machines drift. Some have no reliable clock at all, and the log doesn't pretend otherwise. Each record carries a time trust level: UNKNOWN, UNSYNCED, HW_RTC or NTP_SYNCED. A record marked UNKNOWN contains no wall-clock time at all.</p>
+<p>The order of events doesn't depend on the clock. It comes from sequence numbers in the chain, so even if every timestamp were wrong you could still see what happened before what.</p>
+<h2 id="keeping-the-anchor">Keeping the anchor</h2>
+<p>A hash chain shows that nothing inside the log was changed. To also notice records removed from the end, you keep a copy of the latest hash somewhere else. Offline, that can be a file outside the log. Since version 0.11 it can also be a PKCS#11 hardware token, which the host can read but can't quietly overwrite.</p>
+<p>If your rules ever allow a single link outside, the latest hash can also be sent to a SCITT transparency service as a signed statement. Only the hash leaves the machine.</p>
+<h2 id="checking-without-the-network">Checking without the network</h2>
+<p>Verification works on the same machine or any other one, with no connection. It doesn't need the decryption key, because all it does is compare stored hashes:</p>
+<pre><code>palimpsests pala verify serve.pala --anchor &lt;latest-hash&gt;</code></pre>
+<p>Verification was measured on a test chain of one million records. On an Intel Core Ultra 9 machine running Windows 11, verifying with version 0.11 needed 4.77 GB of memory. Version 0.12 brought that down to 0.57 GB. On an integrated Intel Arc GPU, the engine's tool loop runs as fast as a hand-tuned llama-server, without a separate server process.</p>
+<p>There's no measurement on a discrete GPU yet. The log implementation also hasn't had an independent penetration test.</p>
+<p>More detail, including what we don't claim, is on <a href="https://palimpsests.dev/air-gapped/">air-gapped</a>. The project itself is at <a href="https://palimpsests.dev/">palimpsests.dev</a>.</p>
+<p><i>Written with AI assistance and checked against the project repository.</i></p>]]></content:encoded>
+  </item>
+</channel>
+</rss>
