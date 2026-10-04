@@ -50,5 +50,3 @@ A few properties make a log much easier to rely on when the question finally com
 Logging is a single obligation. Risk management, human oversight, data governance and technical documentation are separate ones, and no logging tool covers them for you.
 
 The articles, dates and fine levels are collected on one page: [EU AI Act Article 12](https://palimpsests.dev/eu-ai-act-article-12/). Our own runtime handles the logging part for models running on your hardware: [palimpsests.dev](https://palimpsests.dev/).
-
-*Written with AI assistance and checked against the regulation and the project repository.*
