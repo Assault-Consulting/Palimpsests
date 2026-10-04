@@ -41,8 +41,7 @@
   <li>someone can check all of this without reading the content, which matters when prompts contain personal data.</li>
 </ul>
 <p>Logging is a single obligation. Risk management, human oversight, data governance and technical documentation are separate ones, and no logging tool covers them for you.</p>
-<p>The articles, dates and fine levels are collected on one page: <a href="https://palimpsests.dev/eu-ai-act-article-12/">EU AI Act Article 12</a>. Our own runtime handles the logging part for models running on your hardware: <a href="https://palimpsests.dev/">palimpsests.dev</a>.</p>
-<p><i>Written with AI assistance and checked against the regulation and the project repository.</i></p>]]></content:encoded>
+<p>The articles, dates and fine levels are collected on one page: <a href="https://palimpsests.dev/eu-ai-act-article-12/">EU AI Act Article 12</a>. Our own runtime handles the logging part for models running on your hardware: <a href="https://palimpsests.dev/">palimpsests.dev</a>.</p>]]></content:encoded>
   </item>
   <item>
     <title>How to check an AI log without reading it</title>
@@ -72,8 +71,7 @@ palimpsests pala verify palimpsests-demo.pala</code></pre>
 <p>Without an anchor, the last command reports that completeness wasn't checked and exits with code 2. Pass the right hash with <code>--anchor</code> and it exits with 0. Change one byte in the middle of the file and it exits with 1, naming the records where the chain broke.</p>
 <h2 id="where-this-stops">Where this stops</h2>
 <p>Someone who holds both the encryption key and write access to the anchor can rebuild the chain and the anchor together. That's why the format is called tamper-evident and not tamper-proof, and why it helps to keep the anchor off the machine that writes the log.</p>
-<p>The format, its specification and its independent implementations are described on <a href="https://palimpsests.dev/pala-1/">PALA-1</a>. A longer explanation of the check is on <a href="https://palimpsests.dev/verify-without-reading/">verify without reading</a>.</p>
-<p><i>Written with AI assistance and checked against the project repository and a real run.</i></p>]]></content:encoded>
+<p>The format, its specification and its independent implementations are described on <a href="https://palimpsests.dev/pala-1/">PALA-1</a>. A longer explanation of the check is on <a href="https://palimpsests.dev/verify-without-reading/">verify without reading</a>.</p>]]></content:encoded>
   </item>
   <item>
     <title>Recording the tool calls your agent already makes</title>
@@ -105,8 +103,7 @@ litellm.callbacks = [PalimpsestsAudit()]</code></pre>
 <h2 id="where-things-stand">Where things stand</h2>
 <p>The LiteLLM and MCP adapters have been tested against a live server with made-up tool calls. Neither has been run on real traffic yet. For OpenCode 1.18.31, one reported call from a real session has reached the log. It was a failed file read, and it was recorded correctly. We haven't yet seen a successful result arrive the same way.</p>
 <p>Client hook interfaces change between versions, so each adapter's README says which version its behaviour was checked on.</p>
-<p>Setup details and limits for all three are on <a href="https://palimpsests.dev/integrations/">integrations</a>. How to check the resulting log without the key is on <a href="https://palimpsests.dev/verify-without-reading/">verify without reading</a>.</p>
-<p><i>Written with AI assistance and checked against the project repository.</i></p>]]></content:encoded>
+<p>Setup details and limits for all three are on <a href="https://palimpsests.dev/integrations/">integrations</a>. How to check the resulting log without the key is on <a href="https://palimpsests.dev/verify-without-reading/">verify without reading</a>.</p>]]></content:encoded>
   </item>
   <item>
     <title>Running a language model on an isolated network, with a log you can prove</title>
@@ -135,8 +132,7 @@ pip install --no-index --find-links ./wheels palimpsests</code></pre>
 <pre><code>palimpsests pala verify serve.pala --anchor &lt;latest-hash&gt;</code></pre>
 <p>Verification was measured on a test chain of one million records. On an Intel Core Ultra 9 machine running Windows 11, verifying with version 0.11 needed 4.77 GB of memory. Version 0.12 brought that down to 0.57 GB. On an integrated Intel Arc GPU, the engine's tool loop runs as fast as a hand-tuned llama-server, without a separate server process.</p>
 <p>There's no measurement on a discrete GPU yet. The log implementation also hasn't had an independent penetration test.</p>
-<p>More detail, including what we don't claim, is on <a href="https://palimpsests.dev/air-gapped/">air-gapped</a>. The project itself is at <a href="https://palimpsests.dev/">palimpsests.dev</a>.</p>
-<p><i>Written with AI assistance and checked against the project repository.</i></p>]]></content:encoded>
+<p>More detail, including what we don't claim, is on <a href="https://palimpsests.dev/air-gapped/">air-gapped</a>. The project itself is at <a href="https://palimpsests.dev/">palimpsests.dev</a>.</p>]]></content:encoded>
   </item>
 </channel>
 </rss>
