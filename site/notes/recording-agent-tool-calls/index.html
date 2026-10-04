@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Recording the tool calls your agent already makes — Palimpsests notes</title>
+<meta name="description" content="Adapters for LiteLLM, MCP servers and OpenCode that put tool calls on a tamper-evident log, and what such a record proves." />
+<link rel="canonical" href="https://palimpsests.dev/notes/recording-agent-tool-calls/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Andrii Sparysh" />
+<meta name="theme-color" content="#15151f" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Palimpsests" />
+<meta property="og:title" content="Recording the tool calls your agent already makes — Palimpsests notes" />
+<meta property="og:description" content="Adapters for LiteLLM, MCP servers and OpenCode that put tool calls on a tamper-evident log, and what such a record proves." />
+<meta property="og:url" content="https://palimpsests.dev/notes/recording-agent-tool-calls/" />
+<meta property="og:locale" content="en" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Recording the tool calls your agent already makes — Palimpsests notes" />
+<meta name="twitter:description" content="Adapters for LiteLLM, MCP servers and OpenCode that put tool calls on a tamper-evident log, and what such a record proves." />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BlogPosting",
+      "@id": "https://palimpsests.dev/notes/recording-agent-tool-calls/#post",
+      "headline": "Recording the tool calls your agent already makes",
+      "description": "Adapters for LiteLLM, MCP servers and OpenCode that put tool calls on a tamper-evident log, and what such a record proves.",
+      "url": "https://palimpsests.dev/notes/recording-agent-tool-calls/",
+      "mainEntityOfPage": "https://palimpsests.dev/notes/recording-agent-tool-calls/",
+      "datePublished": "2026-10-04",
+      "dateModified": "2026-10-04",
+      "inLanguage": "en",
+      "keywords": [
+        "ai-agents",
+        "litellm",
+        "mcp"
+      ],
+      "author": {
+        "@type": "Person",
+        "name": "Andrii Sparysh"
+      },
+      "publisher": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "isPartOf": {
+        "@id": "https://palimpsests.dev/notes/#blog"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Palimpsests",
+          "item": "https://palimpsests.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Notes",
+          "item": "https://palimpsests.dev/notes/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Recording the tool calls your agent already makes",
+          "item": "https://palimpsests.dev/notes/recording-agent-tool-calls/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Palimpsests home">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="nav__links">
+      <a class="hide-sm" href="/#caps">Capabilities</a>
+      <a class="hide-sm" href="/pala-1/">PALA-1</a>
+      <a class="hide-sm" href="/verify-without-reading/">Verify</a>
+      <a class="hide-sm" href="/eu-ai-act-article-12/">EU AI Act</a>
+      <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
+      <a class="hide-sm" href="/integrations/">Integrations</a>
+      <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<main class="doc">
+  <div class="wrap">
+    <div class="doc__in">
+<p class="crumbs"><a href="/">Palimpsests</a> / <a href="/notes/">Notes</a></p>
+<span class="eyebrow">Note · 4 October 2026 · Andrii Sparysh</span>
+<h1 class="display">Recording the tool calls your agent already makes</h1>
+<p>When an agent calls a tool, it does something real. It might read a file or send a message on someone's behalf. Those calls are what people look at first when something goes wrong, and they're often the worst-recorded part of the system.</p>
+<p>Most agents already send their tool calls through something you run. That might be a gateway like LiteLLM, an MCP server or a coding agent like OpenCode. Version 0.12 of Palimpsests added small adapters for these. Each one passes the tool calls it sees to a local Palimpsests server, which writes them into a hash-chained log.</p>
+<h2 id="setting-up-the-server">Setting up the server</h2>
+<pre><code>pip install 'palimpsests[serve]'
+palimpsests serve</code></pre>
+<p>By default the server listens on 127.0.0.1:11435. It stores hashes of the arguments and results, not the content itself. If you start it with an API key, give the adapters the same key in the PALIMPSESTS_SERVE_API_KEY variable.</p>
+<h2 id="litellm">LiteLLM</h2>
+<p>The LiteLLM adapter is one Python file, registered as a callback. It sees the tool calls the model asks for and the results that come back into the conversation:</p>
+<pre><code>import litellm
+from palimpsests_audit import PalimpsestsAudit
+litellm.callbacks = [PalimpsestsAudit()]</code></pre>
+<p>It never sees the tool itself run. A result marked ok only means it went back to the model.</p>
+<h2 id="mcp-servers">MCP servers</h2>
+<p>For MCP servers that talk over standard input and output, the adapter is a small proxy. You put it in front of the server command in your client's configuration. Sitting in the middle, it sees both the request and the response of every tool call. It passes every byte through unchanged and never blocks a call.</p>
+<h2 id="opencode">OpenCode</h2>
+<p>OpenCode gets a plugin: a single JavaScript file you copy into .opencode/plugins/ for one project, or ~/.config/opencode/plugins/ for all of them. It reports the tools OpenCode actually runs. That includes calls the model wrote as plain text, which a server on its own wouldn't recognise.</p>
+<h2 id="what-these-records-prove">What these records prove</h2>
+<p>Records from an adapter are marked as reported by the client. They show what the client said happened and when, and that nobody changed the report afterwards. They don't prove the tool actually ran. The server keeps them apart from the calls it handled itself, so anyone reading the log can tell the two kinds apart.</p>
+<h2 id="where-things-stand">Where things stand</h2>
+<p>The LiteLLM and MCP adapters have been tested against a live server with made-up tool calls. Neither has been run on real traffic yet. For OpenCode 1.18.31, one reported call from a real session has reached the log. It was a failed file read, and it was recorded correctly. We haven't yet seen a successful result arrive the same way.</p>
+<p>Client hook interfaces change between versions, so each adapter's README says which version its behaviour was checked on.</p>
+<p>Setup details and limits for all three are on <a href="https://palimpsests.dev/integrations/">integrations</a>. How to check the resulting log without the key is on <a href="https://palimpsests.dev/verify-without-reading/">verify without reading</a>.</p>
+<p><i>Written with AI assistance and checked against the project repository.</i></p>
+<div class="related">
+  <a class="btn" href="/notes/">All notes →</a>
+  <a class="btn" href="/">Palimpsests →</a>
+</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/" aria-label="Palimpsests">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="/notes/">Notes</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
