@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>How to check an AI log without reading it — Palimpsests notes</title>
+<meta name="description" content="Why the person who checks an AI system&#x27;s log often shouldn&#x27;t read it, and how a hash-chained format makes that possible." />
+<link rel="canonical" href="https://palimpsests.dev/notes/checking-an-ai-log-without-reading-it/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Andrii Sparysh" />
+<meta name="theme-color" content="#15151f" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Palimpsests" />
+<meta property="og:title" content="How to check an AI log without reading it — Palimpsests notes" />
+<meta property="og:description" content="Why the person who checks an AI system&#x27;s log often shouldn&#x27;t read it, and how a hash-chained format makes that possible." />
+<meta property="og:url" content="https://palimpsests.dev/notes/checking-an-ai-log-without-reading-it/" />
+<meta property="og:locale" content="en" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="How to check an AI log without reading it — Palimpsests notes" />
+<meta name="twitter:description" content="Why the person who checks an AI system&#x27;s log often shouldn&#x27;t read it, and how a hash-chained format makes that possible." />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BlogPosting",
+      "@id": "https://palimpsests.dev/notes/checking-an-ai-log-without-reading-it/#post",
+      "headline": "How to check an AI log without reading it",
+      "description": "Why the person who checks an AI system's log often shouldn't read it, and how a hash-chained format makes that possible.",
+      "url": "https://palimpsests.dev/notes/checking-an-ai-log-without-reading-it/",
+      "mainEntityOfPage": "https://palimpsests.dev/notes/checking-an-ai-log-without-reading-it/",
+      "datePublished": "2026-10-04",
+      "dateModified": "2026-10-04",
+      "inLanguage": "en",
+      "keywords": [
+        "audit-log",
+        "security",
+        "verification"
+      ],
+      "author": {
+        "@type": "Person",
+        "name": "Andrii Sparysh"
+      },
+      "publisher": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "isPartOf": {
+        "@id": "https://palimpsests.dev/notes/#blog"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Palimpsests",
+          "item": "https://palimpsests.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Notes",
+          "item": "https://palimpsests.dev/notes/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "How to check an AI log without reading it",
+          "item": "https://palimpsests.dev/notes/checking-an-ai-log-without-reading-it/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Palimpsests home">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="nav__links">
+      <a class="hide-sm" href="/#caps">Capabilities</a>
+      <a class="hide-sm" href="/pala-1/">PALA-1</a>
+      <a class="hide-sm" href="/verify-without-reading/">Verify</a>
+      <a class="hide-sm" href="/eu-ai-act-article-12/">EU AI Act</a>
+      <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
+      <a class="hide-sm" href="/integrations/">Integrations</a>
+      <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<main class="doc">
+  <div class="wrap">
+    <div class="doc__in">
+<p class="crumbs"><a href="/">Palimpsests</a> / <a href="/notes/">Notes</a></p>
+<span class="eyebrow">Note · 4 October 2026 · Andrii Sparysh</span>
+<h1 class="display">How to check an AI log without reading it</h1>
+<p>Prompts sent to a language model often contain things people would rather keep private, such as names or medical details. When someone later needs to confirm that the log of those prompts is intact, they usually don't need to see any of it. Most of the time they shouldn't.</p>
+<p>The common way to protect a log is to encrypt it. Then, to check it, you hand over the key. It works, but it gives the person doing the check far more than they asked for.</p>
+<h2 id="two-permissions-instead-of-one">Two permissions instead of one</h2>
+<p>In PALA-1, the format Palimpsests writes, every record has a header and a body. The body holds the content and can be encrypted. The header holds a SHA-256 hash of the body and the hash of the previous record.</p>
+<p>To check the log you only need the headers. You go through them in order and confirm two things for each record: that its body still matches the hash in its header, and that it points to the record before it. If anything was changed, removed or moved, one of those links breaks. The bodies are never decrypted.</p>
+<p>So reading the log and checking it become separate permissions. You can give one without giving the other.</p>
+<h2 id="what-a-check-can-tell-you">What a check can tell you</h2>
+<p>From the file alone, a check answers one question. Was anything inside it altered? If so, it names the first record where the chain breaks.</p>
+<p>It can't tell you whether records were removed from the end. A shortened chain is still a valid chain. To notice that, the latest hash has to be kept somewhere outside the log, for example in a file you control or on a hardware token. That stored copy is called an anchor. With it, the check can also confirm that the log is complete.</p>
+<p>Proving that the log existed by a certain date needs something else again: a signed statement from an outside witness.</p>
+<p>A good verifier keeps these answers apart. If it was given no anchor, it should say completeness wasn't checked. A green result in that situation invites people to believe something nobody verified.</p>
+<h2 id="trying-it">Trying it</h2>
+<p>The Palimpsests package has a demo that writes a small log and checks it:</p>
+<pre><code>pip install palimpsests
+palimpsests demo
+palimpsests pala verify palimpsests-demo.pala</code></pre>
+<p>Without an anchor, the last command reports that completeness wasn't checked and exits with code 2. Pass the right hash with <code>--anchor</code> and it exits with 0. Change one byte in the middle of the file and it exits with 1, naming the records where the chain broke.</p>
+<h2 id="where-this-stops">Where this stops</h2>
+<p>Someone who holds both the encryption key and write access to the anchor can rebuild the chain and the anchor together. That's why the format is called tamper-evident and not tamper-proof, and why it helps to keep the anchor off the machine that writes the log.</p>
+<p>The format, its specification and its independent implementations are described on <a href="https://palimpsests.dev/pala-1/">PALA-1</a>. A longer explanation of the check is on <a href="https://palimpsests.dev/verify-without-reading/">verify without reading</a>.</p>
+<div class="related">
+  <a class="btn" href="/notes/">All notes →</a>
+  <a class="btn" href="/">Palimpsests →</a>
+</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/" aria-label="Palimpsests">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="/notes/">Notes</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Notes — Palimpsests (PALA-1)</title>
+<meta name="description" content="Short notes on audit logs for AI systems, the EU AI Act and running language models on your own hardware." />
+<link rel="canonical" href="https://palimpsests.dev/notes/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Andrii Sparysh" />
+<meta name="theme-color" content="#15151f" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Palimpsests" />
+<meta property="og:title" content="Notes — Palimpsests (PALA-1)" />
+<meta property="og:description" content="Short notes on audit logs for AI systems, the EU AI Act and running language models on your own hardware." />
+<meta property="og:url" content="https://palimpsests.dev/notes/" />
+<meta property="og:locale" content="en" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Notes — Palimpsests (PALA-1)" />
+<meta name="twitter:description" content="Short notes on audit logs for AI systems, the EU AI Act and running language models on your own hardware." />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Blog",
+      "@id": "https://palimpsests.dev/notes/#blog",
+      "name": "Palimpsests notes",
+      "url": "https://palimpsests.dev/notes/",
+      "inLanguage": "en",
+      "publisher": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "blogPost": [
+        {
+          "@type": "BlogPosting",
+          "headline": "EU AI Act Article 12: what it asks of AI you run yourself",
+          "url": "https://palimpsests.dev/notes/eu-ai-act-article-12-self-hosted-ai/",
+          "datePublished": "2026-10-04"
+        },
+        {
+          "@type": "BlogPosting",
+          "headline": "How to check an AI log without reading it",
+          "url": "https://palimpsests.dev/notes/checking-an-ai-log-without-reading-it/",
+          "datePublished": "2026-10-04"
+        },
+        {
+          "@type": "BlogPosting",
+          "headline": "Recording the tool calls your agent already makes",
+          "url": "https://palimpsests.dev/notes/recording-agent-tool-calls/",
+          "datePublished": "2026-10-04"
+        },
+        {
+          "@type": "BlogPosting",
+          "headline": "Running a language model on an isolated network, with a log you can prove",
+          "url": "https://palimpsests.dev/notes/llm-on-an-isolated-network/",
+          "datePublished": "2026-10-04"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Palimpsests home">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="nav__links">
+      <a class="hide-sm" href="/#caps">Capabilities</a>
+      <a class="hide-sm" href="/pala-1/">PALA-1</a>
+      <a class="hide-sm" href="/verify-without-reading/">Verify</a>
+      <a class="hide-sm" href="/eu-ai-act-article-12/">EU AI Act</a>
+      <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
+      <a class="hide-sm" href="/integrations/">Integrations</a>
+      <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<main class="doc">
+  <div class="wrap">
+    <div class="doc__in">
+<p class="crumbs"><a href="/">Palimpsests</a> / Notes</p>
+<span class="eyebrow">Notes</span>
+<h1 class="display">Notes</h1>
+<p class="lede">Short notes on audit logs for AI systems, the EU AI Act and running language models on your own hardware. New notes also go out through the <a href="/notes/feed.xml">RSS feed</a>.</p>
+<h2><a href="/notes/eu-ai-act-article-12-self-hosted-ai/">EU AI Act Article 12: what it asks of AI you run yourself</a></h2>
+<p class="crumbs">4 October 2026</p>
+<p>Which systems the logging rules cover, what the articles require, when they start and how the fines work, in plain language.</p>
+<h2><a href="/notes/checking-an-ai-log-without-reading-it/">How to check an AI log without reading it</a></h2>
+<p class="crumbs">4 October 2026</p>
+<p>Why the person who checks an AI system&#x27;s log often shouldn&#x27;t read it, and how a hash-chained format makes that possible.</p>
+<h2><a href="/notes/recording-agent-tool-calls/">Recording the tool calls your agent already makes</a></h2>
+<p class="crumbs">4 October 2026</p>
+<p>Adapters for LiteLLM, MCP servers and OpenCode that put tool calls on a tamper-evident log, and what such a record proves.</p>
+<h2><a href="/notes/llm-on-an-isolated-network/">Running a language model on an isolated network, with a log you can prove</a></h2>
+<p class="crumbs">4 October 2026</p>
+<p>What changes when an LLM runs with no network at all: installing it, timestamps, anchors and checking the log offline.</p>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/" aria-label="Palimpsests">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="/notes/">Notes</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

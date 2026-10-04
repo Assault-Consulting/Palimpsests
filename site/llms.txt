@@ -28,6 +28,15 @@ Palimpsests is honest about scope: it supplies the runtime primitives that speci
 - [Air-gapped](https://palimpsests.dev/air-gapped/): inference and the audit log on hardware you control, time without a trusted clock, anchors without a network, measured numbers and what is not claimed.
 - [Integrations](https://palimpsests.dev/integrations/): LiteLLM, MCP and OpenCode tool calls on the chain, marked as reported by the client, with each adapter's status and limits.
 
+<!-- notes:start -->
+## Notes
+
+- [EU AI Act Article 12: what it asks of AI you run yourself](https://palimpsests.dev/notes/eu-ai-act-article-12-self-hosted-ai/): Which systems the logging rules cover, what the articles require, when they start and how the fines work, in plain language.
+- [How to check an AI log without reading it](https://palimpsests.dev/notes/checking-an-ai-log-without-reading-it/): Why the person who checks an AI system's log often shouldn't read it, and how a hash-chained format makes that possible.
+- [Recording the tool calls your agent already makes](https://palimpsests.dev/notes/recording-agent-tool-calls/): Adapters for LiteLLM, MCP servers and OpenCode that put tool calls on a tamper-evident log, and what such a record proves.
+- [Running a language model on an isolated network, with a log you can prove](https://palimpsests.dev/notes/llm-on-an-isolated-network/): What changes when an LLM runs with no network at all: installing it, timestamps, anchors and checking the log offline.
+<!-- notes:end -->
+
 ## Links
 
 - [Source (GitHub)](https://github.com/Assault-Consulting/Palimpsests)
