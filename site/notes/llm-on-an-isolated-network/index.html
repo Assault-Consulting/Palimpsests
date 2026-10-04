@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Running a language model on an isolated network, with a log you can prove — Palimpsests notes</title>
+<meta name="description" content="What changes when an LLM runs with no network at all: installing it, timestamps, anchors and checking the log offline." />
+<link rel="canonical" href="https://palimpsests.dev/notes/llm-on-an-isolated-network/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Andrii Sparysh" />
+<meta name="theme-color" content="#15151f" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Palimpsests" />
+<meta property="og:title" content="Running a language model on an isolated network, with a log you can prove — Palimpsests notes" />
+<meta property="og:description" content="What changes when an LLM runs with no network at all: installing it, timestamps, anchors and checking the log offline." />
+<meta property="og:url" content="https://palimpsests.dev/notes/llm-on-an-isolated-network/" />
+<meta property="og:locale" content="en" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Running a language model on an isolated network, with a log you can prove — Palimpsests notes" />
+<meta name="twitter:description" content="What changes when an LLM runs with no network at all: installing it, timestamps, anchors and checking the log offline." />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BlogPosting",
+      "@id": "https://palimpsests.dev/notes/llm-on-an-isolated-network/#post",
+      "headline": "Running a language model on an isolated network, with a log you can prove",
+      "description": "What changes when an LLM runs with no network at all: installing it, timestamps, anchors and checking the log offline.",
+      "url": "https://palimpsests.dev/notes/llm-on-an-isolated-network/",
+      "mainEntityOfPage": "https://palimpsests.dev/notes/llm-on-an-isolated-network/",
+      "datePublished": "2026-10-04",
+      "dateModified": "2026-10-04",
+      "inLanguage": "en",
+      "keywords": [
+        "air-gapped",
+        "llm",
+        "audit-log"
+      ],
+      "author": {
+        "@type": "Person",
+        "name": "Andrii Sparysh"
+      },
+      "publisher": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "isPartOf": {
+        "@id": "https://palimpsests.dev/notes/#blog"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Palimpsests",
+          "item": "https://palimpsests.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Notes",
+          "item": "https://palimpsests.dev/notes/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Running a language model on an isolated network, with a log you can prove",
+          "item": "https://palimpsests.dev/notes/llm-on-an-isolated-network/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Palimpsests home">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="nav__links">
+      <a class="hide-sm" href="/#caps">Capabilities</a>
+      <a class="hide-sm" href="/pala-1/">PALA-1</a>
+      <a class="hide-sm" href="/verify-without-reading/">Verify</a>
+      <a class="hide-sm" href="/eu-ai-act-article-12/">EU AI Act</a>
+      <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
+      <a class="hide-sm" href="/integrations/">Integrations</a>
+      <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<main class="doc">
+  <div class="wrap">
+    <div class="doc__in">
+<p class="crumbs"><a href="/">Palimpsests</a> / <a href="/notes/">Notes</a></p>
+<span class="eyebrow">Note · 4 October 2026 · Andrii Sparysh</span>
+<h1 class="display">Running a language model on an isolated network, with a log you can prove</h1>
+<p>Some networks are cut off from the internet on purpose. Hospitals and defence sites are the usual examples. If a language model has to work inside one, it can't call a hosted API, and the services that normally back up a log aren't there either. You lose cloud logging, public time servers and any online way to timestamp a record.</p>
+<p>Palimpsests was built for exactly this. The model, its working state and the log all stay on the machine that holds the data. Here's what that looks like in practice.</p>
+<h2 id="getting-the-software-in">Getting the software in</h2>
+<p>The machine has no internet, so the packages travel on a drive. On a connected computer, download them with pip. Then install from that folder on the isolated machine:</p>
+<pre><code>pip download palimpsests -d ./wheels
+pip install --no-index --find-links ./wheels palimpsests</code></pre>
+<p>Releases are signed and ship with a list of their dependencies (an SBOM). You can check what you're carrying in before it crosses over.</p>
+<h2 id="time-you-can-t-fully-trust">Time you can't fully trust</h2>
+<p>Isolated machines drift. Some have no reliable clock at all, and the log doesn't pretend otherwise. Each record carries a time trust level: UNKNOWN, UNSYNCED, HW_RTC or NTP_SYNCED. A record marked UNKNOWN contains no wall-clock time at all.</p>
+<p>The order of events doesn't depend on the clock. It comes from sequence numbers in the chain, so even if every timestamp were wrong you could still see what happened before what.</p>
+<h2 id="keeping-the-anchor">Keeping the anchor</h2>
+<p>A hash chain shows that nothing inside the log was changed. To also notice records removed from the end, you keep a copy of the latest hash somewhere else. Offline, that can be a file outside the log. Since version 0.11 it can also be a PKCS#11 hardware token, which the host can read but can't quietly overwrite.</p>
+<p>If your rules ever allow a single link outside, the latest hash can also be sent to a SCITT transparency service as a signed statement. Only the hash leaves the machine.</p>
+<h2 id="checking-without-the-network">Checking without the network</h2>
+<p>Verification works on the same machine or any other one, with no connection. It doesn't need the decryption key, because all it does is compare stored hashes:</p>
+<pre><code>palimpsests pala verify serve.pala --anchor &lt;latest-hash&gt;</code></pre>
+<p>Verification was measured on a test chain of one million records. On an Intel Core Ultra 9 machine running Windows 11, verifying with version 0.11 needed 4.77 GB of memory. Version 0.12 brought that down to 0.57 GB. On an integrated Intel Arc GPU, the engine's tool loop runs as fast as a hand-tuned llama-server, without a separate server process.</p>
+<p>There's no measurement on a discrete GPU yet. The log implementation also hasn't had an independent penetration test.</p>
+<p>More detail, including what we don't claim, is on <a href="https://palimpsests.dev/air-gapped/">air-gapped</a>. The project itself is at <a href="https://palimpsests.dev/">palimpsests.dev</a>.</p>
+<p><i>Written with AI assistance and checked against the project repository.</i></p>
+<div class="related">
+  <a class="btn" href="/notes/">All notes →</a>
+  <a class="btn" href="/">Palimpsests →</a>
+</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/" aria-label="Palimpsests">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="/notes/">Notes</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
