@@ -73,6 +73,7 @@ from palimpsests.audit.pala.codec import (
     encode_tlvs,
     record_hash,
 )
+from palimpsests.audit.pala.frontier import MerkleFrontier
 from palimpsests.audit.pala.segments import SEGMENTS_FORMAT
 
 # ─── profile §1: ORIGIN_ROLE vocabulary (component names, not a taxonomy) ────
@@ -212,6 +213,70 @@ def canonical_tool_args_digest(arguments: object) -> bytes:
 _monotonic = time.monotonic  # module alias: tests substitute a fake clock
 
 
+#: Hashes a resumed writer holds before building its deferred frontier —
+#: bounded, so a writer whose root is never asked for still does not grow
+#: without limit.
+_FRONTIER_PENDING_LIMIT = 4096
+
+
+class FrontierUnavailable(RuntimeError):
+    """The writer cannot state the derived root over records from seq 0."""
+
+
+def _starting_frontier(
+    path: str | os.PathLike[str], first_header: bytes
+) -> tuple[MerkleFrontier | None, str | None]:
+    """The frontier a resumed writer continues from, or why there is none.
+
+    For a file that starts later than seq 0 — a segment. (A whole chain,
+    starting at seq 0, is resumed with a deferred frontier instead and
+    never reaches this function; seq 0 is still answered, with an empty
+    frontier, so the function is correct on its own.) Only the frontier
+    recorded when the segment's predecessor was closed covers what came
+    before — taken from the segments manifest
+    beside it, and accepted only if it names this segment's own
+    ``prev_hash`` as the closed head and covers exactly ``first.seq``
+    records. Anything else is refused rather than guessed: the earlier
+    records may no longer exist to recompute it from.
+    """
+    first = Header.decode(first_header)
+    if first.seq == 0:
+        return MerkleFrontier(), None
+    p = os.fspath(path)
+    stem, dot, suffix = p.rpartition(".")
+    gap = (
+        f"this file starts at seq {first.seq}, and no frontier for the "
+        f"{first.seq} records before it was found"
+    )
+    if not (dot and suffix.isdigit()):
+        return None, gap
+    manifest = f"{stem}.segments.json"
+    try:
+        with open(manifest, encoding="utf-8") as fh:
+            mf = json.load(fh)
+    except (OSError, ValueError):
+        return None, gap + f" (no readable {os.path.basename(manifest)})"
+    if mf.get("format") != SEGMENTS_FORMAT:
+        return None, gap
+    for entry in reversed(mf.get("segments", [])):
+        if entry.get("head") != first.prev_hash.hex():
+            continue
+        raw = entry.get("frontier")
+        if raw is None:
+            return None, gap + " (the manifest predates recorded frontiers)"
+        try:
+            f = MerkleFrontier.from_bytes(bytes.fromhex(raw))
+        except ValueError:
+            return None, gap + " (the recorded frontier is malformed)"
+        if f.count != first.seq:
+            return None, (
+                f"the recorded frontier covers {f.count} records, but this file "
+                f"starts at seq {first.seq}"
+            )
+        return f, None
+    return None, gap
+
+
 @dataclass(frozen=True)
 class RotationPolicy:
     """When the writer cuts a segment on its own (WS-ROT).
@@ -305,6 +370,13 @@ class PalaWriter:
         self._recovered_tail_bytes = 0
         self._recovered_tail_offset = 0
         self._open_spans: set[bytes] = set()
+        # The derived root over every record from seq 0, kept as the chain
+        # grows (see chain_root()). A new chain starts at record 0, so the
+        # frontier is known from the first record on.
+        self._frontier: MerkleFrontier | None = MerkleFrontier()
+        self._frontier_gap: str | None = None
+        self._frontier_deferred: tuple[str, int] | None = None
+        self._frontier_pending: list[bytes] = []
         if os.path.exists(path) and os.path.getsize(path) > 0:
             # A fresh writer on a non-empty file would append a second GENESIS
             # and corrupt the chain silently. Refuse; resuming is explicit.
@@ -370,6 +442,13 @@ class PalaWriter:
             raise ValueError("file is empty — use PalaWriter(path) to start a new chain")
         first_header: bytes | None = None
         last_header: bytes | None = None
+        # For a file that starts after seq 0 (a segment), the frontier
+        # continues from the one recorded when its predecessor was closed:
+        # known from the first header, then every record hash in the file
+        # is appended in order during this one scan. A whole chain is
+        # deferred instead — see below.
+        frontier: MerkleFrontier | None = None
+        frontier_gap: str | None = None
         record_count = 0
         last_seq = 0
         last_end = 0
@@ -391,6 +470,16 @@ class PalaWriter:
                 last_header = fixed + rest
                 if first_header is None:
                     first_header = last_header
+                    # A whole chain (seq 0) is not hashed here: resuming a
+                    # large file is common, asking it for its root is not,
+                    # and hashing every header tripled the resume time at
+                    # a million records. Its frontier is built on first use
+                    # (see _materialize_frontier_locked). A later segment
+                    # is bounded by its rotation policy, so it is hashed now.
+                    if Header.decode(first_header).seq != 0:
+                        frontier, frontier_gap = _starting_frontier(path, first_header)
+                if frontier is not None:
+                    frontier.append(record_hash(last_header))
                 record_count += 1
                 last_seq = seq
                 off += hlen + body_len
@@ -435,6 +524,9 @@ class PalaWriter:
         w._path = os.fspath(path)
         w._fh = open(path, "ab", buffering=0)  # noqa: SIM115 — closed in close()
         first = Header.decode(first_header)
+        w._frontier, w._frontier_gap = frontier, frontier_gap
+        w._frontier_pending = []
+        w._frontier_deferred = (w._path, record_count) if first.seq == 0 else None
         base = None
         if rotation is not None:
             stem, dot, suffix = w._path.rpartition(".")
@@ -510,6 +602,12 @@ class PalaWriter:
             rh = record_hash(header_bytes)
             self._fh.write(header_bytes + body)
             self._head = rh
+            if self._frontier is not None:
+                self._frontier.append(rh)
+            elif self._frontier_deferred is not None:
+                self._frontier_pending.append(rh)
+                if len(self._frontier_pending) >= _FRONTIER_PENDING_LIMIT:
+                    self._materialize_frontier_locked()
             self._seq += 1
             if record_type == RT_SPAN_START:
                 self._open_spans.add(span_id)
@@ -916,6 +1014,51 @@ class PalaWriter:
     def path(self) -> str:
         return self._path
 
+    def _materialize_frontier_locked(self) -> None:
+        """Build a deferred frontier: rescan the resumed file, then replay
+        the hashes of the records written since. Called with the lock held."""
+        source, count = self._frontier_deferred
+        f = MerkleFrontier()
+        with open(source, "rb") as fh:
+            for _ in range(count):
+                fixed = fh.read(FIXED_HEADER_LEN)
+                (hlen,) = struct.unpack_from("<H", fixed, 6)
+                (body_len,) = struct.unpack_from("<I", fixed, 120)
+                f.append(record_hash(fixed + fh.read(hlen - FIXED_HEADER_LEN)))
+                fh.seek(body_len, os.SEEK_CUR)
+        for rh in self._frontier_pending:
+            f.append(rh)
+        self._frontier = f
+        self._frontier_deferred = None
+        self._frontier_pending = []
+
+    def chain_root(self) -> bytes:
+        """The derived root over every record from seq 0 to the last one written.
+
+        The §4.3 tree over record hashes in seq order — the value
+        ``pala consistency`` lands on and ``SEG_PRIOR_ROOT`` is defined
+        as (retention-continuation design). Kept incrementally, so it
+        stays available after earlier segments are deleted.
+
+        Raises :class:`FrontierUnavailable` when the writer cannot know
+        it: it resumed on a later segment and no earlier frontier was
+        recorded for it (a manifest from before frontiers were kept, or
+        none at all). A root over only the records this writer can see
+        would be a different number under the same name, so none is
+        given.
+        """
+        with self._lock:
+            if self._frontier_deferred is not None:
+                self._materialize_frontier_locked()
+            if self._frontier is None:
+                raise FrontierUnavailable(self._frontier_gap or "no frontier")
+            if self._frontier.count != self._seq:
+                raise FrontierUnavailable(
+                    f"frontier covers {self._frontier.count} records, the chain "
+                    f"has {self._seq} — refusing to state a root"
+                )
+            return self._frontier.root()
+
     def rotate(self, next_path: str | os.PathLike[str]) -> bytes:
         """Cut the container at a record boundary; continue in a new file."""
         p = os.fspath(next_path)
@@ -943,6 +1086,17 @@ class PalaWriter:
             "head": self._head.hex(),
             "prev_head": self._seg_prev_head.hex(),
         }
+        if self._frontier_deferred is not None:
+            self._materialize_frontier_locked()  # the source file is still here
+        if self._frontier is not None:
+            # What a writer resuming on the *next* segment needs to keep
+            # stating the root over every record since seq 0 — including
+            # after this segment and its predecessors are deleted under a
+            # retention policy. The count and a handful of subtree roots;
+            # the root is recorded beside it for a reader that only wants
+            # the value.
+            closed["frontier"] = self._frontier.to_bytes().hex()
+            closed["root"] = self._frontier.root().hex()
         self._fh.close()
         self._fh = open(p, "ab", buffering=0)  # noqa: SIM115 — closed in close()
         self._path = p
