@@ -72,8 +72,12 @@ class ExclusiveLock:
                     ) from exc
                 time.sleep(0.01)
         try:  # best-effort note of who holds it, for the error above
+            # From byte 1: on Windows the lock covers byte 0, and another
+            # process cannot read a locked range — the pid has to sit
+            # outside it to be readable by the one being refused.
             os.ftruncate(fd, 0)
-            os.write(fd, str(os.getpid()).encode())
+            os.lseek(fd, 0, os.SEEK_SET)
+            os.write(fd, b"\n" + str(os.getpid()).encode())
         except OSError:
             pass
         self._fd = fd
@@ -97,7 +101,9 @@ class ExclusiveLock:
 
 def _read_holder(path: Path) -> str | None:
     try:
-        text = path.read_text(encoding="ascii", errors="ignore").strip()
+        with open(path, "rb") as fh:
+            fh.seek(1)  # past byte 0, which a Windows lock makes unreadable
+            text = fh.read(32).decode("ascii", errors="ignore").strip()
     except OSError:
         return None
     return text if text.isdigit() else None
