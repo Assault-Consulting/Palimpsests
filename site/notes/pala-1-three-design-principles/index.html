@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PALA-1: three design principles for verifiable audit logs — Palimpsests notes</title>
+<meta name="description" content="Verification without disclosure, integrity through a hash chain, and checking a log with no remote service: the ideas behind the PALA-1 format and where each one stops." />
+<link rel="canonical" href="https://palimpsests.dev/notes/pala-1-three-design-principles/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Andrii Sparysh" />
+<meta name="theme-color" content="#15151f" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Palimpsests" />
+<meta property="og:title" content="PALA-1: three design principles for verifiable audit logs — Palimpsests notes" />
+<meta property="og:description" content="Verification without disclosure, integrity through a hash chain, and checking a log with no remote service: the ideas behind the PALA-1 format and where each one stops." />
+<meta property="og:url" content="https://palimpsests.dev/notes/pala-1-three-design-principles/" />
+<meta property="og:locale" content="en" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="PALA-1: three design principles for verifiable audit logs — Palimpsests notes" />
+<meta name="twitter:description" content="Verification without disclosure, integrity through a hash chain, and checking a log with no remote service: the ideas behind the PALA-1 format and where each one stops." />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BlogPosting",
+      "@id": "https://palimpsests.dev/notes/pala-1-three-design-principles/#post",
+      "headline": "PALA-1: three design principles for verifiable audit logs",
+      "description": "Verification without disclosure, integrity through a hash chain, and checking a log with no remote service: the ideas behind the PALA-1 format and where each one stops.",
+      "url": "https://palimpsests.dev/notes/pala-1-three-design-principles/",
+      "mainEntityOfPage": "https://palimpsests.dev/notes/pala-1-three-design-principles/",
+      "datePublished": "2026-10-09",
+      "dateModified": "2026-10-09",
+      "inLanguage": "en",
+      "keywords": [
+        "pala-1",
+        "audit-log",
+        "design"
+      ],
+      "author": {
+        "@type": "Person",
+        "name": "Andrii Sparysh"
+      },
+      "publisher": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "isPartOf": {
+        "@id": "https://palimpsests.dev/notes/#blog"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Palimpsests",
+          "item": "https://palimpsests.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Notes",
+          "item": "https://palimpsests.dev/notes/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "PALA-1: three design principles for verifiable audit logs",
+          "item": "https://palimpsests.dev/notes/pala-1-three-design-principles/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Palimpsests home">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="nav__links">
+      <a class="hide-sm" href="/#caps">Capabilities</a>
+      <a class="hide-sm" href="/pala-1/">PALA-1</a>
+      <a class="hide-sm" href="/verify-without-reading/">Verify</a>
+      <a class="hide-sm" href="/eu-ai-act-article-12/">EU AI Act</a>
+      <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
+      <a class="hide-sm" href="/integrations/">Integrations</a>
+      <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<main class="doc">
+  <div class="wrap">
+    <div class="doc__in">
+<p class="crumbs"><a href="/">Palimpsests</a> / <a href="/notes/">Notes</a></p>
+<span class="eyebrow">Note · 9 October 2026 · Andrii Sparysh</span>
+<h1 class="display">PALA-1: three design principles for verifiable audit logs</h1>
+<p>An audit trail should stay verifiable when the system is offline, when the hardware is limited, and when the records hold information an auditor must not read. <a href="https://palimpsests.dev/pala-1/">PALA-1</a>, the Portable Append-only Log for Audit, is designed around those conditions.</p>
+<p>AI systems now often run where keeping a record isn't enough. A team has to be able to show that the record hasn't changed and that its order is intact. It also has to let an outside party check this without handing over the data inside.</p>
+<p>Air-gapped deployments, embedded systems and strict data-residency rules make that harder. A remote verification service may be unavailable by design. Signing every event costs computation that a small device may not have to spare. Giving an auditor full access to the record can expose information that should stay private.</p>
+<p>PALA-1 answers with three principles: verification without disclosure, integrity through chaining, and verification with no external dependency.</p>
+<h2 id="1-verification-must-not-require-disclosure">1. Verification must not require disclosure</h2>
+<p>An audit shouldn't force an organization to reveal everything it records.</p>
+<p>Traditional reviews often tie access to evidence to access to the underlying information. For an AI system that can mean exposing prompts, responses, personal data, internal instructions or operational details, just to show that a log hasn't been modified.</p>
+<p>PALA-1 keeps these apart. Each record has a header and a body, and the body can be encrypted. The header carries a SHA-256 digest of the body. Verification checks the headers and compares each body with its digest, without decrypting anything. The auditor gets the evidence needed to validate the chain and nothing more. The check is described step by step on <a href="https://palimpsests.dev/verify-without-reading/">verify without reading</a>.</p>
+<p>This matters in healthcare, finance, industrial systems and anywhere else data minimization is a requirement rather than a preference. The right to verify a record shouldn't come bundled with the right to read it.</p>
+<p>A successful check doesn't prove that every recorded event was true, though. It establishes properties of the evidence in front of the verifier. Whether the runtime behaved honestly before or during recording is a separate question.</p>
+<h2 id="2-integrity-should-come-from-the-chain">2. Integrity should come from the chain</h2>
+<p>A pile of individually stored records doesn't add up to a trustworthy history. If someone can edit, delete, reorder or replace records without detection, the file may still look plausible while no longer matching what happened.</p>
+<p>PALA-1 links records into an append-only hash chain. Each record carries the hash of the one before it, so a verifier checks the sequence instead of trusting how individual entries look:</p>
+<ul>
+  <li>if a record is modified, its hash no longer matches the link stored in the next record;</li>
+  <li>if a record in the middle is removed, the link to the next one breaks and the sequence numbers show a gap;</li>
+  <li>if records are reordered, the links and the sequence numbers no longer line up.</li>
+</ul>
+<p>Verification is portable too. The specification and its <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/specs/pala-1/test-vectors.json">test vectors</a> are public domain, and anyone can reproduce the checks without our software. Five independent implementations have done exactly that, and the <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/specs/pala-1/INDEPENDENT-VERIFICATION.md">verification runs</a> are on record.</p>
+<p>One limit needs stating. A valid chain doesn't prove its last record is the last one that ever existed. If someone presents an earlier prefix that is still internally valid, only an anchor kept outside the log can reveal it. Integrity and completeness are related, but they are different properties.</p>
+<h2 id="3-verification-must-work-without-a-remote-witness">3. Verification must work without a remote witness</h2>
+<p>Many security designs assume another service is around to confirm, sign or register events. That isn't true everywhere. An air-gapped computer may have no network route at all. An embedded controller may have a tight power budget. A deployment policy may forbid outbound connections even where a network exists.</p>
+<p>PALA-1 is built for those conditions. Its chain can be checked offline, and the integrity check needs no key material. Records are linked by hashing rather than by an asymmetric signature on every record, which keeps routine verification cheap and needs no remote service just to confirm internal consistency.</p>
+<p>External witnessing still has a place. If an organization needs evidence that a particular chain head existed by a particular time, it can register that head with a transparency service. Since version 0.11, Palimpsests can send one signed statement per published head to a SCITT service, and no record content leaves the device. <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/INTEROP-SCITT.md">What a receipt proves and what it doesn't</a> is written up separately. The anchor can also stay local, in a file or on a hardware token, as described on <a href="https://palimpsests.dev/air-gapped/#anchors">air-gapped</a>.</p>
+<p>So offline verification is the core capability, and external witnessing is an extra layer of trust on top of it.</p>
+<h2 id="what-this-means-in-practice">What this means in practice</h2>
+<p>A deployment can keep its records locally, let an independent verifier check their integrity without giving that verifier the content, and run routine checks without depending on a live external service.</p>
+<p>PALA-1 defines the record format and the verification procedure. <a href="https://palimpsests.dev/">Palimpsests</a> is the reference implementation, built for local-first language-model inference where requests and tool calls need an auditable record and the data must not leave the machine.</p>
+<p>The format is described in an Internet-Draft, <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/">draft-sparysh-pala-audit</a>. It's an individual submission with Informational status, a work in progress and not an approved IETF standard. The <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/specs/pala-1/PALA-1.md">specification</a> in the repository is the normative text.</p>
+<p>None of this replaces a threat model, access controls, encryption, retention policies or other deployment-specific measures. The limits of the current implementation are listed in its <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md">security policy and threat model</a>. A consistent log is evidence about a sequence of records. It isn't a guarantee about the system that produced them.</p>
+<h2 id="check-it-yourself">Check it yourself</h2>
+<p>The most useful way to judge an audit format is to run its verification and try to break it. The <a href="https://github.com/Assault-Consulting/Palimpsests/tree/main/docs/specs/pala-1/verification-kit">verification kit</a> has the inputs and a run-record template. The quickest local try is:</p>
+<pre><code>pip install palimpsests
+palimpsests demo
+palimpsests pala verify palimpsests-demo.pala</code></pre>
+<p>Then change one byte in the middle of the file and run the check again.</p>
+<p>For teams that run AI systems locally, on restricted networks or on modest hardware, the useful test is whether their logs stay independently verifiable under the conditions the system actually works in. The source code and all verification material are on <a href="https://github.com/Assault-Consulting/Palimpsests">GitHub</a>.</p>
+<div class="related">
+  <a class="btn" href="/notes/">All notes →</a>
+  <a class="btn" href="/">Palimpsests →</a>
+</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/" aria-label="Palimpsests">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="/notes/">Notes</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
