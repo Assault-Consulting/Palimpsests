@@ -31,6 +31,7 @@ Palimpsests is honest about scope: it supplies the runtime primitives that speci
 <!-- notes:start -->
 ## Notes
 
+- [PALA-1: three design principles for verifiable audit logs](https://palimpsests.dev/notes/pala-1-three-design-principles/): Verification without disclosure, integrity through a hash chain, and checking a log with no remote service: the ideas behind the PALA-1 format and where each one stops.
 - [EU AI Act Article 12: what it asks of AI you run yourself](https://palimpsests.dev/notes/eu-ai-act-article-12-self-hosted-ai/): Which systems the logging rules cover, what the articles require, when they start and how the fines work, in plain language.
 - [How to check an AI log without reading it](https://palimpsests.dev/notes/checking-an-ai-log-without-reading-it/): Why the person who checks an AI system's log often shouldn't read it, and how a hash-chained format makes that possible.
 - [Recording the tool calls your agent already makes](https://palimpsests.dev/notes/recording-agent-tool-calls/): Adapters for LiteLLM, MCP servers and OpenCode that put tool calls on a tamper-evident log, and what such a record proves.
