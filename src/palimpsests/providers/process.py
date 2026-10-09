@@ -28,13 +28,17 @@ details rather than the logic:
 from __future__ import annotations
 
 import httpx
+import logging
 import os
+import secrets
 import socket
 import subprocess
 import tempfile
 import time
 from palimpsests.providers.errors import EngineUnavailable
 from pathlib import Path
+
+logger = logging.getLogger("palimpsests.providers.process")
 
 
 def find_free_port() -> int:
@@ -77,6 +81,16 @@ class LlamaServerProcess:
         self._readiness_timeout = readiness_timeout
         self._proc: subprocess.Popen | None = None
         self._stderr_file: object | None = None  # tempfile handle while running
+        # A fresh key per launch, so the managed server answers only us.
+        # Passed through the child's environment (LLAMA_API_KEY, which
+        # llama-server reads for --api-key), never on its command line:
+        # /proc/<pid>/cmdline is readable by every local user, and a key
+        # visible to any process would defend against none of them.
+        self._api_key = secrets.token_urlsafe(32)
+        #: True once the server refused a request without the key; False if
+        #: it answered one (a build that does not read LLAMA_API_KEY); None
+        #: before start or if the check could not be made.
+        self.auth_enforced: bool | None = None
 
     @property
     def base_url(self) -> str:
@@ -85,6 +99,11 @@ class LlamaServerProcess:
     @property
     def port(self) -> int:
         return self._port
+
+    @property
+    def api_key(self) -> str:
+        """The key this launch requires; send it as ``Authorization: Bearer``."""
+        return self._api_key
 
     def build_argv(self) -> list[str]:
         """The full command line, for spawning and for tests.
@@ -128,6 +147,7 @@ class LlamaServerProcess:
                 self.build_argv(),
                 stdout=subprocess.DEVNULL,
                 stderr=self._stderr_file,
+                env={**os.environ, "LLAMA_API_KEY": self._api_key},
             )
         except FileNotFoundError as e:
             self._close_stderr_file()
@@ -136,6 +156,32 @@ class LlamaServerProcess:
             ) from e
 
         self._wait_until_ready()
+        self._check_auth()
+
+    def _check_auth(self) -> None:
+        """Confirm the server refuses a request that does not carry the key.
+
+        ``/health`` is public in llama-server, so readiness says nothing
+        about authentication; ``/v1/models`` is not. A 401/403 without the
+        key means the key is enforced. A 200 means this build did not read
+        ``LLAMA_API_KEY`` — older ones do not — and any local process can
+        use the server, as before; that is logged loudly rather than
+        refused, so an older binary keeps working with the risk named.
+        """
+        try:
+            resp = httpx.get(f"{self.base_url}/v1/models", timeout=2.0)
+        except httpx.HTTPError:
+            return
+        if resp.status_code in (401, 403):
+            self.auth_enforced = True
+        elif resp.status_code == 200:
+            self.auth_enforced = False
+            logger.warning(
+                "llama-server at %s answered without its API key: this build does "
+                "not read LLAMA_API_KEY, so any local process can use it (the "
+                "level-2 exposure in SECURITY.md). A newer llama-server enforces it.",
+                self.base_url,
+            )
 
     def _wait_until_ready(self) -> None:
         """Poll the health endpoint until the server answers or we give up."""
