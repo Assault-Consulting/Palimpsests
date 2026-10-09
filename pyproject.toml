@@ -73,8 +73,9 @@ encryption = [
 # documented marker of the L2 requirement. httpx (already a base dep) is
 # all the Python side needs.
 #
-# Exposure note: the managed llama-server listens on a local port with no
-# --api-key. Single-user hosts only — see SECURITY.md, "Accepted risks".
+# Exposure note: the managed llama-server listens on a local port, guarded by
+# a per-launch key passed through its environment; the port-selection race
+# remains. Single-user hosts only — see SECURITY.md, "Accepted risks".
 llamacpp = []
 # Level 3 (pal-native) runs an in-process decode loop over llama.cpp via
 # its low-level Python bindings (ADR-0001/0002). llama-cpp-python pulls a
