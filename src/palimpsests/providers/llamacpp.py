@@ -163,7 +163,11 @@ class LlamaCppEngine(BaseInferenceEngine):
         )
         self._process.start()
         self._base_url = self._process.base_url
-        self._client = httpx.Client(base_url=self._base_url, timeout=self._timeout)
+        self._client = httpx.Client(
+            base_url=self._base_url,
+            timeout=self._timeout,
+            headers={"Authorization": f"Bearer {self._process.api_key}"},
+        )
         return self._client
 
     def is_available(self) -> bool:
