@@ -123,7 +123,7 @@ def load_or_create_key() -> bytes:
 
     if stored is not None:
         # Stored as hex so the keychain holds printable text.
-        return bytes.fromhex(stored)
+        return _key_from_hex(stored)
 
     key = generate_key()
     keyring.set_password(SERVICE_NAME, KEY_USERNAME, key.hex())
@@ -133,7 +133,27 @@ def load_or_create_key() -> bytes:
     # keychain no longer holds. Converging on the stored value makes the
     # race harmless: both callers end up with the same key.
     stored = keyring.get_password(SERVICE_NAME, KEY_USERNAME)
-    return bytes.fromhex(stored) if stored is not None else key
+    return _key_from_hex(stored) if stored is not None else key
+
+
+def _key_from_hex(stored: str) -> bytes:
+    """The keychain's hex text as a 256-bit key — or a refusal.
+
+    ``bytes.fromhex`` accepts any even-length hex string; a truncated or
+    edited keychain entry would otherwise reach SQLCipher as a key of the
+    wrong size, and the database would fail to open with an error that
+    names the wrong thing.
+    """
+    try:
+        key = bytes.fromhex(stored)
+    except ValueError as e:
+        raise ValueError("the audit key in the OS keychain is not valid hex") from e
+    if len(key) != KEY_BYTES:
+        raise ValueError(
+            f"the audit key in the OS keychain is {len(key)} bytes; "
+            f"a {KEY_BYTES * 8}-bit key is {KEY_BYTES} bytes"
+        )
+    return key
 
 
 # ─── head anchor (tamper-evidence beyond the chain) ──────────────────────
