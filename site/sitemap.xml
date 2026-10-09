@@ -38,9 +38,15 @@
   </url>
   <url>
     <loc>https://palimpsests.dev/notes/</loc>
-    <lastmod>2026-10-04</lastmod>
+    <lastmod>2026-10-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://palimpsests.dev/notes/pala-1-three-design-principles/</loc>
+    <lastmod>2026-10-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://palimpsests.dev/notes/eu-ai-act-article-12-self-hosted-ai/</loc>
