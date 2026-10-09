@@ -31,7 +31,7 @@ from pathlib import Path
 from palimpsests.audit.log import AuditLog
 
 db, n, go = sys.argv[1], int(sys.argv[2]), Path(sys.argv[3])
-log = AuditLog(Path(db), b"\\\\x01" * 32, allow_unencrypted=True)
+log = AuditLog(Path(db), b"\\x01" * 32, allow_unencrypted=True)
 deadline = time.monotonic() + 30
 while not go.exists():  # released together, to make the race as likely as it gets
     if time.monotonic() > deadline:
