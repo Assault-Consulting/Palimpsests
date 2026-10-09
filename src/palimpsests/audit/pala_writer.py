@@ -42,6 +42,7 @@ import time
 from collections.abc import Mapping
 from dataclasses import dataclass
 from hashlib import sha256
+from palimpsests.audit._oslock import ExclusiveLock, LockHeld
 from palimpsests.audit.pala.codec import (
     FIXED_HEADER_LEN,
     MAGIC,
@@ -170,8 +171,17 @@ _DETAIL_CLIP = 200  # profile §3: EVT_DETAIL clipped, exception text may hide t
 
 
 def _detail(text: str) -> bytes:
-    """Encode EVT_DETAIL: UTF-8, clipped to 200 bytes on a char boundary."""
-    raw = text.encode("utf-8")
+    """Encode EVT_DETAIL: credentials scrubbed, UTF-8, clipped to 200 bytes
+    on a char boundary.
+
+    Scrubbed first (:func:`~palimpsests.audit.redact.scrub_secrets`): the
+    note above says exception text may hide tokens, and clipping alone
+    kept whatever fell in the first 200 bytes — on a hash-chained record
+    that can never be rewritten.
+    """
+    from palimpsests.audit.redact import scrub_secrets
+
+    raw = scrub_secrets(text).encode("utf-8")
     if len(raw) <= _DETAIL_CLIP:
         return raw
     # Clip to <=200 bytes without splitting a multi-byte character.
@@ -217,6 +227,45 @@ _monotonic = time.monotonic  # module alias: tests substitute a fake clock
 #: bounded, so a writer whose root is never asked for still does not grow
 #: without limit.
 _FRONTIER_PENDING_LIMIT = 4096
+
+
+class ChainLocked(LockHeld):
+    """Another process is already writing this chain."""
+
+
+def _chain_lock_target(path: str | os.PathLike[str]) -> str:
+    """The name a chain is locked under — the same for every segment of it.
+
+    A rotated chain is ``base``, ``base.00001``, ``base.00002``… with
+    ``base.segments.json`` beside them; its lock is ``base.lock``, so a
+    writer resumed on any segment collides with one still writing from
+    the base. Anything else is locked under its own name.
+    """
+    p = os.fspath(path)
+    stem, dot, suffix = p.rpartition(".")
+    if dot and suffix.isdigit() and os.path.exists(f"{stem}.segments.json"):
+        return stem
+    return p
+
+
+def _acquire_chain_lock(path: str | os.PathLike[str]) -> ExclusiveLock:
+    """One writer per chain, across processes — or a refusal that says why.
+
+    The writer keeps the head and seq in memory; a second process appending
+    to the same file would write records with seqs already used and a
+    ``prev_hash`` the first never saw — a forked chain, reported by every
+    verifier as a break, with no attack behind it. Two ``palimpsests serve``
+    instances sharing a config directory did exactly that, silently.
+    """
+    lock = ExclusiveLock(_chain_lock_target(path))
+    try:
+        lock.acquire(blocking=False)
+    except LockHeld as exc:
+        raise ChainLocked(
+            f"another process is already writing the chain at {os.fspath(path)} "
+            f"({exc}); a second writer would fork it"
+        ) from exc
+    return lock
 
 
 class FrontierUnavailable(RuntimeError):
@@ -385,9 +434,14 @@ class PalaWriter:
                 "to resume the chain (core §4.2: BOOT is the cross-boot link)"
             )
         self._path = os.fspath(path)
-        self._fh = open(path, "ab", buffering=0)  # noqa: SIM115 — closed in close()
-        self._init_rotation(rotation, seg_records=0, seg_first_seq=0,
-                            seg_prev_head=ZERO32, seg_bytes=0)
+        self._xlock = _acquire_chain_lock(path)
+        try:
+            self._fh = open(path, "ab", buffering=0)  # noqa: SIM115 — closed in close()
+            self._init_rotation(rotation, seg_records=0, seg_first_seq=0,
+                                seg_prev_head=ZERO32, seg_bytes=0)
+        except BaseException:
+            self._xlock.release()
+            raise
 
     def _init_rotation(
         self,
@@ -436,7 +490,39 @@ class PalaWriter:
         assurance_tier: int = TIER_A,
         recover_torn_tail: bool = True,
     ) -> PalaWriter:
-        """Resume an existing chain: adopt its tail head and seq (core §4.2)."""
+        """Resume an existing chain: adopt its tail head and seq (core §4.2).
+
+        Takes the chain's writer lock first — before the scan, and before
+        any torn tail is truncated: truncating a file another process is
+        appending to would destroy records it just wrote.
+        """
+        lock = _acquire_chain_lock(path)
+        try:
+            return cls._open_existing_locked(
+                path,
+                lock,
+                rotation=rotation,
+                boot_id=boot_id,
+                time_trust=time_trust,
+                assurance_tier=assurance_tier,
+                recover_torn_tail=recover_torn_tail,
+            )
+        except BaseException:
+            lock.release()
+            raise
+
+    @classmethod
+    def _open_existing_locked(
+        cls,
+        path: str | os.PathLike[str],
+        lock: ExclusiveLock,
+        *,
+        rotation: RotationPolicy | None,
+        boot_id: bytes | None,
+        time_trust: int,
+        assurance_tier: int,
+        recover_torn_tail: bool,
+    ) -> PalaWriter:
         size = os.path.getsize(path)
         if size == 0:
             raise ValueError("file is empty — use PalaWriter(path) to start a new chain")
@@ -522,6 +608,7 @@ class PalaWriter:
         w._recovered_tail_offset = last_end
         w._open_spans = set()
         w._path = os.fspath(path)
+        w._xlock = lock
         w._fh = open(path, "ab", buffering=0)  # noqa: SIM115 — closed in close()
         first = Header.decode(first_header)
         w._frontier, w._frontier_gap = frontier, frontier_gap
@@ -1165,6 +1252,7 @@ class PalaWriter:
     def close(self) -> None:
         with self._lock:
             self._fh.close()
+            self._xlock.release()
 
     def __enter__(self) -> PalaWriter:
         return self

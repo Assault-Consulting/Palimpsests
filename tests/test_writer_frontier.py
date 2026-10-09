@@ -119,7 +119,9 @@ def test_after_old_segments_are_deleted_the_root_still_covers_them(tmp_path):
     # what was appended after the deletion: the BOOT and the one event,
     # now at the end of the surviving segment (or in a new one, if the
     # policy rotated on the way)
-    appended = (_hashes(*[s for s in sorted(tmp_path.glob("w.pala*")) if s.suffix != ".json"]))
+    appended = _hashes(
+        *[s for s in sorted(tmp_path.glob("w.pala*")) if s.suffix not in (".json", ".lock")]
+    )
     assert root == merkle_root(everything + appended[-2:])
 
 

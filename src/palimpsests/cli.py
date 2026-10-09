@@ -152,7 +152,11 @@ def serve_cmd(
     """
     try:
         import uvicorn
-        from palimpsests.server.openai_api import create_app, default_audit
+        from palimpsests.server.openai_api import (
+            ServeChainUnavailable,
+            create_app,
+            default_audit,
+        )
     except ImportError as e:
         typer.secho(
             "error: the serve extra is not installed; "
@@ -161,14 +165,14 @@ def serve_cmd(
             err=True,
         )
         raise typer.Exit(code=1) from e
-    audit = default_audit()
+    try:
+        audit = default_audit()
+    except ServeChainUnavailable as e:
+        typer.secho(f"error: {e}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1) from e
     typer.secho(
         f"serving OpenAI-compatible endpoint on http://{host}:{port}  "
-        + (
-            "(structured tool loops recorded to serve.pala)"
-            if audit is not None
-            else "(PALA recorder unavailable — serving without it)"
-        ),
+        "(structured tool loops recorded to serve.pala)",
         fg=typer.colors.GREEN,
     )
     try:

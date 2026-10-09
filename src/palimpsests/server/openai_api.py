@@ -594,22 +594,44 @@ def _sse_prebuilt(
     yield "data: [DONE]\n\n"
 
 
-def default_audit():
-    """The endpoint's own PALA-1 chain at ``<config>/serve.pala``."""
-    try:
-        from palimpsests.audit.pala_writer import PalaWriter
-        from palimpsests.core import default_config_dir
-        from palimpsests.providers.native.audit import NativeAudit
+class ServeChainUnavailable(RuntimeError):
+    """The serve cannot open its own audit chain, and so does not start."""
 
-        path = default_config_dir() / "serve.pala"
+
+def default_audit():
+    """The endpoint's own PALA-1 chain at ``<config>/serve.pala``.
+
+    Raises :class:`ServeChainUnavailable` rather than returning ``None``.
+    It used to swallow every failure and return ``None``, and the serve
+    then ran without its record — announced by one entry point, silent
+    in the other. With a writer lock on the chain that would have turned
+    a second serve on the same config directory into a serve with no
+    audit at all. A serve whose chain cannot be opened does not start,
+    and says why.
+    """
+    from palimpsests.audit.pala_writer import ChainLocked, PalaWriter
+    from palimpsests.core import default_config_dir
+    from palimpsests.providers.native.audit import NativeAudit
+
+    path = default_config_dir() / "serve.pala"
+    try:
         path.parent.mkdir(parents=True, exist_ok=True)
         if path.exists() and path.stat().st_size > 0:
             writer = PalaWriter.open_existing(path)
         else:
             writer = PalaWriter(path)
-        return NativeAudit(writer)
-    except Exception:
-        return None
+    except ChainLocked as exc:
+        raise ServeChainUnavailable(
+            f"{exc}. A second serve needs a chain of its own: start it with "
+            "PALIMPSESTS_CONFIG_DIR set to another directory."
+        ) from exc
+    except (OSError, ValueError) as exc:
+        raise ServeChainUnavailable(
+            f"cannot open the serve's audit chain at {path}: {exc}. "
+            f"`palimpsests pala verify {path}` shows what is wrong with it; "
+            "the serve does not start without its chain."
+        ) from exc
+    return NativeAudit(writer)
 
 
 def main() -> None:
@@ -676,7 +698,11 @@ def main() -> None:
 
     import uvicorn
 
-    audit = default_audit()
+    try:
+        audit = default_audit()
+    except ServeChainUnavailable as e:
+        print(f"error: {e}", file=sys.stderr)
+        raise SystemExit(1) from e
     app = create_app(audit=audit, api_key=args.api_key)
     if audit is not None:
 

@@ -55,11 +55,18 @@ would be unanchored, though still chained — for fewer keychain calls,
 which are not free on macOS and Windows.
 
 ``close()`` flushes the anchor **only if this process actually wrote a
-row**, and anchors the hash *it* wrote. Opening a log and closing it
-must never move the anchor: otherwise a read-only operation (notably
-``verify``) would silently re-anchor whatever chain happens to be on
-disk — blessing a forged one and destroying the very evidence it was
-asked to check.
+row**, and only if that row is **still the head**. Opening a log and
+closing it must never move the anchor: otherwise a read-only operation
+(notably ``verify``) would silently re-anchor whatever chain happens to
+be on disk — blessing a forged one and destroying the very evidence it
+was asked to check. And if another process has appended since, its
+append anchored the newer head; anchoring this process's older row over
+it would roll the anchor back.
+
+Several processes may write one log. Each append — read the head,
+insert, commit, anchor — runs under an exclusive lock on ``<db>.lock``
+(``palimpsests.audit._oslock``), so the chain stays linear: two
+processes can never link two rows to one head.
 
 The ``AuditDenied`` exception
 -----------------------------
@@ -96,6 +103,7 @@ from palimpsests.audit.key_manager import (
     load_head_anchor,
     store_head_anchor,
 )
+from palimpsests.audit.redact import scrub_secrets
 from pathlib import Path
 from typing import TypeVar
 
@@ -104,8 +112,9 @@ logger = logging.getLogger("palimpsests.audit")
 #: Longest error text stored in a row. Exception messages are written by
 #: other libraries and can embed request URLs (with tokens), file paths,
 #: or fragments of the payload that raised — none of which belongs in a
-#: log that promises "metadata only". Clipping does not sanitize, but it
-#: bounds the exposure and keeps rows reviewable.
+#: log that promises "metadata only". Recognisable credentials are
+#: scrubbed first (``redact.scrub_secrets``); clipping then bounds what
+#: is left and keeps rows reviewable.
 _ERROR_CLIP = 200
 
 
@@ -282,8 +291,20 @@ class AuditLog:
     ) -> None:
         if anchor_every < 1:
             raise ValueError("anchor_every must be >= 1")
+        if not isinstance(key, (bytes, bytearray)) or len(key) != 32:
+            raise ValueError("the audit key must be 32 bytes (256 bits)")
         self._path = Path(db_path)
         self._lock = threading.Lock()
+        # Threads of this process are serialised by _lock; other processes
+        # writing the same database, by _xlock — held for each append only
+        # (read head → insert → commit → anchor). Without it two processes
+        # could link two rows to one head — a fork verify() reports as a
+        # break, with no attack behind it. Per append rather than for the
+        # writer's lifetime, so a CLI command and a running serve can both
+        # write the same log; the chain stays linear either way.
+        from palimpsests.audit._oslock import ExclusiveLock
+
+        self._xlock = ExclusiveLock(self._path)
         self._anchor_every = anchor_every
         self._since_anchor = 0
         # Anchors are scoped to this database's path, so two logs on one
@@ -371,15 +392,21 @@ class AuditLog:
     ) -> None:
         """Append one event, extending the hash chain. Timestamped in UTC.
 
-        ``error_message`` is clipped to ``_ERROR_CLIP`` chars *before*
-        hashing, so the stored text and the chained text are the same
-        bytes regardless of whether the caller went through the
-        ``@audited`` decorator or called ``record`` directly.
+        ``error_message`` is scrubbed of recognisable credentials
+        (:func:`~palimpsests.audit.redact.scrub_secrets`) and then clipped
+        to ``_ERROR_CLIP`` chars, both *before* hashing, so the stored text
+        and the chained text are the same bytes whether the caller went
+        through the ``@audited`` decorator or called ``record`` directly.
+        Scrub first, then clip: clipping alone kept any credential that
+        happened to fall in the first 200 characters, and a cut can split
+        a token so a pattern no longer recognises it.
         """
         if error_message is not None:
-            error_message = _clip(error_message)
-        ts = datetime.now(UTC).isoformat()
-        with self._lock:
+            error_message = _clip(scrub_secrets(error_message))
+        with self._lock, self._xlock:
+            # The timestamp is taken inside the lock, so rows from several
+            # processes are timestamped in the order they are chained.
+            ts = datetime.now(UTC).isoformat()
             prev = self._head_hash_locked()
             rh = _row_hash(
                 prev,
@@ -594,8 +621,16 @@ class AuditLog:
         bless a forged history and destroy the evidence it was asked to
         examine.
         """
-        with self._lock:
-            if self._last_written is not None:
+        with self._lock, self._xlock:
+            # Anchor what this process wrote only if it is still the head.
+            # If another process has appended since, the head is its row
+            # and its own append anchored it; writing this process's older
+            # row over that anchor would roll it back, and the next verify
+            # would report the newer rows as an unanchored tail.
+            if (
+                self._last_written is not None
+                and self._head_hash_locked() == self._last_written
+            ):
                 store_head_anchor(self._last_written, scope=self._anchor_scope)
             self._conn.close()
 
@@ -666,7 +701,7 @@ def audited(
                         outcome="denied",
                         model_locality=model_locality,
                         data_class=data_class,
-                        error_message=_clip(str(e)),
+                        error_message=str(e),
                     )
                 raise
             except Exception as e:
@@ -677,7 +712,7 @@ def audited(
                         outcome="error",
                         model_locality=model_locality,
                         data_class=data_class,
-                        error_message=_clip(f"{type(e).__name__}: {e}"),
+                        error_message=f"{type(e).__name__}: {e}",
                     )
                 raise
             else:

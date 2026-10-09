@@ -128,26 +128,33 @@ carrying the risk is the person who knows about it. Tracked in
 ### Level 2 (managed `llama-server`) is single-user-host only
 
 When level 2 is enabled, Palimpsests spawns and manages a `llama-server` child
-process that listens on a **local HTTP port with no authentication**
-(`--api-key` is not set). Consequences on a shared host:
+process that listens on a local HTTP port.
 
-- **Any other process running on the same machine can reach that port** — send
-  its own prompts into your slots, read model output, or exhaust the server.
-  `llama-server`'s own built-in endpoints raise the ceiling on what a local
-  attacker can do there.
+**What is now in place.** Each launch generates a random API key and passes it
+to the child through its environment (`LLAMA_API_KEY`, which `llama-server`
+reads for `--api-key`) — never on its command line, where any local user could
+read it from the process list. Palimpsests sends the key on every request.
+After start-up it checks that the key is actually enforced, by asking a
+protected endpoint without it: a refusal confirms it; an answer means the
+`llama-server` build does not read `LLAMA_API_KEY` (older builds do not), and
+that is logged as a warning rather than refused, so an older binary keeps
+working with the risk named. With a current build, another local process can
+no longer send prompts into your slots or read model output through that port.
+
+**What is still open.**
+
 - Port selection has a **time-of-check/time-of-use race**: a free port is chosen
-  and then bound, so a hostile local process can, in principle, occupy the port
-  first and impersonate the server to Palimpsests.
+  and then bound by the child, so a hostile local process can, in principle,
+  occupy the port first and impersonate the server to Palimpsests. The key does
+  not close this — an impersonator would simply receive the requests, key
+  included. Verifying that the health-checked process owns the port is the
+  missing half.
+- A process running as **the same OS user** can read the child's environment,
+  and with it the key. The key separates users, not processes of one user.
 
 **Therefore: do not enable level 2 on a host you share with untrusted users or
 untrusted processes.** Levels 1 and 3 are unaffected — level 1 talks to a daemon
 you already run, and level 3 runs in-process with no listening socket.
-
-This is **deferred by decision**, not overlooked. Level 3 is planned to split
-into a separate distribution, which changes the HTTP exposure model entirely;
-the mitigation (a per-launch random `--api-key`, plus verifying the
-health-checked process owns the expected port) will land with that work. Until
-then, treat the level-2 adapter as a single-user-host component.
 
 ### `state_set` is not yet a validated trust boundary
 
@@ -220,6 +227,36 @@ travels with it, verbatim from the ADR: *the tier-B mechanism is shipped
 and tested; a tier-B claim for a concrete deployment requires a real
 token or HSM holding the anchor — SoftHSM in CI proves the code path,
 not the tier.*
+
+### Concurrency and free text
+
+**One linear chain, however many writers.** Both stores are guarded against
+other *processes*, not only other threads:
+
+- The operations log (`AuditLog`) takes an exclusive lock on `<db>.lock` for
+  each append — read the head, insert, commit, anchor — so a CLI command and a
+  running serve can both write it and the chain stays linear. Before this, two
+  processes appending at once could link two rows to one head: a fork that
+  `audit verify` reports as a break, with no attack behind it. Closing a log
+  anchors its last row only if that row is still the head, so it cannot roll
+  back an anchor another process has since moved.
+- A PALA-1 chain has **one writer**. `PalaWriter` holds `<chain>.lock` for its
+  lifetime (the base name, for every segment of a rotated chain), and a second
+  writer is refused with the holder's pid rather than allowed to append records
+  with seqs already used. A serve that cannot open its chain does not start, and
+  says why; a second serve needs its own `PALIMPSESTS_CONFIG_DIR`.
+
+The `.lock` files are left in place on release; they are empty apart from the
+holder's pid, and safe to delete only when nothing is writing.
+
+**Credentials are scrubbed before they are chained.** The free-text fields — an
+exception message in the operations log, `EVT_DETAIL` in the inference profile
+— pass through a scrubber before they are clipped and hashed: `Bearer` / `Basic`
+credentials, values of credential-named `key=value` pairs, `user:password@` in
+URLs, and self-announcing token shapes are replaced with `[REDACTED]`. It is a
+floor, not a guarantee: a secret with no recognisable shape, in a field with no
+recognisable name, still passes through. Once chained, a field cannot be
+removed without breaking the chain — which is why it is scrubbed first.
 
 ### What an attacker can still do
 
