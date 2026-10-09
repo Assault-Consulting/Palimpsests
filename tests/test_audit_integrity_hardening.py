@@ -11,25 +11,36 @@ only the process that launched it.
 from __future__ import annotations
 
 import logging
-import multiprocessing as mp
 import pytest
 import subprocess
 import sys
 import textwrap
+
+# ── child processes are separate interpreters running a short script.
+# Not multiprocessing: its spawn start method re-imports the *test module*
+# in every child, by the dotted name pytest gave it under importlib mode
+# ("tests.test_…"). In CI, on Linux and Windows alike, that package is not
+# on the children's path — they died with "No module named 'tests'" before
+# writing a row, while the same test passed when run from the repository
+# root. A plain script imports only the package, and its stderr is
+# reported whole on failure.
+
+_APPEND_SCRIPT = """
+import sys, time
 from pathlib import Path
+from palimpsests.audit.log import AuditLog
 
-# ── helpers that run in child processes (module level, so spawn can import them)
-
-
-def _append_rows(db: str, n: int, start_evt) -> None:
-    from palimpsests.audit.key_manager import KEY_BYTES
-    from palimpsests.audit.log import AuditLog
-
-    log = AuditLog(Path(db), b"\x01" * KEY_BYTES, allow_unencrypted=True)
-    start_evt.wait()
-    for i in range(n):
-        log.record(operation="op", tool_name=f"t{i}", outcome="success")
-    log.close()
+db, n, go = sys.argv[1], int(sys.argv[2]), Path(sys.argv[3])
+log = AuditLog(Path(db), b"\\\\x01" * 32, allow_unencrypted=True)
+deadline = time.monotonic() + 30
+while not go.exists():  # released together, to make the race as likely as it gets
+    if time.monotonic() > deadline:
+        sys.exit("start signal never came")
+    time.sleep(0.005)
+for i in range(n):
+    log.record(operation="op", tool_name=f"t{i}", outcome="success")
+log.close()
+"""
 
 
 # ── 1. the operations log: several processes, one linear chain ─────────────
@@ -40,20 +51,23 @@ def test_processes_appending_to_one_log_keep_one_linear_chain(tmp_path):
 
     db = tmp_path / "audit.db"
     AuditLog(db, b"\x01" * 32, allow_unencrypted=True).close()  # create schema
-    ctx = mp.get_context("spawn")
-    start = ctx.Event()
-    procs = [ctx.Process(target=_append_rows, args=(str(db), 40, start)) for _ in range(4)]
+    go = tmp_path / "go"
+    procs = [
+        subprocess.Popen(
+            [sys.executable, "-c", _APPEND_SCRIPT, str(db), "150", str(go)],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+        )
+        for _ in range(4)
+    ]
+    go.touch()
     for p in procs:
-        p.start()
-    start.set()  # release them together, to make the race as likely as it gets
-    for p in procs:
-        p.join(60)
-        assert p.exitcode == 0
+        out, err = p.communicate(timeout=120)
+        assert p.returncode == 0, f"a writer process failed:\n{err}"
     log = AuditLog(db, b"\x01" * 32, allow_unencrypted=True)
     result = log.verify()
     log.close()
     assert result.ok, result
-    assert result.rows_checked == 160
+    assert result.rows_checked == 600
 
 
 def test_closing_does_not_roll_the_anchor_back(tmp_path, monkeypatch):
