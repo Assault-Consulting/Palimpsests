@@ -2,9 +2,10 @@
 # SPDX-License-Identifier: CC0-1.0
 """Generate the prefix-consistency companion vectors.
 
-Derived from the inference-profile companion chain
-(``profiles/inference-vectors.json``, 17 records): the §4.3 tree over
-every record's hash in seq order, and RFC 6962 consistency paths between
+Derived from the first 17 records of the inference-profile companion
+chain (``profiles/inference-vectors.json`` — the r5 chain, which r6 and
+later revisions extend by appending): the §4.3 tree over every record's
+hash in seq order, and RFC 6962 consistency paths between
 prefixes of it. A verifier that reproduces these roots and accepts these
 paths has the derived tree and the RFC 9162 verification right.
 
@@ -66,9 +67,16 @@ def root(hashes: list[bytes]) -> bytes:
     return mth([leaf(h) for h in hashes])
 
 
+# Pinned to the 17-record r5 prefix. These vectors are published: a
+# profile revision that appends records to the companion chain (r6 did)
+# must not change a single root or path in them, so the source is a
+# fixed prefix of that chain, not "however long it is today".
+SOURCE_RECORDS = 17
 src = json.loads(SOURCE.read_text())
-hashes = [R.record_hash(bytes.fromhex(r["header_hex"])) for r in src["records"]]
-assert [r["record_hash"] for r in src["records"]] == [h.hex() for h in hashes]
+source_records = src["records"][:SOURCE_RECORDS]
+assert len(source_records) == SOURCE_RECORDS, "the companion chain lost records"
+hashes = [R.record_hash(bytes.fromhex(r["header_hex"])) for r in source_records]
+assert [r["record_hash"] for r in source_records] == [h.hex() for h in hashes]
 n = len(hashes)
 
 roots = {str(i): root(hashes[:i]).hex() for i in range(0, n + 1)}
@@ -96,7 +104,7 @@ out = {
     ),
     "format": "pala-consistency-proof/1",
     "source": "profiles/inference-vectors.json",
-    "source_chain_head": src["chain_head"],
+    "source_chain_head": hashes[-1].hex(),
     "records": n,
     "leaves": "record_hash of each record, seq order; leaf(d) = SHA-256(0x00 || d)",
     "roots_by_count": roots,
@@ -109,4 +117,4 @@ out = {
     },
 }
 OUT.write_text(json.dumps(out, indent=2) + "\n")
-print(f"wrote {OUT.name}: {n} records, {len(proofs)} proofs, head {src['chain_head'][:16]}…")
+print(f"wrote {OUT.name}: {n} records, {len(proofs)} proofs, head {hashes[-1].hex()[:16]}…")

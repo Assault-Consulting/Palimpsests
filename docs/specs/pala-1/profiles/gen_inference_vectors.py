@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: Assault Consulting
 # SPDX-License-Identifier: CC0-1.0
-"""Generate the inference-profile companion vectors (r2–r5 semantics).
+"""Generate the inference-profile companion vectors (r2–r6 semantics).
 
 Deterministic: fixed key, seq-derived nonces, fixed ids and clocks —
 real crypto, fake entropy. Never do this outside a test vector.
@@ -13,7 +13,11 @@ the tool-loop records: TOOL_CALL (kind 8), TOOL_RESULT (kind 9) with its
 hash-bound reference, and GUARD_TOOL_LOOP_LIMIT (SAFETY kind 104) —
 and, from r4, TOOLS_OFFERED_NO_CALL (kind 10): the offer/absence
 boundary record — and, from r5, a client-reported TOOL_CALL/TOOL_RESULT
-pair carrying EVT_SOURCE = 1 (absent means parsed-from-wire).
+pair carrying EVT_SOURCE = 1 (absent means parsed-from-wire) — and, from
+r6, a TOOL_RESULT with EVT_OUTCOME = 4 (a return whose failure the
+recording vantage could not observe) and SEGMENT_CONTINUATION (kind 11):
+the declaration a writer makes as the first record of each segment it
+opens after a cut, with the derived root of everything before it.
 Prior-revision records are appended-to, never edited:
 their bytes are identical to the revision that introduced them. They are a
 **companion** artifact: `../test-vectors.json` is frozen with the core
@@ -88,6 +92,14 @@ KIND_TOOLS_OFFERED_NO_CALL = 10
 EVT_SOURCE = 0x0011
 SOURCE_PARSED_FROM_WIRE = 0  # the default — the tag is absent
 SOURCE_REPORTED_BY_CLIENT = 1
+
+# r6 profile allocations (profile §3.1 outcome 4; §3.2 segment continuation)
+OUTCOME_UNOBSERVED = 4
+KIND_SEGMENT_CONTINUATION = 11
+SEG_PREDECESSOR_HEAD = 0x0012
+SEG_INDEX = 0x0013
+SEG_RETENTION_S = 0x0014
+SEG_PRIOR_ROOT = 0x0015
 
 
 def h(b: bytes) -> str:
@@ -441,13 +453,107 @@ prev = emit(
     "Anchor over the extended chain; anchor_head below tracks this tip.",
 )
 
+# ─── r6: outcome 4 (profile §3.1) ───────────────────────────────────────
+
+# 17 — EVENT kind 8: a reported TOOL_CALL, as from an agent hook whose
+# tool reaches it as plain output (a shell command, here).
+blind_args = b'{"command":"cat missing.txt"}'
+blind_call_body = R.encode_tlvs([
+    R.tlv(EVT_KIND, u16(KIND_TOOL_CALL)),
+    R.tlv(EVT_TOOL_NAME, b"shell.exec"),
+    R.tlv(EVT_PAYLOAD_DIGEST, hashlib.sha256(blind_args).digest()),
+    R.tlv(EVT_SOURCE, u16(SOURCE_REPORTED_BY_CLIENT)),
+])
+blind_call_hash = emit(
+    "tool_call_blind",
+    header(record_type=R.RT_EVENT, seq=17, prev=prev, body=blind_call_body,
+           tlvs=[R.tlv(R.TLV_ORIGIN_ROLE, b"engine.native")],
+           span_id=SPAN_S1),
+    "TOOL_CALL (kind 8), reported: the call whose result follows.",
+    body=blind_call_body,
+)
+prev = blind_call_hash
+
+# 18 — EVENT kind 9: TOOL_RESULT with EVT_OUTCOME = 4. The output came
+# back and re-entered generation, but nothing at the recording vantage
+# says whether the tool failed — the result is a string that may hold an
+# error message or the file. 4 says exactly that; 0 would let a reader
+# count it as a return that did not fail.
+blind_result = b"cat: missing.txt: No such file or directory\n"
+blind_result_body = R.encode_tlvs([
+    R.tlv(EVT_KIND, u16(KIND_TOOL_RESULT)),
+    R.tlv(EVT_REF_SEQ, u64(17)),
+    R.tlv(EVT_REF_HASH, blind_call_hash),
+    R.tlv(EVT_OUTCOME, u16(OUTCOME_UNOBSERVED)),
+    R.tlv(EVT_PAYLOAD_DIGEST, hashlib.sha256(blind_result).digest()),
+    R.tlv(EVT_SOURCE, u16(SOURCE_REPORTED_BY_CLIENT)),
+])
+prev = emit(
+    "tool_result_unobserved",
+    header(record_type=R.RT_EVENT, seq=18, prev=prev, body=blind_result_body,
+           tlvs=[R.tlv(R.TLV_ORIGIN_ROLE, b"engine.native")],
+           span_id=SPAN_S1),
+    "TOOL_RESULT (kind 9) with EVT_OUTCOME = 4 (r6): a result returned, "
+    "and the vantage that recorded it could not observe whether the tool "
+    "failed. Not 'unknown whether it returned' — that it returned is "
+    "recorded, with its digest.",
+    body=blind_result_body,
+)
+
+# ─── r6: segment continuation (profile §3.2) ────────────────────────────
+
+# 19 — EVENT kind 11: SEGMENT_CONTINUATION. In a deployment this is the
+# first record of a segment file the writer opened after a cut; here it
+# sits mid-file, because a companion vector pins the *body encoding* and
+# one chain is enough for that. The position rule (first record of its
+# file) is a reader check on a file layout, exercised by the writer's
+# own tests. Tag order: EVT_KIND first, the rest ascending by type.
+#
+# SEG_PRIOR_ROOT is the derived root of [0, 19) — the §4.3 tree over the
+# record hashes of seq 0..18, from record 0, computed here by the CC0
+# reference implementation's own merkle_root, independently of any
+# writer.
+prior_root = R.merkle_root([R.record_hash(hb) for hb in chain])
+predecessor_head = prev
+retention_s = 15_552_000  # 180 days: Article 26(6)'s six-month floor
+continuation_body = R.encode_tlvs([
+    R.tlv(EVT_KIND, u16(KIND_SEGMENT_CONTINUATION)),
+    R.tlv(EVT_DETAIL, b"max_records=19"),
+    R.tlv(SEG_PREDECESSOR_HEAD, predecessor_head),
+    R.tlv(SEG_INDEX, u32(1)),
+    R.tlv(SEG_RETENTION_S, u64(retention_s)),
+    R.tlv(SEG_PRIOR_ROOT, prior_root),
+])
+continuation_hash = emit(
+    "segment_continuation",
+    header(record_type=R.RT_EVENT, seq=19, prev=prev, body=continuation_body,
+           tlvs=[R.tlv(R.TLV_ORIGIN_ROLE, b"engine.native")]),
+    "SEGMENT_CONTINUATION (kind 11, r6): opens segment 1. "
+    "SEG_PREDECESSOR_HEAD equals this record's own prev_hash; "
+    "SEG_PRIOR_ROOT commits to every record before it, so a "
+    "pala-consistency-proof/1 against any later derived root verifies "
+    "that prefix after it has been deleted. Cleartext by rule: it must "
+    "stay readable after every key of the deleted prefix is gone.",
+    body=continuation_body,
+)
+prev = continuation_hash
+
+# 20 — ANCHOR noting the new head
+anchored_r6 = prev
+prev = emit(
+    "anchor_r6",
+    header(record_type=R.RT_ANCHOR, seq=20, prev=prev,
+           tlvs=[R.tlv(R.TLV_ANCHOR_HEAD, anchored_r6)]),
+    "Anchor over the r6-extended chain; anchor_head below tracks this tip.",
+)
+
 chain_head = prev
 
 # ─── self-verify before writing anything ────────────────────────────────
 
 res = R.verify_chain(chain)
 assert res.chain_ok, f"generated chain does not verify: {res}"
-assert res.count == 17
+assert res.count == 21
 assert not res.breaks and not res.gaps and not res.violations
 # the encrypted body round-trips under the spec'd nonce/AAD derivation
 back = AESGCM(KEY).decrypt(R.nonce_for(3), bodies[3][12:],
@@ -456,13 +562,13 @@ assert back == plaintext
 
 out = {
     "$comment": (
-        "Inference-profile companion vectors (r2-r5). Deterministic; real "
+        "Inference-profile companion vectors (r2-r6). Deterministic; real "
         "crypto, fake entropy — never derive keys or ids like this outside "
         "a test vector. ../test-vectors.json is frozen with the core and "
         "is deliberately untouched by these."
     ),
     "profile": "inference",
-    "profile_revision": "r5",
+    "profile_revision": "r6",
     "generator": "gen_inference_vectors.py",
     "boot_id": h(BOOT_ID),
     "encryption": {
@@ -531,6 +637,40 @@ out = {
             "payload_digest": hashlib.sha256(reported_result).digest().hex(),
             "source": 1, "source_name": "reported-by-client",
         },
+        "17": {
+            "kind": 8, "kind_name": "TOOL_CALL",
+            "tool_name": "shell.exec",
+            "payload_digest": hashlib.sha256(blind_args).digest().hex(),
+            "source": 1, "source_name": "reported-by-client",
+        },
+        "18": {
+            "kind": 9, "kind_name": "TOOL_RESULT",
+            "ref_seq": 17, "ref_hash": h(blind_call_hash),
+            "outcome": 4, "outcome_name": "unobserved",
+            "payload_digest": hashlib.sha256(blind_result).digest().hex(),
+            "source": 1, "source_name": "reported-by-client",
+        },
+        "outcome_rule": (
+            "EVT_OUTCOME 4 (r6): a result returned and re-entered generation; "
+            "the recording vantage could not observe whether the tool failed. "
+            "0 keeps its r3/r5 meaning — a return — and never states success."
+        ),
+        "19": {
+            "kind": 11, "kind_name": "SEGMENT_CONTINUATION",
+            "detail": "max_records=19",
+            "predecessor_head": h(predecessor_head),
+            "segment_index": 1,
+            "retention_s": retention_s,
+            "prior_root": h(prior_root),
+            "prior_root_covers": "records 0..18 (the 19 records before seq 19)",
+        },
+        "continuation_rules": (
+            "SEG_PREDECESSOR_HEAD MUST equal the record's prev_hash; "
+            "SEG_PRIOR_ROOT is the derived §4.3 root of [0, seq), always from "
+            "record 0; the body MUST be cleartext; in a segment file the "
+            "record is the first one. Reader-side and advisory: the core "
+            "verdict never changes because of this record."
+        ),
         "source_rule": (
             "EVT_SOURCE (0x0011) is present only for the non-default value 1 "
             "(reported-by-client); absent means 0 (parsed-from-wire). Seq 8/9 "

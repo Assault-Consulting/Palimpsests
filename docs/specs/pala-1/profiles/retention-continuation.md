@@ -5,7 +5,7 @@
 
 | | |
 |---|---|
-| **Status** | **Design — for review.** No writer or reader code implements this document; nothing here is emitted by any release. Adoption is a profile revision (additive) plus a reader advisory; the core text and `test-vectors.json` are not touched. |
+| **Status** | **Adopted by the inference profile, r6** (2026-10-10): kind 11, tags 0x0012–0x0015, as proposed in §2, with companion vectors. Writer emission and the reader's rows follow in the implementing PR chain (§7, steps 3–5); until they land, no release emits this record. The core text and `test-vectors.json` are not touched. |
 | **Applies to** | Any PALA-1 profile that adopts it by allocating one `EVENT` kind and the tags below in its own namespaces. The inference profile is the intended first adopter. |
 | **Companion to** | `docs/RETENTION.md` §3 (archival and pruning), `docs/compliance/24970-MAPPING.md` (bounded storage, 5.2 / 6.4 d), core §2.4, §4.2, §7.2 |
 
@@ -147,13 +147,13 @@ verdict stands on its own.
 | 1 | **`SEG_PRIOR_ROOT` tree definition — closed.** Defined by `consistency-proof.md` §1: the derived §4.3 tree over record hashes, computed by any verifier from headers alone; the same object a prefix-consistency proof needs, so the tag and the proof compose by construction. The inference profile's lack of a `MERKLE` leaf source is irrelevant to it — the derived tree needs no carried `MERKLE` record. |
 | 2 | **Manifest as the anchor for a deleted predecessor.** Case B's "matches manifest" depends on the manifest being trustworthy independently of the chain. It is a plain JSON file today. Whether it should be anchored (its digest in an `ANCHOR` record, or in the next continuation record) is a design question shared with core open issue 5. |
 | 3 | **Resume after crash mid-cut.** If the writer dies between closing the predecessor and writing the continuation record, the successor file exists without one. `open_existing` must either finish the cut (write the record first) or fold the empty file back. Writer-side detail, but the "first record of a writer-made segment" guarantee in §1 depends on it. |
-| 4 | **Vectors.** When a profile revision adopts this, companion vectors pin the body encoding as every prior revision's did; no byte of `test-vectors.json` changes. |
+| 4 | **Vectors — closed by r6.** `inference-vectors.json` seq 19 pins the body encoding; `SEG_PRIOR_ROOT` there is computed by the CC0 reference implementation, and the package's Merkle frontier is tested against it. No byte of `test-vectors.json` changed. |
 
 ## 7. Adoption path
 
 1. This document reviewed (ADR-class, non-author).
 2. Inference profile revision: kind 11, tags 0x0012–0x0015, §1–§4 by
-   reference; companion vectors.
+   reference; companion vectors. **Done — r6.**
 3. Writer: emit at the cut; resolve open issue 3.
 4. Reader: Case B rows; §4 checks.
 5. `RETENTION.md` §3 and the 24970 mapping rows move from Planned to
