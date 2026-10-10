@@ -1,7 +1,7 @@
 {
-  "$comment": "Inference-profile companion vectors (r2-r5). Deterministic; real crypto, fake entropy \u2014 never derive keys or ids like this outside a test vector. ../test-vectors.json is frozen with the core and is deliberately untouched by these.",
+  "$comment": "Inference-profile companion vectors (r2-r6). Deterministic; real crypto, fake entropy \u2014 never derive keys or ids like this outside a test vector. ../test-vectors.json is frozen with the core and is deliberately untouched by these.",
   "profile": "inference",
-  "profile_revision": "r5",
+  "profile_revision": "r6",
   "generator": "gen_inference_vectors.py",
   "boot_id": "b0071d000000000000000000000000a2",
   "encryption": {
@@ -185,10 +185,52 @@
       "header_len": 192,
       "header_hex": "50414c410100c000500000031000000000000000b0071d000000000000000000000000a296d3b02fdb21e00ca8a53ad7588b611a2b8f9fc403124ab78dd3b7332e3628320000000000000000000000000000000000000000000000000000000000000000003e651902000000000cb790a30ac218000000000000000000000000000000000000000000000000000000000000000000000000000000005000200096d3b02fdb21e00ca8a53ad7588b611a2b8f9fc403124ab78dd3b7332e362832",
       "record_hash": "cd052df29dba6a183e47099dfec0c10855d6c4dd125642c1ebe172ce6272a3df"
+    },
+    {
+      "label": "tool_call_blind",
+      "note": "TOOL_CALL (kind 8), reported: the call whose result follows.",
+      "seq": 17,
+      "record_type": "0x0012",
+      "header_len": 173,
+      "header_hex": "50414c410100ad00120000031100000000000000b0071d000000000000000000000000a2cd052df29dba6a183e47099dfec0c10855d6c4dd125642c1ebe172ce6272a3df31313131313131313131313131313131000000000000000000000000000000004080741902000000404ec690a30ac218000000003e0000002ef1b51f61d97cc2d2b3ccd53c6bda11fc92eba126e2a09cf7f4c5a7dca79cee01000d00656e67696e652e6e6174697665",
+      "record_hash": "a182faee05c62f2198f4887958adee8d9f73a585139c9c44711b1d87e2ff41ee",
+      "body_len": 62,
+      "body_hex": "0100020008000c000a007368656c6c2e657865630d00200095b0cd76c7d9abab7e58de7c6d57fc577e4901e3a3a1780ff486c14a238285c9110002000100"
+    },
+    {
+      "label": "tool_result_unobserved",
+      "note": "TOOL_RESULT (kind 9) with EVT_OUTCOME = 4 (r6): a result returned, and the vantage that recorded it could not observe whether the tool failed. Not 'unknown whether it returned' \u2014 that it returned is recorded, with its digest.",
+      "seq": 18,
+      "record_type": "0x0012",
+      "header_len": 173,
+      "header_hex": "50414c410100ad00120000031200000000000000b0071d000000000000000000000000a2a182faee05c62f2198f4887958adee8d9f73a585139c9c44711b1d87e2ff41ee313131313131313131313131313131310000000000000000000000000000000080c28319020000008090d590a30ac2180000000066000000815bbbce7c52c5a7cb330c962197695d89ed6a800eb1258e8630bfea1b83654401000d00656e67696e652e6e6174697665",
+      "record_hash": "335b976116a6e1f7c1e12ff37c25ad06b67bc52013870188e96ef3aab91e4884",
+      "body_len": 102,
+      "body_hex": "01000200090008000800110000000000000009002000a182faee05c62f2198f4887958adee8d9f73a585139c9c44711b1d87e2ff41ee0e00020004000d002000d9c819357969b391253af64a3451321c3942d71fbaf55dbdeb1c9b784995d7db110002000100"
+    },
+    {
+      "label": "segment_continuation",
+      "note": "SEGMENT_CONTINUATION (kind 11, r6): opens segment 1. SEG_PREDECESSOR_HEAD equals this record's own prev_hash; SEG_PRIOR_ROOT commits to every record before it, so a pala-consistency-proof/1 against any later derived root verifies that prefix after it has been deleted. Cleartext by rule: it must stay readable after every key of the deleted prefix is gone.",
+      "seq": 19,
+      "record_type": "0x0012",
+      "header_len": 173,
+      "header_hex": "50414c410100ad00120000031300000000000000b0071d000000000000000000000000a2335b976116a6e1f7c1e12ff37c25ad06b67bc52013870188e96ef3aab91e48840000000000000000000000000000000000000000000000000000000000000000c004931902000000c0d2e490a30ac21800000000740000006e4fc176ab784182a4cb5310b82272878bd15a8147ccf60fb364f02a893c002301000d00656e67696e652e6e6174697665",
+      "record_hash": "80bce26837d160018588639361fcf97b0a64872750cf1b606d4dd3ee240a29ce",
+      "body_len": 116,
+      "body_hex": "010002000b0004000e006d61785f7265636f7264733d313912002000335b976116a6e1f7c1e12ff37c25ad06b67bc52013870188e96ef3aab91e4884130004000100000014000800004eed00000000001500200047c659f4898ef58da432bb53e3d3cc20834c0fe880dc0ec16fae693457318e23"
+    },
+    {
+      "label": "anchor_r6",
+      "note": "Anchor over the r6-extended chain; anchor_head below tracks this tip.",
+      "seq": 20,
+      "record_type": "0x0050",
+      "header_len": 192,
+      "header_hex": "50414c410100c000500000031400000000000000b0071d000000000000000000000000a280bce26837d160018588639361fcf97b0a64872750cf1b606d4dd3ee240a29ce00000000000000000000000000000000000000000000000000000000000000000047a219020000000015f490a30ac218000000000000000000000000000000000000000000000000000000000000000000000000000000005000200080bce26837d160018588639361fcf97b0a64872750cf1b606d4dd3ee240a29ce",
+      "record_hash": "26ea26c0934e7791c50becdfc8642ffd9c70fb80fff3e935e5eeb9a47fe8058c"
     }
   ],
-  "chain_head": "cd052df29dba6a183e47099dfec0c10855d6c4dd125642c1ebe172ce6272a3df",
-  "anchor_head": "cd052df29dba6a183e47099dfec0c10855d6c4dd125642c1ebe172ce6272a3df",
+  "chain_head": "26ea26c0934e7791c50becdfc8642ffd9c70fb80fff3e935e5eeb9a47fe8058c",
+  "anchor_head": "26ea26c0934e7791c50becdfc8642ffd9c70fb80fff3e935e5eeb9a47fe8058c",
   "semantics": {
     "$comment": "Decoded r2/r3 body expectations, so a profile-aware reader can check its tag/kind resolution \u2014 the envelope answers above are checkable with any core verifier.",
     "4": {
@@ -263,6 +305,37 @@
       "source": 1,
       "source_name": "reported-by-client"
     },
+    "17": {
+      "kind": 8,
+      "kind_name": "TOOL_CALL",
+      "tool_name": "shell.exec",
+      "payload_digest": "95b0cd76c7d9abab7e58de7c6d57fc577e4901e3a3a1780ff486c14a238285c9",
+      "source": 1,
+      "source_name": "reported-by-client"
+    },
+    "18": {
+      "kind": 9,
+      "kind_name": "TOOL_RESULT",
+      "ref_seq": 17,
+      "ref_hash": "a182faee05c62f2198f4887958adee8d9f73a585139c9c44711b1d87e2ff41ee",
+      "outcome": 4,
+      "outcome_name": "unobserved",
+      "payload_digest": "d9c819357969b391253af64a3451321c3942d71fbaf55dbdeb1c9b784995d7db",
+      "source": 1,
+      "source_name": "reported-by-client"
+    },
+    "outcome_rule": "EVT_OUTCOME 4 (r6): a result returned and re-entered generation; the recording vantage could not observe whether the tool failed. 0 keeps its r3/r5 meaning \u2014 a return \u2014 and never states success.",
+    "19": {
+      "kind": 11,
+      "kind_name": "SEGMENT_CONTINUATION",
+      "detail": "max_records=19",
+      "predecessor_head": "335b976116a6e1f7c1e12ff37c25ad06b67bc52013870188e96ef3aab91e4884",
+      "segment_index": 1,
+      "retention_s": 15552000,
+      "prior_root": "47c659f4898ef58da432bb53e3d3cc20834c0fe880dc0ec16fae693457318e23",
+      "prior_root_covers": "records 0..18 (the 19 records before seq 19)"
+    },
+    "continuation_rules": "SEG_PREDECESSOR_HEAD MUST equal the record's prev_hash; SEG_PRIOR_ROOT is the derived \u00a74.3 root of [0, seq), always from record 0; the body MUST be cleartext; in a segment file the record is the first one. Reader-side and advisory: the core verdict never changes because of this record.",
     "source_rule": "EVT_SOURCE (0x0011) is present only for the non-default value 1 (reported-by-client); absent means 0 (parsed-from-wire). Seq 8/9 carry no EVT_SOURCE and are byte-identical to their r3 form."
   }
 }
