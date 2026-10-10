@@ -127,8 +127,11 @@ def test_companion_vectors_regenerate_byte_identically(tmp_path):
 def test_package_reproduces_the_vectors():
     v = json.loads(VECTORS.read_text())
     src = json.loads((SPEC / "profiles" / "inference-vectors.json").read_text())
-    assert v["source_chain_head"] == src["chain_head"]
-    hashes = [bytes.fromhex(r["record_hash"]) for r in src["records"]]
+    # the vectors cover the 17-record r5 prefix of the companion chain;
+    # later profile revisions append to that chain and must not move them
+    prefix = src["records"][:17]
+    assert v["source_chain_head"] == prefix[-1]["record_hash"]
+    hashes = [bytes.fromhex(r["record_hash"]) for r in prefix]
     for i in range(len(hashes) + 1):
         assert merkle_root(hashes[:i]).hex() == v["roots_by_count"][str(i)]
     for p in v["proofs"]:
