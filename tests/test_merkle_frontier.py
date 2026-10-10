@@ -102,3 +102,24 @@ def test_on_a_real_chain_frontier_and_chain_root_match_the_tree_at_every_length(
             expected = merkle_root(hashes[: i + 1])
             assert f.root() == expected
             assert chain_root(r, i + 1) == expected
+
+
+def test_the_frontier_reproduces_the_published_r6_prior_root():
+    # SEG_PRIOR_ROOT in the r6 companion vectors was computed by the CC0
+    # reference implementation's own merkle_root, which shares no code
+    # with this package. The frontier — what the writer will put in that
+    # tag — has to land on the same value from the same record hashes.
+    import json
+    from pathlib import Path
+
+    vec = json.loads(
+        (Path(__file__).resolve().parents[1]
+         / "docs/specs/pala-1/profiles/inference-vectors.json").read_text()
+    )
+    seq = next(int(k) for k, v in vec["semantics"].items()
+               if isinstance(v, dict) and v.get("kind_name") == "SEGMENT_CONTINUATION")
+    f = MerkleFrontier.from_record_hashes(
+        bytes.fromhex(r["record_hash"]) for r in vec["records"][:seq]
+    )
+    assert f.count == seq
+    assert f.root().hex() == vec["semantics"][str(seq)]["prior_root"]
