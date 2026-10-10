@@ -14,7 +14,7 @@ questions.
 | **Profile of** | PALA-1, version 1 |
 | **Status** | **Frozen — v1.0** (2026-08-09, with the core). Existing tag and kind allocations are permanent; the `EVT_KIND` and `AGG_*` spaces grow **additively** in profile revisions (§6.3) — additions never renumber and never touch the envelope. The profile is emitted by the Palimpsests writer (Phase 3, wired). |
 | **Date** | 2026-08-09 (frozen; first draft 2026-08-03) |
-| **Revision** | **r5** (2026-09-03) — additive only; see §9 for the revision history. r1 is the freeze. |
+| **Revision** | **r6** (2026-10-10) — additive only; see §9 for the revision history. r1 is the freeze. |
 | **Licence** | CC0-1.0, like the core specification and its test vectors. |
 
 **Metadata-only discipline.** The emitting library's existing audit log
@@ -80,10 +80,14 @@ own type namespace:
 | 0x000B | `EVT_DISPOSITION` | u16 — 0 acknowledged, 1 dismissed, 2 escalated. *(r2)* |
 | 0x000C | `EVT_TOOL_NAME` | UTF-8, ≤ 64 bytes — the registered tool identifier (§3.1). An identifier, never arguments. *(r3)* |
 | 0x000D | `EVT_PAYLOAD_DIGEST` | 32 bytes — SHA-256 of the canonical tool arguments (kind 8) or tool result payload (kind 9); the payload itself never enters the log. *(r3)* |
-| 0x000E | `EVT_OUTCOME` | u16 — 0 ok, 1 error, 2 timeout, 3 cancelled (§3.1, kind 9). *(r3)* |
+| 0x000E | `EVT_OUTCOME` | u16 — 0 ok, 1 error, 2 timeout, 3 cancelled (§3.1, kind 9). *(r3)* 4 unobserved: a result returned, and the recording vantage could not observe whether the tool failed. *(r6)* |
 | 0x000F | `EVT_TOOLS_OFFERED` | u16 — number of structured tools offered in the request (kind 10). *(r4)* |
 | 0x0010 | `EVT_TOOLS_DIGEST` | 32 bytes — SHA-256 over the canonical offered-name list: the *sorted* names as a JSON array, compact separators, non-ASCII preserved, UTF-8 (the §6.2 discipline applied to names; kind 10). Order-independent: the offer is a set. *(r4)* |
 | 0x0011 | `EVT_SOURCE` | u16 — how the serving layer learned of the event: 0 parsed from the wire it mediated, 1 reported by the client through the ingestion surface. Absent means 0, so every prior record's meaning and bytes are unchanged. Kinds 8/9. An evidence-quality mark, never a trust upgrade. *(r5)* |
+| 0x0012 | `SEG_PREDECESSOR_HEAD` | 32 bytes — `record_hash` of the last record of the previous segment; MUST equal the record's own `prev_hash` (§3.2, kind 11). *(r6)* |
+| 0x0013 | `SEG_INDEX` | u32 — ordinal of the segment the record opens, counting from 0 for the segment that holds `GENESIS` (kind 11). *(r6)* |
+| 0x0014 | `SEG_RETENTION_S` | u64 — the retention floor in force at the cut, in seconds; 0 means none declared (kind 11). Policy, not something the chain enforces. *(r6)* |
+| 0x0015 | `SEG_PRIOR_ROOT` | 32 bytes — the derived root of `[0, seq)`: the §4.3 tree over the record hashes of every record before this one, always from record 0 (`consistency-proof.md` §1; kind 11). *(r6)* |
 
 | `EVT_KIND` | Meaning |
 |---|---|
@@ -97,6 +101,7 @@ own type namespace:
 | 8 | `TOOL_CALL` — the serving loop dispatched a tool invocation requested by the model (§3.1). *(r3)* |
 | 9 | `TOOL_RESULT` — a dispatched invocation returned and its result re-entered generation (§3.1). *(r3)* |
 | 10 | `TOOLS_OFFERED_NO_CALL` — the request offered structured tools, the completion produced no structured tool call, and the request itself carried no structured tool traffic; the serving layer records the visibility boundary it sits behind (§3.1). An observation of offer and absence, never an inference about what the reply text did. *(r4)* |
+| 11 | `SEGMENT_CONTINUATION` — the first record of a segment the writer opened after a cut, declaring what precedes it (§3.2). *(r6)* |
 
 A `RECOVERY_TRUNCATED_TAIL` event is written by a resumed writer as the
 first record after `BOOT`, when opening the chain truncated a torn
@@ -137,6 +142,24 @@ as `OVERSIGHT_ACK`, checked by readers as an advisory — MUST carry
 payload when the outcome is `ok`. `cancelled` (3) covers abandonment:
 session closed, loop preempted, or a guard refusing further dispatches
 (§4, kind 104).
+
+**Outcome 4, `unobserved` *(r6)*.** Some vantages see a result come
+back but cannot see whether the tool failed: a serving layer that reads
+only the `role: tool` message the client sends, a gateway callback, an
+agent hook that delivers a shell command's output as a string. For
+those, `ok` claims too much — a reader counting failures from the chain
+would count none — and `error` claims what was not observed. A writer
+whose vantage cannot observe failure SHOULD record 4: the result
+returned and re-entered generation, its digest is recorded as for `ok`
+(`EVT_PAYLOAD_DIGEST` SHOULD be present), and whether it was a success
+is not stated. A vantage that *can* observe failure — a hook that fires
+separately on failure, a protocol result that carries an error flag —
+records 0 or 1 as before.
+
+`ok` (0) keeps its meaning (note 5): a return was observed; it never
+stated success, and records written before r6 used it at blind vantages
+too. Outcome 4 adds information, it does not narrow 0 — so a reader
+cannot treat an `ok` as "the tool did not fail", before or after r6.
 
 Two properties fall out of existing structure rather than new
 mechanics, and are worth stating so nobody builds them twice. Duration:
@@ -189,6 +212,54 @@ may *claim*: a wire-parsed pair is the runtime's own observation; a
 reported pair is the client's assertion, faithfully recorded — the
 chain proves the report happened, what it digested, and when, never
 that the tool actually ran.
+
+### 3.2 Segment continuation *(r6)*
+
+A writer that rotates its container under a policy (cutting a new
+segment file at a record boundary) MAY delete whole segments from the
+front once a retention period has passed. The surviving chain then
+starts mid-stream, and the core reports exactly that — its first record
+is not a `GENESIS` (core §4.2). Kind 11 lets the writer **say so in the
+chain, at the cut**, instead of leaving the gap unexplained. The full
+design, with the reader's rows and the decisions behind them, is
+`retention-continuation.md`; this section is its normative core.
+
+**When.** A writer that uses this kind writes a `SEGMENT_CONTINUATION`
+event as the **first record of every segment it opens after a cut**,
+before any other record of that segment, under the same lock as the cut.
+Segments made after the fact by an offline tool carry none — inserting a
+record would break the chain.
+
+**Body.** `EVT_KIND` = 11 first; then, ascending by type: `EVT_DETAIL`
+(optional — the policy that made the cut, metadata only),
+`SEG_PREDECESSOR_HEAD`, `SEG_INDEX`, `SEG_RETENTION_S`, `SEG_PRIOR_ROOT`
+— all four MUST be present. The record's own `seq` is the number of
+records before it; no count tag exists because none is needed. The body
+MUST be cleartext (`key_id = 0`), for the reason the `KEY_SHRED` note is
+(§8): the declaration must stay readable after every key that protected
+the deleted prefix is gone.
+
+**What it does not do.** It is an ordinary `EVENT`, never a `GENESIS`,
+and it never changes the core verdict: a chain whose first surviving
+record is a continuation still reports the §4.2 violation, because a
+verifier that forgave a missing genesis on the strength of an in-chain
+claim would have moved trust into the log. What changes is what a
+profile-aware *reader* can add beside that verdict — a named row stating
+the declared continuation, and whether the predecessor it names matches
+a segments manifest, contradicts it, or is declared only.
+
+**Reader checks (advisory, never a rejection).** `SEG_PREDECESSOR_HEAD`
+equals the record's `prev_hash`; the record is the first of its file;
+`SEG_INDEX` increases from one continuation to the next, consecutively
+when the full chain is present; `key_id` is 0.
+
+**Why the root is from record 0.** `SEG_PRIOR_ROOT` commits to every
+record ever written before the segment, not to a window. After any
+number of deletions, the newest surviving continuation record still
+covers all of them at once, and a `pala-consistency-proof/1` between it
+and any later derived root proves that prefix intact without the deleted
+records. A writer keeps this root incrementally (a Merkle frontier) so
+that it can state it after the records are gone.
 
 ## 4. `SAFETY` — guard refusals
 
@@ -325,3 +396,4 @@ and the note must outlive every key by design. Whether
 | r3 | 2026-08-18 | Additive only: `EVENT` kinds 8 (`TOOL_CALL`) and 9 (`TOOL_RESULT`) with §3.1; `SAFETY` kind 104 (`GUARD_TOOL_LOOP_LIMIT`); `EVT` tags 0x000C–0x000E (`EVT_TOOL_NAME`, `EVT_PAYLOAD_DIGEST`, `EVT_OUTCOME`); `AGG_TOOL_CALLS` (0x0008); open issue 4 (canonical tool-argument encoding). No envelope byte, no core text, no byte of `test-vectors.json` changed; companion vectors for the new kinds extend `inference-vectors.json` in the implementing PR chain. |
 | r4 | 2026-09-02 | Additive only: `EVENT` kind 10 (`TOOLS_OFFERED_NO_CALL`, §3.1); `EVT` tags 0x000F (`EVT_TOOLS_OFFERED`) and 0x0010 (`EVT_TOOLS_DIGEST`); the canonical offered-name digest (writer-owned, the §6.2 discipline applied to sorted names). No envelope byte, no core text, no byte of `test-vectors.json` changed; companion vectors for kind 10 extend `inference-vectors.json` in the implementing PR chain. |
 | r5 | 2026-09-03 | Additive only: `EVT` tag 0x0011 (`EVT_SOURCE`) — the wire-parsed / client-reported evidence mark for kinds 8/9; absent means wire-parsed, so every prior record's meaning and bytes are unchanged. No envelope byte, no core text, no byte of `test-vectors.json` changed; companion vectors extend `inference-vectors.json` in the implementing PR chain. |
+| r6 | 2026-10-10 | Additive only: `EVT_OUTCOME` value 4 (`unobserved`, §3.1) — a return whose failure the recording vantage could not observe; `EVENT` kind 11 (`SEGMENT_CONTINUATION`, §3.2); `EVT` tags 0x0012–0x0015 (`SEG_PREDECESSOR_HEAD`, `SEG_INDEX`, `SEG_RETENTION_S`, `SEG_PRIOR_ROOT`) — the retention-continuation design (`retention-continuation.md`) adopted. No envelope byte, no core text, no byte of `test-vectors.json` changed; `inference-vectors.json` gains four records (21 in all, every earlier record byte-identical), and the prefix-consistency vectors stay pinned to the 17-record r5 prefix and unchanged. |
