@@ -71,6 +71,7 @@ from palimpsests.audit.pala.codec import (
     ZERO32,
     Header,
     body_digest_of,
+    decode_tlvs,
     encode_tlvs,
     record_hash,
 )
@@ -105,6 +106,10 @@ EVT_OUTCOME = 0x000E  # u16 — 0 ok, 1 error, 2 timeout, 3 cancelled (r3)
 EVT_TOOLS_OFFERED = 0x000F  # u16 — structured tools offered in the request (kind 10, r4)
 EVT_TOOLS_DIGEST = 0x0010  # 32 bytes — canonical offered-name list digest (kind 10, r4)
 EVT_SOURCE = 0x0011  # u16 — 0 parsed-from-wire (default, absent), 1 reported-by-client (r5)
+SEG_PREDECESSOR_HEAD = 0x0012  # 32 bytes — head of the previous segment (kind 11, r6)
+SEG_INDEX = 0x0013  # u32 — ordinal of the segment the record opens (kind 11, r6)
+SEG_RETENTION_S = 0x0014  # u64 — retention floor at the cut, 0 = none declared (kind 11, r6)
+SEG_PRIOR_ROOT = 0x0015  # 32 bytes — derived root of [0, seq), from record 0 (kind 11, r6)
 
 # EVT_KIND values — operations (profile §3)
 KIND_MODEL_LOAD = 1
@@ -117,6 +122,7 @@ KIND_RECOVERY_TRUNCATED_TAIL = 7
 KIND_TOOL_CALL = 8  # r3 — the loop dispatched a tool invocation
 KIND_TOOL_RESULT = 9  # r3 — the invocation returned / failed / was abandoned
 KIND_TOOLS_OFFERED_NO_CALL = 10  # r4 — tools offered, no structured call produced
+KIND_SEGMENT_CONTINUATION = 11  # r6 — first record of a segment opened after a cut
 # EVT_KIND values — guard refusals (profile §4), from 100 upward
 KIND_GUARD_PREFIX_RELEASE = 100
 KIND_GUARD_STATE_REJECT = 101
@@ -139,6 +145,7 @@ OUTCOME_OK = 0
 OUTCOME_ERROR = 1
 OUTCOME_TIMEOUT = 2
 OUTCOME_CANCELLED = 3
+OUTCOME_UNOBSERVED = 4  # r6 — returned; the vantage could not observe failure
 
 # r5 — kind 8/9 evidence-source values (EVT_SOURCE; absent tag == 0)
 SOURCE_PARSED_FROM_WIRE = 0
@@ -326,6 +333,46 @@ def _starting_frontier(
     return None, gap
 
 
+def _segment_ordinal(
+    path: str | os.PathLike[str], first: Header, first_body: bytes
+) -> int | None:
+    """Which segment of its chain a file is, counting the GENESIS one as 0.
+
+    In order of evidence: the file starts the chain (0); the file opens
+    with a SEGMENT_CONTINUATION, which states its own SEG_INDEX; the
+    segments manifest closes a segment whose head is this file's
+    predecessor, and the file is the next one. Otherwise None — a later
+    cut then declares nothing rather than an ordinal that may collide.
+    """
+    if first.seq == 0:
+        return 0
+    if first.record_type == RT_EVENT and first.key_id == 0 and first_body:
+        try:
+            tlvs = dict(decode_tlvs(first_body))
+        except ValueError:
+            tlvs = {}
+        kind = tlvs.get(EVT_KIND)
+        index = tlvs.get(SEG_INDEX)
+        if (
+            kind is not None and len(kind) >= 2
+            and struct.unpack_from("<H", kind)[0] == KIND_SEGMENT_CONTINUATION
+            and index is not None and len(index) == 4
+        ):
+            return struct.unpack("<I", index)[0]
+    p = os.fspath(path)
+    stem, dot, suffix = p.rpartition(".")
+    if dot and suffix.isdigit():
+        try:
+            with open(f"{stem}.segments.json", encoding="utf-8") as fh:
+                entries = json.load(fh).get("segments", [])
+        except (OSError, ValueError):
+            entries = []
+        for i, entry in enumerate(entries):
+            if entry.get("head") == first.prev_hash.hex():
+                return i + 1
+    return None
+
+
 @dataclass(frozen=True)
 class RotationPolicy:
     """When the writer cuts a segment on its own (WS-ROT).
@@ -343,11 +390,24 @@ class RotationPolicy:
     ``open_existing`` the age of the adopted segment restarts at zero.
     Byte- and record-thresholds carry across a resume exactly (bytes
     from the file, records from the resume scan).
+
+    Every segment after the first opens with a ``SEGMENT_CONTINUATION``
+    record (inference profile r6), and the thresholds count it like any
+    other: they bound what is on disk. A segment therefore holds its
+    continuation record and at least one more — so ``max_records=1``
+    still makes progress, two records at a time.
     """
 
     max_records: int | None = None
     max_bytes: int | None = None
     max_age_s: float | None = None
+    #: The retention floor the deployment declares (seconds): no closed
+    #: segment is eligible for deletion until at least this long after it
+    #: was closed. Written into every continuation record as
+    #: ``SEG_RETENTION_S`` (r6); ``None`` writes 0, "none declared". A
+    #: declaration, not enforcement — deleting earlier is then contradicted
+    #: by the log itself.
+    retention_s: int | None = None
 
     def __post_init__(self) -> None:
         if self.max_records is None and self.max_bytes is None and self.max_age_s is None:
@@ -356,6 +416,20 @@ class RotationPolicy:
             v = getattr(self, name)
             if v is not None and v <= 0:
                 raise ValueError(f"{name} must be positive when set")
+        if self.retention_s is not None and self.retention_s < 0:
+            raise ValueError("retention_s must not be negative")
+
+    def describe(self) -> str:
+        """The thresholds, as the continuation record's ``EVT_DETAIL``."""
+        return ",".join(
+            f"{k}={v}"
+            for k, v in (
+                ("max_records", self.max_records),
+                ("max_bytes", self.max_bytes),
+                ("max_age_s", self.max_age_s),
+            )
+            if v is not None
+        )
 
 
 def session_span_id(session_id: str) -> bytes:
@@ -462,6 +536,13 @@ class PalaWriter:
         self._seg_started_mono = _monotonic()
         self._seg_index = 0
         self._rotation_due = False
+        # Ordinal of the segment being written, counting the GENESIS
+        # segment as 0 — SEG_INDEX of the next cut's continuation record is
+        # this plus one. None when a resumed writer cannot tell (see
+        # _segment_ordinal); the next cut then declares nothing rather
+        # than a number it does not know.
+        if not hasattr(self, "_seg_ordinal"):
+            self._seg_ordinal: int | None = 0
         self._manifest_entries: list[dict] = []
         if rotation is None:
             return
@@ -475,6 +556,68 @@ class PalaWriter:
                     "extend a history this writer cannot read"
                 )
             self._manifest_entries = list(mf.get("segments", []))
+            self._fold_back_unfinished_cut()
+
+    def _fold_back_unfinished_cut(self) -> None:
+        """Undo a cut that recorded its closed segment but never produced
+        the successor.
+
+        A cut writes the manifest first and then renames the successor
+        into place (``_rotate_core``). A crash between the two leaves the
+        manifest saying this file is closed while nothing follows it. The
+        file's last record is still the head the manifest names, so
+        nothing was written after the cut began: the cut did not happen.
+        The entry is removed and the writer carries on in this file —
+        resuming here while the manifest calls it closed would put records
+        in a segment the manifest says ended.
+        """
+        if not self._manifest_entries:
+            return
+        last = self._manifest_entries[-1]
+        if (
+            last.get("file") == os.path.basename(self._path)
+            and last.get("head") == self._head.hex()
+        ):
+            successor = self._successor_of_head(last["head"])
+            if successor is not None:
+                # The cut finished: this segment really is closed, and
+                # writing on would fork the chain at its head.
+                raise ValueError(
+                    f"{os.path.basename(self._path)} is a closed segment; the chain "
+                    f"continues in {os.path.basename(successor)} — resume there"
+                )
+            import logging
+
+            self._manifest_entries.pop()
+            if self._manifest_entries:
+                self._write_manifest()
+            else:
+                os.remove(self._manifest_path())
+            logging.getLogger("palimpsests.audit").warning(
+                "an unfinished segment cut was folded back: %s was recorded as "
+                "closed, but no successor exists; writing continues in it",
+                os.path.basename(self._path),
+            )
+
+    def _successor_of_head(self, head_hex: str) -> str | None:
+        """A segment file of this chain whose first record follows ``head_hex``."""
+        base = os.path.basename(self._base_path)
+        folder = os.path.dirname(self._base_path) or "."
+        for name in sorted(os.listdir(folder)):
+            stem, dot, suffix = name.rpartition(".")
+            if not (dot and suffix.isdigit() and stem == base):
+                continue
+            path = os.path.join(folder, name)
+            try:
+                with open(path, "rb") as fh:
+                    fixed = fh.read(FIXED_HEADER_LEN)
+            except OSError:
+                continue
+            if len(fixed) == FIXED_HEADER_LEN and fixed[:4] == MAGIC and (
+                fixed[36:68].hex() == head_hex
+            ):
+                return path
+        return None
 
     def _manifest_path(self) -> str:
         return f"{self._base_path}.segments.json"
@@ -527,6 +670,7 @@ class PalaWriter:
         if size == 0:
             raise ValueError("file is empty — use PalaWriter(path) to start a new chain")
         first_header: bytes | None = None
+        first_body = b""
         last_header: bytes | None = None
         # For a file that starts after seq 0 (a segment), the frontier
         # continues from the one recorded when its predecessor was closed:
@@ -552,7 +696,10 @@ class PalaWriter:
                 if hlen < FIXED_HEADER_LEN or off + hlen + body_len > size:
                     break
                 rest = fh.read(hlen - FIXED_HEADER_LEN)
-                fh.seek(body_len, os.SEEK_CUR)
+                if first_header is None:
+                    first_body = fh.read(body_len)
+                else:
+                    fh.seek(body_len, os.SEEK_CUR)
                 last_header = fixed + rest
                 if first_header is None:
                     first_header = last_header
@@ -614,6 +761,7 @@ class PalaWriter:
         w._frontier, w._frontier_gap = frontier, frontier_gap
         w._frontier_pending = []
         w._frontier_deferred = (w._path, record_count) if first.seq == 0 else None
+        w._seg_ordinal = _segment_ordinal(w._path, first, first_body)
         base = None
         if rotation is not None:
             stem, dot, suffix = w._path.rpartition(".")
@@ -624,10 +772,11 @@ class PalaWriter:
                         with open(candidate, encoding="utf-8") as mfh:
                             mf = json.load(mfh)
                         entries = mf.get("segments", [])
-                        if (
-                            mf.get("format") == SEGMENTS_FORMAT
-                            and entries
-                            and entries[-1].get("head") == first.prev_hash.hex()
+                        if mf.get("format") == SEGMENTS_FORMAT and entries and (
+                            entries[-1].get("head") == first.prev_hash.hex()
+                            # or this very file is the last one closed: a cut
+                            # that did not finish (see _init_rotation)
+                            or entries[-1].get("file") == os.path.basename(w._path)
                         ):
                             base = stem
                     except (OSError, ValueError):
@@ -668,42 +817,63 @@ class PalaWriter:
                     )
                 self._resume_boot_pending = False
 
-            wall = time.time_ns() if self._time_trust != TIME_UNKNOWN else 0
-            header = Header(
-                record_type=record_type,
-                seq=self._seq,
-                boot_id=self._boot_id,
-                prev_hash=self._head,
-                assurance_tier=self._tier,
-                time_trust=self._time_trust,
-                span_id=span_id,
-                parent_span_id=parent_span_id,
-                monotonic_ns=time.monotonic_ns(),
-                wall_clock_ns=wall,
-                key_id=0,
-                body_len=len(body),
-                body_digest=body_digest_of(body) if body else ZERO32,
-                tlvs=tlvs or [],
+            header_bytes, rh = self._encode_locked(
+                record_type, tlvs=tlvs, body=body,
+                span_id=span_id, parent_span_id=parent_span_id,
             )
-            header_bytes = header.encode()
-            rh = record_hash(header_bytes)
             self._fh.write(header_bytes + body)
-            self._head = rh
-            if self._frontier is not None:
-                self._frontier.append(rh)
-            elif self._frontier_deferred is not None:
-                self._frontier_pending.append(rh)
-                if len(self._frontier_pending) >= _FRONTIER_PENDING_LIMIT:
-                    self._materialize_frontier_locked()
-            self._seq += 1
-            if record_type == RT_SPAN_START:
-                self._open_spans.add(span_id)
-            elif record_type == RT_SPAN_END:
-                self._open_spans.discard(span_id)
-            self._seg_records += 1
-            self._seg_bytes += len(header_bytes) + len(body)
+            self._commit_locked(record_type, header_bytes, body, rh, span_id)
             self._maybe_rotate_locked()
             return rh
+
+    def _encode_locked(
+        self,
+        record_type: int,
+        *,
+        tlvs: list[tuple[int, bytes]] | None,
+        body: bytes,
+        span_id: bytes,
+        parent_span_id: bytes,
+    ) -> tuple[bytes, bytes]:
+        """The next record's header bytes and hash — written nowhere yet."""
+        wall = time.time_ns() if self._time_trust != TIME_UNKNOWN else 0
+        header = Header(
+            record_type=record_type,
+            seq=self._seq,
+            boot_id=self._boot_id,
+            prev_hash=self._head,
+            assurance_tier=self._tier,
+            time_trust=self._time_trust,
+            span_id=span_id,
+            parent_span_id=parent_span_id,
+            monotonic_ns=time.monotonic_ns(),
+            wall_clock_ns=wall,
+            key_id=0,
+            body_len=len(body),
+            body_digest=body_digest_of(body) if body else ZERO32,
+            tlvs=tlvs or [],
+        )
+        header_bytes = header.encode()
+        return header_bytes, record_hash(header_bytes)
+
+    def _commit_locked(
+        self, record_type: int, header_bytes: bytes, body: bytes, rh: bytes, span_id: bytes
+    ) -> None:
+        """Advance the writer past a record that is now on disk."""
+        self._head = rh
+        if self._frontier is not None:
+            self._frontier.append(rh)
+        elif self._frontier_deferred is not None:
+            self._frontier_pending.append(rh)
+            if len(self._frontier_pending) >= _FRONTIER_PENDING_LIMIT:
+                self._materialize_frontier_locked()
+        self._seq += 1
+        if record_type == RT_SPAN_START:
+            self._open_spans.add(span_id)
+        elif record_type == RT_SPAN_END:
+            self._open_spans.discard(span_id)
+        self._seg_records += 1
+        self._seg_bytes += len(header_bytes) + len(body)
 
     @staticmethod
     def _event_body(
@@ -941,8 +1111,12 @@ class PalaWriter:
         """Record a returned/failed/abandoned invocation (EVENT kind 9, r3)."""
         if len(call_hash) != 32:
             raise ValueError("call_hash must be 32 bytes")
-        if outcome not in (OUTCOME_OK, OUTCOME_ERROR, OUTCOME_TIMEOUT, OUTCOME_CANCELLED):
-            raise ValueError("outcome must be 0..3 (ok/error/timeout/cancelled)")
+        if outcome not in (
+            OUTCOME_OK, OUTCOME_ERROR, OUTCOME_TIMEOUT, OUTCOME_CANCELLED, OUTCOME_UNOBSERVED
+        ):
+            raise ValueError(
+                "outcome must be 0..4 (ok/error/timeout/cancelled/unobserved)"
+            )
         tlvs: list[tuple[int, bytes]] = [
             (EVT_KIND, struct.pack("<H", KIND_TOOL_RESULT)),
             (EVT_REF_SEQ, struct.pack("<Q", call_seq)),
@@ -1159,7 +1333,7 @@ class PalaWriter:
                 )
             return self._rotate_core(p)
 
-    def _rotate_core(self, p: str) -> bytes:
+    def _rotate_core(self, p: str, *, detail: str | None = None) -> bytes:
         if os.path.exists(p) and os.path.getsize(p) > 0:
             raise ValueError(
                 "next_path already holds bytes — a rotation starts an empty "
@@ -1184,18 +1358,105 @@ class PalaWriter:
             # the value.
             closed["frontier"] = self._frontier.to_bytes().hex()
             closed["root"] = self._frontier.root().hex()
-        self._fh.close()
-        self._fh = open(p, "ab", buffering=0)  # noqa: SIM115 — closed in close()
-        self._path = p
+
+        # The successor's first record: SEGMENT_CONTINUATION (inference
+        # profile §3.2, r6), declaring the predecessor, its own ordinal, the
+        # retention floor and the derived root of everything before it.
+        # Staged before anything on disk changes.
+        continuation = self._continuation_locked(detail)
+        head_at_cut = self._head
+
+        # Order matters for a crash at any point of the cut:
+        #   1. the manifest records the closed segment — a crash after this
+        #      and before 2 leaves a "closed" segment with no successor,
+        #      which open_existing folds back (the cut did not happen);
+        #   2. the successor appears atomically, already holding its
+        #      continuation record (written to a temporary file, flushed,
+        #      renamed into place) — so no segment ever exists empty or
+        #      with a torn first record, and "first record of a
+        #      writer-made segment" always means this record (design §1,
+        #      open issue 3);
+        #   3. the writer moves to it.
         if self._rotation is not None:
             self._manifest_entries.append(closed)
             self._write_manifest()
+        tmp = f"{p}.tmp"
+        with open(tmp, "wb") as fh:
+            if continuation is not None:
+                fh.write(continuation[0] + continuation[1])
+            fh.flush()
+            os.fsync(fh.fileno())
+        os.replace(tmp, p)
+        self._fh.close()
+        self._fh = open(p, "ab", buffering=0)  # noqa: SIM115 — closed in close()
+        self._path = p
         self._seg_prev_head = self._head
         self._seg_first_seq = self._seq
         self._seg_records = 0
         self._seg_bytes = 0
         self._seg_started_mono = _monotonic()
-        return self._head
+        self._seg_ordinal = None if self._seg_ordinal is None else self._seg_ordinal + 1
+        if continuation is not None:
+            header_bytes, body, rh = continuation
+            # Committed, never re-checked for rotation: a continuation that
+            # could itself trigger a cut would loop forever under
+            # max_records=1.
+            self._commit_locked(RT_EVENT, header_bytes, body, rh, ZERO16)
+        # The head *at the cut* — the closed segment's — is what a caller
+        # anchors; the continuation record already belongs to the next one.
+        return head_at_cut
+
+    def _continuation_locked(self, detail: str | None) -> tuple[bytes, bytes, bytes] | None:
+        """The successor's SEGMENT_CONTINUATION, staged — or None, logged.
+
+        Every tag is a MUST (profile §3.2), so the record is written only
+        when the writer knows all of them. Two things it can fail to know,
+        both only after a resume onto a segment an older writer made: the
+        segment's ordinal, and the root over everything before it (no
+        recorded frontier). Then the cut declares nothing rather than a
+        guess, and says so in the log.
+        """
+        import logging
+
+        no_root = self._frontier_deferred is None and self._frontier is None
+        if self._seg_ordinal is None or no_root:
+            why = (
+                "ordinal unknown"
+                if self._seg_ordinal is None
+                else (self._frontier_gap or "no frontier")
+            )
+            logging.getLogger("palimpsests.audit").warning(
+                "segment cut at seq %d carries no SEGMENT_CONTINUATION: this writer "
+                "resumed on a segment it cannot place (%s)",
+                self._seq,
+                why,
+            )
+            return None
+        if self._frontier_deferred is not None:
+            self._materialize_frontier_locked()
+        if self._rotation is not None:
+            retention = self._rotation.retention_s or 0
+            text = detail if detail is not None else self._rotation.describe()
+        else:
+            retention = 0
+            text = detail
+        tlvs: list[tuple[int, bytes]] = [
+            (EVT_KIND, struct.pack("<H", KIND_SEGMENT_CONTINUATION))
+        ]
+        if text:
+            tlvs.append((EVT_DETAIL, _detail(text)))
+        tlvs += [
+            (SEG_PREDECESSOR_HEAD, self._head),
+            (SEG_INDEX, struct.pack("<I", self._seg_ordinal + 1)),
+            (SEG_RETENTION_S, struct.pack("<Q", retention)),
+            (SEG_PRIOR_ROOT, self._frontier.root()),
+        ]
+        body = encode_tlvs(tlvs)
+        header_bytes, rh = self._encode_locked(
+            RT_EVENT, tlvs=self._origin(ROLE_NATIVE), body=body,
+            span_id=ZERO16, parent_span_id=ZERO16,
+        )
+        return header_bytes, body, rh
 
     def _maybe_rotate_locked(self) -> None:
         pol = self._rotation
@@ -1217,7 +1478,25 @@ class PalaWriter:
         self._rotate_core(self._next_segment_path())
 
     def _next_segment_path(self) -> str:
-        n = self._seg_index + 1
+        """A name no segment of this chain has had — not merely a free one.
+
+        The first free index is not enough: once a retention policy has
+        deleted ``base.00001``, that name is free again, and reusing it
+        would give a new segment the name the manifest already records
+        for an old one. So the next index is past every index this chain
+        has used: the writer's own count, the segment it is on, and every
+        file the manifest lists.
+        """
+        used = [self._seg_index]
+        if self._seg_ordinal is not None:
+            used.append(self._seg_ordinal)
+        for name in [os.path.basename(self._path)] + [
+            e.get("file", "") for e in self._manifest_entries
+        ]:
+            stem, dot, suffix = name.rpartition(".")
+            if dot and suffix.isdigit() and stem == os.path.basename(self._base_path):
+                used.append(int(suffix))
+        n = max(used) + 1
         while os.path.exists(f"{self._base_path}.{n:05d}"):
             n += 1
         self._seg_index = n

@@ -134,7 +134,7 @@ def test_format_validation_is_the_writer_contract(tmp_path):
             w.tool_call("ok", args_digest=b"\x00" * 31)
         call = w.tool_call("ok")
         with pytest.raises(ValueError):
-            w.tool_result(2, call, 4)  # outcome outside 0..3
+            w.tool_result(2, call, 5)  # outcome outside 0..4 (4 is r6's unobserved)
         with pytest.raises(ValueError):
             w.tool_result(2, b"\x00" * 31, OUTCOME_OK)
         with pytest.raises(ValueError):
@@ -293,3 +293,61 @@ def test_r5_reported_pair_vector_matches_the_writer(tmp_path):
     assert "source" not in sem["8"] and "source" not in sem["9"]
     assert struct.unpack("<Q", vec_body(15)[EVT_REF_SEQ])[0] == 14
     assert vec_body(15)[EVT_REF_HASH].hex() == sem["15"]["ref_hash"]
+
+
+def test_r6_records_from_the_writer_match_the_published_vectors(tmp_path):
+    """The r6 vectors and the writer describe the same wire shapes.
+
+    The r4/r5 pattern one revision on. (1) A ``TOOL_RESULT`` the writer
+    emits with outcome 4 carries exactly the tag set of the published
+    seq 18, with the same outcome bytes. (2) The continuation record the
+    writer puts at a cut carries exactly the tag set of the published
+    seq 19, each tag at the published width, ``EVT_KIND`` first and the
+    rest ascending — the order profile §3.2 fixes. (3) The semantics
+    block names both.
+    """
+    from palimpsests.audit.pala_writer import (
+        KIND_SEGMENT_CONTINUATION,
+        OUTCOME_UNOBSERVED,
+        SEG_INDEX,
+        SEG_PREDECESSOR_HEAD,
+        SEG_PRIOR_ROOT,
+        SEG_RETENTION_S,
+        SOURCE_REPORTED_BY_CLIENT,
+        RotationPolicy,
+    )
+
+    v = json.loads(VECTORS.read_text())
+
+    def vec(seq: int) -> list[tuple[int, bytes]]:
+        rec = next(r for r in v["records"] if r["seq"] == seq)
+        return decode_tlvs(bytes.fromhex(rec["body_hex"]))
+
+    base = tmp_path / "w.pala"
+    with PalaWriter(base, rotation=RotationPolicy(max_records=4, retention_s=15_552_000)) as w:
+        w.genesis()
+        call = w.tool_call("shell.exec", source=SOURCE_REPORTED_BY_CLIENT)
+        w.tool_result(
+            w.seq - 1, call, OUTCOME_UNOBSERVED,
+            result_digest=sha256(b"out").digest(), source=SOURCE_REPORTED_BY_CLIENT,
+        )
+        w.prefix_warm(token_count=1)  # 4 records -> the cut writes the continuation
+    result = decode_tlvs(list(iter_records(base.read_bytes()))[2][1])
+    seg = tmp_path / "w.pala.00001"
+    continuation = decode_tlvs(next(iter(iter_records(seg.read_bytes())))[1])
+
+    # (1) outcome 4
+    assert {t for t, _ in result} == {t for t, _ in vec(18)}
+    assert dict(result)[EVT_OUTCOME] == dict(vec(18))[EVT_OUTCOME] == struct.pack("<H", 4)
+
+    # (2) the continuation: same tags, same order, same widths
+    assert [t for t, _ in continuation] == [t for t, _ in vec(19)]
+    assert [t for t, _ in continuation] == sorted(t for t, _ in continuation)
+    widths = {SEG_PREDECESSOR_HEAD: 32, SEG_INDEX: 4, SEG_RETENTION_S: 8, SEG_PRIOR_ROOT: 32}
+    for tag, width in widths.items():
+        assert len(dict(continuation)[tag]) == len(dict(vec(19))[tag]) == width
+    assert struct.unpack("<H", dict(continuation)[EVT_KIND])[0] == KIND_SEGMENT_CONTINUATION
+
+    # (3) the semantics block
+    assert v["semantics"]["18"]["outcome"] == OUTCOME_UNOBSERVED
+    assert v["semantics"]["19"]["kind"] == KIND_SEGMENT_CONTINUATION
