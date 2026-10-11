@@ -116,13 +116,18 @@ def test_after_old_segments_are_deleted_the_root_still_covers_them(tmp_path):
     w.prefix_warm(token_count=1)
     root = w.chain_root()
     w.close()
-    # what was appended after the deletion: the BOOT and the one event,
-    # now at the end of the surviving segment (or in a new one, if the
-    # policy rotated on the way)
-    appended = _hashes(
-        *[s for s in sorted(tmp_path.glob("w.pala*")) if s.suffix not in (".json", ".lock")]
-    )
-    assert root == merkle_root(everything + appended[-2:])
+    # what was appended after the deletion — the BOOT, the event, and a
+    # continuation record if the policy cut on the way — is every record
+    # in the surviving files whose seq is past what existed before
+    survivors = [s for s in sorted(tmp_path.glob("w.pala*")) if s.suffix not in (".json", ".lock")]
+    appended = [
+        pala.record_hash(h)
+        for f in survivors
+        for h, _ in pala.iter_records(f.read_bytes())
+        if pala.Header.decode(h).seq >= len(everything)
+    ]
+    assert len(appended) >= 2
+    assert root == merkle_root(everything + appended)
 
 
 def test_a_later_segment_without_a_recorded_frontier_refuses(tmp_path):
