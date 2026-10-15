@@ -95,6 +95,7 @@ from palimpsests.audit.pala_writer import (
     EVT_DISPOSITION,
     EVT_KIND,
     EVT_OPERATOR_ID,
+    EVT_OUTCOME,
     EVT_REF_HASH,
     EVT_REF_SEQ,
     EVT_SOURCE,
@@ -110,9 +111,19 @@ from palimpsests.audit.pala_writer import (
     KIND_PREFIX_COPY,
     KIND_PREFIX_WARM,
     KIND_RECOVERY_TRUNCATED_TAIL,
+    KIND_SEGMENT_CONTINUATION,
     KIND_TOOL_CALL,
     KIND_TOOL_RESULT,
     KIND_TOOLS_OFFERED_NO_CALL,
+    OUTCOME_CANCELLED,
+    OUTCOME_ERROR,
+    OUTCOME_OK,
+    OUTCOME_TIMEOUT,
+    OUTCOME_UNOBSERVED,
+    SEG_INDEX,
+    SEG_PREDECESSOR_HEAD,
+    SEG_PRIOR_ROOT,
+    SEG_RETENTION_S,
     SHRED_TARGET_SEQS,
     SOURCE_PARSED_FROM_WIRE,
     SOURCE_REPORTED_BY_CLIENT,
@@ -127,6 +138,8 @@ __all__ = [
     "BootView",
     "OriginView",
     "OriginState",
+    "ContinuationView",
+    "decode_continuation",
     "decode_record",
 ]
 
@@ -162,6 +175,7 @@ _KIND_NAMES = {
     KIND_TOOL_CALL: "TOOL_CALL",
     KIND_TOOLS_OFFERED_NO_CALL: "TOOLS_OFFERED_NO_CALL",
     KIND_TOOL_RESULT: "TOOL_RESULT",
+    KIND_SEGMENT_CONTINUATION: "SEGMENT_CONTINUATION",
     KIND_GUARD_TOOL_LOOP_LIMIT: "GUARD_TOOL_LOOP_LIMIT",
 }
 
@@ -188,6 +202,18 @@ _SOURCE_NAMES = {
     SOURCE_REPORTED_BY_CLIENT: "reported-by-client",
 }
 _SOURCE_BEARING_KINDS = frozenset({KIND_TOOL_CALL, KIND_TOOL_RESULT})
+
+# EVT_OUTCOME on a TOOL_RESULT (r3, r6). "unobserved" (4) is a return whose
+# failure the recording vantage could not see; "ok" is a return, never a
+# success (profile §3.1, note 5) — a consumer must not render either as
+# "the tool worked".
+_OUTCOME_NAMES = {
+    OUTCOME_OK: "ok",
+    OUTCOME_ERROR: "error",
+    OUTCOME_TIMEOUT: "timeout",
+    OUTCOME_CANCELLED: "cancelled",
+    OUTCOME_UNOBSERVED: "unobserved",
+}
 
 _PREFIX_ABSENT = "chain does not start with a GENESIS record"
 
@@ -390,6 +416,10 @@ class DecodedRecord:
     # record; None for every other kind, where the mark has no meaning.
     source_name: str | None = None  # resolved via _SOURCE_NAMES; None
     # when source is None or an unknown value.
+    outcome: int | None = None  # EVT_OUTCOME on a TOOL_RESULT (kind 9)
+    # body; None on every other kind, or if the tag is missing.
+    outcome_name: str | None = None  # resolved via _OUTCOME_NAMES (r6
+    # adds "unobserved"); None when outcome is None or an unknown value.
 
 
 @dataclass(frozen=True)
@@ -466,6 +496,7 @@ class AuditReader:
     def __init__(self, data, *, anchor: AnchorSource | None = None) -> None:
         self._data = data
         self._anchor = anchor
+        self._source_path: str | None = None  # set by open(); the manifest lives beside it
         self._file = None
         self._mmap = None
         self._verification: Verification | None = None
@@ -506,6 +537,7 @@ class AuditReader:
             return cls(b"", anchor=anchor)
         mm = mmap.mmap(fh.fileno(), 0, access=mmap.ACCESS_READ)
         obj = cls(mm, anchor=anchor)
+        obj._source_path = os.fspath(path)
         obj._file = fh
         obj._mmap = mm
         return obj
@@ -665,6 +697,7 @@ class AuditReader:
 
         # phase 2 — which records carry a reference: kind probe + record type
         items: list[AdvisoryItem] = []
+        continuations: list[DecodedRecord] = []
         rtype_at = headers.record_type_at
         for i in pos_by_seq.values():
             rtype = rtype_at(i)
@@ -675,11 +708,95 @@ class AuditReader:
                 continue
             if rtype not in _KIND_BEARING:
                 continue
-            if self._kind_probe(i) not in _REFERENCING_KINDS:
+            probed = self._kind_probe(i)
+            if probed == KIND_SEGMENT_CONTINUATION:
+                continuations.append(by_seq.at(i))
+                continue
+            if probed not in _REFERENCING_KINDS:
                 continue
             # phase 3 — decode the referencing record; its target is
             # decoded on demand inside the check, through ``by_seq``
             items.extend(self._check_reference(by_seq.at(i), by_seq))
+        items.extend(self._check_continuations(continuations))
+        return items
+
+    def _check_continuations(self, records: list[DecodedRecord]) -> list[AdvisoryItem]:
+        """Profile §3.2 reader checks on SEGMENT_CONTINUATION records (r6).
+
+        Advisory, never a violation. Checked: the body is well-formed; the
+        declared predecessor is the record's own ``prev_hash``; segment
+        indices increase, and are consecutive when the whole chain from
+        GENESIS is present; and, when it is, ``SEG_PRIOR_ROOT`` equals the
+        root recomputed here from the records themselves — the declaration
+        checked against the evidence, not only against itself.
+
+        Not checked: "first record of its file". A concatenation of
+        segments is a valid container (core §2.4) in which every
+        continuation sits mid-file, and nothing in the bytes tells the two
+        apart; the writer's own tests hold that rule instead.
+        """
+        items: list[AdvisoryItem] = []
+        if not records:
+            return items
+        full_chain = (
+            len(self._headers) > 0
+            and self._headers.seq_at(0) == 0
+            and self._headers.record_type_at(0) == RT_GENESIS
+        )
+        views: list[tuple[DecodedRecord, ContinuationView]] = []
+        for dr in sorted(records, key=lambda r: r.index):
+            view = decode_continuation(dr)
+            if view is None:
+                items.append(AdvisoryItem(
+                    code="continuation_malformed", at_seq=dr.seq,
+                    boot_id=dr.header.boot_id if dr.header else None,
+                    detail="SEGMENT_CONTINUATION without all four SEG_* tags at "
+                    "their profile widths (32/4/8/32 bytes)",
+                ))
+                continue
+            if dr.header is not None and view.predecessor_head != dr.header.prev_hash:
+                items.append(AdvisoryItem(
+                    code="continuation_predecessor_mismatch", at_seq=dr.seq,
+                    boot_id=dr.header.boot_id,
+                    detail="SEG_PREDECESSOR_HEAD differs from the record's own prev_hash",
+                ))
+            views.append((dr, view))
+        for (_, a), (dr, b) in zip(views, views[1:], strict=False):
+            if b.segment_index <= a.segment_index:
+                items.append(AdvisoryItem(
+                    code="continuation_index_not_increasing", at_seq=dr.seq,
+                    boot_id=dr.header.boot_id if dr.header else None,
+                    detail=f"SEG_INDEX {b.segment_index} after {a.segment_index}",
+                ))
+            elif full_chain and b.segment_index != a.segment_index + 1:
+                items.append(AdvisoryItem(
+                    code="continuation_index_gap", at_seq=dr.seq,
+                    boot_id=dr.header.boot_id if dr.header else None,
+                    detail=f"SEG_INDEX {b.segment_index} after {a.segment_index}, "
+                    "with the whole chain present",
+                ))
+        if full_chain and views:
+            # One frontier walk up to the last continuation — paid only by a
+            # chain that has continuation records at all.
+            from palimpsests.audit.pala.frontier import MerkleFrontier
+
+            frontier = MerkleFrontier()
+            pending = sorted(views, key=lambda dv: dv[1].seq)
+            k = 0
+            for i, hb in enumerate(self._headers):
+                while k < len(pending) and pending[k][1].seq == i:
+                    dr, view = pending[k]
+                    if frontier.root() != view.prior_root:
+                        items.append(AdvisoryItem(
+                            code="continuation_prior_root_mismatch", at_seq=dr.seq,
+                            boot_id=dr.header.boot_id if dr.header else None,
+                            detail="SEG_PRIOR_ROOT is not the derived root of the "
+                            f"{view.seq} records before it, as recomputed from them",
+                        ))
+                    k += 1
+                if k == len(pending):
+                    break
+                frontier.append(_record_hash(hb))
         return items
 
     def _hash_verified_target(
@@ -834,6 +951,9 @@ class AuditReader:
                 "consistent with a writer interrupted mid-write.",
             )
         if (0, _PREFIX_ABSENT) in chain.violations:
+            declared = self._declared_continuation_diagnosis()
+            if declared is not None:
+                return declared
             return Diagnosis(
                 "prefix_absent",
                 0,
@@ -887,6 +1007,85 @@ class AuditReader:
                 "is consistent with the log having been replaced or rolled back.",
             )
         return None
+
+    def _declared_continuation_diagnosis(self) -> Diagnosis | None:
+        """Case B of the continuation design: the prefix is gone, and the
+        first surviving record says so (profile r6 §3.2, design §3).
+
+        The core verdict is untouched — the chain still does not start
+        with a GENESIS, and the report still says violation (design D1).
+        What changes is the *diagnosis*: instead of an unexplained absence,
+        the declaration the writer made at the cut, and whether the
+        segments manifest beside the file agrees with it. Agreement is
+        stated as agreement, never as proof: the removed records are not
+        here to verify, and the declaration is the writer's.
+        """
+        if not len(self._headers):
+            return None
+        dr = self._record_at(0)
+        view = decode_continuation(dr)
+        if view is None or dr.header is None or view.predecessor_head != dr.header.prev_hash:
+            return None
+        status = self._manifest_predecessor_status(view)
+        head8 = view.predecessor_head.hex()[:16]
+        floor = (
+            f"a declared retention floor of {view.retention_s} s"
+            if view.retention_s
+            else "no declared retention floor"
+        )
+        declared = (
+            "The chain's prefix is absent — its first record is not a GENESIS — "
+            f"and the first surviving record declares why: it opens segment "
+            f"{view.segment_index}, after {view.seq} earlier record(s) ending at "
+            f"head {head8}…, under {floor}."
+        )
+        if status == "contradicts":
+            return Diagnosis(
+                "continuation_contradicts_manifest",
+                dr.seq,
+                "a GENESIS record at position 0",
+                declared + " The segments manifest beside it names a different "
+                "predecessor for that segment. The declaration and the manifest "
+                "disagree; the evidence is consistent with a manifest from another "
+                "history, or with records having been substituted.",
+            )
+        tail = (
+            " The segments manifest beside it names the same predecessor."
+            if status == "matches"
+            else " No segments manifest was available to check it against; the "
+            "declaration stands unconfirmed."
+        )
+        return Diagnosis(
+            "declared_continuation",
+            dr.seq,
+            "a GENESIS record at position 0",
+            declared + tail + " The evidence is consistent with earlier segments "
+            "having been removed under the declared policy; the removed records "
+            "themselves are not verified here.",
+        )
+
+    def _manifest_predecessor_status(self, view: ContinuationView) -> str:
+        """``matches`` / ``contradicts`` / ``declared_only`` (design §3, Case B)."""
+        import json
+
+        p = self._source_path
+        if not p:
+            return "declared_only"
+        stem, dot, suffix = p.rpartition(".")
+        if not (dot and suffix.isdigit()):
+            return "declared_only"
+        try:
+            with open(f"{stem}.segments.json", encoding="utf-8") as fh:
+                mf = json.load(fh)
+        except (OSError, ValueError):
+            return "declared_only"
+        if mf.get("format") != "pala-segments/1":
+            return "declared_only"
+        entries = mf.get("segments", [])
+        k = view.segment_index - 1
+        if 0 <= k < len(entries) and entries[k].get("head") == view.predecessor_head.hex():
+            return "matches"
+        return "contradicts"
 
     # ── record & body decoding (lazy, cached) ───────────────────────────
     def _decoded_records(self) -> list[DecodedRecord]:
@@ -1259,6 +1458,8 @@ def decode_record(index: int, hb: bytes, body: bytes) -> DecodedRecord:
     disposition_name: str | None = None
     source: int | None = None
     source_name: str | None = None
+    outcome: int | None = None
+    outcome_name: str | None = None
 
     if header.key_id == 0 and body:
         try:
@@ -1279,10 +1480,16 @@ def decode_record(index: int, hb: bytes, body: bytes) -> DecodedRecord:
                     disposition_name = _DISP_NAMES.get(disposition)
                 elif source is None and t == EVT_SOURCE and len(v) >= 2:
                     source = struct.unpack_from("<H", v, 0)[0]
+                elif outcome is None and t == EVT_OUTCOME and len(v) >= 2:
+                    outcome = struct.unpack_from("<H", v, 0)[0]
             if kind in _SOURCE_BEARING_KINDS and source is None:
                 source = SOURCE_PARSED_FROM_WIRE  # absent means 0 (r5)
             if source is not None:
                 source_name = _SOURCE_NAMES.get(source)
+            if kind != KIND_TOOL_RESULT:
+                outcome = None
+            if outcome is not None:
+                outcome_name = _OUTCOME_NAMES.get(outcome)
 
     return DecodedRecord(
         header.seq,
@@ -1300,6 +1507,50 @@ def decode_record(index: int, hb: bytes, body: bytes) -> DecodedRecord:
         disposition_name,
         source,
         source_name,
+        outcome,
+        outcome_name,
+    )
+
+
+@dataclass(frozen=True)
+class ContinuationView:
+    """A SEGMENT_CONTINUATION record, decoded (inference profile r6, §3.2).
+
+    What the writer *declared* at the cut — never evidence that the
+    records it describes still exist or were the ones it names.
+    """
+
+    seq: int  # the record's own seq: the number of records before it
+    segment_index: int  # SEG_INDEX, the GENESIS segment being 0
+    predecessor_head: bytes  # SEG_PREDECESSOR_HEAD
+    retention_s: int  # SEG_RETENTION_S; 0 = none declared
+    prior_root: bytes  # SEG_PRIOR_ROOT: derived root of [0, seq)
+    detail: str | None  # EVT_DETAIL — the policy that made the cut
+
+
+def decode_continuation(dr: DecodedRecord) -> ContinuationView | None:
+    """The continuation ``dr`` declares, or None if it is not a well-formed one.
+
+    Well-formed means: kind 11 in a cleartext EVENT body carrying all four
+    ``SEG_*`` tags at their profile widths (32, 4, 8, 32 bytes). A kind-11
+    record that fails that is reported by the reader as
+    ``continuation_malformed``; this function only says it is not usable.
+    """
+    if dr.kind != KIND_SEGMENT_CONTINUATION or dr.body_tlvs is None:
+        return None
+    tags: dict[int, bytes] = {}
+    for t, v in dr.body_tlvs:
+        tags.setdefault(t, v)
+    widths = {SEG_PREDECESSOR_HEAD: 32, SEG_INDEX: 4, SEG_RETENTION_S: 8, SEG_PRIOR_ROOT: 32}
+    if any(len(tags.get(t, b"")) != w for t, w in widths.items()):
+        return None
+    return ContinuationView(
+        seq=dr.seq,
+        segment_index=struct.unpack("<I", tags[SEG_INDEX])[0],
+        predecessor_head=tags[SEG_PREDECESSOR_HEAD],
+        retention_s=struct.unpack("<Q", tags[SEG_RETENTION_S])[0],
+        prior_root=tags[SEG_PRIOR_ROOT],
+        detail=dr.detail,
     )
 
 
