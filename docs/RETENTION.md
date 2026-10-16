@@ -88,7 +88,10 @@ segments that verify as one chain. This gives clean archival units.
   (`docs/specs/pala-1/consistency-proof.md`). Prune at segment
   boundaries, keep the anchor for the retained head, and keep the
   prefix root beside the manifest entry: the root is the archived
-  segment's identity for every later check.
+  segment's identity for every later check. Since 0.13 a rotating
+  writer records that root for you — in the manifest entry (`root`)
+  and, in the chain itself, in the successor's continuation record
+  (below).
 
 ### Rotation in production (writer-side, 0.11)
 
@@ -123,6 +126,40 @@ restarts at zero when a segment is adopted by `open_existing` — use it
 as a backstop for near-idle writers, not as the primary cut. Segments
 of ≤ 128 MiB also keep cross-boot resume of the live segment well
 under a second (§4: ≈ 4 s/GB).
+
+### The cut is declared in the chain (0.13, inference profile r6)
+
+A rotating writer now opens every segment after the first with a
+`SEGMENT_CONTINUATION` record (profile §3.2): the predecessor's head,
+the segment's ordinal, the retention floor you declared
+(`RotationPolicy(retention_s=...)`; 0 if you did not), and
+`SEG_PRIOR_ROOT` — the derived root of **every record before it, from
+record 0**. Two consequences for pruning:
+
+- **The survivors explain themselves.** After expired segments are
+  deleted, a verifier handed only the survivors still reports the core
+  violation at position 0 — nothing hides the deletion — but the report's
+  diagnosis is `declared_continuation`: which segment this is, how many
+  records preceded it, under what floor, and whether the
+  `*.segments.json` beside it names the same predecessor
+  (`continuation_contradicts_manifest` if it does not). Agreement is
+  reported as agreement, not proof: the deleted records are not there
+  to check.
+- **The root of the deleted history is in the chain.** The newest
+  surviving continuation's `SEG_PRIOR_ROOT` covers everything ever
+  deleted before it, at once, and a `pala-consistency-proof/1` between
+  it and any later root proves that prefix intact. The writer keeps the
+  root incrementally (a Merkle frontier), so it can state it after the
+  records are gone.
+
+The cut itself is crash-safe: the manifest records the closed segment
+first, and the successor appears atomically, already holding its
+continuation record, so no segment exists empty or with a torn first
+record; a crash between the two is folded back on resume. A new
+segment's name is never one an earlier segment of the chain has had,
+even after that segment was deleted. Thresholds count the continuation
+record — they bound what is on disk — so a segment holds it and at
+least one record more.
 
 ## 4. Resume cost of large chains
 
