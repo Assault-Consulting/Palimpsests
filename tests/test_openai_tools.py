@@ -172,10 +172,14 @@ def test_endpoint_records_the_loop_into_pala(tmp_path):
 
     with AuditReader.open(log) as reader:
         ver = reader.verify()
-        kinds = [dr.kind_name for dr in reader.records() if dr.kind_name]
+        recs = [dr for dr in reader.records() if dr.kind_name]
+        kinds = [dr.kind_name for dr in recs]
     assert ver.chain.chain_ok is True
     assert kinds.count("TOOL_CALL") >= 1
     assert kinds.count("TOOL_RESULT") >= 1
+    # the role:tool message is a string the client sent back — output or an
+    # error message, the wire does not say which: r6's "unobserved", never "ok"
+    assert {dr.outcome_name for dr in recs if dr.kind_name == "TOOL_RESULT"} == {"unobserved"}
     # Both turns are structured traffic: turn 1 produced calls, turn 2
     # carries tool-role messages — the kind-10 advisory must stay silent.
     assert "TOOLS_OFFERED_NO_CALL" not in kinds
