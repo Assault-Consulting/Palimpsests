@@ -19,8 +19,10 @@ fed back. It never sees the tool run. So:
   (registered name + argument digest; the arguments themselves are sent
   to the serve, which stores only their digest);
 * a ``role: tool`` message whose ``tool_call_id`` matches a call this
-  callback reported is reported as a ``TOOL_RESULT`` with outcome ``ok``
-  — meaning *a result re-entered generation*, never *the action took
+  callback reported is reported as a ``TOOL_RESULT`` with outcome
+  ``unobserved`` (profile r6) — *a result re-entered generation*, and
+  this callback could not see whether the tool failed: the message is a
+  string that may hold output or an error. Never *the action took
   effect* (profile open issue 5).
 
 That is the same pairing rule the serve applies to loops on its own
@@ -170,7 +172,10 @@ class Reporter:
 
 
 def _result(call_id: str, content) -> dict:
-    return {"type": "tool_result", "call_id": call_id, "outcome": "ok", "content": _text(content)}
+    return {
+        "type": "tool_result", "call_id": call_id,
+        "outcome": "unobserved", "content": _text(content),
+    }
 
 
 def _text(content) -> str:
