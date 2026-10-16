@@ -2,6 +2,17 @@
 # SPDX-License-Identifier: Apache-2.0
 """Agent tool hooks in the Claude schema → reported tool pairs.
 
+Two clients send this schema, and they differ in one way that matters
+to the record (measured, ``integrations/agent-hooks/PROBE-RESULTS.md``):
+
+- **Claude Code** sends ``PostToolUseFailure`` for a failed call, so a
+  ``PostToolUse`` is a return that did not arrive as a failure: outcome
+  0, and a failure is 1.
+- **Codex** sends ``PostToolUse`` for success and failure alike, with
+  the command's output as a string and nothing that says which. Its
+  results are outcome 4, ``unobserved`` (inference profile r6): a return
+  whose failure this vantage cannot see.
+
 Claude Code calls a hook before and after every tool it runs
 (``PreToolUse``, ``PostToolUse``, ``PostToolUseFailure``) and can deliver
 the hook as an HTTP ``POST`` with the event as the JSON body. This module
@@ -38,6 +49,7 @@ from collections import OrderedDict
 from palimpsests.audit.pala_writer import (
     OUTCOME_ERROR,
     OUTCOME_OK,
+    OUTCOME_UNOBSERVED,
     SOURCE_REPORTED_BY_CLIENT,
     canonical_tool_args_digest,
 )
@@ -51,14 +63,26 @@ CLOSED_MEMORY = 4096
 
 # Hook call ids share the serve's pending map with wire-parsed and
 # ingested calls. A prefix keeps an agent's ids from ever colliding with
-# an id from another path.
+# an id from another path — and, per client, with another agent's.
 _KEY_PREFIX = "hook:"
+
+#: The clients this module knows, and what a ``PostToolUse`` from each
+#: may claim. ``failure_event`` is the client's separate failure hook, or
+#: None when it has none — then a result cannot say it succeeded.
+CLIENTS = {
+    "claude": {"failure_event": "PostToolUseFailure", "post_outcome": OUTCOME_OK},
+    "codex": {"failure_event": None, "post_outcome": OUTCOME_UNOBSERVED},
+}
 
 
 class HookIngest:
     """Per-app state for the hook route: what is open, what is closed."""
 
-    def __init__(self, audit, pending: dict) -> None:
+    def __init__(self, audit, pending: dict, *, client: str = "claude") -> None:
+        if client not in CLIENTS:
+            raise ValueError(f"unknown hook client {client!r}")
+        self._client = CLIENTS[client]
+        self._key_prefix = _KEY_PREFIX if client == "claude" else f"{_KEY_PREFIX}{client}:"
         self._audit = audit
         self._pending = pending
         self._closed: OrderedDict[str, None] = OrderedDict()
@@ -87,12 +111,16 @@ class HookIngest:
             # tool call. Accepted, not recorded — refusing them would only
             # produce errors in the agent's log for hooks that work.
             return 200, {}
+        if event == "PostToolUseFailure" and self._client["failure_event"] is None:
+            # Refused before anything is written: a client that has no
+            # failure event cannot be the source of one.
+            return 400, {"error": f"{event} is not an event this client sends"}
         call_id = payload.get("tool_use_id")
         name = payload.get("tool_name")
         if not isinstance(call_id, str) or not call_id or not isinstance(name, str) or not name:
             return 400, {"error": "a tool hook needs tool_name and tool_use_id"}
 
-        key = _KEY_PREFIX + call_id
+        key = self._key_prefix + call_id
         if key in self._closed:
             return 200, {}  # a re-delivered event for a pair already closed
 
@@ -110,19 +138,22 @@ class HookIngest:
             self._open(key, name, payload)
         seq, call_hash, source = self._pending.pop(key)
         if event == "PostToolUse":
-            # 0, not r6's "unobserved": this vantage does observe failure —
-            # Claude Code sends a separate PostToolUseFailure for it (measured,
-            # PROBE-RESULTS.md) — so a PostToolUse is a return that did not
-            # arrive as a failure. Still a return, never a confirmed effect.
-            outcome = OUTCOME_OK
+            # Claude Code: 0, not r6's "unobserved" — it sends a separate
+            # PostToolUseFailure for a failure (measured, PROBE-RESULTS.md),
+            # so a PostToolUse is a return that did not arrive as a failure.
+            # Codex: 4 — it has no failure event, and its result is a string
+            # that may hold output or an error. Either way a return, never a
+            # confirmed effect.
+            outcome = self._client["post_outcome"]
             digest = (
                 canonical_tool_args_digest(payload["tool_response"])
                 if "tool_response" in payload
                 else None
             )
-        else:  # PostToolUseFailure
+        else:  # the client's failure event (checked above that it has one)
             outcome = OUTCOME_ERROR
             digest = canonical_tool_args_digest(payload["error"]) if "error" in payload else None
+
         self._audit.tool_result(seq, call_hash, outcome, digest, None, source=source)
         self._remember_closed(key)
         return 200, {}
