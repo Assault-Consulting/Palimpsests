@@ -1,0 +1,90 @@
+{
+  "format": "pala-1 scitt-bridge statement vector, construction v3",
+  "relation_to_v2": "v2 (scitt-statement-vector.json) is unchanged and remains valid. v3 adds payload key 5, the derived root over records 0..last_seq, and is named by its own content type in the protected header, so a v2 verifier - which requires exactly keys 1-4 - rejects a v3 statement by type rather than misreading it.",
+  "purpose": "Two v3 statements of one chain and the prefix-consistency proof between their roots. A holder of these three artifacts and no chain verifies both signatures, reads the two roots the signatures cover, and verifies that the 12-record state extends the 8-record state - the check v2 statements cannot support, because they carry heads and the proof connects roots. Real crypto, fake entropy - never use this key outside a test vector.",
+  "key": {
+    "alg": "EdDSA (Ed25519), COSE alg -8",
+    "source": "RFC 8032, section 7.1, TEST 1 - a published test key, chosen so nothing about it is ours",
+    "private_seed_hex": "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60",
+    "public_key_hex": "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a"
+  },
+  "subject_chain": {
+    "source": "docs/specs/pala-1/test-vectors.json (the published core vectors)",
+    "record_hashes_hex": [
+      "7fbd428355851ac808bfefba02149629116cb93c669adfa78f8d48edbc359f3a",
+      "554202850536182b2e95e2b5e62742bc17fedfa7a194edca3feecc4a3972f770",
+      "f029d6b226fced3344d73c884e958e453a389bd486344589dde7b15594b6f225",
+      "f65f04a763a1da6fe1d88b87243e4fcf99c756c0d10dc3727157943d8d945271",
+      "fc63fb7ba13e043c5c1307464b298a5afb6e33d366f0e1daf2ae01b250946fc2",
+      "c0a1e84f4915bc38346751a360fac936ba1616ee7332e67debc63419e1dd2a9c",
+      "72a115227edaba47aa2b6ec85149065c137e55ea6d6539b45153b70756e42182",
+      "4d6c75cdf52510fc7c4ea3a5be141249bc386de9e2565ffeface1dce8e2b9d00",
+      "14434088e5f5866cf0276ba5a9055d8ee0d115a750b2cdf9cc4006d9481b29b4",
+      "059574eab08dd14b01f98b28327a1110f39595995ad2278efb5904b711cca61d",
+      "5e69e513ee0542d3dd6eca6d4127af52ba932b8539218692358ecbf695163e40",
+      "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813"
+    ],
+    "note": "record_hash of each core-vector record, seq order - the leaves of the tree"
+  },
+  "construction": {
+    "content_type": "application/vnd.palimpsests.pala1-head-v3+cbor",
+    "content_type_note": "protected header label 3; the v2 type is application/vnd.palimpsests.pala1-head+cbor. A root under the v2 type, or the v3 type without a root, MUST be refused.",
+    "payload": "attached CBOR map: {1: chain head (32 bytes), 2: first_seq, 3: last_seq, 4: 'pala-1/v1.0', 5: derived root (32 bytes)}",
+    "root_rule": "key 5 is the PALA-1 section 4.3 tree over the record hashes of records 0..last_seq in seq order (consistency-proof.md section 1): leaf(d) = SHA-256(0x00 || d), node(l, r) = SHA-256(0x01 || l || r), an unpaired node promoted, never duplicated. ALWAYS from record 0 - it does not depend on first_seq: the later statement here reports records 8..11 (first_seq = 8) and its root covers 0..11. A root over first_seq..last_seq would connect to nothing.",
+    "issuer": "urn:example:pala-1:reference-emitter",
+    "kid_hex": "866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a415743",
+    "everything_else": "exactly as v2: key, kid derivation, CWT claims, header order, tag 18"
+  },
+  "statements": {
+    "earlier": {
+      "inputs": {
+        "chain_head_hex": "4d6c75cdf52510fc7c4ea3a5be141249bc386de9e2565ffeface1dce8e2b9d00",
+        "first_seq": 0,
+        "last_seq": 7,
+        "subject": "pala-1:chain:4d6c75cdf52510fc7c4ea3a5be141249bc386de9e2565ffeface1dce8e2b9d00",
+        "root_hex": "12e2b61a253c802be0b6bb2e31392632464529df896f1576b3be77801c9666da",
+        "root_covers": "records 0..7 (the 8-record prefix)"
+      },
+      "expected": {
+        "statement_hex": "d28458d0a4012703782e6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642d76332b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a34643663373563646635323531306663376334656133613562653134313234396263333836646539653235363566666566616365316463653865326239643030a05858a50158204d6c75cdf52510fc7c4ea3a5be141249bc386de9e2565ffeface1dce8e2b9d0002000307046b70616c612d312f76312e3005582012e2b61a253c802be0b6bb2e31392632464529df896f1576b3be77801c9666da5840567d875850975484c5813e9f93abd38af92c1291a98b55617d1e93c79adc4dcfeaf835e42d29f5b73bd8c1befbd1c5bbda8747fc8834a7b5a87759f55e1dd001",
+        "statement_sha256": "0eb02a7b952d54c6388d4499d6122c9e3ae2c91454c599bef4f66e5858cf44d9",
+        "statement_length_bytes": 369
+      }
+    },
+    "later": {
+      "inputs": {
+        "chain_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "first_seq": 8,
+        "last_seq": 11,
+        "subject": "pala-1:chain:3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "root_hex": "84f1e4f5c4bc75ff5edc304b35b122c3263366ed7e7ca399706a4128e7ecd7d7",
+        "root_covers": "records 0..11 (the 12-record prefix)"
+      },
+      "expected": {
+        "statement_hex": "d28458d0a4012703782e6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642d76332b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05858a50158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130208030b046b70616c612d312f76312e3005582084f1e4f5c4bc75ff5edc304b35b122c3263366ed7e7ca399706a4128e7ecd7d75840eb3f3a1d272fd6dbc2111ceb4642daacf329515999dfd772f6462e35557b9344c5addb6336856f42ac81171a4203cf03797d8fe82b7041d13a5b44dc880b1a09",
+        "statement_sha256": "32945e9309ad4deb432715cec7d0ef54c2ecc5624cb7a32dbfa39cbf270cd3fc",
+        "statement_length_bytes": 369
+      }
+    }
+  },
+  "consistency": {
+    "format": "pala-consistency-proof/1",
+    "first": 8,
+    "second": 12,
+    "first_root": "12e2b61a253c802be0b6bb2e31392632464529df896f1576b3be77801c9666da",
+    "second_root": "84f1e4f5c4bc75ff5edc304b35b122c3263366ed7e7ca399706a4128e7ecd7d7",
+    "path": [
+      "b81fb7fb423bd7909330f0294a74962dd662e21b6efe21c3f95945f609217f76"
+    ],
+    "verification": "RFC 9162 section 2.1.4.2 with the roots read from the two statements"
+  },
+  "tamper_expectations": [
+    "flip any bit of the root inside a statement's payload: signature verification MUST fail (the payload is signed)",
+    "a root that is not the derived root over 0..last_seq of the chain: a verifier holding the chain MUST reject it",
+    "a root computed over first_seq..last_seq (here 8..11) instead of the prefix: MUST be rejected against the chain, and does not verify in the consistency proof",
+    "a root over last_seq or last_seq + 2 records instead of last_seq + 1: MUST be rejected against the chain",
+    "the v3 content type with no key 5, or key 5 under the v2 content type: MUST be refused, whatever the signature says",
+    "drop the last node of the consistency path, or swap the two roots: the proof MUST NOT verify",
+    "without the chain, a verifier reports the root as carried, not recomputed - never as verified"
+  ]
+}
