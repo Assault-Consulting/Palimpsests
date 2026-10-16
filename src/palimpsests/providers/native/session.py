@@ -73,8 +73,8 @@ from hashlib import sha256
 from palimpsests.audit.pala_writer import (
     OUTCOME_CANCELLED,
     OUTCOME_ERROR,
-    OUTCOME_OK,
     OUTCOME_TIMEOUT,
+    OUTCOME_UNOBSERVED,
     canonical_tool_args_digest,
 )
 from palimpsests.engine.messages import ChatChunk
@@ -286,7 +286,7 @@ class NativeSession:
             self._audit.tool_result(ref[0], ref[1], outcome, None, self._audit_span)
 
     def append_tool_result(
-        self, tool_call_id: str, result: str
+        self, tool_call_id: str, result: str, *, outcome: int | None = None
     ) -> Iterator[ChatChunk]:
         """Resume generation after a server-side tool call.
 
@@ -294,6 +294,14 @@ class NativeSession:
         into the live KV and generation resumes — the conversation is not
         re-prefilled. This is the agentic-loop win: generate → tool →
         continue costs one short feed per hop, not a full re-read.
+
+        ``outcome`` is what the audit chain records for the result. The
+        session does not run the tool — it receives ``result`` as a string
+        — so by default it records ``OUTCOME_UNOBSERVED`` (profile r6
+        §3.1): a return whose failure it could not see. A caller that ran
+        the tool and knows how it went passes ``OUTCOME_OK`` or
+        ``OUTCOME_ERROR`` (or ``OUTCOME_TIMEOUT``) and the chain records
+        that instead.
 
         ``tool_call_id`` identifies which pending call this answers; in
         this minimal loop it is echoed into the rendered result so the
@@ -327,7 +335,7 @@ class NativeSession:
             self._audit.tool_result(
                 ref[0],
                 ref[1],
-                OUTCOME_OK,
+                OUTCOME_UNOBSERVED if outcome is None else outcome,
                 sha256(result.encode("utf-8")).digest(),
                 self._audit_span,
             )

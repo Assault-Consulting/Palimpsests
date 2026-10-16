@@ -5,7 +5,7 @@
 
 | | |
 |---|---|
-| **Status** | **Adopted by the inference profile, r6** (2026-10-10): kind 11, tags 0x0012–0x0015, as proposed in §2, with companion vectors. Writer emission and the reader's rows follow in the implementing PR chain (§7, steps 3–5); until they land, no release emits this record. The core text and `test-vectors.json` are not touched. |
+| **Status** | **Adopted by the inference profile, r6** (2026-10-10): kind 11, tags 0x0012–0x0015, as proposed in §2, with companion vectors. **Implemented** on `main` for v0.13: the writer emits it at every cut (#286), the reader gives Case B its diagnosis and runs the §4 checks (#289). One §4 check is a writer guarantee rather than a reader check — see §4. The core text and `test-vectors.json` are not touched. |
 | **Applies to** | Any PALA-1 profile that adopts it by allocating one `EVENT` kind and the tags below in its own namespaces. The inference profile is the intended first adopter. |
 | **Companion to** | `docs/RETENTION.md` §3 (archival and pruning), `docs/compliance/24970-MAPPING.md` (bounded storage, 5.2 / 6.4 d), core §2.4, §4.2, §7.2 |
 
@@ -120,8 +120,12 @@ adopted this extension — it means the cut was not made by the writer.
 On a `SEGMENT_CONTINUATION` record with known kind:
 
 1. `SEG_PREDECESSOR_HEAD` MUST equal the record's `prev_hash`.
-2. It MUST be the first record of its file (a continuation record in
-   the middle of a segment is a writer error, reported as such).
+2. It MUST be the first record of its file. **A writer guarantee, not
+   a reader check:** a concatenation of segments is a valid container
+   (core §2.4) in which every continuation sits mid-file, and nothing in
+   the bytes tells that apart from a writer error — so no reader can
+   report it. The writer holds it by construction (the successor is
+   created already holding the record) and its tests pin it.
 3. `SEG_INDEX` MUST be strictly greater than the previous continuation
    record's `SEG_INDEX` in the same chain, and consecutive when the
    full chain is present.
@@ -146,7 +150,7 @@ verdict stands on its own.
 |---|---|
 | 1 | **`SEG_PRIOR_ROOT` tree definition — closed.** Defined by `consistency-proof.md` §1: the derived §4.3 tree over record hashes, computed by any verifier from headers alone; the same object a prefix-consistency proof needs, so the tag and the proof compose by construction. The inference profile's lack of a `MERKLE` leaf source is irrelevant to it — the derived tree needs no carried `MERKLE` record. |
 | 2 | **Manifest as the anchor for a deleted predecessor.** Case B's "matches manifest" depends on the manifest being trustworthy independently of the chain. It is a plain JSON file today. Whether it should be anchored (its digest in an `ANCHOR` record, or in the next continuation record) is a design question shared with core open issue 5. |
-| 3 | **Resume after crash mid-cut.** If the writer dies between closing the predecessor and writing the continuation record, the successor file exists without one. `open_existing` must either finish the cut (write the record first) or fold the empty file back. Writer-side detail, but the "first record of a writer-made segment" guarantee in §1 depends on it. |
+| 3 | **Resume after crash mid-cut — closed.** The writer records the closed segment in the manifest first, then creates the successor atomically (temporary file, fsync, rename) already holding its continuation record, so no successor ever exists without one. A crash between the two leaves a "closed" segment with no successor, which `open_existing` folds back; resuming on a segment whose successor exists is refused (#286). |
 | 4 | **Vectors — closed by r6.** `inference-vectors.json` seq 19 pins the body encoding; `SEG_PRIOR_ROOT` there is computed by the CC0 reference implementation, and the package's Merkle frontier is tested against it. No byte of `test-vectors.json` changed. |
 
 ## 7. Adoption path
@@ -154,9 +158,9 @@ verdict stands on its own.
 1. This document reviewed (ADR-class, non-author).
 2. Inference profile revision: kind 11, tags 0x0012–0x0015, §1–§4 by
    reference; companion vectors. **Done — r6.**
-3. Writer: emit at the cut; resolve open issue 3.
-4. Reader: Case B rows; §4 checks.
-5. `RETENTION.md` §3 and the 24970 mapping rows move from Planned to
-   Shipped with the release that carries steps 2–4.
-
-None of steps 2–5 are in scope for 0.12.
+3. Writer: emit at the cut; resolve open issue 3. **Done — #286.**
+4. Reader: Case B rows; §4 checks. **Done — #289** (Case B as a
+   diagnosis pattern rather than a new report field, so the report
+   schema is unchanged; check 2 is the writer's, see §4).
+5. `RETENTION.md` §3 and the 24970 mapping row updated; the row reads
+   `Merged (main, for v0.13)` until v0.13.0 is released.

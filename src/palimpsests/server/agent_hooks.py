@@ -110,6 +110,10 @@ class HookIngest:
             self._open(key, name, payload)
         seq, call_hash, source = self._pending.pop(key)
         if event == "PostToolUse":
+            # 0, not r6's "unobserved": this vantage does observe failure —
+            # Claude Code sends a separate PostToolUseFailure for it (measured,
+            # PROBE-RESULTS.md) — so a PostToolUse is a return that did not
+            # arrive as a failure. Still a return, never a confirmed effect.
             outcome = OUTCOME_OK
             digest = (
                 canonical_tool_args_digest(payload["tool_response"])

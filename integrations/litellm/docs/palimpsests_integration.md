@@ -34,7 +34,7 @@ run itself. The callback therefore reports exactly that, marked as such:
 | LiteLLM sees | Recorded as | Meaning |
 |---|---|---|
 | `tool_calls` in a response | `TOOL_CALL` — tool name + SHA-256 of the arguments | the model asked for this tool |
-| a `role: tool` message for a reported call | `TOOL_RESULT`, outcome `ok` | a result re-entered generation — **not** that the action took effect |
+| a `role: tool` message for a reported call | `TOOL_RESULT`, outcome `unobserved` | a result re-entered generation; whether the tool failed is not visible from here — **not** that the action took effect |
 | a call whose result never comes back | `cancelled`, written by Palimpsests at shutdown | abandonment, recorded as abandonment |
 
 Every record carries the mark `reported-by-client`: the chain proves that

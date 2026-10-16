@@ -437,6 +437,7 @@ def create_app(
             OUTCOME_ERROR,
             OUTCOME_OK,
             OUTCOME_TIMEOUT,
+            OUTCOME_UNOBSERVED,
             SOURCE_REPORTED_BY_CLIENT,
         )
 
@@ -445,6 +446,7 @@ def create_app(
             "error": OUTCOME_ERROR,
             "timeout": OUTCOME_TIMEOUT,
             "cancelled": OUTCOME_CANCELLED,
+            "unobserved": OUTCOME_UNOBSERVED,
         }
         results: list[dict] = []
         for ev in events:
@@ -475,7 +477,10 @@ def create_app(
                     if ref is None:
                         results.append({"id": call_id, "error": "unknown call_id"})
                         continue
-                    outcome = outcomes.get(str(ev.get("outcome", "ok")))
+                    # A client that does not state an outcome has not stated
+                    # success: absent means "unobserved" (profile r6 §3.1),
+                    # not "ok".
+                    outcome = outcomes.get(str(ev.get("outcome", "unobserved")))
                     if outcome is None:
                         pending[call_id] = ref  # not consumed
                         results.append({"id": call_id, "error": "unknown outcome"})
@@ -546,9 +551,17 @@ def _args_digest(arguments: dict) -> bytes:
 
 
 def _record_tool_results(audit, messages: list, pending: dict) -> None:
-    """Bind incoming role:"tool" messages to their recorded calls."""
+    """Bind incoming role:"tool" messages to their recorded calls.
+
+    Outcome 4, ``unobserved`` (profile r6 §3.1): a ``role: tool`` message is
+    a string the client sends back — it may hold the tool's output or its
+    error message, and nothing on the wire says which. This vantage sees a
+    return and cannot see a failure, so it records exactly that. Records
+    written before r6 said ``ok`` here, which the profile defines as a
+    return, never a success.
+    """
     from hashlib import sha256
-    from palimpsests.audit.pala_writer import OUTCOME_OK
+    from palimpsests.audit.pala_writer import OUTCOME_UNOBSERVED
 
     for m in messages:
         if not isinstance(m, dict) or m.get("role") != "tool":
@@ -558,7 +571,7 @@ def _record_tool_results(audit, messages: list, pending: dict) -> None:
             continue
         content = str(m.get("content", ""))
         audit.tool_result(
-            ref[0], ref[1], OUTCOME_OK,
+            ref[0], ref[1], OUTCOME_UNOBSERVED,
             sha256(content.encode("utf-8")).digest(), None, source=ref[2],
         )
 

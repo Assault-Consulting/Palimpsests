@@ -196,7 +196,7 @@ def test_tool_loop_emits_call_and_hash_bound_result(tmp_path):
         EVT_TOOL_NAME,
         KIND_TOOL_CALL,
         KIND_TOOL_RESULT,
-        OUTCOME_OK,
+        OUTCOME_UNOBSERVED,
     )
 
     backend = FakeBackend(eos=0, script={0: [5, 6, 0, 7, 0]})
@@ -215,7 +215,8 @@ def test_tool_loop_emits_call_and_hash_bound_result(tmp_path):
     from palimpsests.audit.pala import record_hash
 
     assert result[1][EVT_REF_HASH] == record_hash(call[2])
-    assert struct.unpack("<H", result[1][EVT_OUTCOME])[0] == OUTCOME_OK
+    # the session was handed a string, not the tool: r6's "unobserved"
+    assert struct.unpack("<H", result[1][EVT_OUTCOME])[0] == OUTCOME_UNOBSERVED
     assert result[1][EVT_PAYLOAD_DIGEST] == sha256(b"42").digest()
     assert struct.unpack("<Q", result[1][EVT_REF_SEQ])[0] >= 2
 
@@ -323,3 +324,17 @@ def test_without_audit_the_cap_still_guards(tmp_path):
     with pytest.raises(ToolLoopLimitError):
         list(sess.append_tool_result("c2", "2"))
     sess.close()
+
+
+def test_a_caller_that_knows_the_outcome_can_say_so(tmp_path):
+    import struct
+    from palimpsests.audit.pala_writer import EVT_OUTCOME, KIND_TOOL_RESULT, OUTCOME_ERROR
+
+    backend = FakeBackend(eos=0, script={0: [5, 6, 0, 7, 0]})
+    sess, writer, path = _audited_session(tmp_path, backend)
+    list(sess.send("use a tool"))
+    sess.note_tool_call("call_1", "fs.read", arguments={"path": "missing"})
+    list(sess.append_tool_result("call_1", "ENOENT", outcome=OUTCOME_ERROR))
+    sess.close()
+    result = next(x for x in _recorded(path) if x[0] == KIND_TOOL_RESULT)
+    assert struct.unpack("<H", result[1][EVT_OUTCOME])[0] == OUTCOME_ERROR
