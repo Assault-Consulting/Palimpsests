@@ -45,6 +45,7 @@ from palimpsests.audit.pala_writer import (  # noqa: E402
     OUTCOME_CANCELLED,
     OUTCOME_ERROR,
     OUTCOME_OK,
+    OUTCOME_UNOBSERVED,
     SOURCE_REPORTED_BY_CLIENT,
     PalaWriter,
 )
@@ -179,7 +180,8 @@ def test_litellm_reporter_pairs_calls_with_the_next_requests_tool_messages(tmp_p
     pairs, n_calls = serve.pairs()
     assert n_calls == 2
     # c2 was never answered: cancelled by the serve at shutdown
-    assert sorted(pairs) == [("fs.read", OUTCOME_OK), ("web.search", OUTCOME_CANCELLED)]
+    # the callback sees a role:tool string, never the tool: r6's "unobserved"
+    assert sorted(pairs) == [("fs.read", OUTCOME_UNOBSERVED), ("web.search", OUTCOME_CANCELLED)]
 
 
 def test_litellm_reporter_tolerates_a_result_hook_arriving_before_its_call(tmp_path):
@@ -192,7 +194,7 @@ def test_litellm_reporter_tolerates_a_result_hook_arriving_before_its_call(tmp_p
         ev = rep.observe([], _response_with_calls([("c7", "calc", '{"a":6}')]))
         assert [e["type"] for e in ev] == ["tool_call", "tool_result"]
     pairs, n_calls = serve.pairs()
-    assert n_calls == 1 and pairs == [("calc", OUTCOME_OK)]
+    assert n_calls == 1 and pairs == [("calc", OUTCOME_UNOBSERVED)]
 
 
 def test_litellm_reporter_is_inert_when_disabled(tmp_path, monkeypatch):
@@ -238,7 +240,7 @@ def test_litellm_custom_logger_wiring_end_to_end(tmp_path):
         finally:
             litellm.callbacks = old
     pairs, n_calls = serve.pairs()
-    assert n_calls == 1 and pairs == [("fs.read", OUTCOME_OK)]
+    assert n_calls == 1 and pairs == [("fs.read", OUTCOME_UNOBSERVED)]
 
 
 # ── MCP ─────────────────────────────────────────────────────────────────
