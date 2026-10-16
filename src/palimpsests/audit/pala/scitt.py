@@ -10,6 +10,13 @@ SCITT transparency service (RFC 9943); the envelope cost is paid once
 per published head, never per record, and nothing here touches the
 write path or the frozen wire format.
 
+Construction v3 adds a second digest beside the head: the derived root
+over every record up to it (payload key 5, its own content type). The
+head answers "is this the chain I anchored?"; the root answers "does this
+later state extend that earlier one?" — two v3 statements and a
+``pala-consistency-proof/1`` decide it without the chain. v2 stays valid
+and byte-identical; :func:`verify_statement` reads both.
+
 Two boundaries, stated up front:
 
 - This module is tooling beside the format, not part of it.
@@ -76,16 +83,21 @@ header-only verification; only the bridge needs the packages.
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 __all__ = [
     "ALG_EDDSA",
     "ALG_ES256",
+    "CONTENT_TYPE",
+    "CONTENT_TYPE_V3",
     "FORMAT_ID",
     "ScittUnavailable",
+    "StatementCheck",
     "build_signed_statement",
     "check_statement_against_head",
     "head_payload",
+    "verify_statement",
 ]
 
 ALG_ES256 = -7
@@ -101,6 +113,12 @@ _HDR_CWT_CLAIMS = 15  # RFC 9597: CWT claims in COSE headers
 # (bridge run B1, finding F2: without this, RFC 9597 §2 invites a reading
 # that must then be rejected).
 CONTENT_TYPE = "application/vnd.palimpsests.pala1-head+cbor"
+#: Statement construction v3: the payload also carries the derived root
+#: (key 5). A separate content type, not a payload member, so the
+#: construction is named in the *signed* header and a v2 verifier — which
+#: checks for exactly keys 1–4 — rejects a v3 statement by its type instead
+#: of misreading it.
+CONTENT_TYPE_V3 = "application/vnd.palimpsests.pala1-head-v3+cbor"
 _CWT_ISS = 1
 _CWT_SUB = 2
 
@@ -108,6 +126,7 @@ _PAYLOAD_HEAD = 1
 _PAYLOAD_FIRST_SEQ = 2
 _PAYLOAD_LAST_SEQ = 3
 _PAYLOAD_FORMAT = 4
+_PAYLOAD_ROOT = 5  # v3: derived root over records 0..last_seq
 FORMAT_ID = "pala-1/v1.0"
 
 _HEAD_LEN = 32
@@ -187,6 +206,7 @@ def _cose_sign1(
     alg: int,
     claims: dict | None = None,
     kid: bytes | None = None,
+    content_type: str = CONTENT_TYPE,
 ) -> bytes:
     cbor2 = _cbor2()
     hashes, ec, decode_dss, _ = _crypto()
@@ -198,7 +218,7 @@ def _cose_sign1(
     # (bridge run B1 used one) accepts it without reordering. kid and the
     # content type sit in the *protected* bucket on purpose: unprotected
     # copies are unauthenticated (B1 adversarial case A10).
-    phdr: dict = {_HDR_ALG: alg, _HDR_CONTENT_TYPE: CONTENT_TYPE, _HDR_KID: kid}
+    phdr: dict = {_HDR_ALG: alg, _HDR_CONTENT_TYPE: content_type, _HDR_KID: kid}
     if claims:
         phdr[_HDR_CWT_CLAIMS] = claims
     protected = cbor2.dumps(phdr)
@@ -245,26 +265,39 @@ def _cose_verify1(message: bytes, public_key: Any) -> bytes:
     return payload
 
 
-def head_payload(head: bytes, first_seq: int, last_seq: int) -> bytes:
+def head_payload(
+    head: bytes, first_seq: int, last_seq: int, *, root: bytes | None = None
+) -> bytes:
     """The statement payload: a self-describing commitment to one head.
 
     Attached rather than detached, deliberately: the statement must be
     readable offline, without the transparency service, because the
     deployments this format serves may only export evidence long after
     the fact.
+
+    With ``root`` (construction v3), key 5 carries the derived root over
+    records ``0..last_seq`` — the §4.3 tree over their record hashes,
+    ``consistency-proof.md`` §1. **Always from record 0, whatever
+    ``first_seq`` says**: a prefix-consistency proof connects roots of
+    prefixes of one tree, so a root over ``first_seq..last_seq`` would
+    connect to nothing. ``first_seq`` keeps its v2 meaning — the range
+    this publication reports — and the root does not depend on it.
     """
     if len(head) != _HEAD_LEN:
         raise ValueError(f"chain head must be {_HEAD_LEN} bytes")
     if first_seq < 0 or last_seq < first_seq:
         raise ValueError("sequence range must satisfy 0 <= first_seq <= last_seq")
-    return _cbor2().dumps(
-        {
-            _PAYLOAD_HEAD: head,
-            _PAYLOAD_FIRST_SEQ: first_seq,
-            _PAYLOAD_LAST_SEQ: last_seq,
-            _PAYLOAD_FORMAT: FORMAT_ID,
-        }
-    )
+    payload: dict = {
+        _PAYLOAD_HEAD: head,
+        _PAYLOAD_FIRST_SEQ: first_seq,
+        _PAYLOAD_LAST_SEQ: last_seq,
+        _PAYLOAD_FORMAT: FORMAT_ID,
+    }
+    if root is not None:
+        if len(root) != _HEAD_LEN:
+            raise ValueError(f"derived root must be {_HEAD_LEN} bytes")
+        payload[_PAYLOAD_ROOT] = root
+    return _cbor2().dumps(payload)
 
 
 def build_signed_statement(
@@ -277,8 +310,19 @@ def build_signed_statement(
     subject: str,
     alg: int = ALG_ES256,
     kid: bytes | None = None,
+    root: bytes | None = None,
 ) -> bytes:
     """One COSE_Sign1 committing to a chain head — the whole export.
+
+    With ``root`` the statement is construction **v3**: content type
+    ``CONTENT_TYPE_V3`` and the derived root over records ``0..last_seq``
+    in payload key 5 (see :func:`head_payload`). Two v3 statements of one
+    chain can then be connected by a ``pala-consistency-proof/1`` without
+    the chain — the use their roots exist for. A writer states that root
+    as ``PalaWriter.chain_root()``, including after earlier segments were
+    deleted; a reader holding the chain, as ``chain_root(reader,
+    last_seq + 1)``. Without ``root`` the statement is v2, byte-identical
+    to what this function built before v3 existed.
 
     ``issuer``/``subject`` land as CWT claims in the protected header,
     the shape a SCITT transparency service registers. What leaves the
@@ -294,9 +338,102 @@ def build_signed_statement(
     truncation's birthday bound, and a transparency service indexes by
     this value (B1, finding F4).
     """
-    payload = head_payload(head, first_seq, last_seq)
+    payload = head_payload(head, first_seq, last_seq, root=root)
     claims = {_CWT_ISS: issuer, _CWT_SUB: subject}
-    return _cose_sign1(payload, key, alg=alg, claims=claims, kid=kid)
+    content_type = CONTENT_TYPE if root is None else CONTENT_TYPE_V3
+    return _cose_sign1(
+        payload, key, alg=alg, claims=claims, kid=kid, content_type=content_type
+    )
+
+
+@dataclass(frozen=True)
+class StatementCheck:
+    """What :func:`verify_statement` established — and what it did not.
+
+    ``root_status`` keeps the overclaim line for the v3 root:
+    ``"absent"`` (a v2 statement carries none), ``"recomputed"`` (the
+    root was recomputed from the chain and matched), or ``"carried, not
+    recomputed"`` (the statement carries a root, the signature covers it,
+    and no chain was at hand to recompute it — so it is reported, never
+    called verified).
+    """
+
+    version: str  # "v2" | "v3"
+    payload: dict
+    root: bytes | None
+    root_status: str
+
+
+def _protected_header(message: bytes) -> dict:
+    tag = _cbor2().loads(message)
+    if not hasattr(tag, "value") or len(tag.value) != 4:
+        raise ValueError("not a COSE_Sign1 message")
+    phdr = _cbor2().loads(tag.value[0])
+    if not isinstance(phdr, dict):
+        raise ValueError("protected header is not a CBOR map")
+    return phdr
+
+
+def verify_statement(
+    message: bytes, public_key: Any, expected_head: bytes, *, reader: Any = None
+) -> StatementCheck:
+    """Verify signature AND commitment, v2 or v3, by the signed content type.
+
+    The construction is read from the *protected* content type, never
+    guessed from the payload: a v2 statement must carry exactly keys 1–4,
+    a v3 statement must also carry a 32-byte root in key 5. A root under
+    the v2 type, or a v3 type without one, is refused — a statement that
+    disagrees with its own signed description is not read either way.
+
+    ``reader`` (an ``AuditReader`` over the chain) lets the v3 root be
+    *recomputed* — the derived root over records ``0..last_seq`` — and
+    compared; without it the root is reported as carried, not
+    recomputed. Raises ``ValueError`` on any mismatch.
+    """
+    payload = _cose_verify1(message, public_key)
+    decoded = _cbor2().loads(payload)
+    if not isinstance(decoded, dict):
+        raise ValueError("statement payload is not a CBOR map")
+    if decoded.get(_PAYLOAD_HEAD) != expected_head:
+        raise ValueError("statement does not commit to the expected chain head")
+    if decoded.get(_PAYLOAD_FORMAT) != FORMAT_ID:
+        raise ValueError(f"statement format id is not {FORMAT_ID!r}")
+    ctype = _protected_header(message).get(_HDR_CONTENT_TYPE)
+    v2_keys = {_PAYLOAD_HEAD, _PAYLOAD_FIRST_SEQ, _PAYLOAD_LAST_SEQ, _PAYLOAD_FORMAT}
+    if ctype == CONTENT_TYPE:
+        if set(decoded) != v2_keys:
+            raise ValueError(
+                "a v2 statement carries exactly payload keys 1-4; this one carries "
+                f"{sorted(decoded)} (a root under the v2 content type is not read)"
+            )
+        return StatementCheck("v2", decoded, None, "absent")
+    if ctype != CONTENT_TYPE_V3:
+        raise ValueError(f"unknown statement content type {ctype!r}")
+    if set(decoded) != v2_keys | {_PAYLOAD_ROOT}:
+        raise ValueError(
+            f"a v3 statement carries payload keys 1-5; this one carries {sorted(decoded)}"
+        )
+    root = decoded[_PAYLOAD_ROOT]
+    if not isinstance(root, bytes) or len(root) != _HEAD_LEN:
+        raise ValueError(f"a v3 root is {_HEAD_LEN} bytes")
+    if reader is None:
+        return StatementCheck("v3", decoded, root, "carried, not recomputed")
+    from palimpsests.audit.pala.proofs import chain_root
+
+    last_seq = decoded[_PAYLOAD_LAST_SEQ]
+    try:
+        expected_root = chain_root(reader, last_seq + 1)
+    except IndexError as e:
+        raise ValueError(
+            f"the chain at hand has fewer than {last_seq + 1} records; the root "
+            "cannot be recomputed from it"
+        ) from e
+    if root != expected_root:
+        raise ValueError(
+            "the statement's root is not the derived root over records "
+            f"0..{last_seq} of this chain"
+        )
+    return StatementCheck("v3", decoded, root, "recomputed")
 
 
 def check_statement_against_head(
@@ -307,14 +444,7 @@ def check_statement_against_head(
     Returns the decoded payload map on success. Raises ``ValueError`` on
     any mismatch. A caller that has not run this (with a key it trusts)
     reports the statement as *reported, not verified* — never as
-    witnessed.
+    witnessed. Accepts v2 and v3 (see :func:`verify_statement`, which
+    also says what was established about a v3 root).
     """
-    payload = _cose_verify1(message, public_key)
-    decoded = _cbor2().loads(payload)
-    if not isinstance(decoded, dict):
-        raise ValueError("statement payload is not a CBOR map")
-    if decoded.get(_PAYLOAD_HEAD) != expected_head:
-        raise ValueError("statement does not commit to the expected chain head")
-    if decoded.get(_PAYLOAD_FORMAT) != FORMAT_ID:
-        raise ValueError(f"statement format id is not {FORMAT_ID!r}")
-    return decoded
+    return verify_statement(message, public_key, expected_head).payload
