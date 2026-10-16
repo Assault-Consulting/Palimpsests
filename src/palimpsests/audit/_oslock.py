@@ -21,11 +21,15 @@ writer never leaves a chain locked.
 
 from __future__ import annotations
 
+import logging
 import os
 import time
 from pathlib import Path
 
 __all__ = ["ExclusiveLock", "LockHeld"]
+
+#: Seconds between "still waiting" warnings during a blocking acquire.
+WARN_EVERY = 30.0
 
 
 class LockHeld(RuntimeError):
@@ -40,9 +44,13 @@ class ExclusiveLock:
     """An exclusive, cross-process lock on ``<store>.lock``.
 
     ``acquire(blocking=False)`` raises :class:`LockHeld` at once if
-    another process holds it; ``blocking=True`` waits up to ``timeout``
-    seconds. Not re-entrant: a second acquire on the same instance is a
-    programming error.
+    another process holds it. ``blocking=True`` waits — by default with
+    no deadline, because the locks this guards are held for one append
+    at a time and released by the OS if their holder dies: a write must
+    not fail just because another process is slow. A long wait is not
+    silent, though: every ``WARN_EVERY`` seconds it logs who holds the
+    lock. Pass ``timeout`` for a bounded wait. Not re-entrant: a second
+    acquire on the same instance is a programming error.
     """
 
     def __init__(self, store: str | os.PathLike[str]) -> None:
@@ -53,23 +61,35 @@ class ExclusiveLock:
     def held(self) -> bool:
         return self._fd is not None
 
-    def acquire(self, *, blocking: bool = False, timeout: float = 30.0) -> None:
+    def acquire(self, *, blocking: bool = False, timeout: float | None = None) -> None:
         if self._fd is not None:
             raise RuntimeError("lock already held by this instance")
         fd = os.open(self.path, os.O_RDWR | os.O_CREAT, 0o600)
-        deadline = time.monotonic() + timeout
+        start = time.monotonic()
+        deadline = None if timeout is None else start + timeout
+        next_warning = start + WARN_EVERY
         while True:
             try:
                 _lock(fd)
                 break
             except OSError as exc:
-                if not blocking or time.monotonic() >= deadline:
+                now = time.monotonic()
+                if not blocking or (deadline is not None and now >= deadline):
                     os.close(fd)
                     holder = _read_holder(self.path)
                     raise LockHeld(
                         f"{self.path} is held by another process"
                         + (f" (pid {holder})" if holder else "")
                     ) from exc
+                if now >= next_warning:
+                    holder = _read_holder(self.path)
+                    logging.getLogger("palimpsests.audit").warning(
+                        "still waiting for %s after %.0f s%s",
+                        self.path,
+                        now - start,
+                        f" (held by pid {holder})" if holder else "",
+                    )
+                    next_warning = now + WARN_EVERY
                 time.sleep(0.01)
         try:  # best-effort note of who holds it, for the error above
             # From byte 1: on Windows the lock covers byte 0, and another
