@@ -19,7 +19,7 @@ It never sees the tool run.
 | It reports | As | Meaning |
 |---|---|---|
 | a `tool_calls` entry in a response | `TOOL_CALL` — registered name + argument digest | the model asked for this tool with these arguments |
-| a `role: tool` message for a call it reported | `TOOL_RESULT`, outcome `ok` | a result re-entered generation — **not** that the action took effect |
+| a `role: tool` message for a call it reported | `TOOL_RESULT`, outcome `unobserved` | a result re-entered generation; whether the tool failed is not visible from here — **not** that the action took effect |
 | a call whose result never comes back | `cancelled`, written by the serve at shutdown | abandonment, recorded as abandonment |
 
 Same pairing rule the serve applies to loops on its own wire; the
