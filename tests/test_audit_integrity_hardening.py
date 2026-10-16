@@ -28,7 +28,14 @@ import textwrap
 _APPEND_SCRIPT = """
 import sys, time
 from pathlib import Path
+import palimpsests.audit.log as logmod
 from palimpsests.audit.log import AuditLog
+
+# Tests never touch the real OS keychain (key_manager's own rule). The
+# anchor write sits inside the per-append lock, and on a CI runner the
+# real one is slow and failing — which made this test about the runner's
+# keychain instead of about the lock.
+logmod.store_head_anchor = lambda *a, **k: True
 
 db, n, go = sys.argv[1], int(sys.argv[2]), Path(sys.argv[3])
 log = AuditLog(Path(db), b"\\x01" * 32, allow_unencrypted=True)
@@ -314,3 +321,56 @@ def test_a_keychain_entry_of_the_wrong_size_is_refused(stored):
 
     with pytest.raises(ValueError):
         _key_from_hex(stored)
+
+
+# ── 7. a blocking acquire waits for the holder, and says so ────────────────
+
+_HOLD_SCRIPT = """
+import sys, time
+from palimpsests.audit._oslock import ExclusiveLock
+lock = ExclusiveLock(sys.argv[1]); lock.acquire()
+print("held", flush=True); time.sleep(float(sys.argv[2])); lock.release()
+"""
+
+
+def _holder(store, seconds):
+    proc = subprocess.Popen(
+        [sys.executable, "-c", _HOLD_SCRIPT, str(store), str(seconds)],
+        stdout=subprocess.PIPE, text=True,
+    )
+    assert proc.stdout.readline().strip() == "held"
+    return proc
+
+
+def test_a_blocking_acquire_has_no_deadline_and_warns_with_the_holder(
+    tmp_path, monkeypatch, caplog
+):
+    import inspect
+    import palimpsests.audit._oslock as oslock
+
+    # "no deadline" cannot be observed in finite time; the contract can
+    params = inspect.signature(oslock.ExclusiveLock.acquire).parameters
+    assert params["timeout"].default is None
+    monkeypatch.setattr(oslock, "WARN_EVERY", 0.2)
+    store = tmp_path / "s.db"
+    holder = _holder(store, 1.0)  # longer than five warning periods
+    try:
+        lock = oslock.ExclusiveLock(store)
+        with caplog.at_level(logging.WARNING, logger="palimpsests.audit"):
+            lock.acquire(blocking=True)  # must wait it out, not give up
+        lock.release()
+    finally:
+        holder.wait(timeout=10)
+    assert "still waiting" in caplog.text and f"pid {holder.pid}" in caplog.text
+
+
+def test_an_explicit_timeout_still_bounds_the_wait(tmp_path):
+    from palimpsests.audit._oslock import ExclusiveLock, LockHeld
+
+    store = tmp_path / "t.db"
+    holder = _holder(store, 2.0)
+    try:
+        with pytest.raises(LockHeld):
+            ExclusiveLock(store).acquire(blocking=True, timeout=0.2)
+    finally:
+        holder.wait(timeout=10)
