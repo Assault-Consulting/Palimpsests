@@ -178,3 +178,23 @@ def test_ingestion_sits_behind_the_bearer(tmp_path):
     )
     assert ok.status_code == 200
     audit.writer.close()
+
+
+def test_a_reported_result_without_an_outcome_is_unobserved_not_ok(tmp_path):
+    """r6: a client that does not state an outcome has not stated success."""
+    from palimpsests.audit.reader import AuditReader
+
+    log, audit, client = _audited_app(tmp_path)
+    calls = [{"type": "tool_call", "id": f"c{i}", "name": "shell.exec"} for i in range(3)]
+    assert client.post("/v1/pala/events", json={"events": calls}).status_code == 200
+    results = [
+        {"type": "tool_result", "call_id": "c0", "outcome": "ok", "content": "a"},
+        {"type": "tool_result", "call_id": "c1", "content": "b"},  # no outcome stated
+        {"type": "tool_result", "call_id": "c2", "outcome": "unobserved", "content": "c"},
+    ]
+    r = client.post("/v1/pala/events", json={"events": results})
+    assert r.status_code == 200 and all("record_hash" in e for e in r.json()["results"])
+    audit.writer.close()
+    with AuditReader.open(log) as reader:
+        outcomes = [dr.outcome_name for dr in reader.records() if dr.kind_name == "TOOL_RESULT"]
+    assert outcomes == ["ok", "unobserved", "unobserved"]
