@@ -1,4 +1,4 @@
-# Agent tool hooks — probe
+# Agent tool hooks — Claude Code and Codex
 
 <!-- SPDX-FileCopyrightText: Assault Consulting -->
 <!-- SPDX-License-Identifier: Apache-2.0 -->
@@ -10,10 +10,12 @@ the agent's tool loop as reported pairs on a local chain. The audit
 record stays on the machine that deploys the agent, even when the model
 does not.
 
-This directory holds the **probe** that comes before any adapter. The
-adapter is written against what the hook really sends on the version
-installed today, not against documentation — and the documentation
-already disagrees with itself on one field.
+This directory holds the two adapters — [Claude Code](#claude-code--recording-the-tool-loop)
+(HTTP hooks, nothing to install) and [Codex](#codex) (command hooks,
+through a one-file forwarder) — and the **probe** that came before them.
+Each adapter is written against what the hook really sends on the version
+installed when it was measured, not against documentation — and the
+documentation already disagrees with itself on one field.
 
 **Results for Claude Code 2.1.288 and Codex CLI 0.160.0 are in
 [PROBE-RESULTS.md](PROBE-RESULTS.md)**, including two ways a hook fails
@@ -160,7 +162,50 @@ red if either side of the arrangement changes.
 
 ## Codex
 
-Codex sends the same hook shape, but only as a command hook, and a
-failed call reaches the hook exactly like a successful one
-([probe results](PROBE-RESULTS.md)). Its adapter waits on how such a
-result is recorded: not as `ok`, which nothing in the hook supports.
+Codex sends the same hook shape, but **only as a command hook**, so a
+small forwarder, [`palimpsests_hook.py`](palimpsests_hook.py) (one file,
+standard library only), carries each event to the serve's
+`/v1/pala/hooks/codex` route.
+
+**What lands on the chain, and why the result says less than Claude
+Code's.** Each tool call becomes a `TOOL_CALL` and its result a
+`TOOL_RESULT`, paired by `tool_use_id` and marked `reported-by-client`,
+with digests only. Codex has no failure hook: a failed command reaches
+`PostToolUse` exactly like a successful one, its output a plain string
+([probe results](PROBE-RESULTS.md)). So every Codex result is recorded
+with outcome **`unobserved`** (inference profile r6) — *a result came
+back; whether the command failed is not visible from here* — never
+`ok`, which nothing in the hook supports.
+
+Put in `~/.codex/hooks.json`:
+
+```json
+{
+  "hooks": {
+    "PreToolUse":  [{ "matcher": "*", "hooks": [{ "type": "command", "command": "python3 /ABS/PATH/palimpsests_hook.py --client codex" }] }],
+    "PostToolUse": [{ "matcher": "*", "hooks": [{ "type": "command", "command": "python3 /ABS/PATH/palimpsests_hook.py --client codex" }] }]
+  }
+}
+```
+
+Start the serve (`palimpsests serve`), export `PALIMPSESTS_SERVE_API_KEY`
+in the shell Codex starts from if the serve runs with `--api-key`, then:
+
+> **Trust the hooks, or nothing is recorded.** Codex does not run a new
+> hook until it has been trusted — open `/hooks` once in an interactive
+> session and trust both entries. An untrusted hook is skipped
+> **silently**: the tools run and the chain stays empty. (Codex has a
+> one-invocation bypass flag; it is not a substitute for trusting the
+> hooks you mean to keep.)
+
+The forwarder never blocks and never alters: it always exits 0 with
+nothing on stdout, so Codex sees no decision and the tool proceeds; a
+report that fails is one line on stderr. `PALIMPSESTS_AUDIT_REPORT=0`
+turns it off. The same forwarder works as a command hook for Claude Code
+too (`--client claude`), for anyone who prefers it to the HTTP hook
+above.
+
+**Not yet watched** by `scripts/check_surfaces.py`, unlike the Claude
+Code route: a Codex probe there needs the trust step automated without
+the bypass flag. Until it is, the arrangement above is as measured on
+Codex 0.160.0, and a later Codex release may change it unseen.
