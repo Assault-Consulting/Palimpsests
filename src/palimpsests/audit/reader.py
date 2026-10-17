@@ -52,6 +52,7 @@ from __future__ import annotations
 import struct
 import threading
 from array import array
+from bisect import bisect_left, bisect_right
 from collections.abc import Iterator
 from dataclasses import dataclass
 from palimpsests.audit.anchors import (
@@ -325,6 +326,20 @@ class _HeaderSeq:
     def key_id_at(self, index: int) -> int:
         return struct.unpack_from("<I", self._data, self._off[index] + 116)[0]
 
+    def has_tlv_at(self, index: int, tag: int) -> bool:
+        """Whether the header at ``index`` carries a header TLV of type ``tag``,
+        read in place. Meaningful only for a header :meth:`fields_at` accepts
+        — the same TLVs, in the same order, ``Header.decode`` would list."""
+        data = self._data
+        pos = self._off[index] + FIXED_HEADER_LEN
+        end = self._off[index] + self._hlen[index]
+        while pos + 4 <= end:
+            t, ln = struct.unpack_from("<HH", data, pos)
+            if t == tag:
+                return True
+            pos += 4 + ln
+        return False
+
     def fields_at(self, index: int) -> _HeaderFields | None:
         """:func:`_header_fields` read in place — same accept/reject rule."""
         off, hlen = self._off[index], self._hlen[index]
@@ -511,6 +526,11 @@ class AuditReader:
         # the first record_by_seq() call from header bytes in place —
         # no record is decoded to build it (U16).
         self._first_pos_by_seq: dict[int, int] | None = None
+        # Built once, on the first origin or shred question (U23): what
+        # those answers need, read from headers and the few bodies that
+        # matter, so neither question decodes the chain.
+        self._origin_index: tuple[array, array, array, bytearray] | None = None
+        self._shredded: dict[int, int] | None = None
         # One re-entrant lock around every cache-filling path (U14, PR-9):
         # verify(), the full decode, the sparse decode. Concurrent
         # callers on a cold reader used to each run the whole pass and
@@ -1414,22 +1434,73 @@ class AuditReader:
         return OriginState(origin, unloaded)
 
     def _origin_state_at(self, seq: int) -> tuple[OriginView | None, bool]:
-        current: OriginView | None = None
-        last_was_unload = False
-        for dr in self._decoded_records():
-            if dr.header is None:
+        """The origin in force at ``seq`` and whether an unload ended it.
+
+        Same answer as walking every decoded record in file order — skipping
+        records whose header does not decode, stopping at the first one
+        whose seq exceeds ``seq``, and letting each MODEL_LOAD, MODEL_UNLOAD
+        or origin-digest-bearing EVENT set the state — without decoding the
+        chain (U23). :meth:`_build_origin_index` reads the headers once and
+        keeps where that walk would stop and which records set the state;
+        a question is then two binary searches and, at most, one decode:
+        the record that set the origin in force.
+        """
+        positions, reach, setters, unloads = self._origin_index_built()
+        # The walk stops at the first decodable record whose seq exceeds
+        # ``seq`` — the first place the running maximum does.
+        k = bisect_right(reach, seq)
+        cutoff = positions[k] if k < len(positions) else len(self._headers)
+        j = bisect_left(setters, cutoff) - 1
+        if j < 0:
+            return None, False
+        if unloads[j]:
+            return None, True
+        return _origin_of(self._record_at(setters[j])), False
+
+    def _origin_index_built(self) -> tuple[array, array, array, bytearray]:
+        index = self._origin_index
+        if index is None:
+            with self._lock:
+                index = self._origin_index
+                if index is None:
+                    index = self._origin_index = self._build_origin_index()
+        return index
+
+    def _build_origin_index(self) -> tuple[array, array, array, bytearray]:
+        """One pass over the headers, nothing decoded but what the kind
+        probe cannot read in place.
+
+        ``positions`` — file positions of the records whose header decodes;
+        ``reach`` — parallel to it, the running maximum of their seqs;
+        ``setters`` — file positions of the EVENT records that set origin
+        state, in file order; ``unloads`` — parallel to it, 1 for a
+        MODEL_UNLOAD. A setter is exactly what the full walk treats as
+        one: kind MODEL_UNLOAD, kind MODEL_LOAD, or any EVENT whose header
+        carries an origin model digest.
+        """
+        headers = self._headers
+        positions = array("Q")
+        reach = array("Q")
+        setters = array("Q")
+        unloads = bytearray()
+        top = 0
+        for i in range(len(headers)):
+            fields = headers.fields_at(i)
+            if fields is None:
                 continue
-            if dr.seq > seq:
-                break
-            if dr.record_type != RT_EVENT:
+            top = max(top, fields.seq) if positions else fields.seq
+            positions.append(i)
+            reach.append(top)
+            if fields.record_type != RT_EVENT:
                 continue
-            if dr.kind == KIND_MODEL_UNLOAD:
-                current = None
-                last_was_unload = True
-            elif dr.kind == KIND_MODEL_LOAD or _has_model_digest(dr.header):
-                current = _origin_of(dr)
-                last_was_unload = False
-        return current, last_was_unload
+            kind = self._kind_probe(i)
+            if kind == KIND_MODEL_UNLOAD:
+                setters.append(i)
+                unloads.append(1)
+            elif kind == KIND_MODEL_LOAD or headers.has_tlv_at(i, TLV_ORIGIN_MODEL_DIGEST):
+                setters.append(i)
+                unloads.append(0)
+        return positions, reach, setters, unloads
 
     def acknowledged_candidates(self) -> dict[int, int]:
         """Maps an ``INCIDENT_CANDIDATE``'s seq to the seq of the
@@ -1488,13 +1559,35 @@ class AuditReader:
         more than one resolving ``KEY_SHRED`` keeps the last one, in
         seq order — a re-shred is what actually holds now, not a
         history of every attempt.
+
+        Bounded (U23): ``KEY_SHRED`` records are found by header type and
+        only they are decoded; a target's ``key_id`` is read from its header
+        in place. The seq map keeps the full-decode version's semantics — a
+        seq's last occurrence, iterated in order of its first — so a broken
+        chain with duplicated seqs answers exactly as before. Computed once
+        per reader and kept; callers get a fresh dict.
         """
-        by_seq: dict[int, DecodedRecord] = {
-            dr.seq: dr for dr in self._decoded_records()
-        }
+        cached = self._shredded
+        if cached is None:
+            with self._lock:
+                cached = self._shredded
+                if cached is None:
+                    cached = self._shredded = self._shredded_pass()
+        return dict(cached)
+
+    def _shredded_pass(self) -> dict[int, int]:
+        headers = self._headers
+        seq_at = headers.seq_at
+        pos_by_seq: dict[int, int] = {}
+        for i in range(len(headers)):
+            pos_by_seq[seq_at(i)] = i
+        rtype_at = headers.record_type_at
         shredded: dict[int, int] = {}
-        for dr in by_seq.values():
-            if dr.record_type != RT_KEY_SHRED or dr.body_tlvs is None:
+        for i in pos_by_seq.values():
+            if rtype_at(i) != RT_KEY_SHRED:
+                continue
+            dr = self._record_at(i)
+            if dr.body_tlvs is None:
                 continue
             tlvs = dict(dr.body_tlvs)
             raw = tlvs.get(SHRED_TARGET_SEQS)
@@ -1505,13 +1598,13 @@ class AuditReader:
                 kid = _origin_tlv(dr.header, TLV_SHRED_KEY_ID)
                 if kid is not None and len(kid) == 4:
                     (shred_key,) = struct.unpack("<I", kid)
-            for i in range(0, len(raw), 8):
-                (t_seq,) = struct.unpack_from("<Q", raw, i)
-                target_dr = by_seq.get(t_seq)
-                if target_dr is None:
+            for off in range(0, len(raw), 8):
+                (t_seq,) = struct.unpack_from("<Q", raw, off)
+                t_pos = pos_by_seq.get(t_seq)
+                if t_pos is None:
                     continue
                 target_key = (
-                    target_dr.header.key_id if target_dr.header is not None else None
+                    headers.key_id_at(t_pos) if headers.fields_at(t_pos) is not None else None
                 )
                 if shred_key is None or target_key == shred_key:
                     shredded[t_seq] = dr.seq

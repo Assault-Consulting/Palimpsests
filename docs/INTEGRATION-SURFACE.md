@@ -74,10 +74,14 @@ have to pay for the whole decode: `record_count`, `record_at(index)`,
 `record_by_seq(seq)` and `header_at(index)` read the index the walk built
 at open and decode only the record asked for. `records()` still
 materialises every record before its first item; use it for a full walk,
-not for a window. Two Reading-channel answers still materialise the chain
-the same way today: `shredded_targets()` and the origin methods
-(`origin_at`, `unloaded_at`, `origin_state_at`). A consumer pays that cost
-the first time it asks either, on any file size.
+not for a window. `shredded_targets()` and the origin methods
+(`origin_at`, `unloaded_at`, `origin_state_at`) do not materialise the
+chain either: each builds what it needs once per reader from the headers
+and the few bodies that matter — the `KEY_SHRED` records; the one record
+that set the origin asked about — and answers from that. Measured at
+1,000,002 records / 245 MB: the first origin question 2.7 s, each after it
+under a millisecond, `shredded_targets()` 0.6 s, against 20.6 s and
+1.99 GB peak RSS for the full decode they used to pay.
 
 Measured at that boundary, not just estimated: a synthetic
 1,000,004-record / 224 MB chain, `open()` plus `verify()` plus
