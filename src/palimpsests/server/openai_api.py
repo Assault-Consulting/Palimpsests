@@ -372,8 +372,9 @@ def create_app(
         from palimpsests.server.agent_hooks import HookIngest
 
         hooks = HookIngest(audit, pending)
+        codex_hooks = HookIngest(audit, pending, client="codex")
     else:
-        hooks = None
+        hooks = codex_hooks = None
 
     @app.post("/v1/pala/hooks/claude")
     def claude_hook(body: dict):
@@ -393,6 +394,28 @@ def create_app(
                 },
             )
         status, reply = hooks.handle(body)
+        return JSONResponse(status_code=status, content=reply)
+
+    @app.post("/v1/pala/hooks/codex")
+    def codex_hook(body: dict):
+        """Agent tool hooks from Codex, forwarded by its command hook.
+
+        Same schema as Claude Code; different outcome rule — Codex has no
+        failure event, so its results record ``unobserved`` (r6). Codex
+        runs only command hooks, so ``integrations/agent-hooks/
+        palimpsests_hook.py`` forwards the event here.
+        """
+        if codex_hooks is None:
+            return JSONResponse(
+                status_code=503,
+                content={
+                    "error": {
+                        "message": "no audit chain configured on this server",
+                        "type": "server_error",
+                    }
+                },
+            )
+        status, reply = codex_hooks.handle(body)
         return JSONResponse(status_code=status, content=reply)
 
     @app.post("/v1/pala/events")
