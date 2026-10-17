@@ -66,7 +66,10 @@ crash-truncated one can look identical from inside.
 
 | `pattern` | When |
 |---|---|
+| `not_a_container` | Nothing at byte 0 is a PALA-1 record: the file does not begin with the record magic. The container is malformed (the verdict says so); the diagnosis no longer blames an interrupted write that never happened. Since 0.13. |
 | `truncated_tail` | The container ends mid-record. |
+| `declared_continuation` | The first record is not a GENESIS, and it declares why: a `SEGMENT_CONTINUATION` opening a later segment (inference profile r6). The verdict is still a violation (D1). Since 0.13. |
+| `continuation_contradicts_manifest` | As above, but the segments manifest beside the file names a different predecessor for that segment. Since 0.13. |
 | `prefix_absent` | The first record is not a GENESIS. |
 | `seq_gap` | A sequence number is skipped. |
 | `chain_break` | A `prev_hash` does not name its predecessor. |
