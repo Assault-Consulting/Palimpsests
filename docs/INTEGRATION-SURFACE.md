@@ -14,7 +14,7 @@ it is not promised.
 
 | # | Channel | Surface | Stability |
 |---|---------|---------|-----------|
-| 1 | Reading | `palimpsests.audit.reader.AuditReader` (`open`, `verify`, `records`, `spans`, `boots`, `origin_at`, `unloaded_at`, `acknowledged_candidates`, `shredded_targets`) | public (since 0.8) |
+| 1 | Reading | `palimpsests.audit.reader.AuditReader` (`open`, `verify`, `records`, `spans`, `boots`, `origin_at`, `unloaded_at`, `acknowledged_candidates`, `shredded_targets`; sparse access `record_count`, `record_at`, `record_by_seq`, `header_at` since 0.13) | public (since 0.8) |
 | 2 | Report | `palimpsests.audit.report.build_report`, `derive_verdict`, format `pala-verification-report/1` | public (since 0.10) |
 | 3 | Proofs | `palimpsests.audit.pala.proofs.inclusion_proof`, `range_proofs` | public (since 0.10) |
 | 4 | Bundle | `palimpsests.audit.pala.bundle.assemble_bundle`, format `pala-bundle/1` | public (since 0.10) |
@@ -68,6 +68,16 @@ is comfortable to the order of ~10^6 records / hundreds of MB;
 multi-GB retention archives (see `docs/RETENTION.md` for the storage
 math) should be segmented before interactive use. A streaming reader
 is backlog, not promise.
+
+A consumer that needs one record, a page of records or a count does not
+have to pay for the whole decode: `record_count`, `record_at(index)`,
+`record_by_seq(seq)` and `header_at(index)` read the index the walk built
+at open and decode only the record asked for. `records()` still
+materialises every record before its first item; use it for a full walk,
+not for a window. Two Reading-channel answers still materialise the chain
+the same way today: `shredded_targets()` and the origin methods
+(`origin_at`, `unloaded_at`, `origin_state_at`). A consumer pays that cost
+the first time it asks either, on any file size.
 
 Measured at that boundary, not just estimated: a synthetic
 1,000,004-record / 224 MB chain, `open()` plus `verify()` plus
