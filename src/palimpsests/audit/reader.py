@@ -507,6 +507,10 @@ class AuditReader:
         # fallback): a record decoded once on demand is not decoded
         # again by the next caller. The full cache above supersedes it.
         self._partial: dict[int, DecodedRecord] = {}
+        # seq → file position of the first record carrying it, built on
+        # the first record_by_seq() call from header bytes in place —
+        # no record is decoded to build it (U16).
+        self._first_pos_by_seq: dict[int, int] | None = None
         # One re-entrant lock around every cache-filling path (U14, PR-9):
         # verify(), the full decode, the sparse decode. Concurrent
         # callers on a cold reader used to each run the whole pass and
@@ -1119,6 +1123,91 @@ class AuditReader:
 
     def records(self) -> Iterator[DecodedRecord]:
         yield from self._decoded_records()
+
+    # ── sparse access (U16) ─────────────────────────────────────────────
+    #
+    # A consumer that shows one record, a page of records or a count
+    # should not pay for decoding every record in the file. records()
+    # cannot offer that: it materialises the whole chain before its
+    # first item. These four read what the walk already indexed and
+    # decode only what is asked for, through the same sparse cache the
+    # bounded internal passes use — so a record decoded here is not
+    # decoded again by verify(), and none of them fills the full cache.
+
+    @property
+    def record_count(self) -> int:
+        """How many records the walk found in this file.
+
+        Counted from the index the walk built at open; nothing is decoded.
+        A torn tail is not a record and is not counted.
+        """
+        return len(self._headers)
+
+    def record_at(self, index: int) -> DecodedRecord:
+        """The record at ``index`` — its position in this file, zero-based.
+
+        ``index`` is what :attr:`DecodedRecord.index` reports, not a seq:
+        a segment's records do not start at seq 0, and a seq gap leaves
+        the positions contiguous. Decodes that one record at most once.
+
+        Raises :class:`IndexError` outside ``range(record_count)``.
+        Negative indices are refused rather than counted from the end,
+        so the argument always means one thing.
+        """
+        if not isinstance(index, int) or isinstance(index, bool):
+            raise TypeError(f"index must be an int, not {type(index).__name__}")
+        if not 0 <= index < len(self._headers):
+            raise IndexError(
+                f"record index {index} is outside this file's 0..{len(self._headers) - 1}"
+            )
+        return self._record_at(index)
+
+    def record_by_seq(self, seq: int) -> DecodedRecord | None:
+        """The record carrying ``seq``, or ``None`` when this file has none.
+
+        ``None`` is an answer, not an error: a segment covering seqs
+        400–900 legitimately has no record 12. If a broken chain carries
+        the same seq twice, this returns the first in file order;
+        ``verify()`` is what reports the duplication.
+
+        The seq index is built once, on the first call, by reading each
+        header's seq field in place — no record is decoded to build it.
+        """
+        pos = self._first_pos_by_seq
+        if pos is None:
+            with self._lock:
+                pos = self._first_pos_by_seq
+                if pos is None:
+                    seq_at = self._headers.seq_at
+                    pos = {}
+                    for i in range(len(self._headers)):
+                        pos.setdefault(seq_at(i), i)
+                    self._first_pos_by_seq = pos
+        index = pos.get(seq)
+        return None if index is None else self._record_at(index)
+
+    def header_at(self, index: int) -> Header | None:
+        """The decoded header at ``index``, without touching the body.
+
+        ``None`` when the header does not decode (an unknown
+        ``format_version``) — the same condition under which
+        :attr:`DecodedRecord.header` is ``None``. Not cached: a header is
+        cheap to decode and a caller paging through headers would
+        otherwise grow a cache the size of the file.
+
+        Raises :class:`IndexError` outside ``range(record_count)``, as
+        :meth:`record_at` does.
+        """
+        if not isinstance(index, int) or isinstance(index, bool):
+            raise TypeError(f"index must be an int, not {type(index).__name__}")
+        if not 0 <= index < len(self._headers):
+            raise IndexError(
+                f"record index {index} is outside this file's 0..{len(self._headers) - 1}"
+            )
+        try:
+            return Header.decode(self._headers[index])
+        except MalformedRecord:
+            return None
 
     # ── header-only access (U14 PR-6) ───────────────────────────────────
     #
