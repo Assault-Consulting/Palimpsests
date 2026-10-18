@@ -801,7 +801,8 @@ class PalaWriter:
         body: bytes = b"",
         span_id: bytes = ZERO16,
         parent_span_id: bytes = ZERO16,
-    ) -> bytes:
+        return_seq: bool = False,
+    ) -> bytes | tuple[int, bytes]:
         with self._lock:
             if not self._started:
                 if record_type != RT_GENESIS:
@@ -817,6 +818,7 @@ class PalaWriter:
                     )
                 self._resume_boot_pending = False
 
+            seq = self._seq
             header_bytes, rh = self._encode_locked(
                 record_type, tlvs=tlvs, body=body,
                 span_id=span_id, parent_span_id=parent_span_id,
@@ -824,7 +826,10 @@ class PalaWriter:
             self._fh.write(header_bytes + body)
             self._commit_locked(record_type, header_bytes, body, rh, span_id)
             self._maybe_rotate_locked()
-            return rh
+            # The seq is read here, under the lock that wrote the record. A
+            # caller reading ``writer.seq - 1`` afterwards can see another
+            # thread's record instead — and bind a result to the wrong call.
+            return (seq, rh) if return_seq else rh
 
     def _encode_locked(
         self,
@@ -995,18 +1000,24 @@ class PalaWriter:
     # ─── §4 safety ──────────────────────────────────────────────────────────
 
     def guard_prefix_release(
-        self, holder_seq: int, consumer_count: int, *, span_id: bytes = ZERO16
-    ) -> bytes:
+        self, holder_seq: int, consumer_count: int, *, span_id: bytes = ZERO16,
+        return_seq: bool = False,
+    ) -> bytes | tuple[int, bytes]:
         detail = f"holder {holder_seq}: {consumer_count} live consumer(s)"
         body = self._event_body(KIND_GUARD_PREFIX_RELEASE, detail=detail)
-        return self._emit(RT_SAFETY, tlvs=self._origin(ROLE_SCHEDULER), body=body, span_id=span_id)
+        return self._emit(
+            RT_SAFETY, tlvs=self._origin(ROLE_SCHEDULER), body=body, span_id=span_id,
+            return_seq=return_seq,
+        )
 
     def guard_state_reject(
-        self, *, detail: str | None = None, span_id: bytes = ZERO16
-    ) -> bytes:
+        self, *, detail: str | None = None, span_id: bytes = ZERO16,
+        return_seq: bool = False,
+    ) -> bytes | tuple[int, bytes]:
         body = self._event_body(KIND_GUARD_STATE_REJECT, detail=detail)
         return self._emit(
-            RT_SAFETY, tlvs=self._origin(ROLE_KV_STORE), body=body, span_id=span_id
+            RT_SAFETY, tlvs=self._origin(ROLE_KV_STORE), body=body, span_id=span_id,
+            return_seq=return_seq,
         )
 
     def incident_candidate(
@@ -1077,8 +1088,14 @@ class PalaWriter:
         span_id: bytes = ZERO16,
         role: str = ROLE_NATIVE,
         source: int = SOURCE_PARSED_FROM_WIRE,
-    ) -> bytes:
-        """Record a dispatched tool invocation (EVENT kind 8, r3)."""
+        return_seq: bool = False,
+    ) -> bytes | tuple[int, bytes]:
+        """Record a dispatched tool invocation (EVENT kind 8, r3).
+
+        ``return_seq=True`` returns ``(seq, record_hash)``, the seq taken
+        under the writer's lock — what a caller needs to bind the result
+        to this call when other threads write to the same chain.
+        """
         raw = name.encode("utf-8")
         if not raw or len(raw) > _TOOL_NAME_MAX:
             raise ValueError(f"tool name must be 1..{_TOOL_NAME_MAX} UTF-8 bytes")
@@ -1094,7 +1111,8 @@ class PalaWriter:
             tlvs.append((EVT_DETAIL, _detail(detail)))
         self._append_source(tlvs, source)
         return self._emit(
-            RT_EVENT, tlvs=self._origin(role), body=encode_tlvs(tlvs), span_id=span_id
+            RT_EVENT, tlvs=self._origin(role), body=encode_tlvs(tlvs), span_id=span_id,
+            return_seq=return_seq,
         )
 
     def tool_result(
@@ -1165,7 +1183,8 @@ class PalaWriter:
         call_hash: bytes | None = None,
         span_id: bytes = ZERO16,
         role: str = ROLE_NATIVE,
-    ) -> bytes:
+        return_seq: bool = False,
+    ) -> bytes | tuple[int, bytes]:
         """Record that the tool-loop cap refused further dispatches (SAFETY 104, r3)."""
         if (call_seq is None) != (call_hash is None):
             raise ValueError("call_seq and call_hash must be given together")
@@ -1179,7 +1198,8 @@ class PalaWriter:
             tlvs.append((EVT_REF_SEQ, struct.pack("<Q", call_seq)))
             tlvs.append((EVT_REF_HASH, call_hash))
         return self._emit(
-            RT_SAFETY, tlvs=self._origin(role), body=encode_tlvs(tlvs), span_id=span_id
+            RT_SAFETY, tlvs=self._origin(role), body=encode_tlvs(tlvs), span_id=span_id,
+            return_seq=return_seq,
         )
 
     # ─── r2: documented erasure ──────────────────────────────────────────────
