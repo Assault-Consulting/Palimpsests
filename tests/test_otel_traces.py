@@ -148,7 +148,6 @@ def test_bad_bodies_are_refused_by_name():
 
 def test_protobuf_without_the_extra_is_refused_with_what_to_install(monkeypatch):
     import builtins
-
     from palimpsests.server.otel_traces import OtlpUnavailable
 
     real = builtins.__import__
@@ -301,3 +300,31 @@ def test_a_call_seq_is_the_calls_own_even_when_another_write_interleaves(tmp_pat
     with AuditReader.open(tmp_path / "race.pala") as r:
         rec = r.record_by_seq(seq)
     assert rec.kind_name == "TOOL_CALL" and rec.record_hash == call_hash
+
+
+def test_an_escalation_refers_to_its_own_refusal_even_when_another_write_interleaves(tmp_path):
+    """The same race on the guard path: an INCIDENT_CANDIDATE names the
+    refusal that tipped it over, by seq and hash — both must be the
+    refusal's, whatever was written in between."""
+    from palimpsests.audit.pala_writer import PalaWriter
+    from palimpsests.audit.reader import AuditReader
+    from palimpsests.providers.native.audit import NativeAudit
+
+    w = PalaWriter(tmp_path / "guard.pala")
+    w.genesis()
+    audit = NativeAudit(w, guard_escalation_threshold=1)
+    real = w.guard_state_reject
+
+    def refuse_then_someone_else_writes(*a, **k):
+        out = real(*a, **k)
+        w.prefix_warm(token_count=1)
+        return out
+
+    w.guard_state_reject = refuse_then_someone_else_writes
+    audit.state_rejected("bad blob", None)
+    w.close()
+    with AuditReader.open(tmp_path / "guard.pala") as r:
+        codes = {i.code for i in r.verify().advisory.items}
+        kinds = [d.kind_name for d in r.records()]
+    assert "INCIDENT_CANDIDATE" in kinds
+    assert "reference_hash_mismatch" not in codes and "reference_unresolved" not in codes
