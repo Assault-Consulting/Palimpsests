@@ -16,7 +16,7 @@ it is not promised.
 |---|---------|---------|-----------|
 | 1 | Reading | `palimpsests.audit.reader.AuditReader` (`open`, `verify`, `records`, `spans`, `boots`, `origin_at`, `unloaded_at`, `acknowledged_candidates`, `shredded_targets`; sparse access `record_count`, `record_at`, `record_by_seq`, `header_at` since 0.13; `Verification.manifest` since 0.13) | public (since 0.8) |
 | 2 | Report | `palimpsests.audit.report.build_report`, `derive_verdict`, format `pala-verification-report/1` | public (since 0.10) |
-| 3 | Proofs | `palimpsests.audit.pala.proofs.inclusion_proof`, `range_proofs` | public (since 0.10) |
+| 3 | Proofs | `palimpsests.audit.pala.proofs.inclusion_proof`, `range_proofs`; prefix consistency `chain_root`, `consistency_proof`, `ConsistencyProof`, format `pala-consistency-proof/1` (since 0.12) | public (since 0.10) |
 | 4 | Bundle | `palimpsests.audit.pala.bundle.assemble_bundle`, format `pala-bundle/1` | public (since 0.10) |
 | 5 | Health | `palimpsests.audit.timehealth`, `palimpsests.audit.bootstats` | public (since 0.10) |
 | 6 | Conformance | `palimpsests.audit.pala.vectors.load`, `palimpsests.audit.pala.selftest.run_selftest`, `pala selftest` | public (since 0.10) |
@@ -24,10 +24,63 @@ it is not promised.
 
 **Stability class "public":** breaking changes only with a minor version
 bump and a CHANGELOG entry naming the break; additive changes (new
-fields, new functions) may land in any release. The two named formats
-(`pala-verification-report/1`, `pala-bundle/1`) change only by format-id
-bump. Writer APIs remain **experimental** until 1.0, as the README
-states — no consumer contract covers them.
+fields, new functions) may land in any release. The three named formats
+(`pala-verification-report/1`, `pala-bundle/1`,
+`pala-consistency-proof/1`) change only by format-id bump.
+
+**Since 0.13, what a value *means* is held to the 1.0 standard already**
+— the rules a consumer needs to rely on a verdict it renders:
+
+- **`None` has one meaning per field, and that meaning is frozen.**
+  Where a field could be `None` for two reasons, the contract names the
+  pair that tells them apart: on a decoded record, `kind is None` means
+  the record carries no kind (not an EVENT/SAFETY body, no body, or an
+  encrypted one), and `kind is not None and kind_name is None` means a
+  kind this build does not know. `complete_to_anchor is None` means not
+  checked; `Verification.manifest is None` means no second file was read.
+- **Numbers never change meaning; names may grow.** A record type, kind,
+  tier, time-trust, outcome, source or disposition number is fixed by the
+  specification. A name table may gain entries, so a consumer handles a
+  `None` name for a value it does not know.
+- **Vocabularies are open.** A release may add a diagnosis pattern, an
+  advisory code or a manifest status; none is ever renamed or
+  repurposed. A consumer renders an unknown one with the verifier's own
+  sentence and says it has no guidance for it — never hides it, never
+  maps it to a known one. The current members are listed below.
+- **Machine fields are contract; sentences are not.** `pattern`, `code`,
+  `at_seq` and the manifest `status` are what a consumer branches on.
+  `narrative`, `detail`, `expected`, `anchor_reason` and the reason of a
+  chain violation are the verifier's words: carried verbatim, never
+  parsed, free to improve in any release, always English. (A chain
+  violation is reported by its reason sentence today; a code for each is
+  planned before 1.0 — until then, render the sentence.)
+
+The structural rules — one place to import from, no removal or rename
+within a major, deprecation over one minor — take effect at 1.0. Until
+then the class above holds for symbols, with every break named in the
+CHANGELOG. The plan towards both is in
+[CONSUMER-SURFACE.md](CONSUMER-SURFACE.md).
+
+**Not covered by any channel:** the writer APIs (`PalaWriter`, anchor
+stores, rotation) remain **experimental** until 1.0, as the README states;
+they get a contract of their own before then. The SCITT bridge
+(`palimpsests.audit.pala.scitt` — signed statements, `verify_statement`,
+`StatementCheck` and its `root_status` values) is **experimental** until an
+independent reproduction of statement construction v3 is recorded.
+
+## Vocabularies (open)
+
+| Vocabulary | Members as of 0.13 |
+|---|---|
+| Diagnosis `pattern` | `not_a_container`, `truncated_tail`, `prefix_absent`, `declared_continuation`, `continuation_contradicts_manifest`, `seq_gap`, `chain_break`, `record_violation`, `unanchored_tail`, `replaced_or_rolled_back` |
+| Advisory `code` | `anchor_never_written`, `mid_boot_time_trust_change`, `mono_regression_in_boot`, `wall_regression_in_boot`, `span_unclosed`, `span_unopened`, `reference_hash_mismatch`, `reference_unresolved`, `ack_target_not_a_candidate`, `tool_target_not_a_call`, `shred_target_key_mismatch`, `shred_target_unresolved`, `continuation_malformed`, `continuation_predecessor_mismatch`, `continuation_index_not_increasing`, `continuation_index_gap`, `continuation_prior_root_mismatch` |
+| `ManifestReading.status` | `matches`, `contradicts`, `declared_only` |
+| `outcome_name` | `ok`, `error`, `timeout`, `cancelled`, `unobserved` |
+| `source_name` | `parsed-from-wire`, `reported-by-client` |
+| `disposition_name`, `kind_name`, `type_name`, tier and time-trust names | as the specification and the inference profile define them |
+
+An advisory never changes a verdict. Each new member ships with one
+CHANGELOG sentence saying what it means and whether it changes a verdict.
 
 ## The report contract
 
@@ -101,8 +154,10 @@ that set the origin asked about — and answers from that. Measured at
 under a millisecond, `shredded_targets()` 0.6 s, against 20.6 s and
 1.99 GB peak RSS for the full decode they used to pay.
 
-Measured at that boundary, not just estimated: a synthetic
-1,000,004-record / 224 MB chain, `open()` plus `verify()` plus
+Measured at that boundary in 0.10, before the referential pass was
+bounded (0.12: it now decodes only the records that carry a reference
+and the records they name), so the figures below are a ceiling, not
+today's cost: a synthetic 1,000,004-record / 224 MB chain, `open()` plus `verify()` plus
 `build_report()` together, was killed by the OS on a 3.9 GB machine —
 `_referential_advisories()` needs every record's kind to resolve r2
 references, which needs every body decoded, and `_decoded_records()`
