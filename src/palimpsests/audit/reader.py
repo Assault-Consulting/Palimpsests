@@ -570,6 +570,7 @@ class AuditReader:
         self._headers = _HeaderSeq(data)
         self._truncated = False
         self._truncated_detail: str | None = None
+        self._truncated_at: int | None = None  # byte offset the walk stopped at
         self._walk()
 
     # ── construction ────────────────────────────────────────────────────
@@ -617,21 +618,25 @@ class AuditReader:
             if off + FIXED_HEADER_LEN > n:
                 self._truncated = True
                 self._truncated_detail = f"fixed header cut at offset {off}"
+                self._truncated_at = off
                 break
             if bytes(data[off : off + 4]) != MAGIC:
                 self._truncated = True
                 self._truncated_detail = f"bad magic at offset {off}"
+                self._truncated_at = off
                 break
             (hlen,) = struct.unpack_from("<H", data, off + 6)
             if hlen < FIXED_HEADER_LEN:
                 self._truncated = True
                 self._truncated_detail = f"header_len={hlen} below fixed size at offset {off}"
+                self._truncated_at = off
                 break
             (blen,) = struct.unpack_from("<I", data, off + 120)
             end = off + hlen + blen
             if end > n:
                 self._truncated = True
                 self._truncated_detail = f"record at offset {off} cut short"
+                self._truncated_at = off
                 break
             self._headers._append(off, hlen, blen)
             off = end
@@ -996,6 +1001,19 @@ class AuditReader:
         return items
 
     def _derive_diagnosis(self, chain: VerifyResult) -> Diagnosis | None:
+        if self._truncated and self._truncated_at == 0 and not self._opens_with_magic():
+            # Nothing at byte 0 is a PALA-1 record, so nothing was ever
+            # written here by a PALA-1 writer: "interrupted mid-write" would
+            # blame a writer that never existed. The verdict is unchanged —
+            # the container is still malformed — only the explanation is.
+            return Diagnosis(
+                "not_a_container",
+                None,
+                "a PALA-1 record starting at byte 0",
+                "The file does not begin with a PALA-1 record — its first bytes "
+                "are not the record magic; the evidence is consistent with a file "
+                "that is not a PALA-1 container, not with an interrupted write.",
+            )
         if self._truncated:
             return Diagnosis(
                 "truncated_tail",
@@ -1061,6 +1079,13 @@ class AuditReader:
                 "is consistent with the log having been replaced or rolled back.",
             )
         return None
+
+    def _opens_with_magic(self) -> bool:
+        """Whether the bytes at offset 0 are the record magic, or as much of
+        it as the file holds — a file cut inside its first record's magic
+        is still a PALA-1 file that was cut, not some other file."""
+        head = bytes(self._data[: len(MAGIC)])
+        return head == MAGIC[: len(head)]
 
     def _declared_continuation_diagnosis(self) -> Diagnosis | None:
         """Case B of the continuation design: the prefix is gone, and the
