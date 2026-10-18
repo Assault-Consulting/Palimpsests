@@ -140,6 +140,7 @@ __all__ = [
     "OriginView",
     "OriginState",
     "ContinuationView",
+    "ManifestReading",
     "decode_continuation",
     "decode_record",
 ]
@@ -495,6 +496,29 @@ class Diagnosis:
 
 
 @dataclass(frozen=True)
+class ManifestReading:
+    """The segments manifest a verdict consulted, named so it can be checked.
+
+    A verdict on a segment whose first record declares a continuation rests
+    on two files: the container, and the ``<stem>.segments.json`` manifest
+    beside it that ``declared_continuation`` and
+    ``continuation_contradicts_manifest`` are decided against. A consumer
+    that identifies what it verified by digest needs the second file's
+    identity as much as the first's (U17).
+
+    ``sha256`` is over the bytes this reader read and judged — one read,
+    hashed and parsed from the same buffer — so it describes the manifest
+    the diagnosis rests on, not whatever the file holds by the time a
+    caller looks. ``None`` when nothing was read.
+    """
+
+    path: str | None  # the manifest looked for; None when there was no path to derive it from
+    status: str  # "matches" | "contradicts" | "declared_only" — as the diagnosis used it
+    sha256: bytes | None  # SHA-256 of the bytes read; None when no file was read
+    detail: str | None  # why the status is what it is, when that is not plain
+
+
+@dataclass(frozen=True)
 class Verification:
     chain: VerifyResult
     anchor: AnchorReading | None
@@ -503,6 +527,9 @@ class Verification:
     anchor_lag: int | None
     diagnosis: Diagnosis | None  # only when something failed
     advisory: Advisory  # always present, never a verdict
+    manifest: ManifestReading | None = None  # the manifest the diagnosis
+    # consulted (U17); None when the verdict consulted none — the first
+    # record declares no continuation, so no second file is involved.
 
 
 class AuditReader:
@@ -515,6 +542,7 @@ class AuditReader:
         self._file = None
         self._mmap = None
         self._verification: Verification | None = None
+        self._manifest_reading: ManifestReading | None = None  # set by verify()
         self._structure: tuple[list[BootView], list[SpanView]] | None = None
         self._decoded: list[DecodedRecord] | None = None
         # Sparse decode cache for the bounded paths (verify()'s
@@ -646,6 +674,7 @@ class AuditReader:
             anchor_reading, anchor_attempts = self._resolve_anchor()
 
         expected = anchor_reading.head if anchor_reading is not None else None
+        self._manifest_reading = None
         chain, header_advisory = verify_headers_with_advisory(
             self._headers, expected_head=expected
         )
@@ -660,6 +689,7 @@ class AuditReader:
             anchor_lag=chain.anchor_lag,
             diagnosis=diagnosis,
             advisory=advisory,
+            manifest=self._manifest_reading,
         )
         return self._verification
 
@@ -1075,7 +1105,9 @@ class AuditReader:
         view = decode_continuation(dr)
         if view is None or dr.header is None or view.predecessor_head != dr.header.prev_hash:
             return None
-        status = self._manifest_predecessor_status(view)
+        reading = self._manifest_predecessor_status(view)
+        self._manifest_reading = reading
+        status = reading.status
         head8 = view.predecessor_head.hex()[:16]
         floor = (
             f"a declared retention floor of {view.retention_s} s"
@@ -1113,28 +1145,66 @@ class AuditReader:
             "themselves are not verified here.",
         )
 
-    def _manifest_predecessor_status(self, view: ContinuationView) -> str:
-        """``matches`` / ``contradicts`` / ``declared_only`` (design §3, Case B)."""
+    def _manifest_predecessor_status(self, view: ContinuationView) -> ManifestReading:
+        """``matches`` / ``contradicts`` / ``declared_only`` (design §3, Case B),
+        with the manifest that decided it.
+
+        The file is read once; the bytes judged are the bytes hashed.
+        """
         import json
+        from hashlib import sha256
 
         p = self._source_path
         if not p:
-            return "declared_only"
+            return ManifestReading(
+                None, "declared_only", None, "the container was not opened from a path"
+            )
         stem, dot, suffix = p.rpartition(".")
         if not (dot and suffix.isdigit()):
-            return "declared_only"
+            return ManifestReading(
+                None, "declared_only", None,
+                "the file name is not a segment's (<stem>.<digits>), so no manifest is named",
+            )
+        path = f"{stem}.segments.json"
         try:
-            with open(f"{stem}.segments.json", encoding="utf-8") as fh:
-                mf = json.load(fh)
-        except (OSError, ValueError):
-            return "declared_only"
-        if mf.get("format") != "pala-segments/1":
-            return "declared_only"
+            with open(path, "rb") as fh:
+                raw = fh.read()
+        except FileNotFoundError:
+            return ManifestReading(path, "declared_only", None, "no manifest at that path")
+        except OSError as exc:
+            return ManifestReading(
+                path, "declared_only", None, f"the manifest could not be read: {exc}"
+            )
+        digest = sha256(raw).digest()
+        try:
+            mf = json.loads(raw.decode("utf-8"))
+        except ValueError:
+            return ManifestReading(path, "declared_only", digest, "the manifest is not JSON")
+        # A manifest that is not the expected shape confirms nothing and
+        # contradicts nothing: it is set aside, and said to be.
+        if not isinstance(mf, dict) or mf.get("format") != "pala-segments/1":
+            return ManifestReading(
+                path, "declared_only", digest, "the manifest is not pala-segments/1"
+            )
         entries = mf.get("segments", [])
+        if not isinstance(entries, list):
+            return ManifestReading(
+                path, "declared_only", digest, "the manifest's segments are not a list"
+            )
         k = view.segment_index - 1
-        if 0 <= k < len(entries) and entries[k].get("head") == view.predecessor_head.hex():
-            return "matches"
-        return "contradicts"
+        if 0 <= k < len(entries) and not isinstance(entries[k], dict):
+            return ManifestReading(
+                path, "declared_only", digest,
+                f"the manifest's entry for segment {k} is not an object",
+            )
+        if not 0 <= k < len(entries):
+            return ManifestReading(
+                path, "contradicts", digest,
+                f"the manifest lists no segment {view.segment_index - 1} before this one",
+            )
+        if entries[k].get("head") == view.predecessor_head.hex():
+            return ManifestReading(path, "matches", digest, None)
+        return ManifestReading(path, "contradicts", digest, None)
 
     # ── record & body decoding (lazy, cached) ───────────────────────────
     def _decoded_records(self) -> list[DecodedRecord]:
