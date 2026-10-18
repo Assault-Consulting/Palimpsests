@@ -90,8 +90,9 @@ class NativeAudit:
         self._writer.kv_restore(sha256(blob).digest(), span_id=span_id or b"\x00" * 16)
 
     def state_rejected(self, reason: str, span_id: bytes | None) -> None:
-        rh = self._writer.guard_state_reject(detail=reason, span_id=span_id or b"\x00" * 16)
-        self._note_guard(rh)
+        self._note_guard(*self._writer.guard_state_reject(
+            detail=reason, span_id=span_id or b"\x00" * 16, return_seq=True,
+        ))
 
     def prefix_warmed(self, token_count: int) -> None:
         self._writer.prefix_warm(token_count=token_count)
@@ -106,12 +107,20 @@ class NativeAudit:
         span_id: bytes | None,
         *,
         source: int = SOURCE_PARSED_FROM_WIRE,
+        detail: str | None = None,
     ) -> tuple[int, bytes]:
-        """Record a dispatched tool invocation; return its (seq, hash)."""
-        rh = self._writer.tool_call(
+        """Record a dispatched tool invocation; return its (seq, hash).
+
+        The seq comes from the writer, taken under the lock that wrote the
+        record. It used to be read afterwards as ``writer.seq - 1`` — which,
+        with another route of the serve writing at the same moment, could be
+        the other route's record, and the result would then bind to a call
+        it does not belong to.
+        """
+        return self._writer.tool_call(
             name, args_digest=args_digest, span_id=span_id or ZERO16, source=source,
+            detail=detail, return_seq=True,
         )
-        return self._writer.seq - 1, rh
 
     def tools_offered_no_call(
         self, count: int, tools_digest: bytes, span_id: bytes | None
@@ -141,17 +150,21 @@ class NativeAudit:
         call_hash: bytes | None,
         span_id: bytes | None,
     ) -> None:
-        rh = self._writer.guard_tool_loop_limit(
+        self._note_guard(*self._writer.guard_tool_loop_limit(
             iterations, call_seq=call_seq, call_hash=call_hash, span_id=span_id or ZERO16,
-        )
-        self._note_guard(rh)
+            return_seq=True,
+        ))
 
     def prefix_release_refused(self, holder_seq: int, consumer_count: int) -> None:
-        rh = self._writer.guard_prefix_release(holder_seq, consumer_count)
-        self._note_guard(rh)
+        self._note_guard(*self._writer.guard_prefix_release(
+            holder_seq, consumer_count, return_seq=True,
+        ))
 
-    def _note_guard(self, guard_hash: bytes) -> None:
-        guard_seq = self._writer.seq - 1
+    def _note_guard(self, guard_seq: int, guard_hash: bytes) -> None:
+        # ``guard_seq`` comes from the writer, taken under the lock that wrote
+        # the refusal — it is what an escalation's INCIDENT_CANDIDATE refers
+        # to, so it must be this refusal's seq, not whatever record another
+        # thread wrote since.
         now = self._clock()
         emit_ref: tuple[int, bytes] | None = None
         count = 0
