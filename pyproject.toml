@@ -150,9 +150,11 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/Assault-Consulting/Palimpsests"
+Homepage = "https://palimpsests.dev"
+"PALA-1 format" = "https://palimpsests.dev/pala-1/"
 Repository = "https://github.com/Assault-Consulting/Palimpsests"
 Issues = "https://github.com/Assault-Consulting/Palimpsests/issues"
+Changelog = "https://github.com/Assault-Consulting/Palimpsests/blob/main/CHANGELOG.md"
 
 [project.scripts]
 palimpsests = "palimpsests.cli:main"
