@@ -365,11 +365,63 @@ def probe_claude_code(workdir: Path) -> Result:
         return _verdict("claude-code", version, serve.pairs(), REPORTED, model.tool_requests)
 
 
+def probe_otel(workdir: Path) -> Result:
+    """A real OpenTelemetry GenAI instrumentation, exported over OTLP/HTTP.
+
+    The client is pydantic-ai's built-in instrumentation with its own
+    ``TestModel`` — which calls every registered tool, locally, with no
+    provider — and the stock OTLP/HTTP protobuf exporter, pointed at the
+    serve's ``/v1/traces`` with the bearer in its headers: the setup
+    ``integrations/otel/README.md`` gives users. GREEN when the tool span
+    lands as a reported pair. It goes red if the framework stops emitting
+    ``execute_tool`` spans in the shape the adapter reads, or if the
+    exporter's wire changes under the route.
+    """
+    try:
+        import importlib.metadata as md
+        from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+        from opentelemetry.sdk.trace import TracerProvider
+        from opentelemetry.sdk.trace.export import BatchSpanProcessor
+        from pydantic_ai import Agent
+        from pydantic_ai.models.instrumented import InstrumentationSettings
+        from pydantic_ai.models.test import TestModel
+
+        version = (f"pydantic-ai {md.version('pydantic-ai-slim')}, "
+                   f"otlp-http {md.version('opentelemetry-exporter-otlp-proto-http')}")
+    except Exception:
+        return Result("otel", "SKIP",
+                      detail="pydantic-ai-slim / opentelemetry-sdk / otlp-http exporter "
+                             "not installed")
+    with StubServe(workdir) as serve:
+        tp = TracerProvider()
+        tp.add_span_processor(BatchSpanProcessor(OTLPSpanExporter(
+            endpoint=serve.url + "/v1/traces",
+            headers={"Authorization": f"Bearer {serve.api_key}"},
+        )))
+        Agent.instrument_all(InstrumentationSettings(tracer_provider=tp, include_content=True))
+        try:
+            agent = Agent(TestModel())
+
+            @agent.tool_plain
+            def read(path: str) -> str:
+                return "hello"
+
+            agent.run_sync("read")
+            tp.force_flush()
+        finally:
+            Agent.instrument_all(False)
+            tp.shutdown()
+        # TestModel answers locally, as LiteLLM's mock does: the stub model
+        # is never asked, so there is no completion count to pass.
+        return _verdict("otel", version, serve.pairs(), REPORTED)
+
+
 PROBES = {
     "litellm": probe_litellm,
     "mcp": probe_mcp,
     "opencode": probe_opencode,
     "claude-code": probe_claude_code,
+    "otel": probe_otel,
 }
 
 
