@@ -418,6 +418,69 @@ def create_app(
         status, reply = codex_hooks.handle(body)
         return JSONResponse(status_code=status, content=reply)
 
+    if audit is not None:
+        from palimpsests.server.otel_traces import TraceIngest
+
+        traces_ingest = TraceIngest(audit)
+    else:
+        traces_ingest = None
+
+    from fastapi import Request
+    from fastapi.responses import Response
+
+    async def otlp_traces(request):
+        """OTLP/HTTP trace export — the GenAI tool spans, onto the chain.
+
+        See ``palimpsests.server.otel_traces``. Only ``execute_tool`` spans
+        are recorded, one call/result pair each, marked
+        ``reported-by-client``; the rest of the trace is accepted and not
+        kept — this is not a trace backend. JSON and protobuf, optionally
+        gzip; the reply uses the request's encoding, and reports dropped
+        tool spans as OTLP ``partialSuccess`` rather than as an error, so an
+        exporter does not retry what will never be recorded.
+        """
+        from palimpsests.server.otel_traces import OtlpUnavailable, decode_otlp
+
+        if traces_ingest is None:
+            return JSONResponse(
+                status_code=503,
+                content={"error": {"message": "no audit chain configured on this server",
+                                   "type": "server_error"}},
+            )
+        ctype = request.headers.get("content-type", "")
+        try:
+            batch = decode_otlp(
+                await request.body(), ctype, request.headers.get("content-encoding")
+            )
+        except OtlpUnavailable as e:
+            return JSONResponse(status_code=415, content={"error": {"message": str(e)}})
+        except ValueError as e:
+            status = 415 if "Content-Type" in str(e) else 400
+            return JSONResponse(status_code=status, content={"error": {"message": str(e)}})
+        traces_ingest.record(batch)
+        if ctype.split(";")[0].strip().lower() == "application/x-protobuf":
+            from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
+                ExportTraceServiceResponse,
+            )
+
+            reply = ExportTraceServiceResponse()
+            if batch.dropped:
+                reply.partial_success.rejected_spans = batch.dropped
+                reply.partial_success.error_message = batch.dropped_reason or ""
+            return Response(reply.SerializeToString(), media_type="application/x-protobuf")
+        if batch.dropped:
+            return {"partialSuccess": {"rejectedSpans": str(batch.dropped),
+                                       "errorMessage": batch.dropped_reason}}
+        return {}
+
+    # The raw body is what OTLP needs, so the handler takes the Request. Its
+    # annotation is set here, as the class itself: this module defers
+    # annotations to strings and imports FastAPI only inside create_app, so a
+    # written ``request: Request`` would not resolve, and FastAPI would read
+    # ``request`` as a body field and answer 422.
+    otlp_traces.__annotations__["request"] = Request
+    app.post("/v1/traces")(otlp_traces)
+
     @app.post("/v1/pala/events")
     def ingest_events(body: dict):
         """Client-reported tool events, onto the same chain (r5).

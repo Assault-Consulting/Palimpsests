@@ -54,6 +54,10 @@ keyring = [
 serve = [
     "fastapi>=0.115",
     "uvicorn>=0.30",
+    # OTLP/protobuf decoding for POST /v1/traces (family B). OTLP/JSON needs
+    # nothing; without this, a protobuf export is refused with a sentence
+    # naming the extra, never misread. Pulls only `protobuf`.
+    "opentelemetry-proto>=1.27",
 ]
 # At-rest audit-log encryption. sqlcipher3-wheels ships prebuilt binaries
 # so it doesn't need a local SQLCipher/OpenSSL toolchain. Isolated behind
@@ -134,6 +138,8 @@ dev = [
     # fastapi so the OpenAI-endpoint tests run (and count for coverage) in
     # CI; uvicorn is runtime-only and stays out of dev.
     "fastapi>=0.115",
+    # opentelemetry-proto so the OTLP/protobuf path of /v1/traces is tested.
+    "opentelemetry-proto>=1.27",
     # jsonschema so the report validates against its shipped schema in CI —
     # the machine seam between the package and Auditor's renderings.
     "jsonschema>=4.21",
