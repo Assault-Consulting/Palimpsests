@@ -14,7 +14,7 @@ it is not promised.
 
 | # | Channel | Surface | Stability |
 |---|---------|---------|-----------|
-| 1 | Reading | `palimpsests.audit.reader.AuditReader` (`open`, `verify`, `records`, `spans`, `boots`, `origin_at`, `unloaded_at`, `acknowledged_candidates`, `shredded_targets`; sparse access `record_count`, `record_at`, `record_by_seq`, `header_at` since 0.13) | public (since 0.8) |
+| 1 | Reading | `palimpsests.audit.reader.AuditReader` (`open`, `verify`, `records`, `spans`, `boots`, `origin_at`, `unloaded_at`, `acknowledged_candidates`, `shredded_targets`; sparse access `record_count`, `record_at`, `record_by_seq`, `header_at` since 0.13; `Verification.manifest` since 0.13) | public (since 0.8) |
 | 2 | Report | `palimpsests.audit.report.build_report`, `derive_verdict`, format `pala-verification-report/1` | public (since 0.10) |
 | 3 | Proofs | `palimpsests.audit.pala.proofs.inclusion_proof`, `range_proofs` | public (since 0.10) |
 | 4 | Bundle | `palimpsests.audit.pala.bundle.assemble_bundle`, format `pala-bundle/1` | public (since 0.10) |
@@ -59,6 +59,24 @@ copies it first and reads the copy (`copy-then-read`). A malformed
 *tail* on a live file is "a record in flight", not evidence of
 tampering; the same defect in a copied, quiescent file is a real
 finding. Auditor's UI follows this rule.
+
+## Files a verdict reads
+
+A verdict is a verdict on the container's bytes — with one exception since
+0.13. When a segment's first record declares a continuation (inference
+profile r6), the diagnosis (`declared_continuation` or
+`continuation_contradicts_manifest`) is decided against the
+`<stem>.segments.json` manifest beside the file. `Verification.manifest`
+names that file, the status it decided (`matches` / `contradicts` /
+`declared_only`), and the SHA-256 of the bytes read — one read, hashed and
+parsed from the same buffer, so the digest describes the manifest the
+diagnosis rests on. `None` means the verdict read no second file.
+
+A consumer that identifies what it verified by digest records both digests,
+and treats a change to either file as a change of subject. The report
+(`pala-verification-report/1`) does not carry the manifest's identity yet;
+adding it is a format question, and the format changes only by format-id
+bump.
 
 ## Size envelope
 
