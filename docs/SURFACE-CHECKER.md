@@ -33,6 +33,7 @@ source .venv/bin/activate
 pip install -e ".[serve]" litellm
 npm install -g opencode-ai
 npm install -g @anthropic-ai/claude-code   # for the claude-code probe
+pip install pydantic-ai-slim opentelemetry-sdk opentelemetry-exporter-otlp-proto-http   # for the otel probe
 ```
 
 The `claude-code` probe needs no Anthropic account: it points the
@@ -131,6 +132,7 @@ What the Detail line usually means on red:
 |---|---|
 | `1 call(s), 0 result(s)` | the client stopped delivering the result (e.g. LiteLLM no longer passes `role: tool` messages to the hook) |
 | `0 call(s), 0 result(s)` with completions reached | the client reached the model but no tool was reported. Either its hooks did not fire, or **the model never called a tool** — which the stub model rules out here, so in this checker it points at the hooks. On real traffic the second is common (see the OpenCode run records) and must be ruled out before blaming the surface |
+| `0 call(s), 0 result(s)` on `otel` | the framework no longer emits `execute_tool` spans in the shape the adapter reads (`gen_ai.operation.name`, a tool name in `gen_ai.tool.name` or the span name), or the exporter's wire changed under `/v1/traces` — compare a fresh capture with `tests/fixtures/otel/` |
 | `1 call(s), 0 result(s)` on OpenCode specifically | `tool.execute.after` did not fire **and** the `message.part.updated` fallback did not deliver — on 1.18.31 the fallback is what carries results, so this means the fallback surface changed |
 | `sources [0]` instead of `[1]` | the record arrived without the reported-by-client mark — a defect in **our** code, not the surface |
 | `probe crashed: …` | the probe itself failed — probably the client API it calls has changed |
@@ -143,6 +145,7 @@ What the Detail line usually means on red:
 |---|---|
 | `litellm not installed` | `pip install litellm` in the same venv |
 | `opencode not on PATH` | see §1, `npm config get prefix` |
+| `pydantic-ai-slim / opentelemetry-sdk / otlp-http exporter not installed` | `pip install pydantic-ai-slim opentelemetry-sdk opentelemetry-exporter-otlp-proto-http` in the same venv |
 | `the client never reached the serve (0 completions)` | OpenCode could not start a session. Most often: no access to `models.opencode.ai` (VPN, corporate proxy, firewall). Check with `curl -I https://models.opencode.ai` |
 
 A SKIP is never fixed by changing an adapter. If you find yourself

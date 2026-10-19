@@ -328,3 +328,54 @@ def test_an_escalation_refers_to_its_own_refusal_even_when_another_write_interle
         kinds = [d.kind_name for d in r.records()]
     assert "INCIDENT_CANDIDATE" in kinds
     assert "reference_hash_mismatch" not in codes and "reference_unresolved" not in codes
+
+
+# ── a real framework's export, recorded once ───────────────────────────────
+
+FIXTURE_FILE = (
+    __import__("pathlib").Path(__file__).resolve().parent
+    / "fixtures" / "otel" / "pydantic-ai-2.57.0.otlp.pb.gz.b64"
+)
+
+
+def _fixture() -> bytes:
+    """The export's protobuf bytes, checked against the digest in its header."""
+    import base64
+    import hashlib
+
+    lines = FIXTURE_FILE.read_text().splitlines()
+    digest = next(ln.split(": ")[1] for ln in lines if ln.startswith("# sha256"))
+    raw = gzip.decompress(base64.b64decode("".join(ln for ln in lines if not ln.startswith("#"))))
+    assert hashlib.sha256(raw).hexdigest() == digest
+    return raw
+
+
+def test_a_real_frameworks_export_reads_as_expected():
+    """pydantic-ai 2.57.0's own instrumentation, its TestModel calling two
+    tools (one raises), sent by the stock OTLP/HTTP exporter 1.45.1 as one
+    batch — the bytes as they crossed the wire. Pins what a real framework
+    emits: no schemaUrl, no error.type, a result only on success."""
+    pytest.importorskip("opentelemetry.proto")
+    batch = decode_otlp(_fixture(), "application/x-protobuf")
+    assert [s.tool_name for s in batch.tool_spans] == ["multiply", "read_file"]
+    assert [s.failed for s in batch.tool_spans] == [False, True]
+    assert {s.semconv for s in batch.tool_spans} == {"unstated"}  # not declared
+    assert batch.tool_spans[1].error_type is None  # not set by this framework
+    assert batch.tool_spans[0].result == "0" and batch.tool_spans[1].result is None
+    assert batch.dropped == 0  # chat and invoke_agent are not tool spans
+
+
+def test_a_real_frameworks_export_lands_as_two_pairs(tmp_path):
+    pytest.importorskip("opentelemetry.proto")
+    log, audit, client = _app(tmp_path)
+    r = client.post("/v1/traces", content=gzip.compress(_fixture()),
+                    headers={"Content-Type": "application/x-protobuf",
+                             "Content-Encoding": "gzip"})
+    assert r.status_code == 200
+    audit.writer.close()
+    recs = _pairs(log)
+    results = [d for d in recs if d.kind_name == "TOOL_RESULT"]
+    assert [d.outcome for d in results] == [OUTCOME_OK, OUTCOME_ERROR]
+    call = next(d for d in recs if d.kind_name == "TOOL_CALL")
+    assert dict(call.body_tlvs)[0x000D] == canonical_tool_args_digest({"a": 0, "b": 0})
+    assert dict(results[0].body_tlvs)[0x000D] == canonical_tool_args_digest(0)

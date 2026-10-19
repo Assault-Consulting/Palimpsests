@@ -71,3 +71,15 @@ and on the chain it is `ok` — a return, never a confirmed effect.
 - **Retries are recorded once.** An exporter that re-sends a batch it
   thinks failed does not create duplicates: the serve remembers the last
   16 384 span ids.
+
+## Tested against
+
+- **pydantic-ai 2.57.0** with its built-in instrumentation, sending
+  through the stock **OTLP/HTTP exporter 1.45.1** (protobuf, batched).
+  One export from it is kept as a test fixture
+  (`tests/fixtures/otel/`, the bytes as they crossed the wire), and the
+  `otel` probe of `scripts/check_surfaces.py` re-runs the same setup
+  against the version installed today. What that framework sends, and
+  the adapter therefore handles: no `schemaUrl` (recorded as
+  `semconv unstated`), no `error.type` on a failed tool (the pair is
+  `error` without one), and a result only on success.
