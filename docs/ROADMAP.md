@@ -1,93 +1,130 @@
-# Palimpsests L3 roadmap
+# Palimpsests roadmap
 
-**Status:** working plan. Updated as steps land.
+**Status:** working plan, revised with each release. Last revised for
+**0.13** (October 2026). What shipped is in the
+[CHANGELOG](../CHANGELOG.md); this page says where the project is going and
+why, and what is deliberately not scheduled.
 
-The value of Palimpsests is not any single mechanism — every individual
-mechanism (parallel batching, prefix sharing, KV persistence) exists
-somewhere already. The value is **orchestration**: composing llama.cpp's
-primitives into disciplined policy for local agentic serving, plus the
-**measurement stand** (L1/L2/L3 behind one abstraction) that lets us test
-whether a research idea actually helps *on this hardware* vs a strong
-baseline. Everything below is weighed by that lens.
-
-A note on numbers: figures cited from external papers (e.g. sleep-time
-compute's 2.5×, KV-reuse speedups) are **hypotheses until measured on our
-own hardware** per `BENCHMARKING.md`. We adopt their *logic* now; their
-*numbers* are flagged "to verify." A consolidated, sourced table of those
-targets lives in `POSITIONING.md`. As of 0.4 one of those hypotheses — the
-tool-loop advantage — has a first measured result (see below).
+The direction has not changed since 0.6: the measurement campaign showed
+that the level-3 speed mechanisms reach parity with a tuned
+`llama-server`, not an edge over it, so the project's differentiation is
+the **audit trail** — a format a regulator can check without trusting our
+binary — and the deployment model, not raw speed. Everything below is
+weighed by that.
 
 ---
 
-## Done
+## Where the project stands (0.13)
 
-- **Spike S1** — three llama.cpp primitives confirmed (ADR-0001).
-- **ADR-0002** — in-process, and the fake-backend test seam.
-- **N1** — native scheduler + stateless streaming (`streaming`).
-- **N3a** — stateful sessions, one at a time (`stateful_sessions`).
-- **N3b** — concurrent session batching (`continuous_batching`).
-- **N5** — server-side tool loop, no re-prefill (`server_side_tools`).
-- **N-pos** — per-slot KV position (`n_past` / `start_pos`), the
-  substrate N4 and N6 both need. No user-visible feature; no flag moved.
-- **N4a** — scheduler primitives for a prefix holder (reserve / warm /
-  copy-to-slot), the first case of slot-orchestration policy. No flag.
-- **N4b** — engine-side prefix registry + refcounted holders + exact
-  token-match identity; `shared_prefix` on. Variant B: engine owns the
-  registry, scheduler stays thin.
-- **N6** — KV persistence: `save_state` / `load_state` with the position
-  packed into a self-contained blob; `kv_persistence` on.
-- **N6b** — content-addressed KV store ("LMCache for edge") layered over
-  N6: reuse a saved state by a hash of the tokens that produced it, not by
-  an opaque path. No flag (a convenience layer over the N6 primitive).
-- **BENCHMARKING.md** — the honest measurement protocol.
-- **Real `LlamaCppBackend` — validated on hardware (0.4).** The ctypes
-  backend mapping onto the same primitives the fake backend exposes,
-  brought online on real hardware (llama-cpp-python 0.3.33, Qwen2.5-1.5B
-  Q4_K_M). Construction, tokenize round-trip, and a scheduler/session
-  smoke test passed; the vocab/memory/state_seq version shims resolved
-  cleanly. One context-param fix was needed on first contact
-  (`n_batch = n_ctx`, so a large single-call prefill does not trip
-  `GGML_ASSERT` inside `llama_decode`). This closes the "real backend"
-  gap — the skeleton now runs a real model.
-- **First measurement — tool-loop (N5) vs re-prefill.** Our strongest
-  claimed advantage, measured first per the working order below. Result:
-  1.08× at the control (negligible prefix) growing to ~7× at
-  prefix≈3000 / 12 hops — the speedup tracks the re-prefill work the tool
-  loop avoids, with near-identical TTFT between arms. Measured **CPU-only
-  on a 1.5B model** as a mechanism sanity check, **not** a representative
-  performance figure; the numbers and full method are in `results/` and
-  `POSITIONING.md`. (Superseded by the full 0.5 iGPU campaign — see Working
-  order below; all three mechanisms are now measured on 1.5B and 7B.)
-
-**The level-3 skeleton is complete, and the real backend is now
-validated.** All six capability flags — `streaming`, `stateful_sessions`,
-`continuous_batching`, `server_side_tools`, `shared_prefix`,
-`kv_persistence` — are true behind the ADR-0002 seam, with the
-content-addressed store on top, and the `[native]` backend runs a real
-model on hardware. What remains is not more skeleton: it is more
-measurement (GPU, larger models, the persistence and shared-prefix cases)
-and research layers on top.
+- **The format is frozen and independently reproduced.** PALA-1 v1.0
+  (August 2026), five independent verifier implementations on record, a
+  self-service verification kit, the vectors shipped inside the wheel.
+  Post-freeze questions are answered in numbered
+  [clarifications](specs/pala-1/CLARIFICATIONS.md); the core text has not
+  changed.
+- **The inference profile records the agent's tool loop** — calls,
+  results, guard refusals, incidents and oversight — from the wire it
+  mediates and from the surfaces that report to it: the ingestion route, agent
+  hooks (Claude Code, Codex), the LiteLLM callback and the MCP proxy, and
+  OpenTelemetry GenAI traces. Each record says how it was observed, and
+  what its recorder could not see (profile r5 source marks, r6 outcome
+  `unobserved`).
+- **Retention is bounded and declared in the chain.** Rotation with a
+  policy, segments that verify alone, and since r6 a continuation record at
+  every cut carrying the derived root of everything before it — so the
+  survivors of a deletion explain themselves.
+- **The trail can leave the island.** SCITT signed statements (construction
+  v3 carries the derived root), prefix-consistency proofs, evidence
+  bundles, a published report schema.
+- **The level-3 engine is complete and measured** (0.3–0.6): continuous
+  batching, server-side tool loop, shared-prefix KV, KV persistence and a
+  content-addressed KV store behind the ADR-0002 seam, measured on 1.5B and
+  7B — see `results/CONSOLIDATION-0.5.md` and `POSITIONING.md`.
 
 ---
 
-## Reframing: two planned steps were stronger as policy, not mechanism
+## Next: 0.14 — real traffic and testing
 
-External review sharpened two steps we were about to build as raw
-mechanism into their more valuable framing. Both are now landed in that
-sharper form:
+0.13 shipped the adapters; 0.14 is about evidence that they hold on real
+traffic, outside our own test suite.
 
-- **N4 was "shared-prefix KV"; it became prefix-aware slot
-  orchestration.** The value is not `seq_cp` (llama.cpp's primitive) but
-  the *policy* over it: agent→slot affinity, prefix-aware routing,
-  cache-invalidation-aware placement. The shared-prefix holder (N4a/N4b)
-  is the *first case* of this policy; broader prefix-aware routing grows
-  out of it as scheduling matures.
+- **Run records on real traffic** for both adapter families (agent hooks,
+  OpenTelemetry), on maintainers' hardware and accounts, filed under
+  `docs/specs/pala-1/independent-runs/`.
+- **OpenCode, revisited** (O1–O6): the plugin surface changed under us
+  once; re-measured on a current release.
+- **`COMPATIBILITY.md`** — which client and framework versions are known to
+  work, from the surface checker's dated reports, not from memory.
+- **Listings** in the ecosystems the adapters target, once the run records
+  exist to point at.
+- **The reading surface, towards its 1.0 contract** — the U track in
+  [CONSUMER-SURFACE.md](CONSUMER-SURFACE.md): re-exports with a contract
+  test (U19, U20), violation codes (U24), `empty_container` (U26),
+  `container_check()` (U21), and `verify_segment_set()` (U18).
+- **Independent verification of what is new** — a from-the-spec run of the
+  inference profile r3–r6, and bridge run B3 reproducing SCITT statement
+  construction v3. These depend on people outside the project and are
+  planned, not promised for a date.
 
-- **N6 was "KV save/restore"; it became a content-addressed KV store.**
-  Plain `save_state`/`load_state` (N6) is the primitive — `--slot-save-path`
-  already exists in llama.cpp. The value is the content-addressed reuse
-  layer (N6b): "LMCache for edge," addressing a warm KV by what it
-  represents rather than where it happens to be stored.
+---
+
+## Towards 1.0
+
+PALA-1 is already at v1.0. **Palimpsests 1.0** is a different promise: that
+a consumer written against it keeps working, and keeps meaning the same
+thing, until 2.0 — and that defects reported against it will be fixed.
+The criteria, agreed in October 2026:
+
+- **A stable public API — the main criterion.** The reading surface is
+  defined, test-pinned and phased in by [CONSUMER-SURFACE.md](CONSUMER-SURFACE.md):
+  its rules on meaning (frozen `None` semantics, open vocabularies, machine
+  fields versus sentences) already apply from 0.13; the structural rules
+  (one import path, no removal within a major, deprecation over one minor)
+  take effect at 1.0. The writer gets a contract of its own before then
+  (U27), for runtime integrators.
+- **Stable formats beside the frozen core.** The report
+  (`pala-verification-report/1`), the bundle (`pala-bundle/1`), the
+  consistency proof (`pala-consistency-proof/1`) and the segments manifest
+  (`pala-segments/1`, which still needs a specification document of its
+  own) change only by format-id bump. SCITT statement construction v3
+  joins them after an independent reproduction.
+- **Verification from our side, written down.** What is checked before
+  every release — the suites on three platforms, the vectors, the surface
+  checker, a reproducible build — as a checklist anyone can read, not a
+  habit.
+- **Readiness to fix, declared as a commitment.** Which versions receive
+  fixes, how a vulnerability is handled and how fast, and that a critical
+  problem reported by someone running Palimpsests is the first priority.
+  The OpenSSF Gold badge and Scorecard are the practice this rests on;
+  1.0 makes it a stated promise.
+
+**Not a gate:** an independent security audit. It is welcome and it is a
+question of funding; it does not block the work, and until it happens the
+documentation says it has not happened.
+
+**Not a criterion we control:** users. A stable API comes first; users
+follow it.
+
+---
+
+## Later, unscheduled
+
+- **Assurance tiers B and C** beyond today's PKCS#11 anchor — a hardware
+  root of trust and an external witness — gated on the tier open questions
+  (TPM clear semantics, witness longevity).
+- **A storage-boundary `SHED` class and a predictive "boundary
+  approaching" event** — the two `Planned` rows of the ISO/IEC 24970
+  mapping.
+- **Anchoring the segments manifest** (retention-continuation open issue 2).
+- **A disk-backed KV store** — gated on a MAC over `state_set` input first:
+  that is a real trust boundary.
+- **A discrete-GPU run** — owed before any speed ratio is presented as
+  hardware-general; the integrated GPU flatters every prefill-saving
+  mechanism.
+- **ISO/IEC 42001 and 23894 mappings**, condensed, in the form of the
+  existing ones.
+- **Speculative decoding** (N7) with its structured-output interlock, and
+  the research items below.
 
 ---
 
@@ -118,7 +155,7 @@ level-3 speed mechanisms reach parity with a tuned `llama-server`, not an
 edge over it; the project's differentiation is the audit/compliance story
 and the deployment model, not another edge perf feature. Sleep-time is a
 genuine idea and stays recorded here, but it is **not scheduled** — effort
-goes to the verifiable-audit direction (Working order below) instead. Its
+goes to the verifiable-audit direction (the sections above) instead. Its
 benefit would still be *measured, not asserted*, if it is ever built.
 
 ---
@@ -137,46 +174,6 @@ benefit would still be *measured, not asserted*, if it is ever built.
   (auto-configure spec-decode per workload; e.g. raise `prompt_lookup_min`
   on tool-call turns to stop corrupting tool output). Small feature, real
   reliability, strong competence signal. Belongs with N7 (spec decoding).
-
----
-
-## Working order (subject to revision)
-
-The fake-backend skeleton (N1 → N3a → N3b → N5 → N-pos → N4a → N4b → N6 →
-N6b) is **done**; the real backend is **validated on hardware**; and the
-**0.5 measurement campaign is complete** (tagged 0.6.0). What follows is a
-change of direction, not more of the same.
-
-1. ~~**Real `LlamaCppBackend` + the measurement campaign.**~~ **Done
-   (0.4 → 0.6.0).** The ctypes backend runs a real model, and all three
-   level-3 mechanisms — Tool Loop, Shared Prefix, KV Persistence — are
-   measured on 1.5B and 7B against a tuned `llama-server`, in isolation and
-   in a composite. The honest result: **on speed the mechanisms reach
-   parity with a tuned server**, not an edge over it; the real
-   differentiators are session density (Shared Prefix, 8.2×), the ~3.5–4×
-   full-stack value of the mechanisms together, and the in-process,
-   no-server, auditable deployment model. `kv_unified` shipped first-class
-   (#81). See `results/CONSOLIDATION-0.5.md` and `docs/POSITIONING.md`.
-2. **Verifiable audit — the format is the deliverable (0.7).** The next
-   direction, chosen because the campaign showed the moat is
-   audit/compliance and the deployment model, not raw speed. Freeze a
-   self-describing, byte-level audit format (envelope + three-question
-   verification + a graded assurance-tier field) with test vectors and a
-   reference verifier an independent party can implement without our code;
-   extract the audit subsystem behind a public API; have the library emit
-   the format and `audit verify` check it.
-3. **Assurance tiers B/C (0.8)** — a hardware root of trust and an external
-   witness (transparency-log / TSA), the stronger-than-local anchors.
-   Gated on the tier open questions (TPM clear semantics, witness
-   longevity).
-4. **Deferred, unscheduled:** a disk-backed KV store (needs `state_set`
-   MAC first — a real trust boundary), a discrete-GPU run (owed before any
-   speed ratio is presented as hardware-general), sleep-time compute
-   (above), N7 + spec-decode interlock.
-
-The priority is no longer speed measurement — that chapter closed with
-0.6.0. It is making the audit trail *independently verifiable*: a format a
-regulator can check without trusting our binary.
 
 ---
 
