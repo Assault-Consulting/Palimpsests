@@ -1,8 +1,8 @@
-# <img src="assets/icon-dark.svg" alt="" height="30" align="center"> Palimpsests
+# <img src="https://raw.githubusercontent.com/Assault-Consulting/Palimpsests/main/assets/icon-dark.svg" alt="" height="30" align="center"> Palimpsests
 
 **Local-first LLM inference with a tamper-evident, independently-verifiable audit trail — built for regulated and air-gapped deployments under the EU AI Act. The audit format is frozen; the inference is measured.**
 
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE)
 [![CI](https://github.com/Assault-Consulting/Palimpsests/actions/workflows/ci.yml/badge.svg)](https://github.com/Assault-Consulting/Palimpsests/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/palimpsests.svg)](https://pypi.org/project/palimpsests/)
 [![Python](https://img.shields.io/pypi/pyversions/palimpsests.svg)](https://pypi.org/project/palimpsests/)
@@ -10,19 +10,21 @@
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Assault-Consulting/Palimpsests/badge)](https://scorecard.dev/viewer/?uri=github.com/Assault-Consulting/Palimpsests)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21978107.svg)](https://doi.org/10.5281/zenodo.21978107)
 
+**Website: [palimpsests.dev](https://palimpsests.dev)** · **The PALA-1 format: [palimpsests.dev/pala-1](https://palimpsests.dev/pala-1/)**
+
 > **Status: v0.12 — the audit format is the deliverable. The reader now
 > verifies a million-record chain in bounded memory (measured on hardware:
 > 4.8 GB → 0.57 GB), a prefix of a chain can be proven a prefix without
 > shipping the rest, and the chain records the tool loops it cannot see
 > as well as the ones it can
-> ([what a receipt proves — and what it doesn't](docs/INTEROP-SCITT.md)).** The **[PALA-1
-> format](docs/specs/pala-1/PALA-1.md)** — *Portable Append-only Log for
+> ([what a receipt proves — and what it doesn't](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/INTEROP-SCITT.md)).** The **[PALA-1
+> format](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/specs/pala-1/PALA-1.md)** — *Portable Append-only Log for
 > Audit* — is **frozen at v1.0**: a
 > self-describing, byte-level audit format with byte-exact test vectors, a CC0
 > reference implementation, a stdlib-only production codec, and the
 > three-question `palimpsests pala verify` CLI — with **five independent
 > verifier implementations (three external) on record** and a self-service
-> [verification kit](docs/specs/pala-1/verification-kit/README.md). The writer
+> [verification kit](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/specs/pala-1/verification-kit/README.md). The writer
 > emits it end-to-end with cross-boot resume; the writer APIs remain
 > experimental and may change before v1.0. Verify it yourself; do not take our
 > word for it — the published vectors now ship **inside the wheel**, and
@@ -35,12 +37,12 @@
 > 1.5B, rising to ~4× on 7B**, with an **8.2× session-density** crossing under a
 > shared prefix, matching a tuned `llama-server` in-process without running a
 > server. Method, numbers, and limits: **[Agentic serving](#agentic-serving-level-3)**
-> below and **[results/](results/)**.
+> below and **[results/](https://github.com/Assault-Consulting/Palimpsests/tree/main/results/)**.
 >
-> The integrity story is in **[SECURITY.md](SECURITY.md)** and
-> **[docs/ASSURANCE-CASE.md](docs/ASSURANCE-CASE.md)**; the honest
+> The integrity story is in **[SECURITY.md](https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md)** and
+> **[docs/ASSURANCE-CASE.md](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/ASSURANCE-CASE.md)**; the honest
 > target-vs-measured performance picture is in
-> **[docs/POSITIONING.md](docs/POSITIONING.md)**.
+> **[docs/POSITIONING.md](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/POSITIONING.md)**.
 
 ---
 
@@ -65,14 +67,14 @@ pip install 'palimpsests[serve]'
 palimpsests serve         # OpenAI-compatible endpoint on http://127.0.0.1:11435/v1
 ```
 
-New here? **[Start here — in plain words](docs/START-HERE.md)**: seven
+New here? **[Start here — in plain words](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/START-HERE.md)**: seven
 words, five minutes, and what enters the chain and what does not.
 
 Compliance mappings, architecture, and the assurance case are one link
-deep: **[AUDIT-ARCHITECTURE](docs/AUDIT-ARCHITECTURE.md)** ·
-**[EU-AI-ACT-MAPPING](docs/compliance/EU-AI-ACT-MAPPING.md)** ·
-**[ASSURANCE-CASE](docs/ASSURANCE-CASE.md)** ·
-**[the frozen PALA-1 spec](docs/specs/pala-1/PALA-1.md)**.
+deep: **[AUDIT-ARCHITECTURE](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/AUDIT-ARCHITECTURE.md)** ·
+**[EU-AI-ACT-MAPPING](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/compliance/EU-AI-ACT-MAPPING.md)** ·
+**[ASSURANCE-CASE](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/ASSURANCE-CASE.md)** ·
+**[the frozen PALA-1 spec](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/specs/pala-1/PALA-1.md)**.
 
 ---
 
@@ -138,7 +140,7 @@ inference runs* and *whether the log can be trusted* are first-order concerns.
   anchor together. Catching that would need a commitment outside the host's trust
   boundary (a remote append-only log, a notary, a transparency log), which
   Palimpsests does not provide. The full threat model, including which attacker
-  capabilities are and are not detected, is in **[SECURITY.md](SECURITY.md)**.
+  capabilities are and are not detected, is in **[SECURITY.md](https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md)**.
 
 These map onto real obligations. The **EU AI Act** (Regulation (EU) 2024/1689)
 makes automatic, lifetime event logging a legal requirement for high-risk systems
@@ -146,26 +148,26 @@ makes automatic, lifetime event logging a legal requirement for high-risk system
 autonomous tool-calling agent is a strong candidate for the high-risk (Annex III)
 classification. Article 12 does not say *tamper-proof*, but a silently-alterable
 log has little evidentiary value in an audit; a tamper-evident trail targets that
-gap. The **[Article 12 mapping](docs/compliance/EU-AI-ACT-MAPPING.md)** sets out,
+gap. The **[Article 12 mapping](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/compliance/EU-AI-ACT-MAPPING.md)** sets out,
 requirement by requirement, which properties ship and which are planned — in the
 claim form *"enables a provider/deployer to meet,"* not *"is compliant."* A
-companion **[ISO/IEC 24970 mapping](docs/compliance/24970-MAPPING.md)** covers the
+companion **[ISO/IEC 24970 mapping](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/compliance/24970-MAPPING.md)** covers the
 AI-logging standard (and its Annex Z presumption of conformity), and
-**[docs/RETENTION.md](docs/RETENTION.md)** gives the measured storage math for the
+**[docs/RETENTION.md](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/RETENTION.md)** gives the measured storage math for the
 six-month duty.
 
 **This is not a compliance claim.** The project is not certified, the audit log's
 implementation has not been independently pen-tested, and the AI Act's own
 technical standards are not yet final. Full references, caveats, and the moving
-timeline are in **[SECURITY.md](SECURITY.md)**; the honest target-vs-measured
-performance picture is in **[docs/POSITIONING.md](docs/POSITIONING.md)**. The
+timeline are in **[SECURITY.md](https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md)**; the honest target-vs-measured
+performance picture is in **[docs/POSITIONING.md](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/POSITIONING.md)**. The
 structured argument that the project delivers these properties — claims, evidence,
 and the explicit residuals and defeaters — is the
-**[assurance case](docs/ASSURANCE-CASE.md)**.
+**[assurance case](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/ASSURANCE-CASE.md)**.
 
 For where the project stands against external frameworks — a self-attested
 **OSPS Baseline Level 2** and **SLSA Build Level 2** release provenance, each
-with its limits — see **[Standards posture](SECURITY.md#standards-posture)**.
+with its limits — see **[Standards posture](https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md#standards-posture)**.
 
 ---
 
@@ -216,7 +218,7 @@ it can demonstrate.
 It is also an **inference library, not a certified compliance product** — it
 provides primitives designed to help address regulatory obligations, but using
 it does not by itself make a deployment compliant. See
-**[SECURITY.md](SECURITY.md)**.
+**[SECURITY.md](https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md)**.
 
 ---
 
@@ -305,7 +307,7 @@ The `chat` function fits the conversation to the context budget (sink + window +
 evict) before it reaches the engine, and records the call to the audit log —
 you get context management and auditability without wiring them yourself.
 
-**Full run + settings guide:** **[docs/USAGE.md](docs/USAGE.md)** — every
+**Full run + settings guide:** **[docs/USAGE.md](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/USAGE.md)** — every
 command, every working setting (`--context-size`, environment variables, adapter
 timeouts, `EngineMemoryConfig`), the Python API, and troubleshooting.
 
@@ -345,7 +347,7 @@ The honest bar: on *speed* Palimpsests matches a tuned `llama-server` rather tha
 beating it; its edges are **session density** under a shared prefix, the
 **~3.5–~4× full-stack** value of the three mechanisms together, and the
 in-process, no-server, auditable deployment model. Method, numbers, and limits:
-**[results/](results/)** and **[docs/POSITIONING.md](docs/POSITIONING.md)**.
+**[results/](https://github.com/Assault-Consulting/Palimpsests/tree/main/results/)** and **[docs/POSITIONING.md](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/POSITIONING.md)**.
 
 ---
 
@@ -363,8 +365,8 @@ in-process, no-server, auditable deployment model. Method, numbers, and limits:
 - **`registry.py`** — one active engine globally (radio, not checkbox).
 - **`audit/`** — every model / KV operation is auditable.
 
-Full design: **[ARCHITECTURE.md](ARCHITECTURE.md)**. Positioning, audiences, and
-performance targets: **[docs/POSITIONING.md](docs/POSITIONING.md)**.
+Full design: **[ARCHITECTURE.md](https://github.com/Assault-Consulting/Palimpsests/blob/main/ARCHITECTURE.md)**. Positioning, audiences, and
+performance targets: **[docs/POSITIONING.md](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/POSITIONING.md)**.
 
 ---
 
@@ -428,7 +430,7 @@ the novelty is in this composition and its seams, not in a new inference kernel.
 - [x] **v0.4 — real `LlamaCppBackend` + first benchmark** — the in-process
       ctypes backend runs a real model on hardware; the first tool-loop-vs-
       re-prefill measurement lands (a CPU-only 1.5B sanity check) per
-      [docs/BENCHMARKING.md](docs/BENCHMARKING.md). The *empirical* half begins.
+      [docs/BENCHMARKING.md](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/BENCHMARKING.md). The *empirical* half begins.
 - [x] **0.5.1 (dev) — Tool Loop benchmark campaign** — full three-arm sweeps
       (ours / naive re-prefill / tuned `llama-server`) on 1.5B and 7B
       (iGPU/Vulkan), under a transport-fair headline convention. Result: the
@@ -436,12 +438,12 @@ the novelty is in this composition and its seams, not in a new inference kernel.
       both models), and runs up to ~3.9× over re-prefilling with no tool loop at
       all — the value of the loop itself, *not* an edge over the server. A
       per-sequence context-budget trade-off surfaced at deep histories. Reports:
-      [results/](results/).
+      [results/](https://github.com/Assault-Consulting/Palimpsests/tree/main/results/).
 - [x] **v0.5 — integrity & supply chain** — the audit log becomes genuinely
       tamper-evident (hash chain + out-of-band head anchor + `audit verify`),
       the KV-state deserialization path is validated and fuzzed, releases ship a
       reproducible CycloneDX SBOM and a signed GitHub Release, and the project's
-      governance and a [security assurance case](docs/ASSURANCE-CASE.md) are
+      governance and a [security assurance case](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/ASSURANCE-CASE.md) are
       documented.
 - [x] **0.5 measurement campaign complete** — Shared Prefix and KV Persistence
       measured in isolation (1.5B and 7B), then a composite run (also 1.5B and 7B)
@@ -451,7 +453,7 @@ the novelty is in this composition and its seams, not in a new inference kernel.
       multiplying), and the full stack runs **~3.5× over no mechanisms** (rising to ~4× on 7B),
       dominated by the Tool Loop. Shared Prefix also gives an **8.2×
       session-density** crossing on a fixed KV budget. Reports:
-      [results/](results/).
+      [results/](https://github.com/Assault-Consulting/Palimpsests/tree/main/results/).
 - [x] **v0.6 — campaign consolidated + `kv_unified` first-class** — the
       unified KV pool ships as a supported, tested backend parameter, turning
       the 8.2× session-density crossing from a benchmark demonstration into a
@@ -461,26 +463,26 @@ the novelty is in this composition and its seams, not in a new inference kernel.
       compute is deprioritized — the differentiation is audit/compliance and
       the deployment model, not raw speed.
 - [x] **v0.7 — verifiable audit: the format is the deliverable** —
-      [PALA-1](docs/specs/pala-1/PALA-1.md) is **frozen at v1.0**: a
+      [PALA-1](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/specs/pala-1/PALA-1.md) is **frozen at v1.0**: a
       self-describing, byte-level audit format with byte-exact test vectors,
       a CC0 reference implementation, a stdlib-only production codec, the
       three-question `palimpsests pala verify` CLI, and four independent
       verifier implementations (two external) on record; the writer emits it
       end-to-end with cross-boot resume, plus a self-service
-      [verification kit](docs/specs/pala-1/verification-kit/README.md). The
+      [verification kit](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/specs/pala-1/verification-kit/README.md). The
       lean tag is deliberate: the format needed no more code to be finished.
 - [x] **v0.8 — audit semantics + public API** — incident/oversight record
       kinds (`INCIDENT_CANDIDATE`, `OVERSIGHT_ACK` with a pseudonymous operator id,
       documented erasure), additive in the frozen profile; verifier
       advisories (referential integrity, boot-scoped monotonic drift);
       JSONL export; the `AuditReader` public API; retention guidance. See
-      [docs/ROADMAP.md](docs/ROADMAP.md).
+      [docs/ROADMAP.md](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/ROADMAP.md).
 - [x] **v0.9 — the tool loop on the record + the standards groundwork** —
       profile r3 (`TOOL_CALL`/`TOOL_RESULT`, the loop-limit guard) end to end:
       spec, byte-exact companion vectors, writer, session wiring, reader
       recognition and advisories (including span pairing — the resolution of
       the fifth independent run's finding); post-freeze
-      [CLARIFICATIONS](docs/specs/pala-1/CLARIFICATIONS.md); a fifth
+      [CLARIFICATIONS](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/specs/pala-1/CLARIFICATIONS.md); a fifth
       independent verification (Perl 5, hand-rolled NIST-validated AES-GCM).
 - [x] **v0.10 — value in one command, and a public consumer surface** —
       `palimpsests demo` (an audited agent turn, verified, with no model or
@@ -492,14 +494,14 @@ the novelty is in this composition and its seams, not in a new inference kernel.
       `merkle_checkpoint`, the `pala bundle` evidence bundle, time-health and
       per-boot analytics, the `pala-verification-report/1` model with a JSON
       Schema shipped beside the vectors, `pala segment` for retention, and
-      [INTEGRATION-SURFACE](docs/INTEGRATION-SURFACE.md) declaring the
+      [INTEGRATION-SURFACE](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/INTEGRATION-SURFACE.md) declaring the
       stability class of every channel.
 - [x] **v0.11 — the trail leaves the island** — the SCITT bridge from
       construction to registered receipt: one COSE Signed Statement per
       published head, reproduced byte-for-byte twice from the referenced
       standards under a stated contamination boundary, a registration run
       with a receipt verified offline from the published artifacts alone,
-      and [INTEROP-SCITT](docs/INTEROP-SCITT.md) stating what a receipt
+      and [INTEROP-SCITT](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/INTEROP-SCITT.md) stating what a receipt
       proves and what it does not. Plus the production duty cycle (container
       rotation with a policy, a PKCS#11 anchor store, `serve` auth and real
       token usage, `pala report`), reader surface for downstream tooling,
@@ -517,7 +519,7 @@ the novelty is in this composition and its seams, not in a new inference kernel.
       prefill-saving mechanism, so these ratios compress on fast prefill); a
       disk-backed KV store (gated on a `state_set` MAC); speculative decoding.
       Sleep-time compute is not scheduled. See
-      [docs/ROADMAP.md](docs/ROADMAP.md).
+      [docs/ROADMAP.md](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/ROADMAP.md).
 
 Each level graduates by flipping the corresponding `capabilities` flag from
 `False` to `True`. A flipped flag means the *mechanism* is implemented and
@@ -532,14 +534,14 @@ a multi-hop agent, and the in-process, no-server, auditable deployment model.
 
 ## Contributing
 
-Early, but PRs and issues welcome. See [CONTRIBUTING.md](CONTRIBUTING.md), our
-[Code of Conduct](CODE_OF_CONDUCT.md), and [GOVERNANCE.md](GOVERNANCE.md) (how the
+Early, but PRs and issues welcome. See [CONTRIBUTING.md](https://github.com/Assault-Consulting/Palimpsests/blob/main/CONTRIBUTING.md), our
+[Code of Conduct](https://github.com/Assault-Consulting/Palimpsests/blob/main/CODE_OF_CONDUCT.md), and [GOVERNANCE.md](https://github.com/Assault-Consulting/Palimpsests/blob/main/GOVERNANCE.md) (how the
 project is run and where decisions are made).
 Python code lands via PR (never direct to `main`); ruff `["E","F","I","B","UP"]`,
 line length 100, Python 3.11+, pytest.
 
-Security issues: please report privately — see [SECURITY.md](SECURITY.md).
+Security issues: please report privately — see [SECURITY.md](https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md).
 
 ## License
 
-[Apache-2.0](LICENSE).
+[Apache-2.0](https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE).
