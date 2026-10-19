@@ -8,6 +8,154 @@ API changes.
 
 ## [Unreleased]
 
+## [0.13.0] — 2026-10-19
+
+**Additive for the wire — the PALA-1 core is unchanged (frozen at v1.0).**
+No envelope byte changes; the core `test-vectors.json` is byte-identical
+to 0.12.0. The inference profile gains one additive revision (r6) with
+regenerated companion vectors, and the published prefix-consistency
+vectors are pinned to the r5 prefix and byte-identical too. Four things
+happen in this release. A chain can now say why its prefix is gone. The
+audit stores hold up under concurrent processes — a release-blocking set
+of defects found by an outside review. A tool result says what its
+recorder could actually see. And two more families of clients report
+their tool loops onto the chain: coding agents through their hooks, and
+any framework instrumented with OpenTelemetry.
+
+**Behaviour changes, listed under *Changed*:** a second `serve` on one
+config directory now refuses to start; tool results at blind vantages now
+record outcome 4 instead of 0; rotated segments open with a continuation
+record that the thresholds count. **The `[serve]` extra gains one
+dependency**, `opentelemetry-proto` (it pulls only `protobuf`); the base
+package gains none.
+
+### Security
+
+- **Two processes could fork an audit chain, and a serve could run
+  without its record** (#283, #291). Both stores were guarded by a thread
+  lock only. Four processes appending to one operations log produced a
+  chain `audit verify` reported as broken in 5 runs of 5 — no attack, just
+  concurrency. The operations log now takes a cross-process lock per
+  append (several processes may write it; the chain stays linear); an
+  append waits for that lock rather than failing, and says every 30 s who
+  holds it. `close()` no longer rolls the anchor back. A PALA-1 chain has
+  one writer across processes; a second is refused with the holder's pid,
+  and the lock is taken before a torn tail is truncated. `default_audit()`
+  used to swallow every failure and serve unaudited — silently in
+  `palimpsests-serve`; a serve whose chain cannot be opened now does not
+  start, and says why.
+- **Credentials are scrubbed before they are chained** (#283), in the
+  operations log's error text and in `EVT_DETAIL`: clipping alone kept
+  any token in the first 200 characters, in a field that can never be
+  rewritten. A floor, not a guarantee.
+- **The managed `llama-server` (level 2) requires a per-launch key**
+  (#283), passed through its environment, never its command line (where
+  any local user could read it); enforcement is checked after start-up.
+  The port-selection race is still open — SECURITY.md says so.
+- A keychain audit key of the wrong size is refused (#283).
+
+### Added
+
+- **Inference profile r6** (#285): `EVENT` kind 11 `SEGMENT_CONTINUATION`
+  with tags 0x0012–0x0015, and `EVT_OUTCOME` 4 `unobserved` — a return
+  whose failure the recording vantage could not observe.
+- **Every cut declares itself** (#286): a rotating writer opens each new
+  segment with a continuation record carrying the predecessor head, the
+  segment ordinal, the retention floor (`RotationPolicy.retention_s`) and
+  the derived root of every earlier record. The cut is atomic and
+  crash-safe; an unfinished cut is folded back on resume.
+- **The reader explains a missing prefix** (#289): `declared_continuation`
+  and `continuation_contradicts_manifest` diagnoses, five §3.2 advisory
+  checks — including the declared root recomputed from the records — and
+  `outcome` / `outcome_name` on decoded tool results.
+- **`Verification.manifest`** (#296): when a diagnosis rests on the
+  segments manifest beside the file, the reader names that file, the
+  status it decided (`matches` / `contradicts` / `declared_only`) and the
+  SHA-256 of the bytes it read — one read, hashed and parsed from the same
+  buffer.
+- **A `not_a_container` diagnosis** (#297) for a file whose first byte is
+  not the record magic; such a file used to be diagnosed as a truncated
+  tail — a false sentence in a published verdict.
+- **Sparse record access** (#294): `record_count`, `record_at(index)`,
+  `record_by_seq(seq)` and `header_at(index)` decode only the record asked
+  for. One record used to cost a full decode — 16.9 s and 1.9 GB at a
+  million records.
+- **Codex** (#293): `POST /v1/pala/hooks/codex` and a one-file command-hook
+  forwarder (`integrations/agent-hooks/palimpsests_hook.py`). Codex has no
+  failure hook, so its results are recorded `unobserved`; the README says
+  first that an untrusted Codex hook is skipped silently.
+- **OpenTelemetry GenAI traces** (#299, #300): `POST /v1/traces`, OTLP/HTTP
+  in JSON or protobuf, optionally gzip. Each `execute_tool` span becomes
+  one reported call/result pair — `error` when the span's status is
+  `ERROR`, `ok` otherwise — with the declared conventions version in the
+  call's detail and digests over canonical JSON; the rest of the trace is
+  not kept. Tested against a real framework's export (pydantic-ai 2.57.0
+  through the stock exporter 1.45.1, kept as a fixture) and watched by a
+  new `otel` probe in the surface checker.
+- **SCITT statement construction v3** (#292): the derived root over
+  records `0..last_seq` in payload key 5, under its own content type, so
+  two registered statements of one chain can be connected by a
+  consistency proof without the chain. v2 is unchanged and byte-identical;
+  `verify_statement` reads both and calls a root `recomputed` only when it
+  recomputed it. **Experimental** until an independent reproduction of v3
+  is recorded.
+- **The derived chain root, kept incrementally** (#281, #282):
+  `MerkleFrontier`, `PalaWriter.chain_root()`, the frontier recorded per
+  closed segment; `chain_root()` dropped from ~175 MiB to O(log n) memory
+  at a million records. Resume stays as fast as 0.12 (the frontier of a
+  whole chain is built on first use).
+- `AuditReader.origin_state_at()` (#277).
+
+### Changed
+
+- **A second `palimpsests serve` on one config directory refuses to
+  start** (#283), naming `PALIMPSESTS_CONFIG_DIR` as the way to run two.
+  It used to start and fork the shared chain.
+- **Tool results at blind vantages record outcome 4, `unobserved`** (#290):
+  the serve's wire path, the LiteLLM callback, a reported result that
+  states no outcome, and `NativeSession.append_tool_result` (which gains
+  `outcome=` for a caller that knows). Vantages that see failure — the
+  Claude Code hooks, MCP's `isError`, OpenTelemetry's span status — keep
+  0/1. `ok` still means a return, never a success.
+- **Rotation thresholds count the continuation record** (#286), so a
+  segment holds it and at least one record more; `rotate()` still
+  returns the closed segment's head.
+- **What a value means is held to the 1.0 standard from this release**
+  (#298): one meaning per `None`, numbers that never change meaning,
+  open vocabularies (all current members listed), machine fields versus
+  sentences. Written in `docs/INTEGRATION-SURFACE.md`; the plan to the 1.0
+  contract is `docs/CONSUMER-SURFACE.md`.
+
+### Fixed
+
+- **A tool result could bind to another route's call** (#299). The serve's
+  routes write to one chain concurrently, and a tool call's seq was read
+  *after* writing it, as `writer.seq - 1` — another route's record could
+  land in between, and the result would then reference a record that was
+  not its call. The same pattern made an escalation's `INCIDENT_CANDIDATE`
+  able to reference the wrong refusal. The seq is now taken under the lock
+  that wrote the record.
+- After old segments were deleted, a resumed writer could give a new
+  segment the name of a deleted one (#286).
+- `shredded_targets()` and the origin methods no longer decode the whole
+  chain (#295): at a million records the first origin question takes
+  2.7 s and each after it under a millisecond, against 20.6 s and 1.99 GB
+  peak before.
+- The reader's report after `verify()` is ~24 % faster at 200 000
+  records — one recovery probe per boot instead of one per event (#277).
+- **The PyPI page's links work** (#301): 44 of the README's 62 links were
+  relative and dead where PyPI renders it. The project URLs now lead to
+  [palimpsests.dev](https://palimpsests.dev) and its PALA-1 page.
+
+### Documentation
+
+- `docs/ROADMAP.md` revised for 0.13: where the project stands, 0.14, and
+  the agreed path to 1.0 (#302).
+- `docs/RETENTION.md` describes the cut declared in the chain; the
+  ISO/IEC 24970 row for deletion recorded in the surviving chain reads
+  `Merged (main, for v0.13)` and becomes `Shipped (v0.13)` with this
+  release (#290).
+
 ## [0.12.0] — 2026-09-29
 
 **Additive for the wire — the PALA-1 core is unchanged (frozen at v1.0).**
@@ -1240,7 +1388,8 @@ Initial release.
   from the OS keychain, falling back to an ephemeral key headless.
 - **CLI** — `chat`, `models`, `engine list` / `engine use`.
 
-[Unreleased]: https://github.com/Assault-Consulting/Palimpsests/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/Assault-Consulting/Palimpsests/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.13.0
 [0.12.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.12.0
 [0.11.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.11.0
 [0.10.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.10.0

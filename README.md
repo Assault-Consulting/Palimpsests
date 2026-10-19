@@ -12,11 +12,10 @@
 
 **Website: [palimpsests.dev](https://palimpsests.dev)** · **The PALA-1 format: [palimpsests.dev/pala-1](https://palimpsests.dev/pala-1/)**
 
-> **Status: v0.12 — the audit format is the deliverable. The reader now
-> verifies a million-record chain in bounded memory (measured on hardware:
-> 4.8 GB → 0.57 GB), a prefix of a chain can be proven a prefix without
-> shipping the rest, and the chain records the tool loops it cannot see
-> as well as the ones it can
+> **Status: v0.13 — the audit format is the deliverable. A chain now says
+> why its prefix is gone, a tool result says what its recorder could
+> actually see, and coding agents (Claude Code, Codex) and
+> OpenTelemetry-instrumented frameworks report their tool loops onto it
 > ([what a receipt proves — and what it doesn't](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/INTEROP-SCITT.md)).** The **[PALA-1
 > format](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/specs/pala-1/PALA-1.md)** — *Portable Append-only Log for
 > Audit* — is **frozen at v1.0**: a
@@ -514,6 +513,16 @@ the novelty is in this composition and its seams, not in a new inference kernel.
       for OpenCode, LiteLLM and MCP with their limits stated, a fix for a
       PKCS#11 anchor that answered without a PIN, and the IETF
       Internet-Draft.
+- [x] **v0.13 — the chain explains itself, and more of the loop reaches
+      it** — profile r6: every segment cut is declared in the chain with
+      the root of everything before it, so the survivors of a deletion
+      explain themselves; a tool result says when its recorder could not
+      see a failure. The audit stores hold up under concurrent processes,
+      and a result can no longer bind to another route's call. Claude Code
+      and Codex hooks and OpenTelemetry GenAI traces report onto the chain;
+      SCITT statements carry the derived root; and the rules a consumer
+      relies on are written down in
+      [CONSUMER-SURFACE](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/CONSUMER-SURFACE.md).
 - [ ] **Later** — assurance tiers B/C (hardware root of trust, external
       witness); a discrete-GPU run (the integrated GPU flatters every
       prefill-saving mechanism, so these ratios compress on fast prefill); a
