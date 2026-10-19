@@ -31,7 +31,7 @@
       "description": "PALA-1 is a compact binary format for tamper-evident audit trails, frozen at v1.0 and reproduced from the specification alone by five independent implementations.",
       "url": "https://palimpsests.dev/pala-1/",
       "inLanguage": "en",
-      "dateModified": "2026-09-30",
+      "dateModified": "2026-10-18",
       "author": {
         "@id": "https://palimpsests.dev/#org"
       },
@@ -132,7 +132,7 @@
       <p>How the implementations are counted, and when each count held, is kept in the <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/specs/pala-1/CLARIFICATIONS.md#implementation-count" rel="noopener">clarifications</a>.</p>
 
       <h2 id="internet-draft">Internet-Draft</h2>
-      <p>PALA-1 is described in an Internet-Draft, <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">draft-sparysh-pala-audit-00</a> — “PALA-1: A Tamper-Evident Audit Record Format for Constrained and Disconnected Deployments” — posted on 3 September 2026. It is an individual submission with Informational status: not an IETF standard and not a working-group document. It presents the frozen v1.0 format as it is and does not revise it; the specification and test vectors in the repository remain normative.</p>
+      <p>PALA-1 is described in an Internet-Draft, <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">draft-sparysh-pala-audit-01</a> — “PALA-1: A Tamper-Evident Audit Record Format for Constrained and Disconnected Deployments” — first posted on 3 September 2026, revised on 2 October 2026. It is an individual submission with Informational status: not an IETF standard and not a working-group document. It presents the frozen v1.0 format as it is and does not revise it; the specification and test vectors in the repository remain normative.</p>
 
       <h2 id="verify">Verify it yourself</h2>
       <p>The <a href="https://github.com/Assault-Consulting/Palimpsests/tree/main/docs/specs/pala-1/verification-kit" rel="noopener">verification kit</a> gives you the inputs, the task and a run-record template — everything needed to repeat a run from the specification alone. Every installed copy of Palimpsests also checks itself against the same published vectors:</p>
@@ -140,7 +140,7 @@
 palimpsests pala selftest</code></pre>
 
       <h2 id="profiles">Profiles</h2>
-      <p>Profiles add record kinds and tags additively, without touching the core or its vectors. The inference profile, which covers tool calls, incidents and human oversight, is at revision r5.</p>
+      <p>Profiles add record kinds and tags additively, without touching the core or its vectors. The inference profile, which covers tool calls, incidents, human oversight and declared retention cuts, is at revision r6.</p>
 
       <h2 id="licence">Licence</h2>
       <p>The specification, the test vectors and the reference implementation are dedicated to the public domain (CC0). The Palimpsests runtime is Apache-2.0.</p>
