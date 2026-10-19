@@ -32,7 +32,7 @@ AUTHOR = "Andrii Sparysh"
 # Static pages and the date each last changed. Update a date when its page changes.
 STATIC_PAGES = [
     ("/", "2026-10-04", "weekly", "1.0"),
-    ("/pala-1/", "2026-09-30", "monthly", "0.9"),
+    ("/pala-1/", "2026-10-18", "monthly", "0.9"),
     ("/verify-without-reading/", "2026-09-30", "monthly", "0.8"),
     ("/eu-ai-act-article-12/", "2026-09-30", "monthly", "0.8"),
     ("/air-gapped/", "2026-09-30", "monthly", "0.8"),
