@@ -36,12 +36,12 @@ artifact.
   `draft-kuehlewind-audit-architecture`. Its "Changes from -00" appendix
   lists every change.
 
-- `draft-sparysh-pala-audit-02.md` — in preparation, for submission
-  before the IETF 127 cut-off (2026-11-02). Corrects the key-identifier
-  description in §8, carries the statement construction with the root
-  in its payload, renders the test-vector table as a table, adds the
-  project page to the authors' addresses. Its "Changes from -01"
-  appendix lists every change.
+- `draft-sparysh-pala-audit-02.md` — posted 2026-10-22, expires
+  2027-04-25; submitted from the `rendered-drafts` artifact of commit
+  `94ce46d9`. Corrects the key-identifier description in §8, carries the
+  statement construction with the root in its payload, renders the
+  test-vector table as a table, adds the project page to the authors'
+  addresses. Its "Changes from -01" appendix lists every change.
 
 Local build:
 
@@ -105,6 +105,8 @@ Carried over; none is reason enough on its own to post a revision.
   reciprocal Agent Action Capsule run, if it happens; a registration
   with a transparency service operated by an unrelated party, if it
   happens.
+- Related work: `draft-sharif-agent-audit-trail`, offered to the AUDIT
+  BoF as an input for its record data model.
 - Before rendering: re-check every Internet-Draft description against
   the revision its reference now resolves to; references follow the
   latest revision, descriptions do not.
