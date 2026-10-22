@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI logging standards in draft: ISO/IEC 24970, prEN 18229-1 and how we map them — Palimpsests notes</title>
+<meta name="description" content="Where the AI logging standards stand in October 2026, why they matter for the EU AI Act, and how Palimpsests maps their requirements to code while the text is still moving." />
+<link rel="canonical" href="https://palimpsests.dev/notes/ai-logging-standards-24970-18229/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Andrii Sparysh" />
+<meta name="theme-color" content="#15151f" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Palimpsests" />
+<meta property="og:title" content="AI logging standards in draft: ISO/IEC 24970, prEN 18229-1 and how we map them — Palimpsests notes" />
+<meta property="og:description" content="Where the AI logging standards stand in October 2026, why they matter for the EU AI Act, and how Palimpsests maps their requirements to code while the text is still moving." />
+<meta property="og:url" content="https://palimpsests.dev/notes/ai-logging-standards-24970-18229/" />
+<meta property="og:locale" content="en" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="AI logging standards in draft: ISO/IEC 24970, prEN 18229-1 and how we map them — Palimpsests notes" />
+<meta name="twitter:description" content="Where the AI logging standards stand in October 2026, why they matter for the EU AI Act, and how Palimpsests maps their requirements to code while the text is still moving." />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BlogPosting",
+      "@id": "https://palimpsests.dev/notes/ai-logging-standards-24970-18229/#post",
+      "headline": "AI logging standards in draft: ISO/IEC 24970, prEN 18229-1 and how we map them",
+      "description": "Where the AI logging standards stand in October 2026, why they matter for the EU AI Act, and how Palimpsests maps their requirements to code while the text is still moving.",
+      "url": "https://palimpsests.dev/notes/ai-logging-standards-24970-18229/",
+      "mainEntityOfPage": "https://palimpsests.dev/notes/ai-logging-standards-24970-18229/",
+      "datePublished": "2026-10-20",
+      "dateModified": "2026-10-20",
+      "inLanguage": "en",
+      "keywords": [
+        "ai-logging",
+        "iso-iec-24970",
+        "eu-ai-act"
+      ],
+      "author": {
+        "@type": "Person",
+        "name": "Andrii Sparysh"
+      },
+      "publisher": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "isPartOf": {
+        "@id": "https://palimpsests.dev/notes/#blog"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Palimpsests",
+          "item": "https://palimpsests.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Notes",
+          "item": "https://palimpsests.dev/notes/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "AI logging standards in draft: ISO/IEC 24970, prEN 18229-1 and how we map them",
+          "item": "https://palimpsests.dev/notes/ai-logging-standards-24970-18229/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Palimpsests home">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="nav__links">
+      <a class="hide-sm" href="/#caps">Capabilities</a>
+      <a class="hide-sm" href="/pala-1/">PALA-1</a>
+      <a class="hide-sm" href="/verify-without-reading/">Verify</a>
+      <a class="hide-sm" href="/eu-ai-act-article-12/">EU AI Act</a>
+      <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
+      <a class="hide-sm" href="/integrations/">Integrations</a>
+      <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<main class="doc">
+  <div class="wrap">
+    <div class="doc__in">
+<p class="crumbs"><a href="/">Palimpsests</a> / <a href="/notes/">Notes</a></p>
+<span class="eyebrow">Note · 20 October 2026 · Andrii Sparysh</span>
+<h1 class="display">AI logging standards in draft: ISO/IEC 24970, prEN 18229-1 and how we map them</h1>
+<p>Article 12 of the EU AI Act says high-risk AI systems must record events automatically. It doesn't say which events, in what format, or how a record should be protected. That level of detail is meant to come from harmonised standards. Once a standard is harmonised and its reference is published in the Official Journal, following it gives a presumption of conformity with the parts of the Act it covers.</p>
+<p>In October 2026, the two documents that matter most for logging are both still drafts.</p>
+<h2 id="the-two-drafts">The two drafts</h2>
+<p>ISO/IEC 24970, "Artificial intelligence — AI system logging", comes from ISO/IEC JTC 1/SC 42. It describes common logging capabilities, requirements and an information model, and it's meant to be used together with a risk management system. It has reached the final draft stage, the last step before formal approval. A European adoption, prEN ISO/IEC 24970, is going through CEN/CENELEC JTC 21 and adds an annex that links it to the AI Act.</p>
+<p>prEN 18229-1, "AI trustworthiness framework — Part 1: Logging", is a European draft from CEN/CENELEC JTC 21. It covers terminology, concepts, requirements and guidance for logging AI systems, aimed at organisations that place AI systems on the market. Its enquiry draft was published in mid-2026 and the vote on it closed in August.</p>
+<p>Neither text is final. Clause numbers and details can still change, and the final versions will be sold like any other standard.</p>
+<h2 id="why-map-against-a-moving-target">Why map against a moving target</h2>
+<p>Waiting for the final text sounds safer. In practice the obligations start on 2 December 2027 for systems listed in Annex III, and a logging setup has to run for months before anyone can show six months of retained records.</p>
+<p>The 24970 draft already sets out the broad shape. Events are chosen by risk. The system logs them automatically and keeps the logs intact and available. The organisation documents what its logging covers. That was enough to start mapping, as long as the mapping couldn't be mistaken for a conformity claim.</p>
+<h2 id="how-the-mapping-works">How the mapping works</h2>
+<p>The <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/compliance/24970-MAPPING.md">ISO/IEC 24970 mapping</a> and the <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/compliance/EU-AI-ACT-MAPPING.md">EU AI Act Article 12 mapping</a> sit in the repository, next to the code they describe. Each requirement gets a row with one of four statuses:</p>
+<ul>
+  <li>Shipped, with the release it shipped in;</li>
+  <li>Planned, for scheduled work that only adds to the format;</li>
+  <li>Deployer, where the obligation belongs to the organisation running the system;</li>
+  <li>N/A, where it's outside what an inference runtime does.</li>
+</ul>
+<p>The Deployer rows matter as much as the Shipped ones. Deciding which events are worth logging is a risk decision for the organisation, and so is documenting the logging programme. A runtime can't make those decisions, and a mapping that suggested it could would be misleading.</p>
+<p>Both documents also say where their clause references come from: the public draft structure, to be checked against the final text before anyone relies on them.</p>
+<h2 id="one-example-limited-storage">One example: limited storage</h2>
+<p>The 24970 draft deals with logs that run out of space, including logs that overwrite their oldest entries. For a hash-chained log, overwriting in place isn't possible. Every record carries the hash of the one before it, so rewriting an old record would break every link after it.</p>
+<p>We took another route. Since version 0.13, <a href="https://palimpsests.dev/">Palimpsests</a> rotates its log into segments. Each new segment opens with a continuation record that names the previous segment's last hash, its own number, the retention period in force and a root that commits to every earlier record. Old segments can then be deleted under the retention policy, and what's left still explains itself. A reader can tell a declared deletion from a missing beginning that nobody accounted for.</p>
+<p>That's the general approach. Where a draft describes an outcome, we look for a way to reach it that keeps the log checkable. Where the requirement belongs to the deployer, the mapping says so plainly.</p>
+<h2 id="what-happens-next">What happens next</h2>
+<p>When ISO/IEC 24970 is published, every row will be checked against the final text and its references updated. The same will happen for prEN 18229-1 once it moves past the enquiry stage. Until then, read the mapping as our reading of a draft.</p>
+<p>The legal side of Article 12 is summarised in <a href="https://palimpsests.dev/notes/eu-ai-act-article-12-self-hosted-ai/">EU AI Act Article 12: what it asks of AI you run yourself</a>. What makes the log itself trustworthy is in <a href="https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/">what makes an audit log tamper-evident</a>.</p>
+<div class="related">
+  <a class="btn" href="/notes/">All notes →</a>
+  <a class="btn" href="/">Palimpsests →</a>
+</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/" aria-label="Palimpsests">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="/notes/">Notes</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
