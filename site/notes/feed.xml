@@ -6,7 +6,161 @@
   <atom:link href="https://palimpsests.dev/notes/feed.xml" rel="self" type="application/rss+xml" />
   <description>Short notes on audit logs for AI systems, the EU AI Act and running language models on your own hardware.</description>
   <language>en</language>
-  <lastBuildDate>Fri, 09 Oct 2026 09:00:00 +0000</lastBuildDate>
+  <lastBuildDate>Tue, 20 Oct 2026 09:00:00 +0000</lastBuildDate>
+  <item>
+    <title>AI logging standards in draft: ISO/IEC 24970, prEN 18229-1 and how we map them</title>
+    <link>https://palimpsests.dev/notes/ai-logging-standards-24970-18229/</link>
+    <guid isPermaLink="true">https://palimpsests.dev/notes/ai-logging-standards-24970-18229/</guid>
+    <pubDate>Tue, 20 Oct 2026 09:00:00 +0000</pubDate>
+    <category>ai-logging</category>
+    <category>iso-iec-24970</category>
+    <category>eu-ai-act</category>
+    <description>Where the AI logging standards stand in October 2026, why they matter for the EU AI Act, and how Palimpsests maps their requirements to code while the text is still moving.</description>
+    <content:encoded><![CDATA[<p>Article 12 of the EU AI Act says high-risk AI systems must record events automatically. It doesn't say which events, in what format, or how a record should be protected. That level of detail is meant to come from harmonised standards. Once a standard is harmonised and its reference is published in the Official Journal, following it gives a presumption of conformity with the parts of the Act it covers.</p>
+<p>In October 2026, the two documents that matter most for logging are both still drafts.</p>
+<h2 id="the-two-drafts">The two drafts</h2>
+<p>ISO/IEC 24970, "Artificial intelligence — AI system logging", comes from ISO/IEC JTC 1/SC 42. It describes common logging capabilities, requirements and an information model, and it's meant to be used together with a risk management system. It has reached the final draft stage, the last step before formal approval. A European adoption, prEN ISO/IEC 24970, is going through CEN/CENELEC JTC 21 and adds an annex that links it to the AI Act.</p>
+<p>prEN 18229-1, "AI trustworthiness framework — Part 1: Logging", is a European draft from CEN/CENELEC JTC 21. It covers terminology, concepts, requirements and guidance for logging AI systems, aimed at organisations that place AI systems on the market. Its enquiry draft was published in mid-2026 and the vote on it closed in August.</p>
+<p>Neither text is final. Clause numbers and details can still change, and the final versions will be sold like any other standard.</p>
+<h2 id="why-map-against-a-moving-target">Why map against a moving target</h2>
+<p>Waiting for the final text sounds safer. In practice the obligations start on 2 December 2027 for systems listed in Annex III, and a logging setup has to run for months before anyone can show six months of retained records.</p>
+<p>The 24970 draft already sets out the broad shape. Events are chosen by risk. The system logs them automatically and keeps the logs intact and available. The organisation documents what its logging covers. That was enough to start mapping, as long as the mapping couldn't be mistaken for a conformity claim.</p>
+<h2 id="how-the-mapping-works">How the mapping works</h2>
+<p>The <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/compliance/24970-MAPPING.md">ISO/IEC 24970 mapping</a> and the <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/compliance/EU-AI-ACT-MAPPING.md">EU AI Act Article 12 mapping</a> sit in the repository, next to the code they describe. Each requirement gets a row with one of four statuses:</p>
+<ul>
+  <li>Shipped, with the release it shipped in;</li>
+  <li>Planned, for scheduled work that only adds to the format;</li>
+  <li>Deployer, where the obligation belongs to the organisation running the system;</li>
+  <li>N/A, where it's outside what an inference runtime does.</li>
+</ul>
+<p>The Deployer rows matter as much as the Shipped ones. Deciding which events are worth logging is a risk decision for the organisation, and so is documenting the logging programme. A runtime can't make those decisions, and a mapping that suggested it could would be misleading.</p>
+<p>Both documents also say where their clause references come from: the public draft structure, to be checked against the final text before anyone relies on them.</p>
+<h2 id="one-example-limited-storage">One example: limited storage</h2>
+<p>The 24970 draft deals with logs that run out of space, including logs that overwrite their oldest entries. For a hash-chained log, overwriting in place isn't possible. Every record carries the hash of the one before it, so rewriting an old record would break every link after it.</p>
+<p>We took another route. Since version 0.13, <a href="https://palimpsests.dev/">Palimpsests</a> rotates its log into segments. Each new segment opens with a continuation record that names the previous segment's last hash, its own number, the retention period in force and a root that commits to every earlier record. Old segments can then be deleted under the retention policy, and what's left still explains itself. A reader can tell a declared deletion from a missing beginning that nobody accounted for.</p>
+<p>That's the general approach. Where a draft describes an outcome, we look for a way to reach it that keeps the log checkable. Where the requirement belongs to the deployer, the mapping says so plainly.</p>
+<h2 id="what-happens-next">What happens next</h2>
+<p>When ISO/IEC 24970 is published, every row will be checked against the final text and its references updated. The same will happen for prEN 18229-1 once it moves past the enquiry stage. Until then, read the mapping as our reading of a draft.</p>
+<p>The legal side of Article 12 is summarised in <a href="https://palimpsests.dev/notes/eu-ai-act-article-12-self-hosted-ai/">EU AI Act Article 12: what it asks of AI you run yourself</a>. What makes the log itself trustworthy is in <a href="https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/">what makes an audit log tamper-evident</a>.</p>]]></content:encoded>
+  </item>
+  <item>
+    <title>Keeping the audit log on your own machine when your agents use cloud models</title>
+    <link>https://palimpsests.dev/notes/audit-log-for-agents-on-cloud-models/</link>
+    <guid isPermaLink="true">https://palimpsests.dev/notes/audit-log-for-agents-on-cloud-models/</guid>
+    <pubDate>Tue, 20 Oct 2026 09:00:00 +0000</pubDate>
+    <category>ai-agents</category>
+    <category>integrations</category>
+    <category>audit-log</category>
+    <description>Agents that call hosted models can still keep their tool-call record locally. How Palimpsests records Claude Code, Codex, OpenTelemetry and LiteLLM tool calls, and what that record proves.</description>
+    <content:encoded><![CDATA[<p><a href="https://palimpsests.dev/">Palimpsests</a> started as a runtime for models that run on your own hardware, often on networks with no internet at all. Many teams work differently. Their agents run on their own servers or laptops, while the model behind them is a hosted one reached through an API. The prompts leave the building. The question is whether the record of what the agent did has to leave with them.</p>
+<p>It doesn't. The way we put it: the audit record stays on your machine, even when the model doesn't.</p>
+<h2 id="why-keep-a-separate-record">Why keep a separate record</h2>
+<p>The model provider keeps its own logs, and they may well be good. They're still the provider's logs. You can't verify them independently and you don't decide how long they're kept. They also record what the model said, not what your agent then did with your files and systems.</p>
+<p>The EU AI Act asks deployers of high-risk systems to keep the automatically generated logs that are under their control. For an agent, the part that's fully under your control is its tool loop: which tools it called, with what input, and what came back. That's what these integrations record.</p>
+<h2 id="what-gets-recorded">What gets recorded</h2>
+<p>A local Palimpsests server receives each tool call and its result from the client and writes them into a PALA-1 chain. Arguments and results are stored as SHA-256 digests of a canonical form, never as content. Each pair is marked as reported by the client, so it can't be confused with a call the runtime made itself.</p>
+<p>Since version 0.13 each result also states what its recorder could see. Where a client reports failures, the result is recorded as ok or error. Where it can't tell a failed call from a successful one, the result is recorded as unobserved. An ok means a result came back. It never means the action succeeded.</p>
+<h2 id="coding-agents-claude-code-and-codex">Coding agents: Claude Code and Codex</h2>
+<p>Claude Code can send its hooks over HTTP. You add three entries to its settings file, pointing PreToolUse, PostToolUse and PostToolUseFailure at the local server, and there's nothing to install. Claude Code reports failures, so its results are recorded as ok or error.</p>
+<p>Codex only runs command hooks, so a small forwarder script passes each event to the server. Codex has no failure hook, which means its results are recorded as unobserved. One thing to watch: Codex skips an untrusted hook without any warning, and the tools then run with nothing recorded. The README explains how to check for it.</p>
+<p>Both adapters were written against what the hooks actually send, measured on Claude Code 2.1.288 and Codex CLI 0.160.0. The details are in the <a href="https://github.com/Assault-Consulting/Palimpsests/tree/main/integrations/agent-hooks">agent hooks README</a>.</p>
+<h2 id="frameworks-with-opentelemetry">Frameworks with OpenTelemetry</h2>
+<p>Many agent frameworks already emit OpenTelemetry traces, with one span per tool execution under the GenAI conventions. Point the trace exporter at the server and those spans become recorded tool calls:</p>
+<pre><code>export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://127.0.0.1:11435/v1/traces
+export OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=http/protobuf</code></pre>
+<p>A span with an error status is recorded as an error. To get digests of the arguments and results, turn on content capture in the instrumentation. Without it the pair is recorded with no digests, which makes a weaker record. This path was tested against a real framework's export from pydantic-ai 2.57.0. Setup is in the <a href="https://github.com/Assault-Consulting/Palimpsests/tree/main/integrations/otel">OpenTelemetry README</a>.</p>
+<h2 id="gateways-and-tool-servers">Gateways and tool servers</h2>
+<p>If your agents reach hosted models through LiteLLM, its callback reports every structured tool loop that passes through it. If they use MCP servers over standard input and output, a small proxy in front of each server records both the request and the response of every tool call. Both are covered in <a href="https://palimpsests.dev/notes/recording-agent-tool-calls/">recording the tool calls your agent already makes</a>.</p>
+<h2 id="limits">Limits</h2>
+<p>A reported record shows what the client said happened and that nobody changed the report later. It doesn't prove the tool ran, and it can't see a tool the client never reports. Hook interfaces change between client versions, so we probe them regularly and note the version each claim was checked on. The record is only as trustworthy as the chain it sits in, and what makes that chain trustworthy is covered in <a href="https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/">what makes an audit log tamper-evident</a>.</p>
+<p>The full list of integrations is on <a href="https://palimpsests.dev/integrations/">integrations</a>.</p>]]></content:encoded>
+  </item>
+  <item>
+    <title>OpenSSF Gold software and the Cyber Resilience Act</title>
+    <link>https://palimpsests.dev/notes/openssf-gold-cyber-resilience-act/</link>
+    <guid isPermaLink="true">https://palimpsests.dev/notes/openssf-gold-cyber-resilience-act/</guid>
+    <pubDate>Tue, 20 Oct 2026 09:00:00 +0000</pubDate>
+    <category>cyber-resilience-act</category>
+    <category>openssf</category>
+    <category>supply-chain</category>
+    <description>What the EU Cyber Resilience Act asks of products built from open-source components, what an OpenSSF Gold badge shows about a component, and what it doesn&#x27;t.</description>
+    <content:encoded><![CDATA[<p>If you sell software or connected hardware in the EU, the Cyber Resilience Act now applies to you in stages. Regulation (EU) 2024/2847 entered into force in December 2024. Since 11 September 2026, manufacturers have had to report actively exploited vulnerabilities and severe incidents. Most of the rest arrives on 11 December 2027, when the essential requirements, technical documentation and CE marking become mandatory.</p>
+<p>Products today are built largely from open-source components. The CRA puts the responsibility for those components on the manufacturer that ships them, not on the people who wrote them. So when you choose a library, you're also choosing the evidence you'll need about it later. This note looks at what an OpenSSF Best Practices Gold badge tells you about a component, using our own project as the example.</p>
+<h2 id="who-the-cra-applies-to">Who the CRA applies to</h2>
+<p>Free and open-source software developed outside any commercial activity is outside the regulation. Once software is placed on the market in the course of a commercial activity, the company doing that is treated as a manufacturer and carries the full set of obligations. There's also a lighter role, the open-source software steward: an organisation that supports open-source software intended for commercial use without selling it itself. Stewards have limited duties, and their reporting only starts in December 2027.</p>
+<p>Palimpsests is free and licensed under Apache-2.0. If you build it into a product you sell in the EU, your company is the manufacturer of that product, and the CRA's questions about its components are yours to answer.</p>
+<h2 id="what-the-cra-asks-about-components">What the CRA asks about components</h2>
+<p>Several parts of Annex I touch on this directly:</p>
+<ul>
+  <li>a software bill of materials in a common machine-readable format, covering at least the top-level dependencies;</li>
+  <li>a process for handling vulnerabilities, with a published way to report them and security updates delivered without delay;</li>
+  <li>protection of the integrity of data, commands and configuration;</li>
+  <li>recording and monitoring of relevant internal activity, such as access to or changes of data, services or functions, with an opt-out for the user.</li>
+</ul>
+<p>The last point is easy to miss. A product has to be able to show what happened inside it, and a log nobody can check is weak evidence of that. That's the subject of a separate note on <a href="https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/">what makes an audit log tamper-evident</a>.</p>
+<h2 id="what-the-gold-badge-says">What the Gold badge says</h2>
+<p>The OpenSSF Best Practices badge has three levels: passing, silver and gold. The project answers each criterion publicly on bestpractices.dev, with a justification anyone can read, and a few answers are checked automatically. Most of it is self-assessment. Its value is that every answer is specific and can be checked against the repository. OpenSSF also maintains the OSPS Baseline, a shorter list of security controls written with the CRA in mind.</p>
+<p>For <a href="https://palimpsests.dev/">Palimpsests</a>, the Gold level rests on things you can open and inspect:</p>
+<ul>
+  <li>every change goes through a pull request approved by someone other than its author, and the organisation requires two-factor authentication;</li>
+  <li>CI refuses to merge if statement coverage drops below 90% or branch coverage below 80%;</li>
+  <li>coverage-guided fuzzing and static analysis run in CI;</li>
+  <li>releases go to PyPI through Trusted Publishing with Sigstore attestations, and each GitHub release carries a CycloneDX SBOM of the base install;</li>
+  <li>the v0.10.0 wheel was rebuilt from source and matched the published file byte for byte;</li>
+  <li>the security policy explains how to report a vulnerability privately and lists the risks we know about and haven't fixed yet.</li>
+</ul>
+<p>The full list, criterion by criterion, is in the <a href="https://www.bestpractices.dev/projects/13534">public registry entry</a> and in our <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/BADGE-STATUS.md">badge status file</a>.</p>
+<h2 id="what-it-doesn-t-say">What it doesn't say</h2>
+<p>A badge isn't a CE mark, and the project isn't certified under the CRA or any other scheme. The badge says nothing about your product, your configuration or the way you deploy a component. It doesn't replace a security review either. Ours so far has been an internal one, done with AI assistance, and the audit log implementation hasn't had an independent penetration test.</p>
+<p>What a manufacturer gets from it is a set of facts for the technical file, each with a link, instead of a vendor questionnaire answered from memory.</p>
+<h2 id="using-it-in-practice">Using it in practice</h2>
+<p>If Palimpsests is one of your components, these are the documents to collect:</p>
+<ul>
+  <li>the SBOM attached to the release you ship;</li>
+  <li>the Sigstore provenance of the wheel, which shows the repository and workflow that built it;</li>
+  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md">SECURITY.md</a>, with the reporting channel and the accepted risks;</li>
+  <li>the <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/RELEASING.md">release process</a>, which explains how to verify the attestations yourself.</li>
+</ul>
+<p>The same reasoning works for any open-source component. Ask whether its claims point to evidence you can open, and whether its known weaknesses are written down somewhere. The logging side of the AI rules is covered in <a href="https://palimpsests.dev/notes/ai-logging-standards-24970-18229/">AI logging standards in draft</a>.</p>]]></content:encoded>
+  </item>
+  <item>
+    <title>What makes an audit log tamper-evident</title>
+    <link>https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/</link>
+    <guid isPermaLink="true">https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/</guid>
+    <pubDate>Tue, 20 Oct 2026 09:00:00 +0000</pubDate>
+    <category>audit-log</category>
+    <category>tamper-evident</category>
+    <category>security</category>
+    <description>How hash chains, anchors and witnesses make changes to a log detectable, what each one proves, and the questions to ask before trusting a tamper-evident claim.</description>
+    <content:encoded><![CDATA[<p>"Tamper-evident" appears on a lot of logging products. It should mean something specific: if someone changes the log, a person who didn't make the change can detect it later. It doesn't mean the change is impossible. That would be tamper-proof, and no log stored on a computer someone controls can promise that.</p>
+<p>Detection relies on several separate mechanisms. Each one answers its own question, and a log can have one without the others.</p>
+<h2 id="the-hash-chain">The hash chain</h2>
+<p>Each record stores the hash of the record before it. Change a record and its hash changes, so the next record's link stops matching. Remove a record from the middle and the link to the next one breaks. Reorder records and both the links and the sequence numbers go wrong.</p>
+<p>A chain answers the question "was anything inside this file altered?" Anyone with the file and the specification can check it, and the check needs no key. In PALA-1 the record bodies can even stay encrypted during the check, because each header carries a digest of its body. That part is explained in <a href="https://palimpsests.dev/notes/checking-an-ai-log-without-reading-it/">how to check an AI log without reading it</a>.</p>
+<h2 id="the-anchor">The anchor</h2>
+<p>A chain has one blind spot. If the last records are deleted, what remains is still a valid chain, only shorter. The same is true when a whole file is swapped for another consistent chain.</p>
+<p>To catch that, the latest hash has to be kept somewhere else, such as a separate file, the operating system's keychain or a hardware token. That copy is the anchor. Checking the chain against it answers a second question: "is this the whole log?" An anchor only helps if whoever could rewrite the log can't rewrite the anchor as well. That's why a hardware token is stronger than a file on the same disk.</p>
+<h2 id="the-witness">The witness</h2>
+<p>The third question is about time. Did this history exist before a certain moment? Nothing inside the log can prove it, because whoever controls the log also controls its clock. Someone outside has to sign a statement.</p>
+<p>In Palimpsests that witness can be a SCITT transparency service. Palimpsests registers one signed statement per published head. The statement holds a hash and no record content. The receipt shows that the head existed by the time it was registered, and since a head commits to every record before it, so did those records.</p>
+<h2 id="proofs-that-travel">Proofs that travel</h2>
+<p>Two more tools help when you can't hand over the whole log. An inclusion proof shows that a particular record belongs to a tree whose root you already trust, using a handful of hashes. A consistency proof shows that an older head is a prefix of a newer one, so the log only ever grew. Both use the same construction as Certificate Transparency (RFC 6962 and RFC 9162).</p>
+<h2 id="deletion-that-explains-itself">Deletion that explains itself</h2>
+<p>Logs can't grow forever. Retention rules say how long records stay, and after that they're deleted. In a hash chain, deleting the oldest records leaves a gap at the start, and a gap normally looks like tampering.</p>
+<p>Since version 0.13, Palimpsests opens each new segment with a continuation record. It names the previous segment's last hash and the retention period that applied, and it commits to every earlier record. When old segments are removed under that policy, the rest of the log still explains where its beginning went. The standards background for this is in <a href="https://palimpsests.dev/notes/ai-logging-standards-24970-18229/">AI logging standards in draft</a>.</p>
+<h2 id="other-approaches">Other approaches</h2>
+<p>Hash chains aren't the only way to do this. Signed syslog (RFC 5848) signs batches of messages. The systemd journal can seal its files with forward-secure keys, so an attacker who takes over a machine can't rewrite what was sealed before. Some storage systems simply refuse to change data once it's written. Each of these puts the trust somewhere different: in a signing key, a sealing key or a storage vendor. For any of them it's worth asking who you have to trust, and whether that's the same party you're worried about.</p>
+<h2 id="questions-to-ask-before-trusting-the-claim">Questions to ask before trusting the claim</h2>
+<ul>
+  <li>Can someone outside the team check the log with a published specification, without your software?</li>
+  <li>Does the check need the decryption key, or can it run without reading the content?</li>
+  <li>What does the check report when it has no anchor? It should say completeness wasn't checked.</li>
+  <li>Where is the anchor kept, and who can change it?</li>
+  <li>What happens to the log when old records are deleted?</li>
+  <li>What isn't covered? A tamper-evident log shows the record wasn't changed. It doesn't show the recorded events were true.</li>
+</ul>
+<p>The format behind all of this is <a href="https://palimpsests.dev/pala-1/">PALA-1</a>. The reasoning behind its design is in <a href="https://palimpsests.dev/notes/pala-1-three-design-principles/">three design principles for verifiable audit logs</a>.</p>]]></content:encoded>
+  </item>
   <item>
     <title>PALA-1: three design principles for verifiable audit logs</title>
     <link>https://palimpsests.dev/notes/pala-1-three-design-principles/</link>
@@ -140,7 +294,7 @@ palimpsests serve</code></pre>
 <pre><code>import litellm
 from palimpsests_audit import PalimpsestsAudit
 litellm.callbacks = [PalimpsestsAudit()]</code></pre>
-<p>It never sees the tool itself run. A result marked ok only means it went back to the model.</p>
+<p>It never sees the tool itself run, so since version 0.13 its results are recorded as unobserved: it can't tell a failed call from a successful one.</p>
 <h2 id="mcp-servers">MCP servers</h2>
 <p>For MCP servers that talk over standard input and output, the adapter is a small proxy. You put it in front of the server command in your client's configuration. Sitting in the middle, it sees both the request and the response of every tool call. It passes every byte through unchanged and never blocks a call.</p>
 <h2 id="opencode">OpenCode</h2>
