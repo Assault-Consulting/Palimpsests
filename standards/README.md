@@ -36,6 +36,13 @@ artifact.
   `draft-kuehlewind-audit-architecture`. Its "Changes from -00" appendix
   lists every change.
 
+- `draft-sparysh-pala-audit-02.md` — in preparation, for submission
+  before the IETF 127 cut-off (2026-11-02). Corrects the key-identifier
+  description in §8, carries the statement construction with the root
+  in its payload, renders the test-vector table as a table, adds the
+  project page to the authors' addresses. Its "Changes from -01"
+  appendix lists every change.
+
 Local build:
 
 ```bash
@@ -80,22 +87,24 @@ the next revision and, where a check can catch its class, by
   syntax visible: it follows a closing `~~~` with no blank line, so
   kramdown read it as paragraph text. The expected-results block and
   every hash are intact, and the vectors themselves are published
-  separately. `check_render.py` now fails on leaked table syntax. Fix:
-  a blank line, in the next revision.
+  separately. `check_render.py` now fails on leaked table syntax. Fixed
+  in -02.
+- **-00 and -01:** the transparency section describes the Signed
+  Statement's key identifier as the COSE Key Thumbprint "truncated to its
+  first 20 bytes", and builds a paragraph on that. No published
+  statement was ever constructed that way: the key identifier has always
+  been the full RFC 9679 thumbprint (32 bytes), in the vectors, in the
+  code and in both bridge runs. Fixed in -02.
 
-## Queued for -02
+## Queued for -03
 
-Fixes and additions accumulated for the next revision; none is reason
-enough on its own to post one.
+Carried over; none is reason enough on its own to post a revision.
 
-- Test vectors: a blank line before the vector-chain table (the -01
-  defect above).
-- Implementation status: the Agent Action Capsule verification run
-  against `draft-mih-scitt-agent-action-capsule-05`, once it is on the
-  record; the reciprocal run, if it happens.
-- Transparency services: the head-to-head consistency proof
-  (`pala consistency`) as the way a later published head is shown to
-  extend an earlier one.
+- Implementation status: an independent reproduction of the
+  root-carrying statement construction, once on the record; the
+  reciprocal Agent Action Capsule run, if it happens; a registration
+  with a transparency service operated by an unrelated party, if it
+  happens.
 - Before rendering: re-check every Internet-Draft description against
   the revision its reference now resolves to; references follow the
   latest revision, descriptions do not.
