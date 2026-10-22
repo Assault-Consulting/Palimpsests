@@ -28,7 +28,11 @@ import sys
 from pathlib import Path
 
 # Posted revisions: archived by the IETF, immutable -- skipped.
-POSTED = {"draft-sparysh-pala-audit-00.md", "draft-sparysh-pala-audit-01.md"}
+POSTED = {
+    "draft-sparysh-pala-audit-00.md",
+    "draft-sparysh-pala-audit-01.md",
+    "draft-sparysh-pala-audit-02.md",
+}
 FENCE = re.compile(r"^(```|~~~)\s*$")
 TABLE_RULE = re.compile(r"\|\s*:?-{3,}:?\s*\|")  # a markdown |---| row
 MARGINS = ("", "   ")  # xml2rfc artwork indent; 0 when the block is too wide
