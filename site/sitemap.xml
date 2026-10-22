@@ -8,7 +8,7 @@
   </url>
   <url>
     <loc>https://palimpsests.dev/pala-1/</loc>
-    <lastmod>2026-10-18</lastmod>
+    <lastmod>2026-09-30</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -38,9 +38,33 @@
   </url>
   <url>
     <loc>https://palimpsests.dev/notes/</loc>
-    <lastmod>2026-10-09</lastmod>
+    <lastmod>2026-10-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://palimpsests.dev/notes/ai-logging-standards-24970-18229/</loc>
+    <lastmod>2026-10-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://palimpsests.dev/notes/audit-log-for-agents-on-cloud-models/</loc>
+    <lastmod>2026-10-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://palimpsests.dev/notes/openssf-gold-cyber-resilience-act/</loc>
+    <lastmod>2026-10-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/</loc>
+    <lastmod>2026-10-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://palimpsests.dev/notes/pala-1-three-design-principles/</loc>
