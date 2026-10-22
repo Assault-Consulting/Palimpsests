@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Keeping the audit log on your own machine when your agents use cloud models — Palimpsests notes</title>
+<meta name="description" content="Agents that call hosted models can still keep their tool-call record locally. How Palimpsests records Claude Code, Codex, OpenTelemetry and LiteLLM tool calls, and what that record proves." />
+<link rel="canonical" href="https://palimpsests.dev/notes/audit-log-for-agents-on-cloud-models/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Andrii Sparysh" />
+<meta name="theme-color" content="#15151f" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Palimpsests" />
+<meta property="og:title" content="Keeping the audit log on your own machine when your agents use cloud models — Palimpsests notes" />
+<meta property="og:description" content="Agents that call hosted models can still keep their tool-call record locally. How Palimpsests records Claude Code, Codex, OpenTelemetry and LiteLLM tool calls, and what that record proves." />
+<meta property="og:url" content="https://palimpsests.dev/notes/audit-log-for-agents-on-cloud-models/" />
+<meta property="og:locale" content="en" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Keeping the audit log on your own machine when your agents use cloud models — Palimpsests notes" />
+<meta name="twitter:description" content="Agents that call hosted models can still keep their tool-call record locally. How Palimpsests records Claude Code, Codex, OpenTelemetry and LiteLLM tool calls, and what that record proves." />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BlogPosting",
+      "@id": "https://palimpsests.dev/notes/audit-log-for-agents-on-cloud-models/#post",
+      "headline": "Keeping the audit log on your own machine when your agents use cloud models",
+      "description": "Agents that call hosted models can still keep their tool-call record locally. How Palimpsests records Claude Code, Codex, OpenTelemetry and LiteLLM tool calls, and what that record proves.",
+      "url": "https://palimpsests.dev/notes/audit-log-for-agents-on-cloud-models/",
+      "mainEntityOfPage": "https://palimpsests.dev/notes/audit-log-for-agents-on-cloud-models/",
+      "datePublished": "2026-10-20",
+      "dateModified": "2026-10-20",
+      "inLanguage": "en",
+      "keywords": [
+        "ai-agents",
+        "integrations",
+        "audit-log"
+      ],
+      "author": {
+        "@type": "Person",
+        "name": "Andrii Sparysh"
+      },
+      "publisher": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "isPartOf": {
+        "@id": "https://palimpsests.dev/notes/#blog"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Palimpsests",
+          "item": "https://palimpsests.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Notes",
+          "item": "https://palimpsests.dev/notes/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Keeping the audit log on your own machine when your agents use cloud models",
+          "item": "https://palimpsests.dev/notes/audit-log-for-agents-on-cloud-models/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Palimpsests home">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="nav__links">
+      <a class="hide-sm" href="/#caps">Capabilities</a>
+      <a class="hide-sm" href="/pala-1/">PALA-1</a>
+      <a class="hide-sm" href="/verify-without-reading/">Verify</a>
+      <a class="hide-sm" href="/eu-ai-act-article-12/">EU AI Act</a>
+      <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
+      <a class="hide-sm" href="/integrations/">Integrations</a>
+      <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<main class="doc">
+  <div class="wrap">
+    <div class="doc__in">
+<p class="crumbs"><a href="/">Palimpsests</a> / <a href="/notes/">Notes</a></p>
+<span class="eyebrow">Note · 20 October 2026 · Andrii Sparysh</span>
+<h1 class="display">Keeping the audit log on your own machine when your agents use cloud models</h1>
+<p><a href="https://palimpsests.dev/">Palimpsests</a> started as a runtime for models that run on your own hardware, often on networks with no internet at all. Many teams work differently. Their agents run on their own servers or laptops, while the model behind them is a hosted one reached through an API. The prompts leave the building. The question is whether the record of what the agent did has to leave with them.</p>
+<p>It doesn't. The way we put it: the audit record stays on your machine, even when the model doesn't.</p>
+<h2 id="why-keep-a-separate-record">Why keep a separate record</h2>
+<p>The model provider keeps its own logs, and they may well be good. They're still the provider's logs. You can't verify them independently and you don't decide how long they're kept. They also record what the model said, not what your agent then did with your files and systems.</p>
+<p>The EU AI Act asks deployers of high-risk systems to keep the automatically generated logs that are under their control. For an agent, the part that's fully under your control is its tool loop: which tools it called, with what input, and what came back. That's what these integrations record.</p>
+<h2 id="what-gets-recorded">What gets recorded</h2>
+<p>A local Palimpsests server receives each tool call and its result from the client and writes them into a PALA-1 chain. Arguments and results are stored as SHA-256 digests of a canonical form, never as content. Each pair is marked as reported by the client, so it can't be confused with a call the runtime made itself.</p>
+<p>Since version 0.13 each result also states what its recorder could see. Where a client reports failures, the result is recorded as ok or error. Where it can't tell a failed call from a successful one, the result is recorded as unobserved. An ok means a result came back. It never means the action succeeded.</p>
+<h2 id="coding-agents-claude-code-and-codex">Coding agents: Claude Code and Codex</h2>
+<p>Claude Code can send its hooks over HTTP. You add three entries to its settings file, pointing PreToolUse, PostToolUse and PostToolUseFailure at the local server, and there's nothing to install. Claude Code reports failures, so its results are recorded as ok or error.</p>
+<p>Codex only runs command hooks, so a small forwarder script passes each event to the server. Codex has no failure hook, which means its results are recorded as unobserved. One thing to watch: Codex skips an untrusted hook without any warning, and the tools then run with nothing recorded. The README explains how to check for it.</p>
+<p>Both adapters were written against what the hooks actually send, measured on Claude Code 2.1.288 and Codex CLI 0.160.0. The details are in the <a href="https://github.com/Assault-Consulting/Palimpsests/tree/main/integrations/agent-hooks">agent hooks README</a>.</p>
+<h2 id="frameworks-with-opentelemetry">Frameworks with OpenTelemetry</h2>
+<p>Many agent frameworks already emit OpenTelemetry traces, with one span per tool execution under the GenAI conventions. Point the trace exporter at the server and those spans become recorded tool calls:</p>
+<pre><code>export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://127.0.0.1:11435/v1/traces
+export OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=http/protobuf</code></pre>
+<p>A span with an error status is recorded as an error. To get digests of the arguments and results, turn on content capture in the instrumentation. Without it the pair is recorded with no digests, which makes a weaker record. This path was tested against a real framework's export from pydantic-ai 2.57.0. Setup is in the <a href="https://github.com/Assault-Consulting/Palimpsests/tree/main/integrations/otel">OpenTelemetry README</a>.</p>
+<h2 id="gateways-and-tool-servers">Gateways and tool servers</h2>
+<p>If your agents reach hosted models through LiteLLM, its callback reports every structured tool loop that passes through it. If they use MCP servers over standard input and output, a small proxy in front of each server records both the request and the response of every tool call. Both are covered in <a href="https://palimpsests.dev/notes/recording-agent-tool-calls/">recording the tool calls your agent already makes</a>.</p>
+<h2 id="limits">Limits</h2>
+<p>A reported record shows what the client said happened and that nobody changed the report later. It doesn't prove the tool ran, and it can't see a tool the client never reports. Hook interfaces change between client versions, so we probe them regularly and note the version each claim was checked on. The record is only as trustworthy as the chain it sits in, and what makes that chain trustworthy is covered in <a href="https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/">what makes an audit log tamper-evident</a>.</p>
+<p>The full list of integrations is on <a href="https://palimpsests.dev/integrations/">integrations</a>.</p>
+<div class="related">
+  <a class="btn" href="/notes/">All notes →</a>
+  <a class="btn" href="/">Palimpsests →</a>
+</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/" aria-label="Palimpsests">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="/notes/">Notes</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
