@@ -14,6 +14,28 @@ Detection relies on several separate mechanisms. Each one answers its own questi
 
 Each record stores the hash of the record before it. Change a record and its hash changes, so the next record's link stops matching. Remove a record from the middle and the link to the next one breaks. Reorder records and both the links and the sequence numbers go wrong.
 
+```
+header 1  <-- prev_hash --  header 2  <-- prev_hash --  header 3   = head
+   |                           |                           |
+digest(body 1)             digest(body 2)             digest(body 3)
+```
+
+The check itself is short. Here's a toy version in Python. It isn't the PALA-1 wire format, only the idea:
+
+```
+import hashlib
+
+def verify(records):
+    prev = bytes(32)  # the first record points at zeros
+    for r in records:
+        if r["prev_hash"] != prev:
+            return None  # a link is broken here
+        if hashlib.sha256(r["body"]).digest() != r["body_digest"]:
+            return None  # the body no longer matches its header
+        prev = hashlib.sha256(r["header"]).digest()
+    return prev  # the head, to compare with the anchor
+```
+
 A chain answers the question "was anything inside this file altered?" Anyone with the file and the specification can check it, and the check needs no key. In PALA-1 the record bodies can even stay encrypted during the check, because each header carries a digest of its body. That part is explained in [how to check an AI log without reading it](https://palimpsests.dev/notes/checking-an-ai-log-without-reading-it/).
 
 ## The anchor
@@ -50,5 +72,9 @@ Hash chains aren't the only way to do this. Signed syslog (RFC 5848) signs batch
 - Where is the anchor kept, and who can change it?
 - What happens to the log when old records are deleted?
 - What isn't covered? A tamper-evident log shows the record wasn't changed. It doesn't show the recorded events were true.
+
+## Further reading
+
+The ideas here are older than AI agents. Bruce Schneier and John Kelsey described hash-chained audit logs on untrusted machines in "Secure Audit Logs to Support Computer Forensics" (ACM Transactions on Information and System Security, 1999). Scott Crosby and Dan Wallach showed how to make such logs efficient to audit in "Efficient Data Structures for Tamper-Evident Logging" (USENIX Security, 2009). Certificate Transparency put Merkle-tree logs into wide use, specified in [RFC 6962](https://www.rfc-editor.org/rfc/rfc6962) and [RFC 9162](https://www.rfc-editor.org/rfc/rfc9162). Signed syslog is [RFC 5848](https://www.rfc-editor.org/rfc/rfc5848).
 
 The format behind all of this is [PALA-1](https://palimpsests.dev/pala-1/). The reasoning behind its design is in [three design principles for verifiable audit logs](https://palimpsests.dev/notes/pala-1-three-design-principles/).
