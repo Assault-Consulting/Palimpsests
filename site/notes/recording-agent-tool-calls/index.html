@@ -129,7 +129,7 @@ palimpsests serve</code></pre>
 <pre><code>import litellm
 from palimpsests_audit import PalimpsestsAudit
 litellm.callbacks = [PalimpsestsAudit()]</code></pre>
-<p>It never sees the tool itself run. A result marked ok only means it went back to the model.</p>
+<p>It never sees the tool itself run, so since version 0.13 its results are recorded as unobserved: it can't tell a failed call from a successful one.</p>
 <h2 id="mcp-servers">MCP servers</h2>
 <p>For MCP servers that talk over standard input and output, the adapter is a small proxy. You put it in front of the server command in your client's configuration. Sitting in the middle, it sees both the request and the response of every tool call. It passes every byte through unchanged and never blocks a call.</p>
 <h2 id="opencode">OpenCode</h2>

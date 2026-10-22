@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>What makes an audit log tamper-evident — Palimpsests notes</title>
+<meta name="description" content="How hash chains, anchors and witnesses make changes to a log detectable, what each one proves, and the questions to ask before trusting a tamper-evident claim." />
+<link rel="canonical" href="https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Andrii Sparysh" />
+<meta name="theme-color" content="#15151f" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Palimpsests" />
+<meta property="og:title" content="What makes an audit log tamper-evident — Palimpsests notes" />
+<meta property="og:description" content="How hash chains, anchors and witnesses make changes to a log detectable, what each one proves, and the questions to ask before trusting a tamper-evident claim." />
+<meta property="og:url" content="https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/" />
+<meta property="og:locale" content="en" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="What makes an audit log tamper-evident — Palimpsests notes" />
+<meta name="twitter:description" content="How hash chains, anchors and witnesses make changes to a log detectable, what each one proves, and the questions to ask before trusting a tamper-evident claim." />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BlogPosting",
+      "@id": "https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/#post",
+      "headline": "What makes an audit log tamper-evident",
+      "description": "How hash chains, anchors and witnesses make changes to a log detectable, what each one proves, and the questions to ask before trusting a tamper-evident claim.",
+      "url": "https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/",
+      "mainEntityOfPage": "https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/",
+      "datePublished": "2026-10-20",
+      "dateModified": "2026-10-20",
+      "inLanguage": "en",
+      "keywords": [
+        "audit-log",
+        "tamper-evident",
+        "security"
+      ],
+      "author": {
+        "@type": "Person",
+        "name": "Andrii Sparysh"
+      },
+      "publisher": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "isPartOf": {
+        "@id": "https://palimpsests.dev/notes/#blog"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Palimpsests",
+          "item": "https://palimpsests.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Notes",
+          "item": "https://palimpsests.dev/notes/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "What makes an audit log tamper-evident",
+          "item": "https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Palimpsests home">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="nav__links">
+      <a class="hide-sm" href="/#caps">Capabilities</a>
+      <a class="hide-sm" href="/pala-1/">PALA-1</a>
+      <a class="hide-sm" href="/verify-without-reading/">Verify</a>
+      <a class="hide-sm" href="/eu-ai-act-article-12/">EU AI Act</a>
+      <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
+      <a class="hide-sm" href="/integrations/">Integrations</a>
+      <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<main class="doc">
+  <div class="wrap">
+    <div class="doc__in">
+<p class="crumbs"><a href="/">Palimpsests</a> / <a href="/notes/">Notes</a></p>
+<span class="eyebrow">Note · 20 October 2026 · Andrii Sparysh</span>
+<h1 class="display">What makes an audit log tamper-evident</h1>
+<p>"Tamper-evident" appears on a lot of logging products. It should mean something specific: if someone changes the log, a person who didn't make the change can detect it later. It doesn't mean the change is impossible. That would be tamper-proof, and no log stored on a computer someone controls can promise that.</p>
+<p>Detection relies on several separate mechanisms. Each one answers its own question, and a log can have one without the others.</p>
+<h2 id="the-hash-chain">The hash chain</h2>
+<p>Each record stores the hash of the record before it. Change a record and its hash changes, so the next record's link stops matching. Remove a record from the middle and the link to the next one breaks. Reorder records and both the links and the sequence numbers go wrong.</p>
+<p>A chain answers the question "was anything inside this file altered?" Anyone with the file and the specification can check it, and the check needs no key. In PALA-1 the record bodies can even stay encrypted during the check, because each header carries a digest of its body. That part is explained in <a href="https://palimpsests.dev/notes/checking-an-ai-log-without-reading-it/">how to check an AI log without reading it</a>.</p>
+<h2 id="the-anchor">The anchor</h2>
+<p>A chain has one blind spot. If the last records are deleted, what remains is still a valid chain, only shorter. The same is true when a whole file is swapped for another consistent chain.</p>
+<p>To catch that, the latest hash has to be kept somewhere else, such as a separate file, the operating system's keychain or a hardware token. That copy is the anchor. Checking the chain against it answers a second question: "is this the whole log?" An anchor only helps if whoever could rewrite the log can't rewrite the anchor as well. That's why a hardware token is stronger than a file on the same disk.</p>
+<h2 id="the-witness">The witness</h2>
+<p>The third question is about time. Did this history exist before a certain moment? Nothing inside the log can prove it, because whoever controls the log also controls its clock. Someone outside has to sign a statement.</p>
+<p>In Palimpsests that witness can be a SCITT transparency service. Palimpsests registers one signed statement per published head. The statement holds a hash and no record content. The receipt shows that the head existed by the time it was registered, and since a head commits to every record before it, so did those records.</p>
+<h2 id="proofs-that-travel">Proofs that travel</h2>
+<p>Two more tools help when you can't hand over the whole log. An inclusion proof shows that a particular record belongs to a tree whose root you already trust, using a handful of hashes. A consistency proof shows that an older head is a prefix of a newer one, so the log only ever grew. Both use the same construction as Certificate Transparency (RFC 6962 and RFC 9162).</p>
+<h2 id="deletion-that-explains-itself">Deletion that explains itself</h2>
+<p>Logs can't grow forever. Retention rules say how long records stay, and after that they're deleted. In a hash chain, deleting the oldest records leaves a gap at the start, and a gap normally looks like tampering.</p>
+<p>Since version 0.13, Palimpsests opens each new segment with a continuation record. It names the previous segment's last hash and the retention period that applied, and it commits to every earlier record. When old segments are removed under that policy, the rest of the log still explains where its beginning went. The standards background for this is in <a href="https://palimpsests.dev/notes/ai-logging-standards-24970-18229/">AI logging standards in draft</a>.</p>
+<h2 id="other-approaches">Other approaches</h2>
+<p>Hash chains aren't the only way to do this. Signed syslog (RFC 5848) signs batches of messages. The systemd journal can seal its files with forward-secure keys, so an attacker who takes over a machine can't rewrite what was sealed before. Some storage systems simply refuse to change data once it's written. Each of these puts the trust somewhere different: in a signing key, a sealing key or a storage vendor. For any of them it's worth asking who you have to trust, and whether that's the same party you're worried about.</p>
+<h2 id="questions-to-ask-before-trusting-the-claim">Questions to ask before trusting the claim</h2>
+<ul>
+  <li>Can someone outside the team check the log with a published specification, without your software?</li>
+  <li>Does the check need the decryption key, or can it run without reading the content?</li>
+  <li>What does the check report when it has no anchor? It should say completeness wasn't checked.</li>
+  <li>Where is the anchor kept, and who can change it?</li>
+  <li>What happens to the log when old records are deleted?</li>
+  <li>What isn't covered? A tamper-evident log shows the record wasn't changed. It doesn't show the recorded events were true.</li>
+</ul>
+<p>The format behind all of this is <a href="https://palimpsests.dev/pala-1/">PALA-1</a>. The reasoning behind its design is in <a href="https://palimpsests.dev/notes/pala-1-three-design-principles/">three design principles for verifiable audit logs</a>.</p>
+<div class="related">
+  <a class="btn" href="/notes/">All notes →</a>
+  <a class="btn" href="/">Palimpsests →</a>
+</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/" aria-label="Palimpsests">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="/notes/">Notes</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

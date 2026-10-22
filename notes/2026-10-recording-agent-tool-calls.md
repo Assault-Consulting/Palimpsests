@@ -29,7 +29,7 @@ from palimpsests_audit import PalimpsestsAudit
 litellm.callbacks = [PalimpsestsAudit()]
 ```
 
-It never sees the tool itself run. A result marked ok only means it went back to the model.
+It never sees the tool itself run, so since version 0.13 its results are recorded as unobserved: it can't tell a failed call from a successful one.
 
 ## MCP servers
 
