@@ -1,11 +1,12 @@
 # Palimpsests
 
-> Local-first LLM inference engine for regulated and air-gapped deployments. Runs language models entirely on hardware you control and writes a tamper-evident, hash-chained record of every request. Apache-2.0.
+> Open-source, tamper-evident audit log for AI agents, and a local-first LLM inference engine. Records the tool calls of agents on hardware you control, whether the model runs locally or behind a cloud API, in a hash-chained format anyone can verify without the decryption key. Apache-2.0.
 
 Palimpsests is honest about scope: it supplies the runtime primitives that specific EU obligations rest on — data residency, record-keeping, and supply-chain integrity — and it does not by itself make a deployment compliant. It is regulated-adjacent infrastructure that enables obligations rather than discharging them.
 
 ## Capabilities
 
+- [Agents on cloud models](https://palimpsests.dev/#agents): the audit record stays on your machine even when the model doesn't; Claude Code, Codex, OpenTelemetry, LiteLLM and MCP tool calls recorded locally, digests only.
 - [Shared Prefix](https://palimpsests.dev/#caps): a shared system prompt or long context is computed once, held warm, and reused across every request that shares it.
 - [Tool Loop](https://palimpsests.dev/#caps): multi-step tool calling without re-prefilling the conversation each step. Measured on Intel Arc (Vulkan) across 1.5B and 7B, it holds at parity with a hand-tuned llama-server — parity, not a speed advantage.
 - [KV Persistence](https://palimpsests.dev/#caps): attention state is serialized to a validated frame format and restored across sessions and processes.
@@ -14,7 +15,7 @@ Palimpsests is honest about scope: it supplies the runtime primitives that speci
 
 - [The record](https://palimpsests.dev/#record): a hash-chained request log in PALA-1 (Portable Append-only Log for Audit) — tamper-evident, recoverable, and the record-keeping substrate that EU AI Act logging expectations rest on. Five independent implementations reproduce the format from the spec and test vectors alone.
 - [SCITT transparency bridge](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/INTEROP-SCITT.md): one COSE Signed Statement per published chain head — no record content leaves the device. The statement construction was reproduced byte-for-byte twice from the standards alone, and one registration with a verified receipt is on the public record. The document states what a receipt proves and what it does not.
-- [OpenSSF Best Practices: Gold](https://www.bestpractices.dev/projects/13534) — the highest tier of the programme; every criterion is a public registry entry, not a self-declaration.
+- [OpenSSF Best Practices: Gold](https://www.bestpractices.dev/projects/13534) — the highest tier of the programme; each criterion is answered by the project in a public registry entry with its justification, so it can be checked against the repository.
 - Signed releases (PEP 740 / Sigstore), a machine-readable SBOM per build, a published threat model, OSPS Baseline Level 2 self-attestation, and Atheris fuzzing in CI.
 - [EU AI Act Article 12 mapping](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/compliance/EU-AI-ACT-MAPPING.md) — a requirement-by-requirement checklist of what ships today (24 of 27 rows as of v0.12) and what is on the roadmap.
 - [EU regulatory fit](https://palimpsests.dev/#eu-law): the specific runtime primitive each act leans on, linked to source text.
@@ -26,7 +27,7 @@ Palimpsests is honest about scope: it supplies the runtime primitives that speci
 - [Verify without reading](https://palimpsests.dev/verify-without-reading/): how anyone checks that no record was altered, removed or reordered, with no decryption key; what the check proves and what it needs.
 - [EU AI Act Article 12](https://palimpsests.dev/eu-ai-act-article-12/): what Articles 12, 19, 26(6) and 99 ask, when they apply, and what a tamper-evident local log does and does not cover. Not legal advice.
 - [Air-gapped](https://palimpsests.dev/air-gapped/): inference and the audit log on hardware you control, time without a trusted clock, anchors without a network, measured numbers and what is not claimed.
-- [Integrations](https://palimpsests.dev/integrations/): LiteLLM, MCP and OpenCode tool calls on the chain, marked as reported by the client, with each adapter's status and limits.
+- [Integrations](https://palimpsests.dev/integrations/): tool calls from Claude Code, Codex, OpenTelemetry GenAI spans, LiteLLM, MCP and OpenCode on the chain, marked as reported by the client, with what each result can show (ok, error or unobserved), each adapter's status and its limits.
 
 <!-- notes:start -->
 ## Notes
