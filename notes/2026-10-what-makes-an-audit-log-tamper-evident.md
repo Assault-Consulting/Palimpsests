@@ -1,12 +1,12 @@
 ---
-title: What makes an audit log tamper-evident
+title: Tamper-evident audit logs: how they work and how to build one
 slug: what-makes-an-audit-log-tamper-evident
 date: 2026-10-20
-description: How hash chains, anchors and witnesses make changes to a log detectable, what each one proves, and the questions to ask before trusting a tamper-evident claim.
+description: What makes an audit log tamper-evident: hash chains, anchors and witnesses, what each one proves, how to build such a log, and what to ask before trusting the claim.
 tags: audit-log, tamper-evident, security
 ---
 
-"Tamper-evident" appears on a lot of logging products. It should mean something specific: if someone changes the log, a person who didn't make the change can detect it later. It doesn't mean the change is impossible. That would be tamper-proof, and no log stored on a computer someone controls can promise that.
+"Tamper-evident" appears on a lot of logging products. For an audit log it should mean something specific: if someone changes the log, a person who didn't make the change can detect it later. It doesn't mean the change is impossible. That would be tamper-proof, and no log stored on a computer someone controls can promise that.
 
 Detection relies on several separate mechanisms. Each one answers its own question, and a log can have one without the others.
 
@@ -59,6 +59,17 @@ Two more tools help when you can't hand over the whole log. An inclusion proof s
 Logs can't grow forever. Retention rules say how long records stay, and after that they're deleted. In a hash chain, deleting the oldest records leaves a gap at the start, and a gap normally looks like tampering.
 
 Since version 0.13, Palimpsests opens each new segment with a continuation record. It names the previous segment's last hash and the retention period that applied, and it commits to every earlier record. When old segments are removed under that policy, the rest of the log still explains where its beginning went. The standards background for this is in [AI logging standards in draft](https://palimpsests.dev/notes/ai-logging-standards-24970-18229/).
+
+## How to make an audit log tamper-evident
+
+Put together, the pieces above make a short list for building a tamper-evident audit log. Which items you need depends on what you'll have to prove later:
+
+- give every record a sequence number and the hash of the record before it;
+- keep a digest of each record's content in its header, so the log can be checked without being read;
+- store the latest hash somewhere the writer can't quietly change, such as a separate file or a hardware token, and check the log against it;
+- when you need to show when the log existed, have an outside party sign the head from time to time;
+- write retention into the log itself, so deleted segments are declared rather than simply missing;
+- publish the format and test it with a verifier someone else wrote.
 
 ## Other approaches
 
