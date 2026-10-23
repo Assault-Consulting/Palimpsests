@@ -126,7 +126,7 @@ palimpsests pala verify palimpsests-demo.pala   # the auditor's check — no key
       <p>Exit codes: <code>0</code> verified · <code>1</code> tampered · <code>2</code> partial — intact, but no anchor was supplied, so a cut-off end would not have been detected · <code>3</code> unreadable.</p>
 
       <h2 id="limits">Limits, stated</h2>
-      <p>Tamper-evident means a change is detectable, not impossible. An attacker who holds both the encryption key and write access to wherever the anchor is kept can forge the chain and its anchor together. Catching that needs a commitment outside the host — a hardware token or an external transparency service; see <a href="/air-gapped/#anchors">anchors without a network</a>.</p>
+      <p>Tamper-evident means a change is detectable, not impossible. An attacker who holds both the encryption key and write access to wherever the anchor is kept can forge the chain and its anchor together. Catching that needs a commitment outside the host — a hardware token or an external transparency service; see <a href="/air-gapped/#anchors">anchors without a network</a>. How each of these pieces fits into a <a href="/notes/what-makes-an-audit-log-tamper-evident/">tamper-evident audit log</a> is explained in a separate note.</p>
 
       <aside class="evidence">
         <h2>Evidence in the repository</h2>
