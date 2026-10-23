@@ -6,7 +6,54 @@
   <atom:link href="https://palimpsests.dev/notes/feed.xml" rel="self" type="application/rss+xml" />
   <description>Short notes on audit logs for AI systems, the EU AI Act and running language models on your own hardware.</description>
   <language>en</language>
-  <lastBuildDate>Tue, 20 Oct 2026 09:00:00 +0000</lastBuildDate>
+  <lastBuildDate>Fri, 23 Oct 2026 09:00:00 +0000</lastBuildDate>
+  <item>
+    <title>Anatomy of a tamper-evident audit log: PALA-1, a PKCS#11 anchor and SCITT</title>
+    <link>https://palimpsests.dev/notes/anatomy-of-a-tamper-evident-audit-log/</link>
+    <guid isPermaLink="true">https://palimpsests.dev/notes/anatomy-of-a-tamper-evident-audit-log/</guid>
+    <pubDate>Fri, 23 Oct 2026 09:00:00 +0000</pubDate>
+    <category>tamper-evident</category>
+    <category>pkcs11</category>
+    <category>scitt</category>
+    <description>The three layers of a Palimpsests audit log taken apart: the PALA-1 hash chain, the chain head on a PKCS#11 token and SCITT receipts. What each one proves alone, and what they prove together.</description>
+    <content:encoded><![CDATA[<p>A tamper-evident audit log has to answer three separate questions. Was any record changed, removed or reordered? Is this the whole log, or was the end cut off? Did this history exist before a given time?</p>
+<p>No single mechanism answers all three. Palimpsests uses a separate layer for each: the PALA-1 chain, a copy of the chain's head on a PKCS#11 token, and receipts from a SCITT transparency service. This note takes them apart one at a time and then puts them back together. The general idea behind each layer is in <a href="https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/">tamper-evident audit logs: how they work</a>.</p>
+<h2 id="layer-1-the-pala-1-chain">Layer 1: the PALA-1 chain</h2>
+<p><a href="https://palimpsests.dev/pala-1/">PALA-1</a> is the record format, frozen at v1.0. Every record has a header and a body. The header holds a sequence number, the hash of the previous record and a SHA-256 digest of the body. The body holds the content and can be encrypted with AES-256-GCM.</p>
+<p>A verifier walks the headers in order and checks each body against its digest. It never decrypts anything, so it never needs the key.</p>
+<p>What it proves: nothing inside the file was altered, removed or moved, and if something was, which record is the first bad one.</p>
+<p>What it can't prove: that the file is complete. A chain with its last records deleted is still a valid chain. It also says nothing about time, because whoever writes the log also controls its clock.</p>
+<p>What it costs: one hash per record. The check is described on <a href="https://palimpsests.dev/verify-without-reading/">verify without reading</a>.</p>
+<h2 id="layer-2-the-head-on-a-pkcs-11-token">Layer 2: the head on a PKCS#11 token</h2>
+<p>The head is the hash of the latest record, 32 bytes. Keep a copy of it somewhere else, compare the chain's end with that copy, and a cut-off end or a swapped file shows up. That copy is the anchor.</p>
+<p>A file or the operating system's keychain can hold the anchor, and both are supported. Their weakness is that they sit inside the same machine as the writer, so whoever takes over the host takes over the anchor too. A PKCS#11 token or HSM moves the anchor onto separate hardware. Palimpsests stores the head there as a private data object, and the writer updates it as the chain grows. A verifier with the token's PIN reads it and checks the chain against it.</p>
+<p>Version 0.12 tightened this after a problem we found ourselves. Reading the anchor now requires the PIN. If a second object appears under the same name, the read fails with an error instead of picking one. A planted decoy is treated as evidence, never filtered away.</p>
+<p>What it proves: the chain ends where the token says it should, so records cut from the end or a wholesale replacement are detected unless the attacker can also rewrite the token.</p>
+<p>What it can't prove: anything about time.</p>
+<p>Limits worth stating: CI runs against SoftHSM, a software token, which proves the code path but not the hardware guarantee. That needs a real token or HSM. If the PIN sits in a config file next to the writer, the gain is smaller than it looks. A signature made by a key that never leaves the token is planned, not shipped. The design record is <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/adr/0004-tier-b-pkcs11-anchor-and-signing.md">ADR-0004</a>.</p>
+<h2 id="layer-3-scitt-receipts">Layer 3: SCITT receipts</h2>
+<p>For each head you choose to publish, Palimpsests builds a small signed statement: a COSE_Sign1 that holds the head, the range of sequence numbers it covers and the format name. Since version 0.13 the statement can also carry a root computed over every earlier record. That part is still experimental until someone reproduces it independently. The statement goes to a SCITT transparency service, which adds it to its own append-only log and returns a receipt. No record content leaves the machine, only hashes.</p>
+<p>What it proves: this head existed by the time the service recorded it, under the service's identity and clock. A receipted head also makes a strong anchor, because it's held by someone outside your organisation. With the roots in the statements and the consistency proofs added in 0.12, two registered heads can be linked without the chain itself. That shows the log only grew between them.</p>
+<p>What it can't prove: anything about the content or its quality. The service saw a digest, nothing more, and its receipt is only as trustworthy as the service.</p>
+<p>Where it stands: the statement construction has been reproduced byte for byte from the RFCs twice, and one registration with a verified receipt is on record. It was done against the reference implementation, whose receipt format predates the final RFC. A run against a hosted service with final-format receipts is next. The details are in <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/INTEROP-SCITT.md">what a receipt proves and what it doesn't</a>.</p>
+<h2 id="what-the-layers-do-together">What the layers do together</h2>
+<p>Take someone who controls the host and holds the encryption key, and wants to change record 500.</p>
+<p>Editing the record breaks the chain, so they have to rebuild every record after it. With the key, that's possible.</p>
+<p>The rebuilt chain ends in a different head. The token still holds the old one, so the check fails unless they also replace the object on the token. That needs the PIN and an authenticated session, and with real hardware it can also need physical access or another person.</p>
+<p>If a head covering record 500 was registered with a SCITT service before the change, the rebuilt chain can't produce that head again. The service's log and its receipt still show the original existed by a certain time. The forgery is detectable even when the attacker holds the host, the key and the token.</p>
+<p>So with all three layers, the records someone could still rewrite unnoticed are only those written after the last registered head. How often you register decides how small that window is. A successful forgery stops being a matter of editing a file. It needs the host, the key, the token and the transparency service's log.</p>
+<p>Two more things come from the combination. None of the layers needs the content, so the whole log can be checked by someone who isn't allowed to read it. And the first two layers work fully offline. The SCITT step needs a link out only when you register a head.</p>
+<h2 id="choosing-a-setup">Choosing a setup</h2>
+<p>Not every deployment needs all three:</p>
+<ul>
+  <li>the chain alone is enough when you trust the storage and only need to catch edits;</li>
+  <li>the chain with a file or keychain anchor also catches a cut-off end, as long as the host itself is trusted;</li>
+  <li>the chain with a token moves the completeness check off the host;</li>
+  <li>the chain with a token and SCITT adds proof of time and an anchor held outside your organisation.</li>
+</ul>
+<h2 id="what-none-of-the-layers-proves">What none of the layers proves</h2>
+<p>Together they show that the record wasn't changed after it was written, that it's complete up to an anchor, and that it existed by a given time. They don't show that the recorded events were true, or that a tool a client reported actually ran. The threat model and the known limits are in <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md">SECURITY.md</a>, and the offline side of anchors is on <a href="https://palimpsests.dev/air-gapped/#anchors">air-gapped</a>.</p>]]></content:encoded>
+  </item>
   <item>
     <title>AI logging standards in draft: ISO/IEC 24970, prEN 18229-1 and how we map them</title>
     <link>https://palimpsests.dev/notes/ai-logging-standards-24970-18229/</link>
@@ -124,15 +171,15 @@ export OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=http/protobuf</code></pre>
 <p>The same reasoning works for any open-source component. Ask whether its claims point to evidence you can open, and whether its known weaknesses are written down somewhere. The logging side of the AI rules is covered in <a href="https://palimpsests.dev/notes/ai-logging-standards-24970-18229/">AI logging standards in draft</a>.</p>]]></content:encoded>
   </item>
   <item>
-    <title>What makes an audit log tamper-evident</title>
+    <title>Tamper-evident audit logs: how they work and how to build one</title>
     <link>https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/</link>
     <guid isPermaLink="true">https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/</guid>
     <pubDate>Tue, 20 Oct 2026 09:00:00 +0000</pubDate>
     <category>audit-log</category>
     <category>tamper-evident</category>
     <category>security</category>
-    <description>How hash chains, anchors and witnesses make changes to a log detectable, what each one proves, and the questions to ask before trusting a tamper-evident claim.</description>
-    <content:encoded><![CDATA[<p>"Tamper-evident" appears on a lot of logging products. It should mean something specific: if someone changes the log, a person who didn't make the change can detect it later. It doesn't mean the change is impossible. That would be tamper-proof, and no log stored on a computer someone controls can promise that.</p>
+    <description>What makes an audit log tamper-evident: hash chains, anchors and witnesses, what each one proves, how to build such a log, and what to ask before trusting the claim.</description>
+    <content:encoded><![CDATA[<p>"Tamper-evident" appears on a lot of logging products. For an audit log it should mean something specific: if someone changes the log, a person who didn't make the change can detect it later. It doesn't mean the change is impossible. That would be tamper-proof, and no log stored on a computer someone controls can promise that.</p>
 <p>Detection relies on several separate mechanisms. Each one answers its own question, and a log can have one without the others.</p>
 <h2 id="the-hash-chain">The hash chain</h2>
 <p>Each record stores the hash of the record before it. Change a record and its hash changes, so the next record's link stops matching. Remove a record from the middle and the link to the next one breaks. Reorder records and both the links and the sequence numbers go wrong.</p>
@@ -163,6 +210,16 @@ def verify(records):
 <h2 id="deletion-that-explains-itself">Deletion that explains itself</h2>
 <p>Logs can't grow forever. Retention rules say how long records stay, and after that they're deleted. In a hash chain, deleting the oldest records leaves a gap at the start, and a gap normally looks like tampering.</p>
 <p>Since version 0.13, Palimpsests opens each new segment with a continuation record. It names the previous segment's last hash and the retention period that applied, and it commits to every earlier record. When old segments are removed under that policy, the rest of the log still explains where its beginning went. The standards background for this is in <a href="https://palimpsests.dev/notes/ai-logging-standards-24970-18229/">AI logging standards in draft</a>.</p>
+<h2 id="how-to-make-an-audit-log-tamper-evident">How to make an audit log tamper-evident</h2>
+<p>Put together, the pieces above make a short list for building a tamper-evident audit log. Which items you need depends on what you'll have to prove later:</p>
+<ul>
+  <li>give every record a sequence number and the hash of the record before it;</li>
+  <li>keep a digest of each record's content in its header, so the log can be checked without being read;</li>
+  <li>store the latest hash somewhere the writer can't quietly change, such as a separate file or a hardware token, and check the log against it;</li>
+  <li>when you need to show when the log existed, have an outside party sign the head from time to time;</li>
+  <li>write retention into the log itself, so deleted segments are declared rather than simply missing;</li>
+  <li>publish the format and test it with a verifier someone else wrote.</li>
+</ul>
 <h2 id="other-approaches">Other approaches</h2>
 <p>Hash chains aren't the only way to do this. Signed syslog (RFC 5848) signs batches of messages. The systemd journal can seal its files with forward-secure keys, so an attacker who takes over a machine can't rewrite what was sealed before. Some storage systems simply refuse to change data once it's written. Each of these puts the trust somewhere different: in a signing key, a sealing key or a storage vendor. For any of them it's worth asking who you have to trust, and whether that's the same party you're worried about.</p>
 <h2 id="questions-to-ask-before-trusting-the-claim">Questions to ask before trusting the claim</h2>

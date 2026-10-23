@@ -37,6 +37,12 @@
       "blogPost": [
         {
           "@type": "BlogPosting",
+          "headline": "Anatomy of a tamper-evident audit log: PALA-1, a PKCS#11 anchor and SCITT",
+          "url": "https://palimpsests.dev/notes/anatomy-of-a-tamper-evident-audit-log/",
+          "datePublished": "2026-10-23"
+        },
+        {
+          "@type": "BlogPosting",
           "headline": "AI logging standards in draft: ISO/IEC 24970, prEN 18229-1 and how we map them",
           "url": "https://palimpsests.dev/notes/ai-logging-standards-24970-18229/",
           "datePublished": "2026-10-20"
@@ -55,7 +61,7 @@
         },
         {
           "@type": "BlogPosting",
-          "headline": "What makes an audit log tamper-evident",
+          "headline": "Tamper-evident audit logs: how they work and how to build one",
           "url": "https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/",
           "datePublished": "2026-10-20"
         },
@@ -136,6 +142,9 @@
 <span class="eyebrow">Notes</span>
 <h1 class="display">Notes</h1>
 <p class="lede">Short notes on audit logs for AI systems, the EU AI Act and running language models on your own hardware. New notes also go out through the <a href="/notes/feed.xml">RSS feed</a>.</p>
+<h2><a href="/notes/anatomy-of-a-tamper-evident-audit-log/">Anatomy of a tamper-evident audit log: PALA-1, a PKCS#11 anchor and SCITT</a></h2>
+<p class="crumbs">23 October 2026</p>
+<p>The three layers of a Palimpsests audit log taken apart: the PALA-1 hash chain, the chain head on a PKCS#11 token and SCITT receipts. What each one proves alone, and what they prove together.</p>
 <h2><a href="/notes/ai-logging-standards-24970-18229/">AI logging standards in draft: ISO/IEC 24970, prEN 18229-1 and how we map them</a></h2>
 <p class="crumbs">20 October 2026</p>
 <p>Where the AI logging standards stand in October 2026, why they matter for the EU AI Act, and how Palimpsests maps their requirements to code while the text is still moving.</p>
@@ -145,9 +154,9 @@
 <h2><a href="/notes/openssf-gold-cyber-resilience-act/">OpenSSF Gold software and the Cyber Resilience Act</a></h2>
 <p class="crumbs">20 October 2026</p>
 <p>What the EU Cyber Resilience Act asks of products built from open-source components, what an OpenSSF Gold badge shows about a component, and what it doesn&#x27;t.</p>
-<h2><a href="/notes/what-makes-an-audit-log-tamper-evident/">What makes an audit log tamper-evident</a></h2>
+<h2><a href="/notes/what-makes-an-audit-log-tamper-evident/">Tamper-evident audit logs: how they work and how to build one</a></h2>
 <p class="crumbs">20 October 2026</p>
-<p>How hash chains, anchors and witnesses make changes to a log detectable, what each one proves, and the questions to ask before trusting a tamper-evident claim.</p>
+<p>What makes an audit log tamper-evident: hash chains, anchors and witnesses, what each one proves, how to build such a log, and what to ask before trusting the claim.</p>
 <h2><a href="/notes/pala-1-three-design-principles/">PALA-1: three design principles for verifiable audit logs</a></h2>
 <p class="crumbs">9 October 2026</p>
 <p>Verification without disclosure, integrity through a hash chain, and checking a log with no remote service: the ideas behind the PALA-1 format and where each one stops.</p>

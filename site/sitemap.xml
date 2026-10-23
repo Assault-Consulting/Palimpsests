@@ -38,9 +38,15 @@
   </url>
   <url>
     <loc>https://palimpsests.dev/notes/</loc>
-    <lastmod>2026-10-20</lastmod>
+    <lastmod>2026-10-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://palimpsests.dev/notes/anatomy-of-a-tamper-evident-audit-log/</loc>
+    <lastmod>2026-10-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://palimpsests.dev/notes/ai-logging-standards-24970-18229/</loc>
