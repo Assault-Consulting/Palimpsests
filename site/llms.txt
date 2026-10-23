@@ -32,6 +32,7 @@ Palimpsests is honest about scope: it supplies the runtime primitives that speci
 <!-- notes:start -->
 ## Notes
 
+- [Anatomy of a tamper-evident audit log: PALA-1, a PKCS#11 anchor and SCITT](https://palimpsests.dev/notes/anatomy-of-a-tamper-evident-audit-log/): The three layers of a Palimpsests audit log taken apart: the PALA-1 hash chain, the chain head on a PKCS#11 token and SCITT receipts. What each one proves alone, and what they prove together.
 - [AI logging standards in draft: ISO/IEC 24970, prEN 18229-1 and how we map them](https://palimpsests.dev/notes/ai-logging-standards-24970-18229/): Where the AI logging standards stand in October 2026, why they matter for the EU AI Act, and how Palimpsests maps their requirements to code while the text is still moving.
 - [Keeping the audit log on your own machine when your agents use cloud models](https://palimpsests.dev/notes/audit-log-for-agents-on-cloud-models/): Agents that call hosted models can still keep their tool-call record locally. How Palimpsests records Claude Code, Codex, OpenTelemetry and LiteLLM tool calls, and what that record proves.
 - [OpenSSF Gold software and the Cyber Resilience Act](https://palimpsests.dev/notes/openssf-gold-cyber-resilience-act/): What the EU Cyber Resilience Act asks of products built from open-source components, what an OpenSSF Gold badge shows about a component, and what it doesn't.
