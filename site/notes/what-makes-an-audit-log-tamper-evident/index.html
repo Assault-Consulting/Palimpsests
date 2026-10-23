@@ -3,21 +3,21 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>What makes an audit log tamper-evident — Palimpsests notes</title>
-<meta name="description" content="How hash chains, anchors and witnesses make changes to a log detectable, what each one proves, and the questions to ask before trusting a tamper-evident claim." />
+<title>Tamper-evident audit logs: how they work and how to build one — Palimpsests notes</title>
+<meta name="description" content="What makes an audit log tamper-evident: hash chains, anchors and witnesses, what each one proves, how to build such a log, and what to ask before trusting the claim." />
 <link rel="canonical" href="https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/" />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 <meta name="author" content="Andrii Sparysh" />
 <meta name="theme-color" content="#15151f" />
 <meta property="og:type" content="article" />
 <meta property="og:site_name" content="Palimpsests" />
-<meta property="og:title" content="What makes an audit log tamper-evident — Palimpsests notes" />
-<meta property="og:description" content="How hash chains, anchors and witnesses make changes to a log detectable, what each one proves, and the questions to ask before trusting a tamper-evident claim." />
+<meta property="og:title" content="Tamper-evident audit logs: how they work and how to build one — Palimpsests notes" />
+<meta property="og:description" content="What makes an audit log tamper-evident: hash chains, anchors and witnesses, what each one proves, how to build such a log, and what to ask before trusting the claim." />
 <meta property="og:url" content="https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/" />
 <meta property="og:locale" content="en" />
 <meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="What makes an audit log tamper-evident — Palimpsests notes" />
-<meta name="twitter:description" content="How hash chains, anchors and witnesses make changes to a log detectable, what each one proves, and the questions to ask before trusting a tamper-evident claim." />
+<meta name="twitter:title" content="Tamper-evident audit logs: how they work and how to build one — Palimpsests notes" />
+<meta name="twitter:description" content="What makes an audit log tamper-evident: hash chains, anchors and witnesses, what each one proves, how to build such a log, and what to ask before trusting the claim." />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <link rel="manifest" href="/site.webmanifest" />
 <link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
@@ -28,8 +28,8 @@
     {
       "@type": "BlogPosting",
       "@id": "https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/#post",
-      "headline": "What makes an audit log tamper-evident",
-      "description": "How hash chains, anchors and witnesses make changes to a log detectable, what each one proves, and the questions to ask before trusting a tamper-evident claim.",
+      "headline": "Tamper-evident audit logs: how they work and how to build one",
+      "description": "What makes an audit log tamper-evident: hash chains, anchors and witnesses, what each one proves, how to build such a log, and what to ask before trusting the claim.",
       "url": "https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/",
       "mainEntityOfPage": "https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/",
       "datePublished": "2026-10-20",
@@ -69,7 +69,7 @@
         {
           "@type": "ListItem",
           "position": 3,
-          "name": "What makes an audit log tamper-evident",
+          "name": "Tamper-evident audit logs: how they work and how to build one",
           "item": "https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/"
         }
       ]
@@ -117,8 +117,8 @@
     <div class="doc__in">
 <p class="crumbs"><a href="/">Palimpsests</a> / <a href="/notes/">Notes</a></p>
 <span class="eyebrow">Note · 20 October 2026 · Andrii Sparysh</span>
-<h1 class="display">What makes an audit log tamper-evident</h1>
-<p>"Tamper-evident" appears on a lot of logging products. It should mean something specific: if someone changes the log, a person who didn't make the change can detect it later. It doesn't mean the change is impossible. That would be tamper-proof, and no log stored on a computer someone controls can promise that.</p>
+<h1 class="display">Tamper-evident audit logs: how they work and how to build one</h1>
+<p>"Tamper-evident" appears on a lot of logging products. For an audit log it should mean something specific: if someone changes the log, a person who didn't make the change can detect it later. It doesn't mean the change is impossible. That would be tamper-proof, and no log stored on a computer someone controls can promise that.</p>
 <p>Detection relies on several separate mechanisms. Each one answers its own question, and a log can have one without the others.</p>
 <h2 id="the-hash-chain">The hash chain</h2>
 <p>Each record stores the hash of the record before it. Change a record and its hash changes, so the next record's link stops matching. Remove a record from the middle and the link to the next one breaks. Reorder records and both the links and the sequence numbers go wrong.</p>
@@ -149,6 +149,16 @@ def verify(records):
 <h2 id="deletion-that-explains-itself">Deletion that explains itself</h2>
 <p>Logs can't grow forever. Retention rules say how long records stay, and after that they're deleted. In a hash chain, deleting the oldest records leaves a gap at the start, and a gap normally looks like tampering.</p>
 <p>Since version 0.13, Palimpsests opens each new segment with a continuation record. It names the previous segment's last hash and the retention period that applied, and it commits to every earlier record. When old segments are removed under that policy, the rest of the log still explains where its beginning went. The standards background for this is in <a href="https://palimpsests.dev/notes/ai-logging-standards-24970-18229/">AI logging standards in draft</a>.</p>
+<h2 id="how-to-make-an-audit-log-tamper-evident">How to make an audit log tamper-evident</h2>
+<p>Put together, the pieces above make a short list for building a tamper-evident audit log. Which items you need depends on what you'll have to prove later:</p>
+<ul>
+  <li>give every record a sequence number and the hash of the record before it;</li>
+  <li>keep a digest of each record's content in its header, so the log can be checked without being read;</li>
+  <li>store the latest hash somewhere the writer can't quietly change, such as a separate file or a hardware token, and check the log against it;</li>
+  <li>when you need to show when the log existed, have an outside party sign the head from time to time;</li>
+  <li>write retention into the log itself, so deleted segments are declared rather than simply missing;</li>
+  <li>publish the format and test it with a verifier someone else wrote.</li>
+</ul>
 <h2 id="other-approaches">Other approaches</h2>
 <p>Hash chains aren't the only way to do this. Signed syslog (RFC 5848) signs batches of messages. The systemd journal can seal its files with forward-secure keys, so an attacker who takes over a machine can't rewrite what was sealed before. Some storage systems simply refuse to change data once it's written. Each of these puts the trust somewhere different: in a signing key, a sealing key or a storage vendor. For any of them it's worth asking who you have to trust, and whether that's the same party you're worried about.</p>
 <h2 id="questions-to-ask-before-trusting-the-claim">Questions to ask before trusting the claim</h2>
