@@ -3,21 +3,21 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Tamper-evident logging for LiteLLM, MCP and OpenCode tool calls — Palimpsests (PALA-1)</title>
-<meta name="description" content="Three adapters put LiteLLM, MCP and OpenCode tool calls on a tamper-evident PALA-1 chain, marked as reported by the client — with each adapter's status and limits stated." />
+<title>Audit logging for Claude Code, Codex, OpenTelemetry, LiteLLM and MCP tool calls — Palimpsests (PALA-1)</title>
+<meta name="description" content="Put the tool calls of AI agents on a tamper-evident log on your own machine, whether the model is local or hosted: Claude Code, Codex, OpenTelemetry, LiteLLM, MCP and OpenCode, with each adapter's status and limits." />
 <link rel="canonical" href="https://palimpsests.dev/integrations/" />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 <meta name="author" content="Assault Consulting" />
 <meta name="theme-color" content="#15151f" />
 <meta property="og:type" content="article" />
 <meta property="og:site_name" content="Palimpsests" />
-<meta property="og:title" content="Tamper-evident logging for LiteLLM, MCP and OpenCode tool calls — Palimpsests (PALA-1)" />
-<meta property="og:description" content="Three adapters put LiteLLM, MCP and OpenCode tool calls on a tamper-evident PALA-1 chain, marked as reported by the client — with each adapter's status and limits stated." />
+<meta property="og:title" content="Audit logging for Claude Code, Codex, OpenTelemetry, LiteLLM and MCP tool calls — Palimpsests (PALA-1)" />
+<meta property="og:description" content="Put the tool calls of AI agents on a tamper-evident log on your own machine, whether the model is local or hosted: Claude Code, Codex, OpenTelemetry, LiteLLM, MCP and OpenCode, with each adapter's status and limits." />
 <meta property="og:url" content="https://palimpsests.dev/integrations/" />
 <meta property="og:locale" content="en" />
 <meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="Tamper-evident logging for LiteLLM, MCP and OpenCode tool calls — Palimpsests (PALA-1)" />
-<meta name="twitter:description" content="Three adapters put LiteLLM, MCP and OpenCode tool calls on a tamper-evident PALA-1 chain, marked as reported by the client — with each adapter's status and limits stated." />
+<meta name="twitter:title" content="Audit logging for Claude Code, Codex, OpenTelemetry, LiteLLM and MCP tool calls — Palimpsests (PALA-1)" />
+<meta name="twitter:description" content="Put the tool calls of AI agents on a tamper-evident log on your own machine, whether the model is local or hosted: Claude Code, Codex, OpenTelemetry, LiteLLM, MCP and OpenCode, with each adapter's status and limits." />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <link rel="manifest" href="/site.webmanifest" />
 <script type="application/ld+json">
@@ -27,11 +27,11 @@
     {
       "@type": "TechArticle",
       "@id": "https://palimpsests.dev/integrations/#article",
-      "headline": "Tamper-evident logging for LiteLLM, MCP and OpenCode tool calls — Palimpsests (PALA-1)",
-      "description": "Three adapters put LiteLLM, MCP and OpenCode tool calls on a tamper-evident PALA-1 chain, marked as reported by the client — with each adapter's status and limits stated.",
+      "headline": "Audit logging for Claude Code, Codex, OpenTelemetry, LiteLLM and MCP tool calls — Palimpsests (PALA-1)",
+      "description": "Put the tool calls of AI agents on a tamper-evident log on your own machine, whether the model is local or hosted: Claude Code, Codex, OpenTelemetry, LiteLLM, MCP and OpenCode, with each adapter's status and limits.",
       "url": "https://palimpsests.dev/integrations/",
       "inLanguage": "en",
-      "dateModified": "2026-09-30",
+      "dateModified": "2026-10-23",
       "author": {
         "@id": "https://palimpsests.dev/#org"
       },
@@ -101,65 +101,75 @@
   <div class="wrap">
     <div class="doc__in">
       <p class="crumbs"><a href="/">Palimpsests</a> / Integrations</p>
-      <span class="eyebrow">Integrations · LiteLLM · MCP · OpenCode</span>
-      <h1 class="display">Put your agent's tool calls on a tamper-evident record</h1>
-      <p class="lede">Three adapters report tool calls from existing clients to a local <code>palimpsests serve</code>, which writes them into the PALA-1 chain — marked as reported by the client, so they are never confused with what the runtime observed itself.</p>
+      <span class="eyebrow">Integrations · Claude Code · Codex · OpenTelemetry · LiteLLM · MCP</span>
+      <h1 class="display">Audit logging for the tool calls your agents already make</h1>
+      <p class="lede">Your agents may run a local model or call a hosted one. Either way, their tool calls can be recorded on a tamper-evident log that stays on your own machine. The audit record stays on your machine, even when the model doesn't.</p>
 
       <h2 id="start">Before you start</h2>
       <pre><code>pip install 'palimpsests[serve]'
-palimpsests serve        # http://127.0.0.1:11435 — local by default</code></pre>
-      <p>The adapters post to the serve's ingestion endpoint, <code>POST /v1/pala/events</code>, available since 0.12. If the serve runs with <code>--api-key</code>, give the adapter the same key in <code>PALIMPSESTS_SERVE_API_KEY</code>. Arguments and outputs are sent to the serve, which stores only their digests — content never enters the chain.</p>
+palimpsests-serve --api-key "$PALIMPSESTS_SERVE_API_KEY"   # http://127.0.0.1:11435</code></pre>
+      <p>Every integration below reports to this local server, which writes each tool call and its result into a PALA-1 chain. Arguments and results are stored as SHA-256 digests of a canonical form; their content never enters the chain. The key is optional on a machine only you use, and recommended anywhere else.</p>
 
       <h2 id="proves">What a reported record proves</h2>
       <div class="tbl"><table>
         <thead><tr><th>Record</th><th>What the chain proves</th></tr></thead>
         <tbody>
-          <tr><td>wire-parsed pair — the serve mediated the loop itself</td><td>the runtime observed the dispatch and the returned result</td></tr>
-          <tr><td>reported pair — marked <code>reported-by-client</code></td><td>the client asserted a call and a result; the serve recorded the assertion, its digests and when — <b>not</b> that the tool ran</td></tr>
+          <tr><td>wire-parsed pair: the server ran the tool loop itself</td><td>the runtime saw the dispatch and the returned result</td></tr>
+          <tr><td>reported pair, marked <code>reported-by-client</code></td><td>a client reported a call and a result; the server recorded the report, its digests and the time. It doesn't show that the tool ran.</td></tr>
         </tbody>
       </table></div>
-      <p>A reported result binds to its call by sequence number and hash, exactly as a wire-parsed pair does.</p>
+      <p>Since 0.13 every result also says what its recorder could see: <code>ok</code> or <code>error</code> where the client reports failures, <code>unobserved</code> where it can't tell a failed call from a successful one. An <code>ok</code> means a result came back, never that the action succeeded.</p>
+
+      <h2 id="claude-code">Claude Code</h2>
+      <p>Claude Code sends its hooks over HTTP, so there's nothing to install. Add <code>PreToolUse</code>, <code>PostToolUse</code> and <code>PostToolUseFailure</code> entries to <code>~/.claude/settings.json</code>, each pointing at <code>/v1/pala/hooks/claude</code> with your key in the <code>Authorization</code> header. List the key's variable in <code>allowedEnvVars</code>: without it Claude Code sends an empty header and every report is refused while the agent keeps working.</p>
+      <p><b>Results:</b> <code>ok</code> or <code>error</code>, because Claude Code reports failures. <b>Measured on</b> Claude Code 2.1.288, and the route is watched by the surface checker.</p>
+
+      <h2 id="codex">Codex</h2>
+      <p>Codex runs only command hooks, so a one-file forwarder, <code>palimpsests_hook.py</code>, passes each event to <code>/v1/pala/hooks/codex</code>. Add it as the <code>PreToolUse</code> and <code>PostToolUse</code> command in <code>~/.codex/hooks.json</code>, then open <code>/hooks</code> once in an interactive session and trust both entries. Codex skips an untrusted hook without a warning, and the tools then run with nothing recorded.</p>
+      <p><b>Results:</b> <code>unobserved</code>, because Codex has no failure hook. <b>Measured on</b> Codex CLI 0.160.0.</p>
+
+      <h2 id="opentelemetry">OpenTelemetry GenAI</h2>
+      <p>Frameworks instrumented with OpenTelemetry already put one <code>execute_tool</code> span on each tool execution. Point the trace exporter at the server and those spans become recorded tool calls:</p>
+      <pre><code>export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://127.0.0.1:11435/v1/traces
+export OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=http/protobuf
+export OTEL_EXPORTER_OTLP_TRACES_HEADERS="Authorization=Bearer $PALIMPSESTS_SERVE_API_KEY"</code></pre>
+      <p>OTLP over HTTP only, JSON or protobuf. To record digests of arguments and results, turn on the instrumentation's content capture; without it the pair is recorded with no digests. <b>Results:</b> <code>error</code> for a span with error status, <code>ok</code> otherwise. <b>Tested</b> against a real export from pydantic-ai 2.57.0.</p>
 
       <h2 id="litellm">LiteLLM</h2>
-      <p>A one-file callback, standard library only. It sees every structured tool loop that passes through LiteLLM — as a client library or through the proxy — and reports the model's <code>tool_calls</code> and the <code>role: tool</code> results fed back. It never sees the tool run, so <code>ok</code> means a result re-entered generation, not that the action took effect.</p>
+      <p>A one-file callback for the LiteLLM client library or proxy. It reports the model's <code>tool_calls</code> and the <code>role: tool</code> results that come back, which makes it a natural fit when your agents reach hosted models through a LiteLLM gateway.</p>
       <pre><code>import litellm
 from palimpsests_audit import PalimpsestsAudit   # integrations/litellm/palimpsests_audit.py
 litellm.callbacks = [PalimpsestsAudit()]</code></pre>
-      <p><b>Status:</b> exercised against a live serve with synthetic tool calls; no real-traffic run on record yet.</p>
+      <p><b>Results:</b> <code>unobserved</code>, because LiteLLM never sees the tool run. <b>Status:</b> exercised against a live server with synthetic calls; no real-traffic run on record yet.</p>
 
-      <h2 id="mcp">MCP (stdio servers)</h2>
-      <p>A one-file proxy in front of any MCP server that speaks stdio. It sits between client and server, so it observes both halves of every <code>tools/call</code> — request and response — and reports outcomes <code>ok</code>, <code>error</code> or <code>cancelled</code>. It forwards every byte unchanged and never blocks or alters a call.</p>
-      <pre><code>{&quot;mcpServers&quot;: {&quot;fs&quot;: {
-  &quot;command&quot;: &quot;python3&quot;,
-  &quot;args&quot;: [&quot;/path/to/palimpsests_audit_mcp.py&quot;, &quot;--&quot;,
-           &quot;npx&quot;, &quot;-y&quot;, &quot;@modelcontextprotocol/server-filesystem&quot;, &quot;/data&quot;]}}}</code></pre>
-      <p><b>Status:</b> exercised against a live serve with synthetic calls; no real-traffic run on record yet.</p>
+      <h2 id="mcp">MCP servers over stdio</h2>
+      <p>A one-file proxy in front of any MCP server that speaks standard input and output. It sees both the request and the response of every <code>tools/call</code>, forwards every byte unchanged and never blocks a call.</p>
+      <p><b>Results:</b> <code>ok</code>, <code>error</code> or <code>cancelled</code>. <b>Status:</b> exercised against a live server with synthetic calls; no real-traffic run on record yet.</p>
 
       <h2 id="opencode">OpenCode</h2>
-      <p>A dependency-free plugin: copy <code>palimpsests-audit.js</code> into <code>.opencode/plugins/</code> (one project) or <code>~/.config/opencode/plugins/</code> (all projects). It reports the tools OpenCode executes — including loops the model ran in text, which the serve on its own cannot see.</p>
-      <p><b>Status on OpenCode 1.18.31</b>, from two maintainer traffic runs: one reported pair reached the chain — a failed <code>read</code>, correctly bound. The call arrived through <code>tool.execute.before</code>; <code>tool.execute.after</code> did not fire, and the result arrived through the plugin's fallback path. Delivery of a <i>successful</i> result through that path has not been observed yet. The first run recorded no pairs, and why is not yet explained.</p>
+      <p>A dependency-free plugin you copy into <code>.opencode/plugins/</code>. It reports the tools OpenCode runs, including calls the model wrote as plain text. <b>Status on OpenCode 1.18.31:</b> one reported pair has reached the chain from a real session, a failed <code>read</code> that was bound correctly. A successful result arriving the same way hasn't been observed yet.</p>
 
       <h2 id="limits">Limits</h2>
       <ul>
-        <li>A reported record proves the report, not the action.</li>
-        <li>Client hook surfaces change between versions. A surface checker probes each client's hook surface and reports it green, red or skipped; each adapter's README states the version its claims were observed on.</li>
-        <li>Each adapter's README carries a paste-ready prompt for a coding agent, and says what it sees and what it cannot.</li>
+        <li>A reported record proves the report, not the action, and nothing is recorded for a tool the client never reports.</li>
+        <li>Hook interfaces change between client versions. Each adapter's README states the version its behaviour was measured on.</li>
+        <li>The record is only as trustworthy as the chain it sits in; see <a href="/notes/what-makes-an-audit-log-tamper-evident/">what makes an audit log tamper-evident</a>.</li>
       </ul>
 
       <aside class="evidence">
         <h2>Evidence in the repository</h2>
         <ul>
-          <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/integrations/litellm/README.md" rel="noopener">LiteLLM callback — README</a></li>
-          <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/integrations/mcp/README.md" rel="noopener">MCP proxy — README</a></li>
-          <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/integrations/opencode/README.md" rel="noopener">OpenCode plugin — README, with its status table</a></li>
-          <li><a href="https://github.com/Assault-Consulting/Palimpsests/tree/main/docs/specs/pala-1/independent-runs" rel="noopener">OpenCode traffic runs</a></li>
-          <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/adr/0005-text-mode-tool-loops-and-audit-visibility.md" rel="noopener">Text-mode tool loops and audit visibility — ADR-0005</a></li>
+          <li><a href="https://github.com/Assault-Consulting/Palimpsests/tree/main/integrations/agent-hooks" rel="noopener">Claude Code and Codex hooks: README and probe results</a></li>
+          <li><a href="https://github.com/Assault-Consulting/Palimpsests/tree/main/integrations/otel" rel="noopener">OpenTelemetry GenAI receiver: README</a></li>
+          <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/integrations/litellm/README.md" rel="noopener">LiteLLM callback: README</a></li>
+          <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/integrations/mcp/README.md" rel="noopener">MCP proxy: README</a></li>
+          <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/integrations/opencode/README.md" rel="noopener">OpenCode plugin: README, with its status table</a></li>
           <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/SURFACE-CHECKER.md" rel="noopener">Surface checker</a></li>
         </ul>
       </aside>
       <div class="related">
+        <a class="btn" href="/notes/audit-log-for-agents-on-cloud-models/">Agents on cloud models →</a>
         <a class="btn" href="/verify-without-reading/">Verify without reading →</a>
-        <a class="btn" href="/pala-1/">The format: PALA-1 →</a>
       </div>
     </div>
   </div>

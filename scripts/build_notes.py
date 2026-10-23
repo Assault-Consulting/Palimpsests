@@ -4,7 +4,8 @@
 Each note is a markdown file with a small front-matter block. The script
 writes site/notes/<slug>/index.html, the list page site/notes/index.html
 and the RSS feed site/notes/feed.xml, regenerates site/sitemap.xml, and
-rewrites the notes block of site/llms.txt. Output is deterministic: dates
+rewrites the notes block of site/llms.txt and the latest-notes block of
+the home page. Output is deterministic: dates
 come from the front matter, never from the clock, so a re-run on unchanged
 sources changes nothing. tests/test_notes_build.py holds that.
 
@@ -31,12 +32,12 @@ AUTHOR = "Andrii Sparysh"
 
 # Static pages and the date each last changed. Update a date when its page changes.
 STATIC_PAGES = [
-    ("/", "2026-10-04", "weekly", "1.0"),
+    ("/", "2026-10-23", "weekly", "1.0"),
     ("/pala-1/", "2026-10-18", "monthly", "0.9"),
     ("/verify-without-reading/", "2026-09-30", "monthly", "0.8"),
     ("/eu-ai-act-article-12/", "2026-09-30", "monthly", "0.8"),
     ("/air-gapped/", "2026-09-30", "monthly", "0.8"),
-    ("/integrations/", "2026-09-30", "monthly", "0.8"),
+    ("/integrations/", "2026-10-23", "monthly", "0.8"),
 ]
 
 NAV = [
@@ -54,6 +55,9 @@ DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 LLMS_START = "<!-- notes:start -->"
 LLMS_END = "<!-- notes:end -->"
+HOME_START = "<!-- latest-notes:start -->"
+HOME_END = "<!-- latest-notes:end -->"
+HOME_LATEST = 3
 
 
 @dataclass
@@ -421,6 +425,26 @@ def sitemap(notes: list[Note]) -> str:
 """
 
 
+def home_block(notes: list[Note]) -> str:
+    """The newest notes, as cards for the home page."""
+    cards = "\n".join(
+        f"""    <div class="prov__item" data-reveal>
+      <h4><a href="/notes/{n.slug}/">{html.escape(n.title)}</a></h4>
+      <p>{html.escape(n.description)}</p>
+    </div>"""
+        for n in notes[:HOME_LATEST]
+    )
+    return f"{HOME_START}\n  <div class=\"prov\">\n{cards}\n  </div>\n  {HOME_END}"
+
+
+def replace_block(path: Path, start_marker: str, end_marker: str, block: str) -> None:
+    text = path.read_text(encoding="utf-8")
+    start, end = text.find(start_marker), text.find(end_marker)
+    if start < 0 or end < start:
+        raise ValueError(f"{path} needs the {start_marker} / {end_marker} markers")
+    path.write_text(text[:start] + block + text[end + len(end_marker):], encoding="utf-8")
+
+
 def llms_block(notes: list[Note]) -> str:
     lines = [f"- [{n.title}]({n.url}): {n.description}" for n in notes]
     return "\n".join([LLMS_START, "## Notes", "", *lines, LLMS_END])
@@ -439,13 +463,8 @@ def build(notes_dir: Path, site_dir: Path) -> None:
     (out / "feed.xml").write_text(feed(notes), encoding="utf-8")
     (site_dir / "sitemap.xml").write_text(sitemap(notes), encoding="utf-8")
 
-    llms = site_dir / "llms.txt"
-    text = llms.read_text(encoding="utf-8")
-    start, end = text.find(LLMS_START), text.find(LLMS_END)
-    if start < 0 or end < start:
-        raise ValueError("site/llms.txt needs the notes:start / notes:end markers")
-    llms.write_text(text[:start] + llms_block(notes) + text[end + len(LLMS_END):],
-                    encoding="utf-8")
+    replace_block(site_dir / "llms.txt", LLMS_START, LLMS_END, llms_block(notes))
+    replace_block(site_dir / "index.html", HOME_START, HOME_END, home_block(notes))
 
 
 if __name__ == "__main__":

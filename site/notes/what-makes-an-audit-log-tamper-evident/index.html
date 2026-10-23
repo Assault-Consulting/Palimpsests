@@ -122,6 +122,21 @@
 <p>Detection relies on several separate mechanisms. Each one answers its own question, and a log can have one without the others.</p>
 <h2 id="the-hash-chain">The hash chain</h2>
 <p>Each record stores the hash of the record before it. Change a record and its hash changes, so the next record's link stops matching. Remove a record from the middle and the link to the next one breaks. Reorder records and both the links and the sequence numbers go wrong.</p>
+<pre><code>header 1  &lt;-- prev_hash --  header 2  &lt;-- prev_hash --  header 3   = head
+   |                           |                           |
+digest(body 1)             digest(body 2)             digest(body 3)</code></pre>
+<p>The check itself is short. Here's a toy version in Python. It isn't the PALA-1 wire format, only the idea:</p>
+<pre><code>import hashlib
+
+def verify(records):
+    prev = bytes(32)  # the first record points at zeros
+    for r in records:
+        if r["prev_hash"] != prev:
+            return None  # a link is broken here
+        if hashlib.sha256(r["body"]).digest() != r["body_digest"]:
+            return None  # the body no longer matches its header
+        prev = hashlib.sha256(r["header"]).digest()
+    return prev  # the head, to compare with the anchor</code></pre>
 <p>A chain answers the question "was anything inside this file altered?" Anyone with the file and the specification can check it, and the check needs no key. In PALA-1 the record bodies can even stay encrypted during the check, because each header carries a digest of its body. That part is explained in <a href="https://palimpsests.dev/notes/checking-an-ai-log-without-reading-it/">how to check an AI log without reading it</a>.</p>
 <h2 id="the-anchor">The anchor</h2>
 <p>A chain has one blind spot. If the last records are deleted, what remains is still a valid chain, only shorter. The same is true when a whole file is swapped for another consistent chain.</p>
@@ -145,6 +160,8 @@
   <li>What happens to the log when old records are deleted?</li>
   <li>What isn't covered? A tamper-evident log shows the record wasn't changed. It doesn't show the recorded events were true.</li>
 </ul>
+<h2 id="further-reading">Further reading</h2>
+<p>The ideas here are older than AI agents. Bruce Schneier and John Kelsey described hash-chained audit logs on untrusted machines in "Secure Audit Logs to Support Computer Forensics" (ACM Transactions on Information and System Security, 1999). Scott Crosby and Dan Wallach showed how to make such logs efficient to audit in "Efficient Data Structures for Tamper-Evident Logging" (USENIX Security, 2009). Certificate Transparency put Merkle-tree logs into wide use, specified in <a href="https://www.rfc-editor.org/rfc/rfc6962">RFC 6962</a> and <a href="https://www.rfc-editor.org/rfc/rfc9162">RFC 9162</a>. Signed syslog is <a href="https://www.rfc-editor.org/rfc/rfc5848">RFC 5848</a>.</p>
 <p>The format behind all of this is <a href="https://palimpsests.dev/pala-1/">PALA-1</a>. The reasoning behind its design is in <a href="https://palimpsests.dev/notes/pala-1-three-design-principles/">three design principles for verifiable audit logs</a>.</p>
 <div class="related">
   <a class="btn" href="/notes/">All notes →</a>
