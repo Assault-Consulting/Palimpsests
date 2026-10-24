@@ -43,8 +43,9 @@ maintainers rather than something to do quietly. Tracked as U14.
 
 The module path is chosen so extraction into ``palimpsests-audit`` renames
 nothing: this facade sits above ``pala`` (the wire codec) and consumes only
-its public surface, plus the writer's EVT_KIND constant table as the single
-source for kind names (§10.5 — the ints are imported, never re-typed).
+its public surface, plus the inference profile's allocations
+(``audit.profiles.inference``) as the single source for kind numbers (§10.5 —
+the ints are imported, never re-typed). It does not import the writer.
 """
 
 from __future__ import annotations
@@ -61,8 +62,9 @@ from palimpsests.audit.anchors import (
     AnchorSource,
     AnchorSourceError,
 )
-from palimpsests.audit.pala.codec import (
+from palimpsests.audit.pala.codec import (  # re-exported: the consumer surface
     FIXED_HEADER_LEN,
+    FORMAT_VERSION,
     MAGIC,
     RT_AGGREGATE,
     RT_ANCHOR,
@@ -76,11 +78,19 @@ from palimpsests.audit.pala.codec import (
     RT_SPAN_END,
     RT_SPAN_START,
     RT_WITNESS,
+    TIER_A,
+    TIER_B,
+    TIER_BPLUS,
+    TIME_HW_RTC,
+    TIME_NTP_SYNCED,
+    TIME_UNKNOWN,
+    TIME_UNSYNCED,
     TLV_ORIGIN_CONFIG_DIGEST,
     TLV_ORIGIN_MODEL_DIGEST,
     TLV_ORIGIN_ROLE,
     TLV_SHRED_KEY_ID,
     ZERO16,
+    ZERO32,
     Header,
     MalformedRecord,
     decode_tlvs,
@@ -88,7 +98,7 @@ from palimpsests.audit.pala.codec import (
 from palimpsests.audit.pala.codec import record_hash as _record_hash
 from palimpsests.audit.pala.incremental import Advisory, AdvisoryItem
 from palimpsests.audit.pala.verify import VerifyResult, verify_headers_with_advisory
-from palimpsests.audit.pala_writer import (
+from palimpsests.audit.profiles.inference import (
     DISP_ACKNOWLEDGED,
     DISP_DISMISSED,
     DISP_ESCALATED,
@@ -129,21 +139,129 @@ from palimpsests.audit.pala_writer import (
     SOURCE_PARSED_FROM_WIRE,
     SOURCE_REPORTED_BY_CLIENT,
 )
+from typing import TYPE_CHECKING
 
+#: The 16 zero bytes that mean "no span" in ``span_id`` / ``parent_span_id``,
+#: and the 32 that mean "no predecessor" in a GENESIS ``prev_hash``. Named
+#: here so a consumer compares against a meaning, not against a byte string
+#: it had to know.
+NO_SPAN = ZERO16
+NO_PREDECESSOR = ZERO32
+
+# The reading surface — one place to import from (docs/CONSUMER-SURFACE.md,
+# rule 1). Re-exported names keep their home modules as well; both paths are
+# pinned by tests/test_consumer_surface.py. The boot-statistics and clock-health
+# names are resolved on first use (see __getattr__ below): those modules import
+# this one, so a plain import here would be circular.
 __all__ = [
+    # reading and verifying
     "AuditReader",
     "Verification",
     "Diagnosis",
+    "ManifestReading",
+    "VerifyResult",
+    "Advisory",
+    "AdvisoryItem",
+    # records
     "DecodedRecord",
+    "Header",
+    "decode_record",
+    # structure and resolutions
     "SpanView",
     "BootView",
     "OriginView",
     "OriginState",
     "ContinuationView",
-    "ManifestReading",
     "decode_continuation",
-    "decode_record",
+    # analytics (channel 5, re-exported)
+    "boot_statistics",
+    "BootStats",
+    "AnchorCadence",
+    "SpanStats",
+    "step_catalog",
+    "TimeStep",
+    # sentinels
+    "NO_SPAN",
+    "NO_PREDECESSOR",
+    # core numbers (frozen by the specification)
+    "FORMAT_VERSION",
+    "RT_GENESIS",
+    "RT_BOOT",
+    "RT_SPAN_START",
+    "RT_SPAN_END",
+    "RT_EVENT",
+    "RT_MERKLE",
+    "RT_AGGREGATE",
+    "RT_SHED",
+    "RT_SAFETY",
+    "RT_ANCHOR",
+    "RT_WITNESS",
+    "RT_KEY_SHRED",
+    "TIER_A",
+    "TIER_B",
+    "TIER_BPLUS",
+    "TIME_UNKNOWN",
+    "TIME_UNSYNCED",
+    "TIME_HW_RTC",
+    "TIME_NTP_SYNCED",
+    # inference-profile numbers (frozen by the profile)
+    "KIND_MODEL_LOAD",
+    "KIND_MODEL_UNLOAD",
+    "KIND_KV_SAVE",
+    "KIND_KV_RESTORE",
+    "KIND_PREFIX_COPY",
+    "KIND_PREFIX_WARM",
+    "KIND_RECOVERY_TRUNCATED_TAIL",
+    "KIND_TOOL_CALL",
+    "KIND_TOOL_RESULT",
+    "KIND_TOOLS_OFFERED_NO_CALL",
+    "KIND_SEGMENT_CONTINUATION",
+    "KIND_GUARD_PREFIX_RELEASE",
+    "KIND_GUARD_STATE_REJECT",
+    "KIND_INCIDENT_CANDIDATE",
+    "KIND_OVERSIGHT_ACK",
+    "KIND_GUARD_TOOL_LOOP_LIMIT",
+    "OUTCOME_OK",
+    "OUTCOME_ERROR",
+    "OUTCOME_TIMEOUT",
+    "OUTCOME_CANCELLED",
+    "OUTCOME_UNOBSERVED",
+    "SOURCE_PARSED_FROM_WIRE",
+    "SOURCE_REPORTED_BY_CLIENT",
+    "DISP_ACKNOWLEDGED",
+    "DISP_DISMISSED",
+    "DISP_ESCALATED",
 ]
+
+if TYPE_CHECKING:  # what __getattr__ returns, for linters, IDEs and type checkers
+    from palimpsests.audit.bootstats import (
+        AnchorCadence,
+        BootStats,
+        SpanStats,
+        boot_statistics,
+    )
+    from palimpsests.audit.timehealth import TimeStep, step_catalog
+
+_LAZY = {
+    "boot_statistics": "palimpsests.audit.bootstats",
+    "BootStats": "palimpsests.audit.bootstats",
+    "AnchorCadence": "palimpsests.audit.bootstats",
+    "SpanStats": "palimpsests.audit.bootstats",
+    "step_catalog": "palimpsests.audit.timehealth",
+    "TimeStep": "palimpsests.audit.timehealth",
+}
+
+
+def __getattr__(name: str):
+    """Resolve the channel-5 re-exports on first use (PEP 562)."""
+    home = _LAZY.get(name)
+    if home is None:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    import importlib
+
+    value = getattr(importlib.import_module(home), name)
+    globals()[name] = value
+    return value
 
 _TYPE_NAMES = {
     RT_GENESIS: "GENESIS",
@@ -160,8 +278,8 @@ _TYPE_NAMES = {
     RT_KEY_SHRED: "KEY_SHRED",
 }
 
-# §10.5: single source for kind names — the values come from the writer's
-# table (imported), the labels are this layer's presentation.
+# §10.5: single source for kind names — the values come from the profile's
+# table (audit.profiles.inference), the labels are this layer's presentation.
 _KIND_NAMES = {
     KIND_MODEL_LOAD: "MODEL_LOAD",
     KIND_MODEL_UNLOAD: "MODEL_UNLOAD",
