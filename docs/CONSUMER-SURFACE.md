@@ -73,21 +73,21 @@ Two consumer modules for reading: `palimpsests.audit.reader` for everything abou
 | Open and close | `AuditReader.open(path, *, anchor=None)`, `AuditReader.from_bytes(data, *, anchor=None)`, `close()`, context manager | Exists |
 | Not a container | Diagnosis `not_a_container` when byte 0 is not the record magic; `open` and `from_bytes` do not raise on such a file | Exists — 0.13 (U22, #297) |
 | Empty container (r2) | Diagnosis `empty_container` for a file with no bytes | New (U26) — after 0.13 |
-| Question one: links | `verify() -> Verification`; `Verification.chain: VerifyResult` (`chain_ok`, `count`, `head`, `breaks`, `gaps`, `violations`, `uninterpretable`) | Export `VerifyResult` |
+| Question one: links | `verify() -> Verification`; `Verification.chain: VerifyResult` (`chain_ok`, `count`, `head`, `breaks`, `gaps`, `violations`, `uninterpretable`) | Exists — 0.14 (U19) |
 | Violation codes (r2) | `VerifyResult.violation_codes: list[tuple[int, str]]`, parallel to `violations`; `Diagnosis.code` for `record_violation` | New (U24) — after 0.13, before 1.0 |
 | Question one: bodies | `container_check() -> ContainerCheck` (`well_formed`, `malformed`, `bytes_parsed`, `bytes_total`, `body_digest_mismatches`) | New (U21) — after 0.13 |
 | Question two | `Verification.complete_to_anchor`, `anchor_lag`, `anchor`, `anchor_attempts`; `VerifyResult.anchor_reason` (a sentence) | Exists |
 | Diagnosis | `Diagnosis` (`pattern`, `at_seq` — contract; `expected`, `narrative` — sentences) | Exists |
 | Companion files | `Verification.manifest: ManifestReading \| None` (`path`, `status`, `sha256`, `detail`) | Exists — 0.13 (U17, #296) |
-| Advisory | `Advisory`, `AdvisoryItem` (`code`, `at_seq`, `boot_id`, `detail`) | Export |
+| Advisory | `Advisory`, `AdvisoryItem` (`code`, `at_seq`, `boot_id`, `detail`) | Exists — 0.14 (U19) |
 | Records | `records()`, `safety_records()`, `head()`, `DecodedRecord`, `Header` | Exists; export `Header` |
 | Random access | `record_at(index)`, `record_by_seq(seq) -> DecodedRecord \| None`, `header_at(index) -> Header \| None`, `record_count` | Exists — 0.13 (U16, #294) |
 | Structure | `boots()`, `spans()`, `structure()`, `BootView`, `SpanView` | Exists |
-| Boot statistics | `boot_statistics(reader)` and its result types | Export (channel 5 path kept) |
+| Boot statistics | `boot_statistics(reader)`, `BootStats`, `AnchorCadence`, `SpanStats` | Exists — 0.14 (U19); channel 5 path kept |
 | Resolutions | `acknowledged_candidates()`, `shredded_targets()`, `origin_state_at(seq) -> OriginState`, `OriginView` | Exists; bounded since 0.13 (U23, #295) |
-| Clock health | `step_catalog(reader)` and its step type | Export (channel 5 path kept) |
+| Clock health | `step_catalog(reader)`, `TimeStep` | Exists — 0.14 (U19); channel 5 path kept |
 | Segments | `ContinuationView`, `decode_continuation` | Exists |
-| Constants | `RT_*`, read-side `KIND_*`, `OUTCOME_*`, `SOURCE_*`, `DISPOSITION_*`, `TIER_*`, `TIME_*`, `FORMAT_VERSION`, `NO_SPAN`, `NO_PREDECESSOR` | Export; the last two new aliases of `ZERO16`, `ZERO32` |
+| Constants | `RT_*`, `KIND_*`, `OUTCOME_*`, `SOURCE_*`, `DISP_*`, `TIER_*`, `TIME_*`, `FORMAT_VERSION`, `NO_SPAN`, `NO_PREDECESSOR` | Exists — 0.14 (U19); the profile's numbers live in `audit.profiles.inference`, the last two are aliases of `ZERO16`, `ZERO32` |
 | Names | `assurance_tier_name`, `time_trust_name` | Exists |
 | Anchors | `AnchorSource`, `AnchorReading`, `AnchorSourceError`, `AnchorAttempt`, `ManualAnchor`, `FileAnchor`, `ChainedAnchorSource` (incl. `last_attempts`), `Pkcs11Anchor`, `Pkcs11Unavailable`, `DEFAULT_OBJECT_LABEL` | Exists |
 
@@ -132,8 +132,8 @@ Twelve changes turn today's code into the surface above. Two are 0.13 release bl
 | **U25 (r2)** | `INTEGRATION-SURFACE.md` refresh: rules 4–7 apply from 0.13; the `kind_name` pair; channel 3 names the consistency proofs (`chain_root`, `consistency_proof`, `ConsistencyProof`, since 0.12); the SCITT bridge listed as **experimental** until bridge run B3 reproduces construction v3 | The document already lags the code; what 0.13 promises must be written down when 0.13 ships | Before the 0.13 tag — docs only; this document lands with it |
 | U16 | `record_at`, `record_by_seq`, `header_at`, `record_count` | One record cost a full decode: 16.9 s and 1.9 GB at 1M records | Done (#294) |
 | U23 | Bounded `shredded_targets()` and origin methods | A record card asked for both and paid a full decode | Done (#295) |
-| U19 | Re-exports into `reader.__all__` (`VerifyResult`, `Header`, `Advisory`, `AdvisoryItem`, `boot_statistics`, `step_catalog`, the constants); `NO_SPAN`, `NO_PREDECESSOR`; inference-profile constants moved to `audit/profiles/inference.py` (see decision 2) | No reader-side consumer should need the writer, the codec or an undeclared module | After 0.13 |
-| U20 | Contract test `tests/test_consumer_surface.py`: every symbol, field and vocabulary member in this document, both import paths for re-exports, asserted by name | Makes "stable" checkable in CI | With U19 |
+| U19 | Re-exports into `reader.__all__` (`VerifyResult`, `Header`, `Advisory`, `AdvisoryItem`, `boot_statistics`, `step_catalog`, the constants); `NO_SPAN`, `NO_PREDECESSOR`; inference-profile constants moved to `audit/profiles/inference.py` (see decision 2) | No reader-side consumer should need the writer, the codec or an undeclared module | Done (0.14) |
+| U20 | Contract test `tests/test_consumer_surface.py`: every symbol, field and vocabulary member in this document, both import paths for re-exports, asserted by name | Makes "stable" checkable in CI | Done (0.14) |
 | **U24 (r2)** | Violation codes: `VerifyResult.violation_codes` parallel to `violations`; `Diagnosis.code` for `record_violation`; the reader's `prefix_absent` test moves from the sentence to the code; the report gains the codes additively, within `pala-verification-report/1` | Rule 7 cannot hold while the verifier itself branches on a sentence and consumers have nothing else | After 0.13; **required before 1.0** |
 | U21 | `container_check() -> ContainerCheck` | Half of question one is reachable only through a report | After 0.13 (additive) |
 | **U26 (r2)** | `empty_container` diagnosis; the verdict question raised as core clarification **C-8** (see below) | An empty file verifies `chain_ok` with no diagnosis and the report says `partial`, which means "intact, unanchored" — there is nothing intact | Diagnosis after 0.13; C-8 by decision |
@@ -183,7 +183,7 @@ Ordered by what each step unblocks. "PR" means one reviewable pull request.
 
 **0.13 → 0.14 (the U track proper)**
 
-4. U19 + U20 together — one PR: the re-exports, `profiles/inference.py`, the contract test. The contract test lands with the exports so nothing is exported untested.
+4. U19 + U20 together — one PR: the re-exports, `profiles/inference.py`, the contract test. The contract test lands with the exports so nothing is exported untested. **Done (0.14).** Two things it settled: the channel-5 names are re-exported lazily (`bootstats` and `timehealth` import the reader, so an eager import is circular); and `anchors.__all__` also lists the writer-side stores (`AnchorStore`, `FileAnchorStore`) — outside the reading surface, left in place until the writer's contract (U27) decides where they belong.
 5. U24 — violation codes; touches `incremental`, `verify`, `reader`, `report`. One PR with its own vectors check: the report schema stays `/1`, the codes are additive.
 6. U26 — `empty_container`; C-8 drafted beside it for the maintainers' decision.
 7. U21 — `container_check()`.
