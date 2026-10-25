@@ -45,6 +45,13 @@ For a client that takes an MCP configuration:
            "npx", "-y", "@modelcontextprotocol/server-filesystem", "/data"]}}}
 ```
 
+The server command is found the way a shell finds it, so `npx` and `uvx`
+work by name on Windows too, where they are `.cmd` shims. (Releases up to
+0.13 started the server by bare name, and on Windows `npx …` failed to
+start; with those, give the full path that `where npx` prints.) A command
+that is not on `PATH` at all stops the proxy with one line on stderr and
+exit code 127.
+
 | Variable | Meaning | Default |
 |---|---|---|
 | `PALIMPSESTS_SERVE_URL` | base URL of the serve | `http://127.0.0.1:11435` |
