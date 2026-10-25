@@ -177,8 +177,16 @@ class Proxy:
 
     # ── the pump ────────────────────────────────────────────────────────
     def run(self) -> int:
+        command = resolve_command(self.command)
+        if command is None:
+            print(
+                f"palimpsests-audit-mcp: cannot start the MCP server: "
+                f"{self.command[0]!r} is not on PATH",
+                file=sys.stderr,
+            )
+            return 127
         proc = subprocess.Popen(
-            self.command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=sys.stderr
+            command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=sys.stderr
         )
         assert proc.stdin is not None and proc.stdout is not None
         client_in = sys.stdin.buffer
@@ -222,6 +230,25 @@ def _parse(line: bytes):
 def _idkey(rid) -> str:
     # JSON-RPC ids may be strings or numbers; the serve keys calls by string.
     return json.dumps(rid, separators=(",", ":"))
+
+
+def resolve_command(command: list[str]) -> list[str] | None:
+    """The server command with its program resolved to a full path.
+
+    On Windows the usual MCP launchers (``npx``, ``uvx``) are ``.cmd``
+    shims: ``subprocess`` finds them only by full path, never by bare
+    name, so ``npx …`` failed to start while ``where npx`` found it. The
+    path is resolved the way a shell would (``shutil.which``, which honours
+    ``PATHEXT``); a program that is already a path is kept as given.
+    ``None`` when the program cannot be found at all.
+    """
+    import shutil
+
+    program = command[0]
+    if os.path.dirname(program):
+        return command
+    found = shutil.which(program)
+    return None if found is None else [found, *command[1:]]
 
 
 def main(argv: list[str]) -> int:
