@@ -31,6 +31,11 @@ digests; content never enters the chain.
 
 ## Install
 
+**One package LiteLLM needs and does not install:** as soon as a request
+carries `tools`, LiteLLM imports `mcp`, and without it the completion fails
+with `ModuleNotFoundError: No module named 'mcp'` — before this callback is
+involved. Install both: `pip install litellm mcp` (measured on LiteLLM 1.106).
+
 Python client:
 
 ```python
@@ -66,7 +71,8 @@ Install the Palimpsests audit callback for LiteLLM.
 1. Copy `integrations/litellm/palimpsests_audit.py` from the
    Assault-Consulting/Palimpsests repository next to the code (or the
    proxy's custom_callbacks.py). It has no dependencies beyond LiteLLM
-   itself; do not pip-install anything for it.
+   itself; do not pip-install anything for it. LiteLLM, though, needs the
+   `mcp` package once a request carries tools: `pip install mcp`.
 2. Register it: `litellm.callbacks = [PalimpsestsAudit()]`, or in the
    proxy config `litellm_settings.callbacks: custom_callbacks.palimpsests_audit`.
 3. Start the serve: `pip install 'palimpsests[serve]' && palimpsests serve`

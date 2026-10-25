@@ -73,8 +73,8 @@ python scripts/check_surfaces.py litellm mcp
 python scripts/check_surfaces.py opencode
 ```
 
-**Exit status:** `0` — no red; `1` — at least one red. SKIP never
-changes the exit status.
+**Exit status:** `0` — no red and no orange; `1` — at least one red or
+orange. SKIP never changes the exit status.
 
 > In PowerShell the exit status is in `$LASTEXITCODE`; in bash, `$?`.
 > Do not pipe the output through `| tail` or `| Select-Object` when you
@@ -97,10 +97,17 @@ changes the exit status.
 |---|---|---|
 | 🟢 **GREEN** | the surface delivered a call/result pair with the right source mark | nothing |
 | 🔴 **RED** | the client **reached** the serve and the record did not follow, or the wrong one did — **the surface changed** | §4 |
-| ⚪ **SKIP** | the client is not installed, **or never reached the serve at all** — a problem with this machine, not the surface | §5 |
+| ⚪ **SKIP** | the client is not installed, cannot be launched, **or never reached the serve at all**; or this Python lacks what the check needs — a problem with this machine, not the surface | §5 |
+| 🟠 **ERROR** | the checker itself failed after the client had started — the surface is **unchecked** | §4a |
 
 **SKIP is not green.** It means "not checked". A client that is SKIP two
 runs in a row is a question about the machine, not a reassurance.
+
+**ERROR is not red.** Red says a surface changed and sends someone to the
+integration; orange says this script broke and sends someone to the
+script. Before orange existed, every failure inside a probe was reported
+red — and a Windows run reported OpenCode red when the checker simply
+could not start it.
 
 ---
 
@@ -135,7 +142,20 @@ What the Detail line usually means on red:
 | `0 call(s), 0 result(s)` on `otel` | the framework no longer emits `execute_tool` spans in the shape the adapter reads (`gen_ai.operation.name`, a tool name in `gen_ai.tool.name` or the span name), or the exporter's wire changed under `/v1/traces` — compare a fresh capture with `tests/fixtures/otel/` |
 | `1 call(s), 0 result(s)` on OpenCode specifically | `tool.execute.after` did not fire **and** the `message.part.updated` fallback did not deliver — on 1.18.31 the fallback is what carries results, so this means the fallback surface changed |
 | `sources [0]` instead of `[1]` | the record arrived without the reported-by-client mark — a defect in **our** code, not the surface |
-| `probe crashed: …` | the probe itself failed — probably the client API it calls has changed |
+| — | a failure inside a probe is no longer red: it is 🟠 ERROR, §4a |
+
+## 4a. When a probe is orange 🟠
+
+The checker failed after the client had started; the Detail line names the
+exception. The surface was **not** checked — no warning goes into the
+integration's README, and nothing is changed in the adapter.
+
+1. Run that probe again on its own; note whether it repeats.
+2. Commit the report anyway (§6) — an orange line is a dated fact about
+   the checker.
+3. Fix `scripts/check_surfaces.py` in its own PR, with a test in
+   `tests/test_check_surfaces.py` that fails before the fix. Then run the
+   probe again: its first real verdict goes into `results/`.
 
 ---
 
@@ -146,6 +166,9 @@ What the Detail line usually means on red:
 | `litellm not installed` | `pip install litellm` in the same venv |
 | `opencode not on PATH` | see §1, `npm config get prefix` |
 | `pydantic-ai-slim / opentelemetry-sdk / otlp-http exporter not installed` | `pip install pydantic-ai-slim opentelemetry-sdk opentelemetry-exporter-otlp-proto-http` in the same venv |
+| `litellm needs the mcp package once a request carries tools` | `pip install mcp` in the same venv — LiteLLM imports it for any request with `tools` and does not install it itself |
+| `this Python has no fastapi, uvicorn — install the [serve] extra …` | the checker was started with a Python that is not the venv's; activate the venv (§1) or `pip install 'palimpsests[serve]'` into that Python. Every probe is SKIP until then |
+| `could not launch …` | the client was found on `PATH` but would not start; run its `--version` by hand in the same shell |
 | `the client never reached the serve (0 completions)` | OpenCode could not start a session. Most often: no access to `models.opencode.ai` (VPN, corporate proxy, firewall). Check with `curl -I https://models.opencode.ai` |
 
 A SKIP is never fixed by changing an adapter. If you find yourself

@@ -28,9 +28,12 @@ States:
     GREEN  the surface delivered a paired record
     RED    the client reached the serve and the record did not follow —
            the surface changed, which is what this checker exists to find
-    SKIP   the client is not installed, or never reached the serve at all
-           — a fact about the machine running the check, not about the
-           surface, and not a pass
+    SKIP   the client is not installed, cannot be launched, or never
+           reached the serve at all; or this Python lacks what the check
+           itself needs — a fact about the machine running the check, not
+           about the surface, and not a pass
+    ERROR  the checker failed after the client had started — the surface
+           is unchecked, and the checker is what needs fixing
 
 The RED/SKIP line is drawn by counting completions the stub model
 served. Zero means the client never talked to us — no network to its
@@ -38,8 +41,16 @@ own backend, no credentials, a broken config — and blaming the surface
 for that would send someone to rewrite a working adapter. That exact
 confusion cost a round on the OpenCode integration.
 
-Exit status is 1 if any probe is RED, 0 otherwise. SKIP never fails the
-run, and never counts as green: the report says so, with the reason.
+Exit status is 1 if any probe is RED or ERROR, 0 otherwise. SKIP never
+fails the run, and never counts as green: the report says so, with the
+reason. RED and ERROR are kept apart on purpose: RED means a surface
+changed and its integration's README gets a warning the same day; ERROR
+means this script broke, and saying "the surface changed" would send
+someone to rewrite an adapter that works. A Windows run in which the
+checker could not launch a client and reported RED is why.
+
+The report file is written before anything is printed, so a console that
+cannot print a status mark does not cost the report.
 
 How to set it up, run it, read it, and what to do on red or grey:
 docs/SURFACE-CHECKER.md.
@@ -68,7 +79,7 @@ REPORTED = 1  # EVT_SOURCE reported-by-client
 @dataclass
 class Result:
     name: str
-    state: str  # GREEN / RED / SKIP
+    state: str  # GREEN / RED / SKIP / ERROR
     version: str = "—"
     detail: str = ""
     evidence: dict = field(default_factory=dict)
@@ -163,6 +174,22 @@ def _verdict(
     return Result(name, "GREEN" if ok else "RED", version, detail, pairs)
 
 
+class LaunchFailed(Exception):
+    """A client was found but could not be started — a SKIP, not a RED."""
+
+
+def _resolve(name: str) -> str | None:
+    """A client's full path, found the way a shell finds it, or ``None``.
+
+    Every client is launched by this path, never by bare name: on Windows
+    the npm-installed clients are ``.cmd`` shims, which ``subprocess``
+    starts only by full path — ``shutil.which`` (honouring ``PATHEXT``)
+    finds ``opencode.CMD``, and ``subprocess.run(["opencode", …])`` then
+    raises ``FileNotFoundError``.
+    """
+    return shutil.which(name)
+
+
 def _version(cmd: list[str]) -> str | None:
     if not shutil.which(cmd[0]):
         return None
@@ -190,7 +217,10 @@ def _run_tree(cmd: list[str], *, cwd: Path, env: dict, timeout: float) -> bool:
         kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
     else:
         kwargs["start_new_session"] = True
-    proc = subprocess.Popen(cmd, **kwargs)
+    try:
+        proc = subprocess.Popen(cmd, **kwargs)
+    except OSError as exc:
+        raise LaunchFailed(f"could not launch {cmd[0]}: {exc}") from exc
     try:
         proc.wait(timeout=timeout)
         return True
@@ -220,6 +250,14 @@ def probe_litellm(workdir: Path) -> Result:
         version = md.version("litellm")
     except Exception:
         return Result("litellm", "SKIP", detail="litellm not installed")
+    import importlib.util
+
+    if importlib.util.find_spec("mcp") is None:
+        # LiteLLM imports the mcp package as soon as a request carries
+        # tools, and does not install it itself.
+        return Result("litellm", "SKIP", version,
+                      "litellm needs the mcp package once a request carries tools — "
+                      "pip install mcp")
     sys.path.insert(0, str(ROOT / "integrations" / "litellm"))
     from palimpsests_audit import PalimpsestsAudit
 
@@ -227,9 +265,15 @@ def probe_litellm(workdir: Path) -> Result:
         cb = PalimpsestsAudit(url=serve.url, api_key=serve.api_key)
         saved, litellm.callbacks = litellm.callbacks, [cb]
         try:
+            # tools= is passed as a real application passes it: without it
+            # this probe stayed green while LiteLLM itself failed on a
+            # request that carries tools (it needs the mcp package then).
+            tools = [{"type": "function", "function": {
+                "name": "read", "parameters": {"type": "object", "properties": {}}}}]
             litellm.completion(
                 model="gpt-4o",
                 messages=[{"role": "user", "content": "read"}],
+                tools=tools,
                 mock_tool_calls=[{"id": "c1", "type": "function",
                                   "function": {"name": "read", "arguments": "{}"}}],
             )
@@ -237,6 +281,7 @@ def probe_litellm(workdir: Path) -> Result:
                 model="gpt-4o",
                 messages=[{"role": "user", "content": "read"},
                           {"role": "tool", "tool_call_id": "c1", "content": "hello"}],
+                tools=tools,
                 mock_response="done",
             )
             time.sleep(1)
@@ -287,9 +332,10 @@ def probe_mcp(workdir: Path) -> Result:
 
 def probe_opencode(workdir: Path) -> Result:
     """OpenCode still dispatches the plugin surface our plugin uses, on this version."""
-    version = _version(["opencode", "--version"])
-    if version is None:
+    exe = _resolve("opencode")
+    if exe is None:
         return Result("opencode", "SKIP", detail="opencode not on PATH")
+    version = _version([exe, "--version"]) or "?"
     home = workdir / "home"
     (home / ".config" / "opencode" / "plugins").mkdir(parents=True)
     (home / ".local" / "share" / "opencode").mkdir(parents=True)
@@ -315,10 +361,10 @@ def probe_opencode(workdir: Path) -> Result:
         # after its provider baseURL changes (seen three times in a traffic
         # run) and a retry usually succeeds — the probe points it at a new
         # port every time, so allow exactly one retry before judging.
-        if not _run_tree(["opencode", "run", "read NOTES.md"],
+        if not _run_tree([exe, "run", "read NOTES.md"],
                          cwd=repo, env=env, timeout=180):
             if serve.completions == 0:
-                _run_tree(["opencode", "run", "read NOTES.md"],
+                _run_tree([exe, "run", "read NOTES.md"],
                           cwd=repo, env=env, timeout=180)
         return _verdict("opencode", version, serve.pairs(), REPORTED, serve.completions)
 
@@ -332,9 +378,10 @@ def probe_claude_code(workdir: Path) -> Result:
     environment through allowedEnvVars — the configuration the README
     gives users, so a change on either side of it turns this red.
     """
-    version = _version(["claude", "--version"])
-    if version is None:
+    exe = _resolve("claude")
+    if exe is None:
         return Result("claude-code", "SKIP", detail="claude not on PATH")
+    version = _version([exe, "--version"]) or "?"
     sys.path.insert(0, str(ROOT / "scripts"))
     from _anthropic_stub import AnthropicStub
 
@@ -358,7 +405,7 @@ def probe_claude_code(workdir: Path) -> Result:
                    ANTHROPIC_API_KEY="sk-surface-stub",
                    PALIMPSESTS_SERVE_API_KEY=serve.api_key,
                    CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC="1", DISABLE_TELEMETRY="1")
-        _run_tree(["claude", "-p", "read NOTES.md"], cwd=repo, env=env, timeout=180)
+        _run_tree([exe, "-p", "read NOTES.md"], cwd=repo, env=env, timeout=180)
         # The stand-in model plays the part of "completions" here: zero
         # tool-bearing requests means the client never got as far as
         # offering tools — this machine's problem, not the surface's.
@@ -429,7 +476,7 @@ PROBES = {
 
 
 def render(results: list[Result], when: str) -> str:
-    mark = {"GREEN": "🟢", "RED": "🔴", "SKIP": "⚪"}
+    mark = {"GREEN": "🟢", "RED": "🔴", "SKIP": "⚪", "ERROR": "🟠"}
     lines = [
         "<!-- " + "SPDX-" + "FileCopyrightText: Assault Consulting -->",
         "<!-- " + "SPDX-" + "License-Identifier: Apache-2.0 -->",
@@ -437,7 +484,8 @@ def render(results: list[Result], when: str) -> str:
         f"# Surface check — {when}",
         "",
         "Produced by `scripts/check_surfaces.py`. SKIP is not a pass: it "
-        "means the client was not available on the machine that ran the check.",
+        "means the client was not available on the machine that ran the check. "
+        "ERROR means the checker itself failed and the surface is unchecked.",
         "",
         "| Surface | State | Version | Detail |",
         "|---|---|---|---|",
@@ -458,21 +506,63 @@ def main(argv: list[str]) -> int:
     if unknown:
         ap.error(f"unknown probe(s): {', '.join(unknown)}")
 
+    missing = _preflight()
     results = []
     for name in names:
-        with tempfile.TemporaryDirectory(prefix=f"surface-{name}-") as tmp:
-            try:
-                results.append(PROBES[name](Path(tmp)))
-            except Exception as exc:  # a crashing probe is a red surface, named
-                results.append(Result(name, "RED", detail=f"probe crashed: {exc!r}"))
+        if missing:
+            results.append(Result(name, "SKIP", detail=missing))
+            continue
+        results.append(run_probe(name))
 
     when = dt.date.today().isoformat()
     text = render(results, when)
-    sys.stdout.write(text)
-    if args.report:
+    if args.report:  # first: a console that cannot print must not cost the report
         args.report.mkdir(parents=True, exist_ok=True)
         (args.report / f"surfaces-{when}.md").write_text(text, encoding="utf-8")
-    return 1 if any(r.state == "RED" for r in results) else 0
+    _print(text)
+    return 1 if any(r.state in ("RED", "ERROR") for r in results) else 0
+
+
+def _preflight() -> str | None:
+    """What this Python lacks for any probe to run, or ``None``.
+
+    Every probe runs a real serve, which needs the ``[serve]`` extra. A
+    Python without it used to report each surface RED with
+    ``ModuleNotFoundError`` — a fact about the machine, not the surfaces.
+    """
+    import importlib.util
+
+    absent = [m for m in ("fastapi", "uvicorn") if importlib.util.find_spec(m) is None]
+    if absent:
+        return (f"this Python has no {', '.join(absent)} — install the [serve] extra "
+                "(pip install 'palimpsests[serve]') and run the checker with that Python")
+    return None
+
+
+def run_probe(name: str) -> Result:
+    """One probe, classified: a launch failure is SKIP, any other failure ERROR."""
+    with tempfile.TemporaryDirectory(prefix=f"surface-{name}-") as tmp:
+        try:
+            return PROBES[name](Path(tmp))
+        except LaunchFailed as exc:
+            return Result(name, "SKIP", detail=str(exc))
+        except Exception as exc:  # the checker failed; the surface is unchecked
+            return Result(name, "ERROR",
+                          detail=f"the checker failed, the surface is unchecked: {exc!r}")
+
+
+def _print(text: str) -> None:
+    """Print the report on any console. Windows consoles default to a code
+    page without the status marks, and printing them raised
+    UnicodeEncodeError after every probe had run."""
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
+    try:
+        sys.stdout.write(text)
+    except UnicodeEncodeError:
+        sys.stdout.write(text.encode("ascii", "replace").decode("ascii"))
 
 
 if __name__ == "__main__":
