@@ -131,17 +131,17 @@ three of the thirteen calls certainly failed in the world (the read of
 Nothing here shows what Codex does across restarts, or whether trust
 persists.
 
-### Two places the instructions do not match the client
+### Two places the integration README does not match the client
 
-- **Trust is offered at startup, not through `/hooks`.** The instructions
-  say to open `/hooks` inside the session and trust the entries there. On
+- **Trust is offered at startup, not through `/hooks`.** `integrations/agent-hooks/README.md`
+  says to open `/hooks` in a session and trust the entries there. On
   0.164.0 Codex asks before the first prompt, with
   *Review hooks / Trust all and continue / Continue without trusting*.
   Anyone following the text literally will look for a menu that is not
   there at that moment.
 - **Codex asks to configure a sandbox on Windows** before the first
   prompt — *default sandbox (requires Administrator)* or *non-admin
-  sandbox*. The instructions do not mention it. The non-admin option was
+  sandbox*. The README does not mention it. The non-admin option was
   taken here; the run's prompts and files are its own, so the risk that
   option names does not apply.
 
