@@ -7,9 +7,9 @@ Two runs of the same pydantic-ai agent against a local model, one with
 content capture on and one with it off. Each produced three calls and
 three results, none without a result, every one `reported-by-client`,
 every call detailed `otel execute_tool; semconv unstated`. Outcomes were
-`ok` × 1 and `error` × 2 in both — one more `error` than the instructions
-expect, because the model made a failing `read_file` call of its own
-beyond the deliberate one. The two chains differ by 144 bytes: the
+`ok` × 1 and `error` × 2 in both — one more `error` than planned,
+because the model made a failing `read_file` call of its own beyond the
+deliberate one. The two chains differ by 144 bytes: the
 digests that content capture provides and `--no-content` does not.
 
 ## Environment
@@ -27,7 +27,7 @@ digests that content capture provides and `--no-content` does not.
 
 ### Model choice, stated
 
-The instructions name `qwen2.5:7b`. That model was not on the machine and
+The run was planned with `qwen2.5:7b`. That model was not on the machine and
 `llama3.1:8b` was, so `llama3.1:8b` was used and is recorded here rather
 than silently substituted. The choice was not neutral: in this project's
 earlier OpenCode traffic runs, `llama3.1:8b` was the one local model
@@ -120,8 +120,8 @@ the difference shows.
 - **Nothing was lost.** Five spans were exported in each variant and none
   failed to export; three of the five are the `execute_tool` spans that
   become pairs, and the rest of the trace is deliberately not kept.
-- **The outcome split is not the one the instructions predict.** They
-  expect `list_dir` and `read_file` on `notes.txt` to be `ok` and only
+- **The outcome split is not the planned one.** The plan
+  expected `list_dir` and `read_file` on `notes.txt` to be `ok` and only
   `missing.txt` to be `error` — two `ok`, one `error`. Both variants
   produced one `ok` and two `error`: the model issued a `read_file` that
   failed in addition to the deliberate one. This is model behaviour, not
