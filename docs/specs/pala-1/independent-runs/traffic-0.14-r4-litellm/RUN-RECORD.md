@@ -26,7 +26,7 @@ on all ten turns; none answered without it.
 
 ### Model choice, stated
 
-The instructions name `qwen2.5:7b`; it was not on the machine, and
+The run was planned with `qwen2.5:7b`; it was not on the machine, and
 `llama3.1:8b` was. The substitution is recorded rather than hidden, for
 the reason given in run 3: a model that declines to call tools yields an
 empty chain and tests nothing, and `llama3.1:8b` is the local model this
@@ -45,7 +45,7 @@ project has already observed emitting structured tool calls.
 
    It printed `turn 1: 1 tool call(s); answer: done`, confirming the
    wiring without a provider.
-3. **The mock chain was discarded**, as the instructions require: the
+3. **The mock chain was discarded**: the
    serve was stopped, `C:\runs\r4` deleted and recreated empty, and the
    serve restarted on it. The mock turn appears nowhere in the result
    below.
@@ -94,8 +94,8 @@ results — **all accepted**, no refusals.
 ## What did not land, and why
 
 - **Nothing was lost.** Ten turns, ten calls, ten results, ten pairs.
-- **No turn answered without a tool.** The instructions ask for the count
-  of `no tool call` turns; it is **zero**. The model used `read_file` on
+- **No turn answered without a tool.** The count of `no tool call` turns
+  is **zero**. The model used `read_file` on
   every turn, including the three asking about a file that does not
   exist.
 - **Three results were failures in the world and are recorded
