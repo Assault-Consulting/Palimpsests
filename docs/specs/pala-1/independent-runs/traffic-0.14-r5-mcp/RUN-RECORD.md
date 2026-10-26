@@ -33,7 +33,7 @@ rather than behind an agent's shell tool.
    could be recorded twice — once by a hook and once by the proxy.
 2. The serve was started on a fresh `C:\runs\r5` (200 with the bearer,
    401 without).
-3. **The documented Windows defect was reproduced deliberately**, before
+3. **The known Windows defect was reproduced deliberately**, before
    the session, by starting the proxy with a bare command name:
 
        python palimpsests_audit_mcp.py -- npx -y @modelcontextprotocol/server-filesystem C:\runs\scratch
@@ -131,7 +131,7 @@ the world, which this proxy cannot assert and does not.
 Reproduced above: `npx` resolves to `npx.cmd`, and `subprocess` without
 `shell=True` cannot execute a `.cmd` by bare name —
 `FileNotFoundError: [WinError 2]` from `_winapi.CreateProcess`. The
-documented workaround, a full path to `npx.cmd`, works and was used.
+known workaround, a full path to `npx.cmd`, works and was used.
 This is the same defect that broke the OpenCode probe in the surface
 checker: two call sites, one cause. A fix in both would be to resolve the
 command with `shutil.which()` and invoke the resolved path.
