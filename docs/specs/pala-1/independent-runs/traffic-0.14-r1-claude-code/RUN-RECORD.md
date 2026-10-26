@@ -117,11 +117,12 @@ any other OS. The four refused posts mean this run cannot claim that
 *every* tool call Claude Code executed reached the chain — only that
 every call that reached it was paired and marked correctly.
 
-### A defect in the instructions, not in this run
+### The documented serve start line does not enforce the key
 
-The documented way to start the serve does not work. Section 0 gives
-`palimpsests serve --api-key ***REDACTED***`; in 0.13.0 the `serve`
-subcommand has only `--host` and `--port`, and that line exits with
+`docs/USAGE.md` gives `PALIMPSESTS_SERVE_API_KEY` as the bearer key for
+`palimpsests serve`, and `integrations/otel/README.md` says to add
+`--api-key` to it. In 0.13.0 the `serve` subcommand has only `--host` and
+`--port`, and `palimpsests serve --api-key ***REDACTED***` exits with
 `No such option: --api-key`. Worse, the obvious repair — moving the key
 into `PALIMPSESTS_SERVE_API_KEY` and running `palimpsests serve` — starts
 an endpoint that **does not require the key at all**: measured here,
@@ -132,8 +133,8 @@ run in this series, is:
 
     palimpsests-serve --api-key ***REDACTED***
 
-This affects all five runs in the series, and anyone following section 0
-literally will hit it before the first prompt.
+This affects all five runs in the series, and anyone following those
+documents literally will hit it before the first prompt.
 
 ---
 
