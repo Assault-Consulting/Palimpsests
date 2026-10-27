@@ -32,6 +32,7 @@ Palimpsests is honest about scope: it supplies the runtime primitives that speci
 <!-- notes:start -->
 ## Notes
 
+- [Can a coding agent implement a binary format from its spec alone?](https://palimpsests.dev/notes/can-a-coding-agent-implement-a-spec/): A small, strict test for coding agents. Give one a frozen specification and its test vectors, no reference code, and ask it to reproduce eleven values byte for byte in a language it chooses.
 - [Anatomy of a tamper-evident audit log: PALA-1, a PKCS#11 anchor and SCITT](https://palimpsests.dev/notes/anatomy-of-a-tamper-evident-audit-log/): The three layers of a Palimpsests audit log taken apart: the PALA-1 hash chain, the chain head on a PKCS#11 token and SCITT receipts. What each one proves alone, and what they prove together.
 - [AI logging standards in draft: ISO/IEC 24970, prEN 18229-1 and how we map them](https://palimpsests.dev/notes/ai-logging-standards-24970-18229/): Where the AI logging standards stand in October 2026, why they matter for the EU AI Act, and how Palimpsests maps their requirements to code while the text is still moving.
 - [Keeping the audit log on your own machine when your agents use cloud models](https://palimpsests.dev/notes/audit-log-for-agents-on-cloud-models/): Agents that call hosted models can still keep their tool-call record locally. How Palimpsests records Claude Code, Codex, OpenTelemetry and LiteLLM tool calls, and what that record proves.

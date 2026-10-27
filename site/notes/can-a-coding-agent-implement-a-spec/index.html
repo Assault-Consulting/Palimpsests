@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Can a coding agent implement a binary format from its spec alone? — Palimpsests notes</title>
+<meta name="description" content="A small, strict test for coding agents. Give one a frozen specification and its test vectors, no reference code, and ask it to reproduce eleven values byte for byte in a language it chooses." />
+<link rel="canonical" href="https://palimpsests.dev/notes/can-a-coding-agent-implement-a-spec/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Andrii Sparysh" />
+<meta name="theme-color" content="#15151f" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Palimpsests" />
+<meta property="og:title" content="Can a coding agent implement a binary format from its spec alone? — Palimpsests notes" />
+<meta property="og:description" content="A small, strict test for coding agents. Give one a frozen specification and its test vectors, no reference code, and ask it to reproduce eleven values byte for byte in a language it chooses." />
+<meta property="og:url" content="https://palimpsests.dev/notes/can-a-coding-agent-implement-a-spec/" />
+<meta property="og:locale" content="en" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Can a coding agent implement a binary format from its spec alone? — Palimpsests notes" />
+<meta name="twitter:description" content="A small, strict test for coding agents. Give one a frozen specification and its test vectors, no reference code, and ask it to reproduce eleven values byte for byte in a language it chooses." />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BlogPosting",
+      "@id": "https://palimpsests.dev/notes/can-a-coding-agent-implement-a-spec/#post",
+      "headline": "Can a coding agent implement a binary format from its spec alone?",
+      "description": "A small, strict test for coding agents. Give one a frozen specification and its test vectors, no reference code, and ask it to reproduce eleven values byte for byte in a language it chooses.",
+      "url": "https://palimpsests.dev/notes/can-a-coding-agent-implement-a-spec/",
+      "mainEntityOfPage": "https://palimpsests.dev/notes/can-a-coding-agent-implement-a-spec/",
+      "datePublished": "2026-10-27",
+      "dateModified": "2026-10-27",
+      "inLanguage": "en",
+      "keywords": [
+        "verification",
+        "specification",
+        "coding-agents"
+      ],
+      "author": {
+        "@type": "Person",
+        "name": "Andrii Sparysh"
+      },
+      "publisher": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "isPartOf": {
+        "@id": "https://palimpsests.dev/notes/#blog"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Palimpsests",
+          "item": "https://palimpsests.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Notes",
+          "item": "https://palimpsests.dev/notes/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Can a coding agent implement a binary format from its spec alone?",
+          "item": "https://palimpsests.dev/notes/can-a-coding-agent-implement-a-spec/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Palimpsests home">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="nav__links">
+      <a class="hide-sm" href="/#caps">Capabilities</a>
+      <a class="hide-sm" href="/pala-1/">PALA-1</a>
+      <a class="hide-sm" href="/verify-without-reading/">Verify</a>
+      <a class="hide-sm" href="/eu-ai-act-article-12/">EU AI Act</a>
+      <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
+      <a class="hide-sm" href="/integrations/">Integrations</a>
+      <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<main class="doc">
+  <div class="wrap">
+    <div class="doc__in">
+<p class="crumbs"><a href="/">Palimpsests</a> / <a href="/notes/">Notes</a></p>
+<span class="eyebrow">Note · 27 October 2026 · Andrii Sparysh</span>
+<h1 class="display">Can a coding agent implement a binary format from its spec alone?</h1>
+<p>Coding agents now write whole programs from a short description. Most of the tasks they are tested on are forgiving, though. A web page that looks roughly right is fine. A function that passes the tests someone wrote for it is fine.</p>
+<p>Here is a less forgiving task. Give an agent the specification of a binary file format and a set of test vectors. No reference implementation, nothing to copy. Ask it to write a verifier in a language of its choice and reproduce eleven published values exactly, down to the last byte of a SHA-256 hash. Then ask it to break the format seven different ways and confirm that the verifier notices each one.</p>
+<p>We would like to know how far agents get with that, in which languages, and where they stop. We have a reason to ask, and a format to ask about.</p>
+<h2 id="who-we-are-and-why-this-matters-to-us">Who we are and why this matters to us</h2>
+<p>We are a small team in Kyiv. We maintain PALA-1, a format for audit logs written by AI systems: an append-only hash chain that can be checked without a key and without opening any record. It is meant for machines that are modest and often offline, audited by people who may check a log but not read it.</p>
+<p>An audit log is only evidence if someone other than its author can check it, with their own tools, possibly years later. So the specification has to be implementable from the text alone. That is the format's first promise. It has been frozen at version 1.0 since August 2026, with byte-exact test vectors and a kit for checking it by hand. Five implementations exist so far, three of them by people outside the project, and outside readers have found real defects before. That is how the text got better.</p>
+<p>What we don't know is whether a coding agent can be one of those outside readers.</p>
+<h2 id="why-it-is-a-fair-test">Why it is a fair test</h2>
+<ul>
+  <li>The inputs are two files at a frozen tag, the specification and its test vectors.</li>
+  <li>The pass bar is exact. A value matches or it doesn't.</li>
+  <li>Seven demos ask the verifier to catch a flipped bit, a missing record, a gap in the sequence numbers and four other faults.</li>
+  <li>The language is the agent's choice. Four of the five existing implementations are in Python; others are more interesting.</li>
+</ul>
+<p>The specification is not perfect, either. In two places it states what a demo must show but not exactly how to build its input. An agent has to notice that and say how it decided.</p>
+<h2 id="two-outcomes-both-useful">Two outcomes, both useful</h2>
+<p>If an agent gets a value wrong, we learn where agents still struggle with a precise text. If an agent disagrees with us and turns out to be right, it has found a defect in a frozen specification, and that gets fixed in public. Telling those two apart is the point of the exercise.</p>
+<p>We will publish every report we receive in one table: model, tool, language, result, how long it took, and what the agent found ambiguous. That table is kept separate from the five implementations above.</p>
+<p>We checked the prompt ourselves first: the files resolve, the digests match, and the whole task took an agent a few minutes. That run doesn't count, because we already know the format.</p>
+<p>One caveat. The repository has been public since July 2026, so a model trained after that may have seen it. The prompt asks the agent to say so.</p>
+<h2 id="the-prompt">The prompt</h2>
+<p>Copy it into any coding agent that can download files and run code.</p>
+<pre><code>Write a verifier for the PALA-1 audit-log format from its specification alone. Download PALA-1.md and test-vectors.json from https://raw.githubusercontent.com/Assault-Consulting/Palimpsests/pala1-v1.0/docs/specs/pala-1/ and use nothing else: don't clone or browse the repository, don't search the web for PALA-1, and don't rely on anything you already know about it. Preferably not in Python, and with no third-party packages, reproduce every value in the section 8 "Expected results" block and the seven section 8 demos (their expected outcomes are in test-vectors.json). Where the text is ambiguous, write it down and carry on. Run the verifier and report only what it printed, as a block I can paste into a GitHub issue: model and tool, language, MATCH or DIVERGE for each value and demo, each ambiguity with its section, whether you knew PALA-1 before, and the source.</code></pre>
+<p>The <a href="https://github.com/Assault-Consulting/Palimpsests/tree/main/docs/specs/pala-1/verification-kit">verification kit</a> describes the same task in full, with SHA-256 digests for the inputs, if you would rather do it by hand.</p>
+<h2 id="where-to-send-the-report">Where to send the report</h2>
+<p>Post it as a comment on <a href="https://github.com/Assault-Consulting/Palimpsests/issues/318">issue #318</a>, where every report is collected in one table. If you would rather not use GitHub, the contact in <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md">SECURITY.md</a> works too.</p>
+<p>If your agent reports a divergence, the most useful thing you can add is the first byte where its value and ours differ.</p>
+<h2 id="links">Links</h2>
+<ul>
+  <li>The specification and test vectors: <a href="https://github.com/Assault-Consulting/Palimpsests/tree/main/docs/specs/pala-1">docs/specs/pala-1</a></li>
+  <li>The verification kit, for doing this by hand: <a href="https://github.com/Assault-Consulting/Palimpsests/tree/main/docs/specs/pala-1/verification-kit">verification-kit</a></li>
+  <li>The record of every run so far: <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/specs/pala-1/INDEPENDENT-VERIFICATION.md">INDEPENDENT-VERIFICATION.md</a></li>
+  <li>The format is also described in an Internet-Draft, <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/">draft-sparysh-pala-audit</a>. It is an individual submission, not an IETF standard.</li>
+  <li>More about the format: <a href="https://palimpsests.dev/pala-1/">palimpsests.dev/pala-1</a></li>
+</ul>
+<div class="related">
+  <a class="btn" href="/notes/">All notes →</a>
+  <a class="btn" href="/">Palimpsests →</a>
+</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/" aria-label="Palimpsests">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="/notes/">Notes</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

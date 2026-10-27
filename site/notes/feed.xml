@@ -6,7 +6,52 @@
   <atom:link href="https://palimpsests.dev/notes/feed.xml" rel="self" type="application/rss+xml" />
   <description>Short notes on audit logs for AI systems, the EU AI Act and running language models on your own hardware.</description>
   <language>en</language>
-  <lastBuildDate>Fri, 23 Oct 2026 09:00:00 +0000</lastBuildDate>
+  <lastBuildDate>Tue, 27 Oct 2026 09:00:00 +0000</lastBuildDate>
+  <item>
+    <title>Can a coding agent implement a binary format from its spec alone?</title>
+    <link>https://palimpsests.dev/notes/can-a-coding-agent-implement-a-spec/</link>
+    <guid isPermaLink="true">https://palimpsests.dev/notes/can-a-coding-agent-implement-a-spec/</guid>
+    <pubDate>Tue, 27 Oct 2026 09:00:00 +0000</pubDate>
+    <category>verification</category>
+    <category>specification</category>
+    <category>coding-agents</category>
+    <description>A small, strict test for coding agents. Give one a frozen specification and its test vectors, no reference code, and ask it to reproduce eleven values byte for byte in a language it chooses.</description>
+    <content:encoded><![CDATA[<p>Coding agents now write whole programs from a short description. Most of the tasks they are tested on are forgiving, though. A web page that looks roughly right is fine. A function that passes the tests someone wrote for it is fine.</p>
+<p>Here is a less forgiving task. Give an agent the specification of a binary file format and a set of test vectors. No reference implementation, nothing to copy. Ask it to write a verifier in a language of its choice and reproduce eleven published values exactly, down to the last byte of a SHA-256 hash. Then ask it to break the format seven different ways and confirm that the verifier notices each one.</p>
+<p>We would like to know how far agents get with that, in which languages, and where they stop. We have a reason to ask, and a format to ask about.</p>
+<h2 id="who-we-are-and-why-this-matters-to-us">Who we are and why this matters to us</h2>
+<p>We are a small team in Kyiv. We maintain PALA-1, a format for audit logs written by AI systems: an append-only hash chain that can be checked without a key and without opening any record. It is meant for machines that are modest and often offline, audited by people who may check a log but not read it.</p>
+<p>An audit log is only evidence if someone other than its author can check it, with their own tools, possibly years later. So the specification has to be implementable from the text alone. That is the format's first promise. It has been frozen at version 1.0 since August 2026, with byte-exact test vectors and a kit for checking it by hand. Five implementations exist so far, three of them by people outside the project, and outside readers have found real defects before. That is how the text got better.</p>
+<p>What we don't know is whether a coding agent can be one of those outside readers.</p>
+<h2 id="why-it-is-a-fair-test">Why it is a fair test</h2>
+<ul>
+  <li>The inputs are two files at a frozen tag, the specification and its test vectors.</li>
+  <li>The pass bar is exact. A value matches or it doesn't.</li>
+  <li>Seven demos ask the verifier to catch a flipped bit, a missing record, a gap in the sequence numbers and four other faults.</li>
+  <li>The language is the agent's choice. Four of the five existing implementations are in Python; others are more interesting.</li>
+</ul>
+<p>The specification is not perfect, either. In two places it states what a demo must show but not exactly how to build its input. An agent has to notice that and say how it decided.</p>
+<h2 id="two-outcomes-both-useful">Two outcomes, both useful</h2>
+<p>If an agent gets a value wrong, we learn where agents still struggle with a precise text. If an agent disagrees with us and turns out to be right, it has found a defect in a frozen specification, and that gets fixed in public. Telling those two apart is the point of the exercise.</p>
+<p>We will publish every report we receive in one table: model, tool, language, result, how long it took, and what the agent found ambiguous. That table is kept separate from the five implementations above.</p>
+<p>We checked the prompt ourselves first: the files resolve, the digests match, and the whole task took an agent a few minutes. That run doesn't count, because we already know the format.</p>
+<p>One caveat. The repository has been public since July 2026, so a model trained after that may have seen it. The prompt asks the agent to say so.</p>
+<h2 id="the-prompt">The prompt</h2>
+<p>Copy it into any coding agent that can download files and run code.</p>
+<pre><code>Write a verifier for the PALA-1 audit-log format from its specification alone. Download PALA-1.md and test-vectors.json from https://raw.githubusercontent.com/Assault-Consulting/Palimpsests/pala1-v1.0/docs/specs/pala-1/ and use nothing else: don't clone or browse the repository, don't search the web for PALA-1, and don't rely on anything you already know about it. Preferably not in Python, and with no third-party packages, reproduce every value in the section 8 "Expected results" block and the seven section 8 demos (their expected outcomes are in test-vectors.json). Where the text is ambiguous, write it down and carry on. Run the verifier and report only what it printed, as a block I can paste into a GitHub issue: model and tool, language, MATCH or DIVERGE for each value and demo, each ambiguity with its section, whether you knew PALA-1 before, and the source.</code></pre>
+<p>The <a href="https://github.com/Assault-Consulting/Palimpsests/tree/main/docs/specs/pala-1/verification-kit">verification kit</a> describes the same task in full, with SHA-256 digests for the inputs, if you would rather do it by hand.</p>
+<h2 id="where-to-send-the-report">Where to send the report</h2>
+<p>Post it as a comment on <a href="https://github.com/Assault-Consulting/Palimpsests/issues/318">issue #318</a>, where every report is collected in one table. If you would rather not use GitHub, the contact in <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md">SECURITY.md</a> works too.</p>
+<p>If your agent reports a divergence, the most useful thing you can add is the first byte where its value and ours differ.</p>
+<h2 id="links">Links</h2>
+<ul>
+  <li>The specification and test vectors: <a href="https://github.com/Assault-Consulting/Palimpsests/tree/main/docs/specs/pala-1">docs/specs/pala-1</a></li>
+  <li>The verification kit, for doing this by hand: <a href="https://github.com/Assault-Consulting/Palimpsests/tree/main/docs/specs/pala-1/verification-kit">verification-kit</a></li>
+  <li>The record of every run so far: <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/specs/pala-1/INDEPENDENT-VERIFICATION.md">INDEPENDENT-VERIFICATION.md</a></li>
+  <li>The format is also described in an Internet-Draft, <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/">draft-sparysh-pala-audit</a>. It is an individual submission, not an IETF standard.</li>
+  <li>More about the format: <a href="https://palimpsests.dev/pala-1/">palimpsests.dev/pala-1</a></li>
+</ul>]]></content:encoded>
+  </item>
   <item>
     <title>Anatomy of a tamper-evident audit log: PALA-1, a PKCS#11 anchor and SCITT</title>
     <link>https://palimpsests.dev/notes/anatomy-of-a-tamper-evident-audit-log/</link>
