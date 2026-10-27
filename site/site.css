@@ -292,7 +292,7 @@ footer{border-top:1px solid var(--rule);padding-block:44px;background:var(--pape
 .doc li{margin:.35rem 0}
 .doc a{color:var(--patina-strong)}
 .doc code{font-family:"IBM Plex Mono",monospace;font-size:.88em;background:var(--plate);border:1px solid var(--rule-soft);border-radius:5px;padding:.08em .35em}
-.doc pre{background:var(--ink);color:var(--paper);border-radius:12px;padding:16px 18px;overflow-x:auto;font-family:"IBM Plex Mono",monospace;font-size:.84rem;line-height:1.55}
+.doc pre{background:var(--ink);color:var(--paper);border-radius:12px;padding:16px 18px;overflow-x:auto;white-space:pre-wrap;overflow-wrap:anywhere;font-family:"IBM Plex Mono",monospace;font-size:.84rem;line-height:1.55}
 .doc pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
 .tbl{overflow-x:auto;margin:1rem 0}
 .doc table{border-collapse:collapse;width:100%;font-size:.93rem}
