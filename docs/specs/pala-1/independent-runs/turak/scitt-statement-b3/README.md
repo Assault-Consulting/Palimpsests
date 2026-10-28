@@ -16,7 +16,7 @@ cover.
 
 - **Implementer:** Oleksii Turak — olexii.turak@gmail.com (maintainer;
   **not** an unaffiliated external run — see `RUN-RECORD.md` for the
-  boundary disclosure, which has five parts this time)
+  boundary disclosure, which has six parts this time)
 - **Date:** 2026-10-28
 - **Vector tested:** `docs/interop/scitt-statement-vector-v3.json` at
   commit `a39f4fd0`, SHA-256 `86a474ff…a8a96657`
@@ -63,7 +63,7 @@ answer apparently corroborated by the proof document they are holding.
 
 | Path | What it is |
 |---|---|
-| `RUN-RECORD.md` | The run report: metadata, the five-part contamination-boundary disclosure, the AI-assistance disclosure, what was done in what order, the four findings, what did **not** diverge, and the verdict |
+| `RUN-RECORD.md` | The run report: metadata, the six-part contamination-boundary disclosure, the AI-assistance disclosure, what was done in what order, the four findings, what did **not** diverge, and the verdict |
 | `ambiguity-log.md` | Twelve places the task, the vector, the draft or a standard admitted more than one reading, including those resolved correctly on the first attempt |
 | `verifier/merkle.py` | **New (207 lines).** PALA-1 §4.3 tree in both the iterative promote-not-duplicate form and RFC 6962's recursive `MTH`; RFC 6962 §2.1.2 `PROOF`/`SUBPROOF`; RFC 9162 §2.1.4.2 verification step for step, returning `(ok, reason)` rather than raising. Self-test: the two constructions checked equal for n = 0…24, and 276 build/verify round trips |
 | `verifier/scitt_verify_v3.py` | **New (942 lines).** The run itself: COSE_Sign1 parse, RFC 9052 §4.4 Sig_structure, RFC 9679 thumbprint, the v2/v3 version rule, the eight task steps, 7 tamper expectations, nine adversarial cases |

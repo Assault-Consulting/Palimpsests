@@ -42,7 +42,7 @@ And, as the boundary permits, my own B1 and B2 code and run records —
 `docs/interop/gen_scitt_statement_vector_v3.py`,
 `docs/specs/pala-1/palaudit_ref.py`.
 
-Five disclosures, in the interest of the record.
+Six disclosures, in the interest of the record.
 
 **1 — the generator exclusion was read wider than its list.** The
 boundary names two generators; three more sit in directories it
@@ -88,6 +88,19 @@ written from this report rather than the other way round. No finding,
 measurement or ambiguity entry was added, removed or reworded
 afterwards. Same for B2's `README.md`, read at submission time for the
 house layout of this file. Same disclosure as B2's, for the same reason.
+
+**6 — B1's and B2's commit messages were read, last of all.** To match
+the house commit-message style for this run, `git log --diff-filter=A`
+was run against B1's and B2's run records, which printed those two
+commits' full messages. They summarise B1's F1–F4 and B2's
+F-1–F-4 — material the boundary already opens through "your own
+B1/B2 … run records" — and they concern constructions v1 and v2,
+not v3. This happened after the report, the findings, the ambiguity log
+and the §7 row were all written, and nothing was changed afterwards.
+Logged anyway, and in a commit of its own so the sequence is visible,
+because the boundary names commit history touching the bridge and this
+is commit history touching the bridge. As B1 put it: a boundary is only
+worth what its disclosures are.
 
 ## Affiliation
 
