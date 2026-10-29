@@ -1,0 +1,795 @@
+{
+  "run": "B3 -- SCITT statement construction v3",
+  "v3_vector_sha256": "86a474ff33a1a210cfebb7e2b2d0352b0f57246d46b352de8c908891a8a96657",
+  "v2_vector_sha256": "2e93995c3f4d85296f962ce6d96edcbfb197b352c348afde8aa562cb4cd5386e",
+  "core_vectors_sha256": "476c05ce8ef765c57b0b67bea8ac4ddf73a85d8e0435aac38b19831ae20a8193",
+  "consistency_vectors_sha256": "7f80808fc84fe99142d674f8ce1cd1adf2c516ffce5976b698a17690578ddadc",
+  "passed": 155,
+  "total": 155,
+  "failed": 0,
+  "divergences": [
+    {
+      "tag": "F1",
+      "statement": "consistency-vectors.json publishes a first == second proof (17 -> 17, empty path) among its positive cases, but RFC 9162 s2.1.4.2 cannot verify it",
+      "detail": "The RFC states its domain as '0 < first < second' and its step 1 is 'If consistency_path is an empty array, stop and fail the proof verification.' With the domain guard removed the algorithm still returns False: 'step 1: consistency_path is empty'. consistency-proof.md s2 asserts both that the format 'verifies with RFC 9162 s2.1.4.2' and that 'first == second has an empty proof and requires the roots to be equal'. Both cannot hold. The RFC wins, so the equal-size case is a PALA-1 pre-check that must be settled BEFORE s2.1.4.2 is entered -- not a proof that algorithm accepts. Does not affect the B3 statement vector (8 < 12, one-node path)."
+    }
+  ],
+  "elapsed_seconds": 0.27,
+  "checks": [
+    {
+      "check": "ed25519.py reproduces RFC 8032 s7.1 TEST 1 and TEST 2",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "vector public key derives from the vector seed (RFC 8032 s5.1.5)",
+      "ok": true,
+      "detail": "derived d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a"
+    },
+    {
+      "check": "merkle.py: PALA-1 s4.3 bottom-up tree == RFC 6962 recursive MTH for n=0..24, and build/verify round-trips for every 0<m<n<=24",
+      "ok": true,
+      "detail": "PALA-1 s4.3 asserts the two agree; checked, not assumed"
+    },
+    {
+      "check": "empty-tree root is SHA-256(\"\") (PALA-1 s4.3)",
+      "ok": true,
+      "detail": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "check": "vector publishes 12 record hashes (seq 0..11)",
+      "ok": true,
+      "detail": "12"
+    },
+    {
+      "check": "derived root over records 0..7 (8 leaves) == earlier.inputs.root_hex",
+      "ok": true,
+      "detail": "12e2b61a253c802be0b6bb2e31392632464529df896f1576b3be77801c9666da"
+    },
+    {
+      "check": "derived root over records 0..11 (12 leaves) == later.inputs.root_hex",
+      "ok": true,
+      "detail": "84f1e4f5c4bc75ff5edc304b35b122c3263366ed7e7ca399706a4128e7ecd7d7"
+    },
+    {
+      "check": "the two roots differ (the chain grew)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "earlier.inputs.chain_head_hex == record_hashes_hex[7] (the head is the last record's hash, PALA-1 s4.1)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "later.inputs.chain_head_hex == record_hashes_hex[11]",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "core test-vectors.json publishes 12 records",
+      "ok": true,
+      "detail": "12"
+    },
+    {
+      "check": "record_hash == SHA-256(header_bytes) for all 12 records, and each equals the v3 vector's record_hashes_hex",
+      "ok": true,
+      "detail": "12/12; the v3 vector's leaves are the published core vectors"
+    },
+    {
+      "check": "header_len field equals the actual header length for all 12",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "re-derived chain head == core test-vectors.json chain_head",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "consistency-vectors source_chain_head == inference record_hash[16] (the file's tree is the 17-record prefix)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "our derived_root reproduces roots_by_count for every count 0..17",
+      "ok": true,
+      "detail": "18/18"
+    },
+    {
+      "check": "  rebuilt RFC 6962 PROOF(1, D[17]) == published path",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "  rebuilt RFC 6962 PROOF(2, D[17]) == published path",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "  rebuilt RFC 6962 PROOF(4, D[17]) == published path",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "  rebuilt RFC 6962 PROOF(7, D[17]) == published path",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "  rebuilt RFC 6962 PROOF(8, D[17]) == published path",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "  rebuilt RFC 6962 PROOF(13, D[17]) == published path",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "  rebuilt RFC 6962 PROOF(16, D[17]) == published path",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "  rebuilt RFC 6962 PROOF(4, D[8]) == published path",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "  rebuilt RFC 6962 PROOF(3, D[7]) == published path",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "  rebuilt RFC 6962 PROOF(5, D[12]) == published path",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "every published proof inside the RFC 9162 s2.1.4.2 input domain (0 < first < second) verifies, and its path rebuilds from the chain by RFC 6962 PROOF",
+      "ok": true,
+      "detail": "10 of 11 proofs are in domain; failures: []"
+    },
+    {
+      "check": "negative case 'truncated_path' verifies False",
+      "ok": true,
+      "detail": "step 7: recomputed second root 5258652ebb4ead05ec39d0eb4279d93d42968387281530041adabe5f7c4a9456 != second_hash 75ec5d085d4c2043aa4d0b73ee110a843cd74f76db21460d1f5e524114c65c7d"
+    },
+    {
+      "check": "negative case 'wrong_first_root' verifies False",
+      "ok": true,
+      "detail": "step 7: recomputed first root 834a308444f094caa258c1bb70b6be1fadcabc9ae0899f089f315e453c93b27a != first_hash 6c52ae5cb5127b0a2267b9a25c5b6f991d76ba4b5085a3af4f1055ebcf31104a"
+    },
+    {
+      "check": "negative case 'swapped_sizes' verifies False",
+      "ok": true,
+      "detail": "outside the RFC 9162 s2.1.4.2 input domain 0 < first < second (first=17, second=7)"
+    },
+    {
+      "check": "first byte is 0xd2 (CBOR tag 18, tagged COSE_Sign1)",
+      "ok": true,
+      "detail": "got 0xd2"
+    },
+    {
+      "check": "decodes under a STRICT RFC 8949 s4.2.1 decoder",
+      "ok": true,
+      "detail": "protected=208 B, payload=88 B, sig=64 B; no non-minimal heads, no indefinite lengths, no trailing bytes"
+    },
+    {
+      "check": "unprotected bucket is empty",
+      "ok": true,
+      "detail": "0 entr(ies)"
+    },
+    {
+      "check": "payload is attached (a bstr, not nil)",
+      "ok": true,
+      "detail": "88 bytes"
+    },
+    {
+      "check": "signature is 64 bytes",
+      "ok": true,
+      "detail": "64"
+    },
+    {
+      "check": "Ed25519 signature verifies with key.public_key_hex over the RFC 9052 s4.4 Sig_structure",
+      "ok": true,
+      "detail": "Sig_structure 313 bytes"
+    },
+    {
+      "check": "protected labels are exactly [1, 3, 4, 15]",
+      "ok": true,
+      "detail": "got [1, 3, 4, 15]"
+    },
+    {
+      "check": "labels are in RFC 8949 s4.2.1 bytewise-on-encoded-key order",
+      "ok": true,
+      "detail": "['01', '03', '04', '0f']"
+    },
+    {
+      "check": "alg (label 1) is EdDSA (-8)",
+      "ok": true,
+      "detail": "got -8"
+    },
+    {
+      "check": "kid (label 4) is in the PROTECTED bucket (RFC 9943 s6 MUST)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "kid == construction.kid_hex",
+      "ok": true,
+      "detail": "866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a415743"
+    },
+    {
+      "check": "kid is the RFC 9679 COSE Key Thumbprint (SHA-256) over {1:1, -1:6, -2:x} in RFC 8949 s4.2.1 order",
+      "ok": true,
+      "detail": "encoded key a301012006215820d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a"
+    },
+    {
+      "check": "the numeric-key-order thumbprint is NOT what the vector used",
+      "ok": true,
+      "detail": "confirms s4.2.1 bytewise ordering (B1/B2 finding)"
+    },
+    {
+      "check": "CWT claims (label 15) present in the protected bucket (RFC 9597)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "CWT iss (claim 1) == construction.issuer",
+      "ok": true,
+      "detail": "got 'urn:example:pala-1:reference-emitter'"
+    },
+    {
+      "check": "CWT sub (claim 2) == inputs.subject",
+      "ok": true,
+      "detail": "got 'pala-1:chain:4d6c75cdf52510fc7c4ea3a5be141249bc386de9e2565ffeface1dce8e2b9d00'"
+    },
+    {
+      "check": "CWT sub carries the FULL 64-hex chain head, untruncated",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "protected bucket re-encodes to identical bytes",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "RFC 9943 s6: neither x5t (34) nor x5chain (33) is present, which is exactly what makes kid MUST-present here",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "RFC 9943 s6: the CWT Claims header parameter is present and includes iss (1) and sub (2) -- both MUST",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "RFC 9943 s6: iss is a string of 1..8192 characters",
+      "ok": true,
+      "detail": "36 characters"
+    },
+    {
+      "check": "payload[1] == inputs.chain_head_hex (32 bytes)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "payload[2] == first_seq (0)",
+      "ok": true,
+      "detail": "got 0"
+    },
+    {
+      "check": "payload[3] == last_seq (7)",
+      "ok": true,
+      "detail": "got 7"
+    },
+    {
+      "check": "payload[4] == 'pala-1/v1.0'",
+      "ok": true,
+      "detail": "got 'pala-1/v1.0'"
+    },
+    {
+      "check": "payload map keys are in RFC 8949 s4.2.1 deterministic order",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "content type (label 3) is the v3 string",
+      "ok": true,
+      "detail": "'application/vnd.palimpsests.pala1-head-v3+cbor'"
+    },
+    {
+      "check": "content type is NOT the v2 string",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "payload has exactly keys [1, 2, 3, 4, 5]",
+      "ok": true,
+      "detail": "got [1, 2, 3, 4, 5]"
+    },
+    {
+      "check": "payload[5] is a 32-byte byte string",
+      "ok": true,
+      "detail": "32 bytes"
+    },
+    {
+      "check": "payload[5] == inputs.root_hex",
+      "ok": true,
+      "detail": "12e2b61a253c802be0b6bb2e31392632464529df896f1576b3be77801c9666da"
+    },
+    {
+      "check": "payload[5] == OUR derived root over records 0..7 (8 leaves), computed in step 1",
+      "ok": true,
+      "detail": "12e2b61a253c802be0b6bb2e31392632464529df896f1576b3be77801c9666da"
+    },
+    {
+      "check": "reader accepts it as construction v3",
+      "ok": true,
+      "detail": "ok"
+    },
+    {
+      "check": "without the chain the root is reported CARRIED, never verified",
+      "ok": true,
+      "detail": "root_status='carried'"
+    },
+    {
+      "check": "with the chain the root is RECOMPUTED and matches",
+      "ok": true,
+      "detail": "root_status='recomputed-ok'"
+    },
+    {
+      "check": "independently built protected header == published bytes",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "independently built payload == published bytes",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "independently produced Ed25519 signature == published signature",
+      "ok": true,
+      "detail": "RFC 8032 determinism"
+    },
+    {
+      "check": "REPRODUCED: whole statement == expected.statement_hex byte-for-byte",
+      "ok": true,
+      "detail": "369 bytes"
+    },
+    {
+      "check": "statement_length_bytes == 369",
+      "ok": true,
+      "detail": "369"
+    },
+    {
+      "check": "statement_sha256 matches",
+      "ok": true,
+      "detail": "0eb02a7b952d54c6388d4499d6122c9e3ae2c91454c599bef4f66e5858cf44d9"
+    },
+    {
+      "check": "first byte is 0xd2 (CBOR tag 18, tagged COSE_Sign1)",
+      "ok": true,
+      "detail": "got 0xd2"
+    },
+    {
+      "check": "decodes under a STRICT RFC 8949 s4.2.1 decoder",
+      "ok": true,
+      "detail": "protected=208 B, payload=88 B, sig=64 B; no non-minimal heads, no indefinite lengths, no trailing bytes"
+    },
+    {
+      "check": "unprotected bucket is empty",
+      "ok": true,
+      "detail": "0 entr(ies)"
+    },
+    {
+      "check": "payload is attached (a bstr, not nil)",
+      "ok": true,
+      "detail": "88 bytes"
+    },
+    {
+      "check": "signature is 64 bytes",
+      "ok": true,
+      "detail": "64"
+    },
+    {
+      "check": "Ed25519 signature verifies with key.public_key_hex over the RFC 9052 s4.4 Sig_structure",
+      "ok": true,
+      "detail": "Sig_structure 313 bytes"
+    },
+    {
+      "check": "protected labels are exactly [1, 3, 4, 15]",
+      "ok": true,
+      "detail": "got [1, 3, 4, 15]"
+    },
+    {
+      "check": "labels are in RFC 8949 s4.2.1 bytewise-on-encoded-key order",
+      "ok": true,
+      "detail": "['01', '03', '04', '0f']"
+    },
+    {
+      "check": "alg (label 1) is EdDSA (-8)",
+      "ok": true,
+      "detail": "got -8"
+    },
+    {
+      "check": "kid (label 4) is in the PROTECTED bucket (RFC 9943 s6 MUST)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "kid == construction.kid_hex",
+      "ok": true,
+      "detail": "866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a415743"
+    },
+    {
+      "check": "kid is the RFC 9679 COSE Key Thumbprint (SHA-256) over {1:1, -1:6, -2:x} in RFC 8949 s4.2.1 order",
+      "ok": true,
+      "detail": "encoded key a301012006215820d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a"
+    },
+    {
+      "check": "the numeric-key-order thumbprint is NOT what the vector used",
+      "ok": true,
+      "detail": "confirms s4.2.1 bytewise ordering (B1/B2 finding)"
+    },
+    {
+      "check": "CWT claims (label 15) present in the protected bucket (RFC 9597)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "CWT iss (claim 1) == construction.issuer",
+      "ok": true,
+      "detail": "got 'urn:example:pala-1:reference-emitter'"
+    },
+    {
+      "check": "CWT sub (claim 2) == inputs.subject",
+      "ok": true,
+      "detail": "got 'pala-1:chain:3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813'"
+    },
+    {
+      "check": "CWT sub carries the FULL 64-hex chain head, untruncated",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "protected bucket re-encodes to identical bytes",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "RFC 9943 s6: neither x5t (34) nor x5chain (33) is present, which is exactly what makes kid MUST-present here",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "RFC 9943 s6: the CWT Claims header parameter is present and includes iss (1) and sub (2) -- both MUST",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "RFC 9943 s6: iss is a string of 1..8192 characters",
+      "ok": true,
+      "detail": "36 characters"
+    },
+    {
+      "check": "payload[1] == inputs.chain_head_hex (32 bytes)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "payload[2] == first_seq (8)",
+      "ok": true,
+      "detail": "got 8"
+    },
+    {
+      "check": "payload[3] == last_seq (11)",
+      "ok": true,
+      "detail": "got 11"
+    },
+    {
+      "check": "payload[4] == 'pala-1/v1.0'",
+      "ok": true,
+      "detail": "got 'pala-1/v1.0'"
+    },
+    {
+      "check": "payload map keys are in RFC 8949 s4.2.1 deterministic order",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "content type (label 3) is the v3 string",
+      "ok": true,
+      "detail": "'application/vnd.palimpsests.pala1-head-v3+cbor'"
+    },
+    {
+      "check": "content type is NOT the v2 string",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "payload has exactly keys [1, 2, 3, 4, 5]",
+      "ok": true,
+      "detail": "got [1, 2, 3, 4, 5]"
+    },
+    {
+      "check": "payload[5] is a 32-byte byte string",
+      "ok": true,
+      "detail": "32 bytes"
+    },
+    {
+      "check": "payload[5] == inputs.root_hex",
+      "ok": true,
+      "detail": "84f1e4f5c4bc75ff5edc304b35b122c3263366ed7e7ca399706a4128e7ecd7d7"
+    },
+    {
+      "check": "payload[5] == OUR derived root over records 0..11 (12 leaves), computed in step 1",
+      "ok": true,
+      "detail": "84f1e4f5c4bc75ff5edc304b35b122c3263366ed7e7ca399706a4128e7ecd7d7"
+    },
+    {
+      "check": "the later root covers 0..11 even though its first_seq is 8 (the root does not depend on first_seq)",
+      "ok": true,
+      "detail": "root over 12 leaves, reported range 8..11"
+    },
+    {
+      "check": "a root over first_seq..last_seq (8..11) would NOT match",
+      "ok": true,
+      "detail": "that value is b81fb7fb423bd7909330f0294a74962dd662e21b6efe21c3f95945f609217f76"
+    },
+    {
+      "check": "reader accepts it as construction v3",
+      "ok": true,
+      "detail": "ok"
+    },
+    {
+      "check": "without the chain the root is reported CARRIED, never verified",
+      "ok": true,
+      "detail": "root_status='carried'"
+    },
+    {
+      "check": "with the chain the root is RECOMPUTED and matches",
+      "ok": true,
+      "detail": "root_status='recomputed-ok'"
+    },
+    {
+      "check": "independently built protected header == published bytes",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "independently built payload == published bytes",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "independently produced Ed25519 signature == published signature",
+      "ok": true,
+      "detail": "RFC 8032 determinism"
+    },
+    {
+      "check": "REPRODUCED: whole statement == expected.statement_hex byte-for-byte",
+      "ok": true,
+      "detail": "369 bytes"
+    },
+    {
+      "check": "statement_length_bytes == 369",
+      "ok": true,
+      "detail": "369"
+    },
+    {
+      "check": "statement_sha256 matches",
+      "ok": true,
+      "detail": "32945e9309ad4deb432715cec7d0ef54c2ecc5624cb7a32dbfa39cbf270cd3fc"
+    },
+    {
+      "check": "BOTH roots were taken from the statements' payloads, not from the vector's root_hex and not recomputed from the chain",
+      "ok": true,
+      "detail": "root_status=('carried', 'carried')"
+    },
+    {
+      "check": "prefix consistency VERIFIES by RFC 9162 s2.1.4.2: the 12-record state extends the 8-record state",
+      "ok": true,
+      "detail": "ok"
+    },
+    {
+      "check": "the sizes derived from the statements match the proof document's own `first`/`second`",
+      "ok": true,
+      "detail": "statements say 8/12, document says 8/12"
+    },
+    {
+      "check": "the roots read from the statements match the proof document's own first_root/second_root",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "this check used NO record hash, NO chain, and NO vector root field -- two statements, one proof, one public key",
+      "ok": true,
+      "detail": "1-node path"
+    },
+    {
+      "check": "separately, with the chain: RFC 6962 PROOF(8, D[12]) rebuilds the published path",
+      "ok": true,
+      "detail": "['b81fb7fb423bd7909330f0294a74962dd662e21b6efe21c3f95945f609217f76']"
+    },
+    {
+      "check": "the single path node is the subtree root over records 8..11",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "T1 flip a bit of the root inside the payload -> signature FAILS",
+      "ok": true,
+      "detail": "root at payload offset 56"
+    },
+    {
+      "check": "T2 a wrong root, correctly signed -> chain-holding verifier REJECTS; the signature itself is valid",
+      "ok": true,
+      "detail": "root does not match the derived root over records 0..7"
+    },
+    {
+      "check": "T3a a root over first_seq..last_seq (8..11) -> REJECTED against the chain",
+      "ok": true,
+      "detail": "root does not match the derived root over records 0..11"
+    },
+    {
+      "check": "T3b that root does not verify in the consistency proof either",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "T3c NOTE: in this vector that wrong root is byte-identical to the proof's only path node -- the 8..11 subtree is a complete subtree, so the mistake yields a real node of the tree, not a random value",
+      "ok": true,
+      "detail": "b81fb7fb423bd7909330f0294a74962dd662e21b6efe21c3f95945f609217f76"
+    },
+    {
+      "check": "T4 earlier statement with a root over last_seq (7) records instead of last_seq+1 (8) -> REJECTED",
+      "ok": true,
+      "detail": "root does not match the derived root over records 0..7"
+    },
+    {
+      "check": "T4 earlier statement with a root over last_seq+2 (9) records instead of last_seq+1 (8) -> REJECTED",
+      "ok": true,
+      "detail": "root does not match the derived root over records 0..7"
+    },
+    {
+      "check": "T4 later statement with a root over 11 records instead of 12 -> REJECTED",
+      "ok": true,
+      "detail": "root does not match the derived root over records 0..11"
+    },
+    {
+      "check": "T5a a v2 payload (keys 1-4) under the v3 content type, signed with the vector's key -> REFUSED",
+      "ok": true,
+      "detail": "version rule: content type names v3, which carries exactly payload keys [1, 2, 3, 4, 5], but the payload carries [1, 2, 3, 4]"
+    },
+    {
+      "check": "T5b a v3 payload (keys 1-5) under the v2 content type, signed with the vector's key -> REFUSED",
+      "ok": true,
+      "detail": "version rule: content type names v2, which carries exactly payload keys [1, 2, 3, 4], but the payload carries [1, 2, 3, 4, 5]"
+    },
+    {
+      "check": "T5c both refusals happen with a VALID signature -- the version rule is a reading rule, not a crypto one",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "T6a drop the last node of the path -> proof does NOT verify",
+      "ok": true,
+      "detail": "step 1: consistency_path is empty"
+    },
+    {
+      "check": "T6b swap the two roots -> proof does NOT verify",
+      "ok": true,
+      "detail": "step 7: recomputed second root beb2b0a5ce274cc9f6f93736120b3f702dbc502e611426457ca0c4a6ef299614 != second_hash 12e2b61a253c802be0b6bb2e31392632464529df896f1576b3be77801c9666da"
+    },
+    {
+      "check": "T6c swap the two sizes as well -> still does NOT verify",
+      "ok": true,
+      "detail": "outside the RFC 9162 s2.1.4.2 input domain 0 < first < second (first=12, second=8)"
+    },
+    {
+      "check": "T7 without the chain the verifier says CARRIED; only with the chain does it say RECOMPUTED -- it never says 'verified'",
+      "ok": true,
+      "detail": "'carried' / 'recomputed-ok'"
+    },
+    {
+      "check": "v2 statement verifies and reads as construction v2",
+      "ok": true,
+      "detail": "ok"
+    },
+    {
+      "check": "v2 statement carries NO root (no payload key 5)",
+      "ok": true,
+      "detail": "keys [1, 2, 3, 4]"
+    },
+    {
+      "check": "v2 root_status is None -- there is no root to call carried",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "v2 statement bytes and sha256 unchanged from the v2 vector",
+      "ok": true,
+      "detail": "331 bytes"
+    },
+    {
+      "check": "v2 and v3 statements of the same head differ in bytes and length",
+      "ok": true,
+      "detail": "v2 331 B, v3 369 B, delta 38"
+    },
+    {
+      "check": "a v2-only verifier (content type must be the v2 string) rejects the v3 statement BY TYPE, before reading the payload",
+      "ok": true,
+      "detail": "the vector's relation_to_v2 claim"
+    },
+    {
+      "check": "A1 key 5 of 31 bytes -> REFUSED on length, before any tree work",
+      "ok": true,
+      "detail": "version rule: payload key 5 must be 32 bytes, got '31 bytes'"
+    },
+    {
+      "check": "A1 key 5 of 33 bytes -> REFUSED on length, before any tree work",
+      "ok": true,
+      "detail": "version rule: payload key 5 must be 32 bytes, got '33 bytes'"
+    },
+    {
+      "check": "A2a payload keys in DESCENDING order: the signature still verifies (those bytes are what was signed)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "A2b ... but its ENCODED keys are in descending order, the deterministic re-encode differs from the published bytes, and our reader refuses it on the key list -- a reader that checked only the signature would accept it",
+      "ok": true,
+      "detail": "encoded keys ['05', '04', '03', '02', '01']; reader says: version rule: content type names v3, which carries exactly payload keys [1, 2, 3, 4, 5], but the payload carries [5, 4, 3, 2, 1]"
+    },
+    {
+      "check": "A3 a payload with key 5 twice: a length-driven decoder accepts the map; RFC 8949 s5.6 calls it invalid, and which copy a dict-building decoder keeps decides the root",
+      "ok": true,
+      "detail": "our decoder surfaces both copies: [1, 2, 3, 4, 5, 5]"
+    },
+    {
+      "check": "A4 first_seq (11) > last_seq (8): refused by OUR reader, but neither the task text nor the vector states this constraint",
+      "ok": true,
+      "detail": "first_seq (11) > last_seq (8): the reported range is empty or inverted"
+    },
+    {
+      "check": "A5 a statement whose head (record 7) and root (12 records) do not correspond: ACCEPTED without the chain, and the consistency proof still verifies -- nothing in the chainless check binds key 1 to key 5",
+      "ok": true,
+      "detail": "the chainless check is a statement about ROOTS; the head rides along unchecked"
+    },
+    {
+      "check": "A5b ... and a chain-holding verifier catches it only if it checks the head too: the root here IS the right root for last_seq=11",
+      "ok": true,
+      "detail": "root_status='recomputed-ok', head=record 7 while last_seq=11"
+    },
+    {
+      "check": "A6a first == second with an empty path: our faithful RFC 9162 s2.1.4.2 returns False (see finding F1)",
+      "ok": true,
+      "detail": "outside the RFC 9162 s2.1.4.2 input domain 0 < first < second (first=12, second=12)"
+    },
+    {
+      "check": "A6b ... and still False with the domain guard removed, because the RFC's own step 1 fails an empty consistency_path",
+      "ok": true,
+      "detail": "step 1: consistency_path is empty"
+    },
+    {
+      "check": "A7 a root over a different chain entirely: accepted as CARRIED without the chain, rejected with it, and the consistency proof fails -- the proof is what catches it when no chain is held",
+      "ok": true,
+      "detail": "root does not match the derived root over records 0..11"
+    },
+    {
+      "check": "A8 strip tag 18: a tag-requiring parser rejects the artifact while the signature over it is still valid (B1/B2 finding, unchanged in v3)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "A9 the task's 'Construction v3' text states leaf/node/promote but omits the empty-tree root that PALA-1 s4.3 and consistency-proof.md s1 both give as SHA-256(\"\"); unreachable here because a payload always has last_seq >= 0, so the tree has >= 1 leaf",
+      "ok": true,
+      "detail": "documentation gap, not a byte divergence; see U3"
+    }
+  ]
+}
