@@ -38,10 +38,14 @@ Let `first ≤ second` be record **counts** (seq of the last record
 covered, plus one). A consistency proof between `root(first)` and
 `root(second)` is RFC 6962 `PROOF(first, D[second])`: the list of
 subtree hashes that lets a verifier reconstruct both roots from the
-shared structure. It verifies with RFC 9162 §2.1.4.2, which corrects
-the RFC 6962 text. `first == second` has an empty proof and requires
-the roots to be equal; `first == 0` is not defined (there is no prefix
-to speak of) and is rejected.
+shared structure. For `0 < first < second` it verifies with RFC 9162
+§2.1.4.2, which corrects the RFC 6962 text. Two cases are settled
+**before** that algorithm is entered, because they lie outside its input
+domain (`0 < first < second`; its step 1 fails any empty path):
+`first == second` has an empty proof and requires the roots to be equal;
+`first == 0` is not defined (there is no prefix to speak of) and is
+rejected. The equal-size case in the companion vectors is therefore a
+PALA-1 pre-check, not an RFC 9162 verification (bridge run B3, F1).
 
 **What it proves.** That every record with `seq < first` in the state
 that produced `root(second)` is byte-for-byte (by hash) the record at
