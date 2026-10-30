@@ -100,6 +100,21 @@ root is *carried*: the signature covers it, and nothing more is known.
 With the chain, it can be *recomputed* and compared. A report must not
 call an unrecomputed root verified.
 
+**What it may not claim about the head** (added after bridge run B3, F3).
+Without the chain, nothing binds payload key 1 to key 5: a statement
+pairing an earlier record's head with a later root is accepted, and a
+consistency proof between two roots never reads a head. What two
+statements and one proof establish is a relation between the two
+**roots** — not that either head belongs to the tree its root describes.
+
+**The range** (B3, F4): `0 <= first_seq <= last_seq`. A statement
+outside it is refused, by the builder and by the verifier alike.
+
+**Contamination boundary, as a rule** (B3, U2): for any future run, the
+excluded files are every generator (`gen_*.py`) and every reference
+implementation that computed a published expected value — not only the
+ones a task names.
+
 ## The task
 
 1. **Roots.** From `subject_chain.record_hashes_hex` (12 record hashes,
