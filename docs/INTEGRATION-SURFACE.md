@@ -63,10 +63,13 @@ CHANGELOG. The plan towards both is in
 
 **Not covered by any channel:** the writer APIs (`PalaWriter`, anchor
 stores, rotation) remain **experimental** until 1.0, as the README states;
-they get a contract of their own before then. The SCITT bridge
-(`palimpsests.audit.pala.scitt` — signed statements, `verify_statement`,
-`StatementCheck` and its `root_status` values) is **experimental** until an
-independent reproduction of statement construction v3 is recorded.
+they get a contract of their own before then. **SCITT statement
+construction v3** (the bytes of a signed statement) is independently
+reproduced — bridge run B3, `docs/specs/pala-1/INDEPENDENT-VERIFICATION.md`
+§7 — and changes only by content-type bump, as v2 does. The Python functions of the
+bridge (`palimpsests.audit.pala.scitt` — `verify_statement`,
+`StatementCheck` and its `root_status` values) stay **experimental** until
+they belong to a channel; B3 verified the construction, not that API.
 
 ## Vocabularies (open)
 
