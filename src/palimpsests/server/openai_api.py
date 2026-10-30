@@ -178,11 +178,20 @@ def create_app(
                     # refused. Measured on Claude Code 2.1.288.
                     import logging
 
+                    event = tool = "?"
+                    try:  # metadata only — never the tool's input or output
+                        hook = json.loads(await request.body())
+                        event = str(hook.get("hook_event_name", "?"))
+                        tool = str(hook.get("tool_name", "?"))
+                    except (ValueError, AttributeError):
+                        pass
                     logging.getLogger("palimpsests.serve").warning(
-                        "hook report refused: empty bearer on %s — if the agent's "
-                        "hook header uses $PALIMPSESTS_SERVE_API_KEY, list that "
-                        "variable in the hook's allowedEnvVars",
-                        request.url.path,
+                        "hook report refused: empty bearer on %s (event %s, tool %s, "
+                        "id %s) — if the agent's hook header uses "
+                        "$PALIMPSESTS_SERVE_API_KEY, list that variable in the "
+                        "hook's allowedEnvVars",
+                        request.url.path, event, tool,
+                        str(hook.get("tool_use_id", "?")) if event != "?" else "?",
                     )
                 return JSONResponse(
                     status_code=401,
@@ -736,7 +745,6 @@ def default_audit():
 def main() -> None:
     """Console-script entry point: ``palimpsests-serve``."""
     import argparse
-    import atexit
 
     parser = argparse.ArgumentParser(
         description="Serve the OpenAI-compatible endpoint over the active engine."
@@ -787,6 +795,25 @@ def main() -> None:
     # CI caught this: the coverage job installs the dev extra, which has
     # fastapi but not uvicorn, so the import raised before the preflight
     # could run.
+    run_serve(args.host, args.port, args.api_key)
+
+
+_LOCAL_HOSTS = frozenset({"127.0.0.1", "localhost", "::1"})
+
+
+def run_serve(host: str, port: int, api_key: str | None) -> None:
+    """Start the endpoint — the one start-up both entry points use.
+
+    ``palimpsests-serve`` and ``palimpsests serve`` used to start the
+    endpoint by two separate code paths, and only the first took a key: the
+    subcommand had no ``--api-key`` and ignored ``PALIMPSESTS_SERVE_API_KEY``,
+    so a serve started as the documentation described ran without
+    authentication. Both now come here.
+
+    Order: the engine's audit log (a misconfiguration the operator can fix),
+    then the server runtime, then the chain; on the way out, dispatched calls
+    that never came back are closed as ``cancelled`` and the chain is closed.
+    """
     from palimpsests.audit import AuditIntegrityError
 
     try:
@@ -802,17 +829,21 @@ def main() -> None:
     except ServeChainUnavailable as e:
         print(f"error: {e}", file=sys.stderr)
         raise SystemExit(1) from e
-    app = create_app(audit=audit, api_key=args.api_key)
-    if audit is not None:
-
-        def _close_audit() -> None:
-            cancel = getattr(app.state, "cancel_pending", None)
-            if cancel is not None:
-                cancel()
-            audit.writer.close()
-
-        atexit.register(_close_audit)
-    uvicorn.run(app, host=args.host, port=args.port)
+    if api_key is None and host not in _LOCAL_HOSTS:
+        print(
+            f"warning: serving on {host} without a key — anything that can reach "
+            "this port can use the endpoint and write to its audit chain; pass "
+            "--api-key or set PALIMPSESTS_SERVE_API_KEY",
+            file=sys.stderr,
+        )
+    app = create_app(audit=audit, api_key=api_key)
+    try:
+        uvicorn.run(app, host=host, port=port)
+    finally:
+        cancel = getattr(app.state, "cancel_pending", None)
+        if cancel is not None:
+            cancel()
+        audit.writer.close()
 
 
 def _opencode_config(host: str, port: int, api_key: str | None) -> str:
