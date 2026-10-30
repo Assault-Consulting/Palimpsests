@@ -8,6 +8,88 @@ API changes.
 
 ## [Unreleased]
 
+## [0.13.1] — 2026-10-30
+
+**Security release.** `palimpsests serve` ran without authentication in
+0.13.0 when started as the documentation described — upgrade if you used it.
+The PALA-1 core is unchanged (frozen at v1.0); the inference profile is
+unchanged (r6). 0.13.1 is cut from `main`, so it also carries the
+additive changes merged since 0.13.0: the reading surface importable
+from one module, and the surface checker's Windows fixes.
+
+### Security
+
+- **`palimpsests serve` takes the API key.** In 0.13.0 the subcommand had no
+  `--api-key` and ignored `PALIMPSESTS_SERVE_API_KEY`, so a serve started as
+  `docs/USAGE.md` described ran **without authentication**; only the separate
+  `palimpsests-serve` script enforced a key. Found in the 0.14 real-traffic
+  runs. Both entry points now start through one function and take the key the
+  same way (option or variable); a keyless serve bound beyond localhost is
+  warned about on stderr. If you ran `palimpsests serve` with the variable set
+  on a reachable address, it was open: restart it on 0.13.1.
+
+### Added
+
+- **One place to import the reading surface from** (U19): `palimpsests.audit.reader`
+  now also exports `VerifyResult`, `Header`, `Advisory`, `AdvisoryItem`,
+  `boot_statistics` and `step_catalog` with their result types, the core
+  numbers (`RT_*`, `TIER_*`, `TIME_*`, `FORMAT_VERSION`), the inference
+  profile's (`KIND_*`, `OUTCOME_*`, `SOURCE_*`, `DISP_*`), and the sentinels
+  `NO_SPAN` and `NO_PREDECESSOR`. Every name keeps its home module too.
+- **`palimpsests.audit.profiles.inference`** — the inference profile's
+  allocations, which used to live in the writer; the writer re-exports all
+  of them, so existing imports keep working.
+- **A contract test for the reading surface** (U20,
+  `tests/test_consumer_surface.py`): the exported names, the frozen numbers
+  of the core and the profile, the result types' fields, the reader's
+  methods, and the diagnosis, advisory and name vocabularies checked
+  against `docs/INTEGRATION-SURFACE.md`.
+
+### Changed
+
+- **SCITT statement construction v3 is no longer experimental**: bridge run
+  B3 reproduced it independently. The bridge's Python functions stay
+  experimental until they belong to a channel.
+- **The surface checker has a fourth state, 🟠 ERROR**: the checker
+  failed after the client had started, so the surface is unchecked. It
+  used to be reported RED — a change in the surface — which it is not.
+  ERROR fails the run like RED (exit 1); `docs/SURFACE-CHECKER.md` §4a
+  says what to do with it.
+- **The LiteLLM probe passes `tools`**, as an application does. LiteLLM
+  imports the `mcp` package for any request with tools and does not
+  install it; the probe is SKIP with that sentence when it is missing, and
+  the LiteLLM README says to install it.
+
+### Fixed
+
+- **The SCITT statement verifier refuses an inverted range**
+  (`first_seq > last_seq`), as the builder already did (bridge run B3, F4).
+- **A refused hook names its event, tool and call id** in the serve's log —
+  metadata only, never the tool's input — so an `empty bearer` refusal can
+  be traced to the call it belongs to.
+- **The MCP proxy starts `npx` and `uvx` servers on Windows.** It started
+  the server by bare name, and on Windows those launchers are `.cmd`
+  shims that `subprocess` can start only by full path — `npx …` failed
+  while `where npx` found it. The command is now resolved the way a shell
+  resolves it; one that is not on `PATH` stops the proxy with one line on
+  stderr and exit code 127.
+- **The surface checker on Windows**: npm-installed clients (OpenCode,
+  Claude Code) are launched by full path, for the same reason; a client
+  that cannot be launched, or a Python without the `[serve]` extra, is
+  SKIP rather than RED; the report file is written before anything is
+  printed, and printing no longer fails on a console without the status
+  marks.
+
+### Documentation
+
+- `consistency-proof.md`: the equal-size and zero-size cases are pre-checks
+  before RFC 9162 §2.1.4.2, outside its input domain (B3, F1).
+- The v3 verification task states what two statements and a proof do not
+  establish about heads (B3, F3), the range rule, and the contamination
+  boundary as a rule rather than a list.
+- The Codex hooks are trusted at startup on 0.164, and Codex asks for a
+  sandbox on Windows — both in `integrations/agent-hooks/README.md`.
+
 ## [0.13.0] — 2026-10-19
 
 **Additive for the wire — the PALA-1 core is unchanged (frozen at v1.0).**
@@ -1388,7 +1470,8 @@ Initial release.
   from the OS keychain, falling back to an ephemeral key headless.
 - **CLI** — `chat`, `models`, `engine list` / `engine use`.
 
-[Unreleased]: https://github.com/Assault-Consulting/Palimpsests/compare/v0.13.0...HEAD
+[Unreleased]: https://github.com/Assault-Consulting/Palimpsests/compare/v0.13.1...HEAD
+[0.13.1]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.13.1
 [0.13.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.13.0
 [0.12.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.12.0
 [0.11.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.11.0

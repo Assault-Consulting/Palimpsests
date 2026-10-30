@@ -398,6 +398,14 @@ def verify_statement(
         raise ValueError("statement does not commit to the expected chain head")
     if decoded.get(_PAYLOAD_FORMAT) != FORMAT_ID:
         raise ValueError(f"statement format id is not {FORMAT_ID!r}")
+    first, last = decoded.get(_PAYLOAD_FIRST_SEQ), decoded.get(_PAYLOAD_LAST_SEQ)
+    if not (
+        type(first) is int and type(last) is int and 0 <= first <= last
+    ):
+        # The builder refuses an inverted range; a verifier must too. The root
+        # depends only on last_seq, so an inverted statement would otherwise
+        # verify with a root correct for its last_seq (bridge run B3, F4).
+        raise ValueError("a statement's range must satisfy 0 <= first_seq <= last_seq")
     ctype = _protected_header(message).get(_HDR_CONTENT_TYPE)
     v2_keys = {_PAYLOAD_HEAD, _PAYLOAD_FIRST_SEQ, _PAYLOAD_LAST_SEQ, _PAYLOAD_FORMAT}
     if ctype == CONTENT_TYPE:

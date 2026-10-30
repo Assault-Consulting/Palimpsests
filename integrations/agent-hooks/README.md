@@ -192,11 +192,17 @@ Start the serve (`palimpsests serve`), export `PALIMPSESTS_SERVE_API_KEY`
 in the shell Codex starts from if the serve runs with `--api-key`, then:
 
 > **Trust the hooks, or nothing is recorded.** Codex does not run a new
-> hook until it has been trusted — open `/hooks` once in an interactive
-> session and trust both entries. An untrusted hook is skipped
-> **silently**: the tools run and the chain stays empty. (Codex has a
+> hook until it has been trusted. On 0.164 it asks at startup, before the
+> first prompt — *Review hooks / Trust all and continue / Continue without
+> trusting*; choose to trust (later, `/hooks` lists them). An untrusted
+> hook is skipped **silently**: the tools run and the chain stays empty —
+> measured, with the hooks on disk and correctly formed. (Codex has a
 > one-invocation bypass flag; it is not a substitute for trusting the
 > hooks you mean to keep.)
+>
+> **On Windows, Codex also asks to configure a sandbox** before the first
+> prompt (*default*, which needs Administrator, or *non-admin*). It is
+> Codex's own question and does not affect the hooks.
 
 The forwarder never blocks and never alters: it always exits 0 with
 nothing on stdout, so Codex sees no decision and the tool proceeds; a
