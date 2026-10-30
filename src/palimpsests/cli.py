@@ -142,21 +142,25 @@ app.command("demo")(demo_cmd)
 def serve_cmd(
     host: str = typer.Option("127.0.0.1", help="Address to bind (localhost by default)."),
     port: int = typer.Option(11435, help="Port to listen on."),
+    api_key: str | None = typer.Option(
+        None,
+        "--api-key",
+        envvar="PALIMPSESTS_SERVE_API_KEY",
+        help="Require this bearer key on every request "
+        "(default: $PALIMPSESTS_SERVE_API_KEY if set).",
+    ),
 ) -> None:
     """Serve the OpenAI-compatible endpoint over the active engine.
 
     The same interface the ecosystem already speaks — point any client at
     this base URL — with the difference that everything the engine does is
     on the audit record. Requires the 'serve' extra:
-    pip install 'palimpsests[serve]'.
+    pip install 'palimpsests[serve]'. Starts exactly as ``palimpsests-serve``
+    does, key included.
     """
     try:
-        import uvicorn
-        from palimpsests.server.openai_api import (
-            ServeChainUnavailable,
-            create_app,
-            default_audit,
-        )
+        import uvicorn  # noqa: F401 — checked here for a clear message
+        from palimpsests.server.openai_api import run_serve
     except ImportError as e:
         typer.secho(
             "error: the serve extra is not installed; "
@@ -165,21 +169,13 @@ def serve_cmd(
             err=True,
         )
         raise typer.Exit(code=1) from e
-    try:
-        audit = default_audit()
-    except ServeChainUnavailable as e:
-        typer.secho(f"error: {e}", fg=typer.colors.RED, err=True)
-        raise typer.Exit(code=1) from e
     typer.secho(
         f"serving OpenAI-compatible endpoint on http://{host}:{port}  "
-        "(structured tool loops recorded to serve.pala)",
+        f"(structured tool loops recorded to serve.pala; "
+        f"{'bearer key required' if api_key else 'no key'})",
         fg=typer.colors.GREEN,
     )
-    try:
-        uvicorn.run(create_app(audit=audit), host=host, port=port)
-    finally:
-        if audit is not None:
-            audit.writer.close()
+    run_serve(host, port, api_key)
 
 
 def _ctx() -> AppContext:
