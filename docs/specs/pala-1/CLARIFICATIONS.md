@@ -95,6 +95,21 @@ no verifier's answer. The format is not tied to any one implementation;
 Palimpsests is its reference runtime. Earlier documents, including
 draft-sparysh-pala-audit-00, use the name without expansion.
 
+## C-8 — A container with no records
+
+§4.2 requires a chain's first record to be a GENESIS; §7.1 checks every
+record it is given. On a container with **zero** records both hold
+vacuously: there is no first record to be wrong and no record to fail,
+so a §7.1 verifier reports the chain consistent — and, with no anchor,
+an implementation that grades its answer reports what it reports for any
+unanchored chain. **That answer stands; this clarification does not
+change it.** What it fixes is the reading: a consistent result on zero
+records means *nothing was there to contradict*, never *a log was found
+intact*. An implementation that reports in words SHOULD say that the
+container is empty rather than present the result as a verified chain.
+Whether an empty container should carry a stronger verdict is a question
+for an implementation's own report format, not for the frozen core.
+
 ## Implementation count
 
 §11's "four independent implementations — two of them external" was

@@ -107,12 +107,11 @@ def test_a_chain_cut_mid_record_stays_truncated(tmp_path):
 # --- unchanged on purpose ---------------------------------------------------------
 
 
-def test_an_empty_file_is_left_as_it_was():
-    """An empty file has no byte 0 to judge and is not truncated: no
-    diagnosis, as before. Whether an empty file is a chain at all is a
-    question for the core specification (§4.2 speaks of a first record),
-    not for this diagnosis — see the PR."""
-    assert _pattern(b"") is None
+def test_an_empty_file_is_not_called_not_a_container():
+    """An empty file has no byte 0 to judge and is not truncated, so this
+    diagnosis does not claim it. It has its own since U26 —
+    ``empty_container``, read by clarification C-8 (tests/test_empty_container.py)."""
+    assert _pattern(b"") == "empty_container"
 
 
 def test_a_whole_chain_has_no_diagnosis(tmp_path):
