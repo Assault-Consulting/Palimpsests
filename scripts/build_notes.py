@@ -37,7 +37,7 @@ STATIC_PAGES = [
     ("/verify-without-reading/", "2026-09-30", "monthly", "0.8"),
     ("/eu-ai-act-article-12/", "2026-09-30", "monthly", "0.8"),
     ("/air-gapped/", "2026-09-30", "monthly", "0.8"),
-    ("/integrations/", "2026-10-23", "monthly", "0.8"),
+    ("/integrations/", "2026-10-31", "monthly", "0.8"),
 ]
 
 NAV = [
