@@ -22,11 +22,9 @@ from __future__ import annotations
 
 import json
 import palimpsests
-import struct
 import time
 from dataclasses import dataclass, field
 from hashlib import sha256
-from palimpsests.audit.pala import MalformedRecord, body_digest_of, iter_records
 from palimpsests.audit.pala.codec import RT_WITNESS
 from palimpsests.audit.reader import AuditReader
 from pathlib import Path
@@ -198,29 +196,20 @@ def build_report(
     # digest and every count are byte-identical either way.
     raw = reader._data if reader is not None else path.read_bytes()
 
-    # The report's own container walk (K2/K5): §2.4 well-formedness and
-    # the body↔header digest binding are attested here, not assumed —
-    # reader.verify() covers headers, and a body swap is invisible to a
-    # header-only chain check.
-    bytes_parsed = 0
-    body_mismatches: list[int] = []
-    malformed: str | None = None
-    try:
-        for hb, body in iter_records(raw):
-            bytes_parsed += len(hb) + len(body)
-            if body and body_digest_of(body) != hb[124:156]:
-                (bad_seq,) = struct.unpack_from("<Q", hb, 12)
-                body_mismatches.append(bad_seq)
-    except MalformedRecord as e:
-        malformed = str(e)
-
+    # The container walk (K2/K5): §2.4 well-formedness and the body↔header
+    # digest binding are attested, not assumed — reader.verify() covers
+    # headers, and a body swap is invisible to a header-only chain check.
+    # It is the reader's own ``container_check()`` (U21), so a consumer
+    # asking the reader and this report can never get two answers.
     if reader is not None:
         ver, boots, spans, safety, witness_pins, first_seq, last_seq = _structure(reader)
+        container = reader.container_check()
     else:
         with AuditReader.open(path, anchor=anchor_source) as opened:
             ver, boots, spans, safety, witness_pins, first_seq, last_seq = _structure(
                 opened
             )
+            container = opened.container_check()
 
     chain = ver.chain
     version = palimpsests.__version__
@@ -247,11 +236,11 @@ def build_report(
             "note": "the auditing machine's clock",
         },
         "container": {
-            "well_formed": malformed is None,
-            "malformed": malformed,
-            "bytes_parsed": bytes_parsed,
-            "bytes_total": len(raw),
-            "body_digest_mismatches": body_mismatches,
+            "well_formed": container.well_formed,
+            "malformed": container.malformed,
+            "bytes_parsed": container.bytes_parsed,
+            "bytes_total": container.bytes_total,
+            "body_digest_mismatches": list(container.body_digest_mismatches),
         },
         "chain": {
             "chain_ok": chain.chain_ok,
