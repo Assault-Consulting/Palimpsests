@@ -93,7 +93,9 @@ from palimpsests.audit.pala.codec import (  # re-exported: the consumer surface
     ZERO32,
     Header,
     MalformedRecord,
+    body_digest_of,
     decode_tlvs,
+    iter_records,
 )
 from palimpsests.audit.pala.codec import record_hash as _record_hash
 from palimpsests.audit.pala.incremental import Advisory, AdvisoryItem
@@ -159,6 +161,7 @@ __all__ = [
     "Verification",
     "Diagnosis",
     "ManifestReading",
+    "ContainerCheck",
     "VerifyResult",
     "Advisory",
     "AdvisoryItem",
@@ -639,6 +642,25 @@ class ManifestReading:
 
 
 @dataclass(frozen=True)
+class ContainerCheck:
+    """The second half of question one (§2.4, §7.1): is the container
+    well-formed, and does every body match the digest its header binds?
+
+    ``verify()`` answers from headers alone, so a swapped body is invisible
+    to it; this walks the bodies. A second pass over the file, which is why
+    it is its own method and not a field of :class:`Verification` — a
+    consumer that only browses does not pay for it (U21). The report's
+    ``container`` section is this object.
+    """
+
+    well_formed: bool  # the walk reached the end of the file on a record boundary
+    malformed: str | None  # why it did not, in the walker's words; None when it did
+    bytes_parsed: int  # bytes of whole records walked
+    bytes_total: int  # bytes in the file
+    body_digest_mismatches: list[int]  # seqs whose body does not match its header's digest
+
+
+@dataclass(frozen=True)
 class Verification:
     chain: VerifyResult
     anchor: AnchorReading | None
@@ -679,6 +701,7 @@ class AuditReader:
         # matter, so neither question decodes the chain.
         self._origin_index: tuple[array, array, array, bytearray] | None = None
         self._shredded: dict[int, int] | None = None
+        self._container: ContainerCheck | None = None  # set by container_check()
         # One re-entrant lock around every cache-filling path (U14, PR-9):
         # verify(), the full decode, the sparse decode. Concurrent
         # callers on a cold reader used to each run the whole pass and
@@ -815,6 +838,36 @@ class AuditReader:
 
     def head(self) -> bytes:
         return self.verify().chain.head
+
+    def container_check(self) -> ContainerCheck:
+        """Walk the bodies: §2.4 well-formedness and the body digests.
+
+        Computed once per reader and kept, like :meth:`verify`. Reads the
+        bytes the reader holds — no second read of the file.
+        """
+        cached = self._container
+        if cached is not None:
+            return cached
+        with self._lock:
+            if self._container is None:
+                parsed = 0
+                mismatches: list[int] = []
+                malformed: str | None = None
+                try:
+                    for hb, body in iter_records(self._data):
+                        parsed += len(hb) + len(body)
+                        if body and body_digest_of(body) != hb[124:156]:
+                            mismatches.append(struct.unpack_from("<Q", hb, 12)[0])
+                except MalformedRecord as e:
+                    malformed = str(e)
+                self._container = ContainerCheck(
+                    well_formed=malformed is None,
+                    malformed=malformed,
+                    bytes_parsed=parsed,
+                    bytes_total=len(self._data),
+                    body_digest_mismatches=mismatches,
+                )
+            return self._container
 
     def _resolve_anchor(self) -> tuple[AnchorReading | None, list[AnchorAttempt]]:
         src = self._anchor
