@@ -19,6 +19,14 @@ byte-for-byte from the RFCs twice (bridge runs B1 and B2,
 `docs/specs/pala-1/independent-runs/turak/`), after B1 found and #192
 fixed a missing `kid` (RFC 9943 §6 MUST).
 
+**Construction v3** (since 0.13) adds one member: payload key 5, the
+derived root over records `0 … last_seq` (`docs/specs/pala-1/consistency-proof.md`
+§1), under its own content type `application/vnd.palimpsests.pala1-head-v3+cbor`.
+Everything else is v2's. It is stated byte by byte in
+[SCITT-STATEMENT-V3-VERIFICATION-TASK.md](interop/SCITT-STATEMENT-V3-VERIFICATION-TASK.md)
+and was reproduced independently from that text in bridge run B3
+(`independent-runs/turak/scitt-statement-b3/`). What v3 is for is §8.
+
 ## 2. What a receipt proves
 
 A receipt is the transparency service's countersigned statement that
@@ -51,10 +59,10 @@ from inside itself, and exactly why the bridge exists.
   question by itself.
 - **Not endorsement, not certification, not conformity.** "Registered"
   means submitted and included; every other word is an overclaim.
-- **Not growth after `T`.** A receipt covers the head it names. A chain
-  that grew past `H` verifies against `H` only with a prefix-consistency
-  proof (planned; roadmap item WS-PROOF). Until then, register the new
-  head.
+- **Not growth after `T`.** A receipt covers the head it names. That a
+  chain which grew past `H` still extends it is shown by a
+  prefix-consistency proof (`pala-consistency-proof/1`, since 0.12); with
+  v3 statements the proof connects two registered roots (§8).
 - **Only as much as the service is trusted.** Receipt verification
   follows the service's protocol and key; the bridge verifies
   *statements*, never receipts — a deliberate boundary, so that trust in
@@ -78,6 +86,7 @@ The overclaim rule applies to every sentence a deployment writes:
 |---|---|---|
 | B1 (`independent-runs/turak/scitt-statement/`) | statement, v1 | reproduced byte-for-byte; four findings, one an RFC 9943 MUST — fixed in #192 |
 | B2 (`independent-runs/turak/scitt-statement-b2/`) | statement, v2 | 61/61, reproduced byte-for-byte, `kid` thumbprint re-derived; four refinements — folded in #194 |
+| B3 (`independent-runs/turak/scitt-statement-b3/`) | statement, v3 | 155/155, both statements reproduced byte-for-byte; the consistency proof verified from the two statements' roots alone; four findings — one in the verifier (an inverted range accepted), fixed in 0.13.1 |
 | Registration run 1 (`docs/interop/registration-run-1/`) | registration + receipt | registered with the reference implementation, receipt verified by its verifier and offline from the published artifacts; finding: the reference implementation still expects the draft-era CWT-Claims label 14 (RFC 9597: 15) — patched as infrastructure, diff published |
 
 The statement side is final-RFC. The receipt side, in the reference
@@ -94,6 +103,9 @@ Use these sentences; do not improve them.
 - "The statement over `H` verifies against issuer key `K` (thumbprint
   `kid`)."
 - "This trail's head as of `T` existed by `T`, per `S`."
+- (v3) "The chain state of `M` records extends the state of `N` records:
+  statements over both, verified against `K`, and a consistency proof
+  between their roots."
 
 Not: "audited by", "certified by", "compliant with", "witnessed" (the
 format reserves *witnessed* for WITNESS records with receipts that a
@@ -111,3 +123,28 @@ verifier has actually checked).
   `cryptography` package can sign with and never stores one.
 - Ecosystem drift is real: the reference emulator lagged RFC 9597 by one
   label. Expect to read the service's protocol, not to assume it.
+
+## 8. Two v3 statements and one consistency proof
+
+**What they establish, without the chain.** A holder of two v3
+statements of one chain — sizes `N < M`, both verifying against the same
+key — and a `pala-consistency-proof/1` between their roots can check,
+with nothing else, that the tree of `M` records extends the tree of `N`:
+every record before `N` in the later state is, by hash, the record at
+the same position in the earlier one. With both statements registered,
+the same holds between two dated entries of a transparency log. That is
+the case v3 exists for: a regulator's copy of last quarter's statement,
+this quarter's statement, and a proof — no chain transferred.
+
+**What they do not establish** (bridge run B3, finding F3). The relation
+is between the two **roots**. Nothing in a statement binds its head
+(key 1) to its root (key 5) without the chain: a statement pairing one
+record's head with a later tree's root verifies, and so does a
+consistency proof that never reads a head. To say that a head belongs to
+its root's tree, a verifier needs the chain — or an inclusion proof,
+which no statement carries.
+
+**What a verifier may say about a root.** Without the chain: *carried* —
+signed, not recomputed. With the chain: *recomputed* and compared.
+`verify_statement` reports which (`root_status`), and a report never
+calls a carried root verified.

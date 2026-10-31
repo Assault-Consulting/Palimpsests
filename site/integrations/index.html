@@ -31,7 +31,7 @@
       "description": "Put the tool calls of AI agents on a tamper-evident log on your own machine, whether the model is local or hosted: Claude Code, Codex, OpenTelemetry, LiteLLM, MCP and OpenCode, with each adapter's status and limits.",
       "url": "https://palimpsests.dev/integrations/",
       "inLanguage": "en",
-      "dateModified": "2026-10-23",
+      "dateModified": "2026-10-31",
       "author": {
         "@id": "https://palimpsests.dev/#org"
       },
@@ -108,7 +108,8 @@
       <h2 id="start">Before you start</h2>
       <pre><code>pip install 'palimpsests[serve]'
 palimpsests-serve --api-key "$PALIMPSESTS_SERVE_API_KEY"   # http://127.0.0.1:11435</code></pre>
-      <p>Every integration below reports to this local server, which writes each tool call and its result into a PALA-1 chain. Arguments and results are stored as SHA-256 digests of a canonical form; their content never enters the chain. The key is optional on a machine only you use, and recommended anywhere else.</p>
+      <p>Every integration below reports to this local server, which writes each tool call and its result into a PALA-1 chain. Arguments and results are stored as SHA-256 digests of a canonical form; their content never enters the chain. The key is optional on a machine only you use, and recommended anywhere else. Since 0.13.1 <code>palimpsests serve --api-key …</code> takes it the same way; in 0.13.0 only <code>palimpsests-serve</code> did.</p>
+      <p>Every integration below has a recorded run on real traffic — a real client and a real model — with what reached the chain and what did not: <a href="https://github.com/Assault-Consulting/Palimpsests/tree/main/docs/specs/pala-1/independent-runs" rel="noopener">run records R1–R5</a>.</p>
 
       <h2 id="proves">What a reported record proves</h2>
       <div class="tbl"><table>
@@ -122,29 +123,30 @@ palimpsests-serve --api-key "$PALIMPSESTS_SERVE_API_KEY"   # http://127.0.0.1:11
 
       <h2 id="claude-code">Claude Code</h2>
       <p>Claude Code sends its hooks over HTTP, so there's nothing to install. Add <code>PreToolUse</code>, <code>PostToolUse</code> and <code>PostToolUseFailure</code> entries to <code>~/.claude/settings.json</code>, each pointing at <code>/v1/pala/hooks/claude</code> with your key in the <code>Authorization</code> header. List the key's variable in <code>allowedEnvVars</code>: without it Claude Code sends an empty header and every report is refused while the agent keeps working.</p>
-      <p><b>Results:</b> <code>ok</code> or <code>error</code>, because Claude Code reports failures. <b>Measured on</b> Claude Code 2.1.288, and the route is watched by the surface checker.</p>
+      <p><b>Results:</b> <code>ok</code> or <code>error</code>, because Claude Code reports failures. <b>On real traffic</b> (Claude Code 2.1.310): eleven pairs from a ten-prompt session, the failed read recorded as <code>error</code>. Four of the session's 26 hook posts arrived without the key for a reason not yet established; the server now logs each refusal with its event and tool. Claude Code runs reads, searches and edits through its shell tool, so the chain names <code>Bash</code> where you might expect more variety. The route is watched by the surface checker.</p>
 
       <h2 id="codex">Codex</h2>
-      <p>Codex runs only command hooks, so a one-file forwarder, <code>palimpsests_hook.py</code>, passes each event to <code>/v1/pala/hooks/codex</code>. Add it as the <code>PreToolUse</code> and <code>PostToolUse</code> command in <code>~/.codex/hooks.json</code>, then open <code>/hooks</code> once in an interactive session and trust both entries. Codex skips an untrusted hook without a warning, and the tools then run with nothing recorded.</p>
-      <p><b>Results:</b> <code>unobserved</code>, because Codex has no failure hook. <b>Measured on</b> Codex CLI 0.160.0.</p>
+      <p>Codex runs only command hooks, so a one-file forwarder, <code>palimpsests_hook.py</code>, passes each event to <code>/v1/pala/hooks/codex</code>. Add it as the <code>PreToolUse</code> and <code>PostToolUse</code> command in <code>~/.codex/hooks.json</code>, then trust them: Codex asks at startup, before the first prompt (<i>Trust all and continue</i>). Codex skips an untrusted hook without a warning, and the tools then run with nothing recorded — measured, with the hooks on disk and correctly formed. On Windows Codex also asks to set up a sandbox; that question does not affect the hooks.</p>
+      <p><b>Results:</b> <code>unobserved</code>, because Codex has no failure hook — including for reads that certainly failed. <b>On real traffic</b> (Codex CLI 0.164.0): thirteen pairs, all <code>unobserved</code>; before trusting, zero.</p>
 
       <h2 id="opentelemetry">OpenTelemetry GenAI</h2>
       <p>Frameworks instrumented with OpenTelemetry already put one <code>execute_tool</code> span on each tool execution. Point the trace exporter at the server and those spans become recorded tool calls:</p>
       <pre><code>export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://127.0.0.1:11435/v1/traces
 export OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=http/protobuf
 export OTEL_EXPORTER_OTLP_TRACES_HEADERS="Authorization=Bearer $PALIMPSESTS_SERVE_API_KEY"</code></pre>
-      <p>OTLP over HTTP only, JSON or protobuf. To record digests of arguments and results, turn on the instrumentation's content capture; without it the pair is recorded with no digests. <b>Results:</b> <code>error</code> for a span with error status, <code>ok</code> otherwise. <b>Tested</b> against a real export from pydantic-ai 2.57.0.</p>
+      <p>OTLP over HTTP only, JSON or protobuf. To record digests of arguments and results, turn on the instrumentation's content capture; without it the pair is recorded with no digests. <b>Results:</b> <code>error</code> for a span with error status, <code>ok</code> otherwise. <b>Tested</b> against a real export from pydantic-ai 2.57.0, and <b>on real traffic</b> with a local model: three pairs per run, failures as <code>error</code>. Note that pydantic-ai stops an agent when a tool raises; the failing span is still exported.</p>
 
       <h2 id="litellm">LiteLLM</h2>
       <p>A one-file callback for the LiteLLM client library or proxy. It reports the model's <code>tool_calls</code> and the <code>role: tool</code> results that come back, which makes it a natural fit when your agents reach hosted models through a LiteLLM gateway.</p>
       <pre><code>import litellm
 from palimpsests_audit import PalimpsestsAudit   # integrations/litellm/palimpsests_audit.py
 litellm.callbacks = [PalimpsestsAudit()]</code></pre>
-      <p><b>Results:</b> <code>unobserved</code>, because LiteLLM never sees the tool run. <b>Status:</b> exercised against a live server with synthetic calls; no real-traffic run on record yet.</p>
+      <p>Install <code>mcp</code> beside LiteLLM: LiteLLM imports it as soon as a request carries tools, and does not install it itself.</p>
+      <p><b>Results:</b> <code>unobserved</code>, because LiteLLM never sees the tool run. <b>On real traffic</b> (LiteLLM 1.106, a local model): ten turns, ten pairs, all <code>unobserved</code> — the three reads of a missing file among them.</p>
 
       <h2 id="mcp">MCP servers over stdio</h2>
       <p>A one-file proxy in front of any MCP server that speaks standard input and output. It sees both the request and the response of every <code>tools/call</code>, forwards every byte unchanged and never blocks a call.</p>
-      <p><b>Results:</b> <code>ok</code>, <code>error</code> or <code>cancelled</code>. <b>Status:</b> exercised against a live server with synthetic calls; no real-traffic run on record yet.</p>
+      <p><b>Results:</b> <code>ok</code>, <code>error</code> or <code>cancelled</code>. <b>On real traffic</b> (Claude Code as the client, a filesystem server): eleven pairs, the server's <code>isError</code> recorded as <code>error</code> — and the only adapter whose chain carries the real tool names, because it sits at the MCP boundary. Since 0.13.1 the proxy starts <code>npx</code> and <code>uvx</code> servers on Windows by name; before, it needed the full path.</p>
 
       <h2 id="opencode">OpenCode</h2>
       <p>A dependency-free plugin you copy into <code>.opencode/plugins/</code>. It reports the tools OpenCode runs, including calls the model wrote as plain text. <b>Status on OpenCode 1.18.31:</b> one reported pair has reached the chain from a real session, a failed <code>read</code> that was bound correctly. A successful result arriving the same way hasn't been observed yet.</p>
@@ -164,6 +166,7 @@ litellm.callbacks = [PalimpsestsAudit()]</code></pre>
           <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/integrations/litellm/README.md" rel="noopener">LiteLLM callback: README</a></li>
           <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/integrations/mcp/README.md" rel="noopener">MCP proxy: README</a></li>
           <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/integrations/opencode/README.md" rel="noopener">OpenCode plugin: README, with its status table</a></li>
+          <li><a href="https://github.com/Assault-Consulting/Palimpsests/tree/main/docs/specs/pala-1/independent-runs" rel="noopener">Run records on real traffic (R1–R5) and earlier runs</a></li>
           <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/SURFACE-CHECKER.md" rel="noopener">Surface checker</a></li>
         </ul>
       </aside>
