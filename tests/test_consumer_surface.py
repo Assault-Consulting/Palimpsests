@@ -27,7 +27,8 @@ SRC = REPO / "src" / "palimpsests" / "audit"
 # ── rule 1: one place to import from ───────────────────────────────────────
 
 READER_ALL = {
-    "AuditReader", "Verification", "Diagnosis", "ManifestReading", "VerifyResult",
+    "AuditReader", "Verification", "Diagnosis", "ManifestReading", "ContainerCheck",
+    "VerifyResult",
     "Advisory", "AdvisoryItem",
     "DecodedRecord", "Header", "decode_record",
     "SpanView", "BootView", "OriginView", "OriginState", "ContinuationView",
@@ -198,6 +199,8 @@ FIELDS = {
                      "anchor_lag", "diagnosis", "advisory", "manifest"],
     "Diagnosis": ["pattern", "at_seq", "expected", "narrative", "code"],
     "ManifestReading": ["path", "status", "sha256", "detail"],
+    "ContainerCheck": ["well_formed", "malformed", "bytes_parsed", "bytes_total",
+                       "body_digest_mismatches"],
     "DecodedRecord": ["seq", "index", "record_type", "type_name", "header", "body_tlvs",
                       "kind", "kind_name", "record_hash", "detail", "operator_id",
                       "disposition", "disposition_name", "source", "source_name",
@@ -231,7 +234,8 @@ def test_result_type_fields_are_kept(name):
 
 
 READER_METHODS = {
-    "open", "from_bytes", "close", "verify", "head", "records", "safety_records",
+    "open", "from_bytes", "close", "verify", "container_check", "head", "records",
+    "safety_records",
     "record_count", "record_at", "record_by_seq", "header_at",
     "boots", "spans", "structure",
     "origin_at", "unloaded_at", "origin_state_at",
