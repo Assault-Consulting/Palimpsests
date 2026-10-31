@@ -74,7 +74,7 @@ Two consumer modules for reading: `palimpsests.audit.reader` for everything abou
 | Not a container | Diagnosis `not_a_container` when byte 0 is not the record magic; `open` and `from_bytes` do not raise on such a file | Exists — 0.13 (U22, #297) |
 | Empty container (r2) | Diagnosis `empty_container` for a file with no bytes | New (U26) — after 0.13 |
 | Question one: links | `verify() -> Verification`; `Verification.chain: VerifyResult` (`chain_ok`, `count`, `head`, `breaks`, `gaps`, `violations`, `uninterpretable`) | Exists — 0.14 (U19) |
-| Violation codes (r2) | `VerifyResult.violation_codes: list[tuple[int, str]]`, parallel to `violations`; `Diagnosis.code` for `record_violation` | New (U24) — after 0.13, before 1.0 |
+| Violation codes (r2) | `VerifyResult.violation_codes: list[tuple[int, str]]`, parallel to `violations`; `Diagnosis.code` for `record_violation` | Exists — 0.14 (U24); not yet in the report (see the gaps table) |
 | Question one: bodies | `container_check() -> ContainerCheck` (`well_formed`, `malformed`, `bytes_parsed`, `bytes_total`, `body_digest_mismatches`) | New (U21) — after 0.13 |
 | Question two | `Verification.complete_to_anchor`, `anchor_lag`, `anchor`, `anchor_attempts`; `VerifyResult.anchor_reason` (a sentence) | Exists |
 | Diagnosis | `Diagnosis` (`pattern`, `at_seq` — contract; `expected`, `narrative` — sentences) | Exists |
@@ -97,7 +97,7 @@ Shape decisions behind the table:
 - **`record_by_seq` returns `None`, never raises,** for a seq the file does not hold. A segment covering 400–900 has no record 12; that is an answer, not an error.
 - **`origin_at` and `unloaded_at` stay, superseded.** `origin_state_at` answers both in one call; the two older methods are deprecated in the minor after 1.0, not before.
 - **The package root stays light.** `palimpsests.audit` keeps re-exporting `AuditReader` only; a consumer that needs more imports from `reader`.
-- **(r2) Violation codes are additive, not a reshape.** `violations` keeps its `(seq, reason)` pairs — consumers and the report schema already carry them. `violation_codes` is a parallel list of `(seq, code)`, same order, one entry per violation. The reader's own `prefix_absent` derivation moves to the code.
+- **(r2) Violation codes are additive, not a reshape.** `violations` keeps its `(seq, reason)` pairs — consumers and the report schema already carry them. `violation_codes` is a parallel list of `(seq, code)`, same order, one entry per violation. The reader's own `prefix_absent` derivation moves to the code. **The report does not carry them in `/1`:** its schema closes the `chain` object (`additionalProperties: false`), so an added field would fail every consumer validating against the `/1` schema it holds — a breaking change, which the format rule allows only by format-id bump. The codes go into the report with `/2`.
 
 ## Vocabularies
 
@@ -134,7 +134,7 @@ Twelve changes turn today's code into the surface above. Two are 0.13 release bl
 | U23 | Bounded `shredded_targets()` and origin methods | A record card asked for both and paid a full decode | Done (#295) |
 | U19 | Re-exports into `reader.__all__` (`VerifyResult`, `Header`, `Advisory`, `AdvisoryItem`, `boot_statistics`, `step_catalog`, the constants); `NO_SPAN`, `NO_PREDECESSOR`; inference-profile constants moved to `audit/profiles/inference.py` (see decision 2) | No reader-side consumer should need the writer, the codec or an undeclared module | Done (0.14) |
 | U20 | Contract test `tests/test_consumer_surface.py`: every symbol, field and vocabulary member in this document, both import paths for re-exports, asserted by name | Makes "stable" checkable in CI | Done (0.14) |
-| **U24 (r2)** | Violation codes: `VerifyResult.violation_codes` parallel to `violations`; `Diagnosis.code` for `record_violation`; the reader's `prefix_absent` test moves from the sentence to the code; the report gains the codes additively, within `pala-verification-report/1` | Rule 7 cannot hold while the verifier itself branches on a sentence and consumers have nothing else | After 0.13; **required before 1.0** |
+| **U24 (r2)** | Violation codes: `VerifyResult.violation_codes` parallel to `violations`; `Diagnosis.code` for `record_violation`; the reader's `prefix_absent` test moves from the sentence to the code; the report gains the codes additively, within `pala-verification-report/1` | Rule 7 cannot hold while the verifier itself branches on a sentence and consumers have nothing else | **Done (0.14)** in the API; the report's codes wait for `/2` |
 | U21 | `container_check() -> ContainerCheck` | Half of question one is reachable only through a report | After 0.13 (additive) |
 | **U26 (r2)** | `empty_container` diagnosis; the verdict question raised as core clarification **C-8** (see below) | An empty file verifies `chain_ok` with no diagnosis and the report says `partial`, which means "intact, unanchored" — there is nothing intact | Diagnosis after 0.13; C-8 by decision |
 | U18 | `verify_segment_set(manifest_path)` — a function, not a reader method (decision 6) | With rotation, a single segment reports a violation by design (D1); only the set can be called whole | 0.14 |
@@ -184,7 +184,7 @@ Ordered by what each step unblocks. "PR" means one reviewable pull request.
 **0.13 → 0.14 (the U track proper)**
 
 4. U19 + U20 together — one PR: the re-exports, `profiles/inference.py`, the contract test. The contract test lands with the exports so nothing is exported untested. **Done (0.14).** Two things it settled: the channel-5 names are re-exported lazily (`bootstats` and `timehealth` import the reader, so an eager import is circular); and `anchors.__all__` also lists the writer-side stores (`AnchorStore`, `FileAnchorStore`) — outside the reading surface, left in place until the writer's contract (U27) decides where they belong.
-5. U24 — violation codes; touches `incremental`, `verify`, `reader`, `report`. One PR with its own vectors check: the report schema stays `/1`, the codes are additive.
+5. U24 — violation codes; touches `incremental`, `verify`, `reader`. **Done (0.14).** The report stays `/1` without them: its schema is closed, so adding them there needs `/2`.
 6. U26 — `empty_container`; C-8 drafted beside it for the maintainers' decision.
 7. U21 — `container_check()`.
 8. U18 — `verify_segment_set` (0.14).
