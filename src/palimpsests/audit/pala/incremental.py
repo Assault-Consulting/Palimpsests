@@ -85,13 +85,31 @@ class Advisory:
     items: list[AdvisoryItem] = field(default_factory=list)
 
 
-def _semantic_checks(hb: bytes, seq: int, rtype: int, index: int) -> list[tuple[int, str]]:
+#: The violation codes (U24, docs/CONSUMER-SURFACE.md): one per normative MUST
+#: the verifier checks, parallel to the reason sentences. A consumer branches
+#: on the code; the sentence is the verifier's words and may change. Open
+#: vocabulary: a release may add a code, never rename or repurpose one.
+VIOLATION_CODES = frozenset({
+    "prefix_absent",
+    "genesis_not_first",
+    "genesis_prev_hash_nonzero",
+    "header_len_mismatch",
+    "malformed_tlv",
+    "time_trust_undefined",
+    "time_unknown_with_wall_clock",
+    "empty_body_digest_nonzero",
+    "nonempty_body_digest_zero",
+    "encrypted_body_too_short",
+})
+
+
+def _semantic_checks(hb: bytes, seq: int, rtype: int, index: int) -> list[tuple[int, str, str]]:
     """The §7.4 MUSTs, checkable on a record whose type we understand.
 
     Never applied to unknown versions or types (§7.6): those checks belong
     to a version this verifier does not claim.
     """
-    out: list[tuple[int, str]] = []
+    out: list[tuple[int, str, str]] = []
     time_trust = hb[11]
     (wall_clock_ns,) = struct.unpack_from("<q", hb, 108)
     (key_id,) = struct.unpack_from("<I", hb, 116)
@@ -100,23 +118,32 @@ def _semantic_checks(hb: bytes, seq: int, rtype: int, index: int) -> list[tuple[
 
     # §5: "I do not know the time" must not carry a confident timestamp.
     if time_trust == TIME_UNKNOWN and wall_clock_ns != 0:
-        out.append((seq, "time_trust=UNKNOWN requires wall_clock_ns=0"))
+        out.append(
+            (seq, "time_unknown_with_wall_clock", "time_trust=UNKNOWN requires wall_clock_ns=0")
+        )
     if time_trust > TIME_NTP_SYNCED:
-        out.append((seq, f"time_trust={time_trust} is not a defined value"))
+        out.append((seq, "time_trust_undefined", f"time_trust={time_trust} is not a defined value"))
 
     # §2.1: empty body ⟺ zero digest.
     if body_len == 0 and body_digest != ZERO32:
-        out.append((seq, "body_len=0 requires body_digest = 32 zero bytes"))
+        out.append(
+            (seq, "empty_body_digest_nonzero", "body_len=0 requires body_digest = 32 zero bytes")
+        )
     if body_len != 0 and body_digest == ZERO32:
-        out.append((seq, "non-empty body with an all-zero body_digest"))
+        out.append(
+            (seq, "nonempty_body_digest_zero", "non-empty body with an all-zero body_digest")
+        )
 
     # §4.4: an encrypted body carries a nonce and a tag inside body_len.
     if key_id != 0 and 0 < body_len < NONCE_LEN + GCM_TAG_LEN:
-        out.append((seq, f"encrypted body_len={body_len} is shorter than nonce+tag"))
+        out.append(
+            (seq, "encrypted_body_too_short",
+             f"encrypted body_len={body_len} is shorter than nonce+tag")
+        )
 
     # §4.2: genesis is a position, not just a type.
     if rtype == RT_GENESIS and index != 0:
-        out.append((seq, "GENESIS record at a non-initial position"))
+        out.append((seq, "genesis_not_first", "GENESIS record at a non-initial position"))
 
     return out
 
@@ -275,7 +302,7 @@ class IncrementalVerifier:
         self._halted = False
         self._breaks: list[int] = []
         self._gaps: list[int] = []
-        self._violations: list[tuple[int, str]] = []
+        self._violations: list[tuple[int, str, str]] = []  # (seq, code, reason)
         self._uninterpretable: list[int] = []
         self._seen: list[bytes] = []
         self._advisory = _AdvisoryAccumulator()
@@ -312,7 +339,8 @@ class IncrementalVerifier:
         ver, hlen, rtype = struct.unpack_from("<HHH", hb, 4)
         if hlen != len(hb):
             self._violations.append(
-                (self._count, f"header_len={hlen} but {len(hb)} bytes supplied")
+                (self._count, "header_len_mismatch",
+                 f"header_len={hlen} but {len(hb)} bytes supplied")
             )
         (seq,) = struct.unpack_from("<Q", hb, 12)
 
@@ -333,11 +361,12 @@ class IncrementalVerifier:
                 # the record's seq — with no break and no zero-prev demand on
                 # a non-GENESIS record (freeze-candidate run #4).
                 self._violations.append(
-                    (0, "chain does not start with a GENESIS record")
+                    (0, "prefix_absent", "chain does not start with a GENESIS record")
                 )
             elif hb[_OFF_PREV_HASH] != ZERO32:
                 self._violations.append(
-                    (seq, "GENESIS must have prev_hash = 32 zero bytes")
+                    (seq, "genesis_prev_hash_nonzero",
+                     "GENESIS must have prev_hash = 32 zero bytes")
                 )
         elif hb[_OFF_PREV_HASH] != self._prev:
             # The link check compares only records that have a predecessor
@@ -356,7 +385,7 @@ class IncrementalVerifier:
             try:
                 decode_tlvs(hb[FIXED_HEADER_LEN:hlen])
             except MalformedRecord as e:
-                self._violations.append((seq, f"malformed TLV: {e}"))
+                self._violations.append((seq, "malformed_tlv", f"malformed TLV: {e}"))
 
         # Advisory: header-only signals, only for records we can interpret.
         if ver == FORMAT_VERSION:
@@ -376,7 +405,8 @@ class IncrementalVerifier:
             head=self._prev,
             breaks=list(self._breaks),
             gaps=list(self._gaps),
-            violations=list(self._violations),
+            violations=[(seq, reason) for seq, _code, reason in self._violations],
+            violation_codes=[(seq, code) for seq, code, _reason in self._violations],
             uninterpretable=list(self._uninterpretable),
         )
 
