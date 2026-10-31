@@ -79,7 +79,7 @@ they belong to a channel; B3 verified the construction, not that API.
 
 | Vocabulary | Members as of 0.13 |
 |---|---|
-| Diagnosis `pattern` | `not_a_container`, `truncated_tail`, `prefix_absent`, `declared_continuation`, `continuation_contradicts_manifest`, `seq_gap`, `chain_break`, `record_violation`, `unanchored_tail`, `replaced_or_rolled_back` |
+| Diagnosis `pattern` | `empty_container`, `not_a_container`, `truncated_tail`, `prefix_absent`, `declared_continuation`, `continuation_contradicts_manifest`, `seq_gap`, `chain_break`, `record_violation`, `unanchored_tail`, `replaced_or_rolled_back` |
 | Advisory `code` | `anchor_never_written`, `mid_boot_time_trust_change`, `mono_regression_in_boot`, `wall_regression_in_boot`, `span_unclosed`, `span_unopened`, `reference_hash_mismatch`, `reference_unresolved`, `ack_target_not_a_candidate`, `tool_target_not_a_call`, `shred_target_key_mismatch`, `shred_target_unresolved`, `continuation_malformed`, `continuation_predecessor_mismatch`, `continuation_index_not_increasing`, `continuation_index_gap`, `continuation_prior_root_mismatch` |
 | Violation `code` | `prefix_absent`, `genesis_not_first`, `genesis_prev_hash_nonzero`, `header_len_mismatch`, `malformed_tlv`, `time_trust_undefined`, `time_unknown_with_wall_clock`, `empty_body_digest_nonzero`, `nonempty_body_digest_zero`, `encrypted_body_too_short` |
 | `ManifestReading.status` | `matches`, `contradicts`, `declared_only` |
