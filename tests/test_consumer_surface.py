@@ -196,7 +196,7 @@ def test_profile_numbers_never_change():
 FIELDS = {
     "Verification": ["chain", "anchor", "anchor_attempts", "complete_to_anchor",
                      "anchor_lag", "diagnosis", "advisory", "manifest"],
-    "Diagnosis": ["pattern", "at_seq", "expected", "narrative"],
+    "Diagnosis": ["pattern", "at_seq", "expected", "narrative", "code"],
     "ManifestReading": ["path", "status", "sha256", "detail"],
     "DecodedRecord": ["seq", "index", "record_type", "type_name", "header", "body_tlvs",
                       "kind", "kind_name", "record_hash", "detail", "operator_id",
@@ -210,7 +210,8 @@ FIELDS = {
     "ContinuationView": ["seq", "segment_index", "predecessor_head", "retention_s",
                          "prior_root", "detail"],
     "VerifyResult": ["chain_ok", "count", "head", "breaks", "gaps", "violations",
-                     "uninterpretable", "complete_to_anchor", "anchor_lag", "anchor_reason"],
+                     "uninterpretable", "complete_to_anchor", "anchor_lag", "anchor_reason",
+                     "violation_codes"],
     "AdvisoryItem": ["code", "at_seq", "boot_id", "detail"],
     "Advisory": ["items"],
     "Header": ["record_type", "seq", "boot_id", "prev_hash", "assurance_tier", "time_trust",
@@ -273,6 +274,12 @@ def test_diagnosis_patterns_in_code_are_the_documented_ones(surface_doc):
 def test_advisory_codes_in_code_are_the_documented_ones(surface_doc):
     emitted = _emitted(r'AdvisoryItem\(\s*"([a-z_]+)"') | _emitted(r'code="([a-z_]+)"')
     assert emitted == _table_row(surface_doc, "Advisory `code`")
+
+
+def test_violation_codes_are_the_documented_ones(surface_doc):
+    from palimpsests.audit.pala.incremental import VIOLATION_CODES
+
+    assert set(VIOLATION_CODES) == _table_row(surface_doc, "Violation `code`")
 
 
 def test_names_and_statuses_are_the_documented_ones(surface_doc):
