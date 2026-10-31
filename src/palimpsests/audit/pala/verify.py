@@ -52,6 +52,10 @@ class VerifyResult:
     #: (seq, reason) for normative MUSTs violated on records we claim to
     #: understand (§7.4). Defective record, possibly sound chain around it.
     violations: list[tuple[int, str]] = field(default_factory=list)
+    #: (seq, code), parallel to ``violations`` — same order, one entry per
+    #: violation (U24). The code is contract; the reason beside it is a
+    #: sentence. Members: ``incremental.VIOLATION_CODES``.
+    violation_codes: list[tuple[int, str]] = field(default_factory=list)
     #: Seqs of records with an unknown format_version or record_type —
     #: chain-checked, reported, never rejected (§7.6).
     uninterpretable: list[int] = field(default_factory=list)

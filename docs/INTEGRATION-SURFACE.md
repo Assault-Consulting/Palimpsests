@@ -51,9 +51,13 @@ fields, new functions) may land in any release. The three named formats
   `at_seq` and the manifest `status` are what a consumer branches on.
   `narrative`, `detail`, `expected`, `anchor_reason` and the reason of a
   chain violation are the verifier's words: carried verbatim, never
-  parsed, free to improve in any release, always English. (A chain
-  violation is reported by its reason sentence today; a code for each is
-  planned before 1.0 — until then, render the sentence.)
+  parsed, free to improve in any release, always English. Since 0.14 a
+  chain violation also carries a code — `VerifyResult.violation_codes`,
+  parallel to `violations`, and `Diagnosis.code` for `record_violation` —
+  and the code is what to branch on. The verification report does not
+  carry the codes yet: its schema closes the `chain` object, so a code in a
+  `/1` report would fail a consumer's validation; they arrive with the
+  report's next format id.
 
 The structural rules — one place to import from, no removal or rename
 within a major, deprecation over one minor — take effect at 1.0. Until
@@ -77,6 +81,7 @@ they belong to a channel; B3 verified the construction, not that API.
 |---|---|
 | Diagnosis `pattern` | `not_a_container`, `truncated_tail`, `prefix_absent`, `declared_continuation`, `continuation_contradicts_manifest`, `seq_gap`, `chain_break`, `record_violation`, `unanchored_tail`, `replaced_or_rolled_back` |
 | Advisory `code` | `anchor_never_written`, `mid_boot_time_trust_change`, `mono_regression_in_boot`, `wall_regression_in_boot`, `span_unclosed`, `span_unopened`, `reference_hash_mismatch`, `reference_unresolved`, `ack_target_not_a_candidate`, `tool_target_not_a_call`, `shred_target_key_mismatch`, `shred_target_unresolved`, `continuation_malformed`, `continuation_predecessor_mismatch`, `continuation_index_not_increasing`, `continuation_index_gap`, `continuation_prior_root_mismatch` |
+| Violation `code` | `prefix_absent`, `genesis_not_first`, `genesis_prev_hash_nonzero`, `header_len_mismatch`, `malformed_tlv`, `time_trust_undefined`, `time_unknown_with_wall_clock`, `empty_body_digest_nonzero`, `nonempty_body_digest_zero`, `encrypted_body_too_short` |
 | `ManifestReading.status` | `matches`, `contradicts`, `declared_only` |
 | `outcome_name` | `ok`, `error`, `timeout`, `cancelled`, `unobserved` |
 | `source_name` | `parsed-from-wire`, `reported-by-client` |

@@ -335,8 +335,6 @@ _OUTCOME_NAMES = {
     OUTCOME_UNOBSERVED: "unobserved",
 }
 
-_PREFIX_ABSENT = "chain does not start with a GENESIS record"
-
 # The kinds whose bodies carry an EVT_REF_SEQ/EVT_REF_HASH pair the
 # referential pass resolves (profile §4, r2/r3). KEY_SHRED references by
 # record type, not kind, and is handled beside these.
@@ -611,6 +609,10 @@ class Diagnosis:
     at_seq: int | None
     expected: str | None
     narrative: str
+    #: For ``record_violation``: the violation's code (U24), the field to
+    #: branch on — ``expected`` carries its reason, a sentence. None for
+    #: every other pattern.
+    code: str | None = None
 
 
 @dataclass(frozen=True)
@@ -1140,7 +1142,7 @@ class AuditReader:
                 "The container ends in the middle of a record; the evidence is "
                 "consistent with a writer interrupted mid-write.",
             )
-        if (0, _PREFIX_ABSENT) in chain.violations:
+        if (0, "prefix_absent") in chain.violation_codes:
             declared = self._declared_continuation_diagnosis()
             if declared is not None:
                 return declared
@@ -1177,6 +1179,7 @@ class AuditReader:
                 reason,
                 "A record violates a normative MUST; the evidence is consistent "
                 "with a defective writer or a tampered record.",
+                code=chain.violation_codes[0][1] if chain.violation_codes else None,
             )
         if chain.complete_to_anchor is False:
             if chain.anchor_lag is not None:
