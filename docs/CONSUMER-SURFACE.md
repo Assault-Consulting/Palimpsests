@@ -72,10 +72,10 @@ Two consumer modules for reading: `palimpsests.audit.reader` for everything abou
 | --- | --- | --- |
 | Open and close | `AuditReader.open(path, *, anchor=None)`, `AuditReader.from_bytes(data, *, anchor=None)`, `close()`, context manager | Exists |
 | Not a container | Diagnosis `not_a_container` when byte 0 is not the record magic; `open` and `from_bytes` do not raise on such a file | Exists — 0.13 (U22, #297) |
-| Empty container (r2) | Diagnosis `empty_container` for a file with no bytes | New (U26) — after 0.13 |
+| Empty container (r2) | Diagnosis `empty_container` for a file with no bytes | Exists — 0.14 (U26) |
 | Question one: links | `verify() -> Verification`; `Verification.chain: VerifyResult` (`chain_ok`, `count`, `head`, `breaks`, `gaps`, `violations`, `uninterpretable`) | Exists — 0.14 (U19) |
 | Violation codes (r2) | `VerifyResult.violation_codes: list[tuple[int, str]]`, parallel to `violations`; `Diagnosis.code` for `record_violation` | Exists — 0.14 (U24); not yet in the report (see the gaps table) |
-| Question one: bodies | `container_check() -> ContainerCheck` (`well_formed`, `malformed`, `bytes_parsed`, `bytes_total`, `body_digest_mismatches`) | New (U21) — after 0.13 |
+| Question one: bodies | `container_check() -> ContainerCheck` (`well_formed`, `malformed`, `bytes_parsed`, `bytes_total`, `body_digest_mismatches`); the report's `container` section is this object | Exists — 0.14 (U21) |
 | Question two | `Verification.complete_to_anchor`, `anchor_lag`, `anchor`, `anchor_attempts`; `VerifyResult.anchor_reason` (a sentence) | Exists |
 | Diagnosis | `Diagnosis` (`pattern`, `at_seq` — contract; `expected`, `narrative` — sentences) | Exists |
 | Companion files | `Verification.manifest: ManifestReading \| None` (`path`, `status`, `sha256`, `detail`) | Exists — 0.13 (U17, #296) |
@@ -105,7 +105,7 @@ Two kinds of vocabulary cross the surface, and they get different promises. Numb
 
 | Vocabulary | Members | Kind |
 | --- | --- | --- |
-| Diagnosis `pattern` (10 once #297 lands; 11 with U26) | `not_a_container` (U22), `empty_container` (U26), `truncated_tail`, `prefix_absent`, `seq_gap`, `chain_break`, `record_violation`, `unanchored_tail`, `replaced_or_rolled_back`, `declared_continuation`, `continuation_contradicts_manifest` | Open |
+| Diagnosis `pattern` (11) | `not_a_container` (U22), `empty_container` (U26), `truncated_tail`, `prefix_absent`, `seq_gap`, `chain_break`, `record_violation`, `unanchored_tail`, `replaced_or_rolled_back`, `declared_continuation`, `continuation_contradicts_manifest` | Open |
 | Advisory `code` (17) | `anchor_never_written`, `mid_boot_time_trust_change`, `mono_regression_in_boot`, `wall_regression_in_boot`, `span_unclosed`, `span_unopened`, `reference_hash_mismatch`, `reference_unresolved`, `ack_target_not_a_candidate`, `tool_target_not_a_call`, `shred_target_key_mismatch`, `shred_target_unresolved`, `continuation_malformed`, `continuation_predecessor_mismatch`, `continuation_index_not_increasing`, `continuation_index_gap`, `continuation_prior_root_mismatch` | Open |
 | **(r2)** Violation `code` (10, U24) | `prefix_absent`, `genesis_not_first`, `genesis_prev_hash_nonzero`, `header_len_mismatch`, `malformed_tlv`, `time_trust_undefined`, `time_unknown_with_wall_clock`, `empty_body_digest_nonzero`, `nonempty_body_digest_zero`, `encrypted_body_too_short` — one per reason the verifier emits today | Open |
 | `outcome_name` | `ok`, `error`, `timeout`, `cancelled`, `unobserved` | Open names over frozen numbers |
@@ -135,17 +135,17 @@ Twelve changes turn today's code into the surface above. Two are 0.13 release bl
 | U19 | Re-exports into `reader.__all__` (`VerifyResult`, `Header`, `Advisory`, `AdvisoryItem`, `boot_statistics`, `step_catalog`, the constants); `NO_SPAN`, `NO_PREDECESSOR`; inference-profile constants moved to `audit/profiles/inference.py` (see decision 2) | No reader-side consumer should need the writer, the codec or an undeclared module | Done (0.14) |
 | U20 | Contract test `tests/test_consumer_surface.py`: every symbol, field and vocabulary member in this document, both import paths for re-exports, asserted by name | Makes "stable" checkable in CI | Done (0.14) |
 | **U24 (r2)** | Violation codes: `VerifyResult.violation_codes` parallel to `violations`; `Diagnosis.code` for `record_violation`; the reader's `prefix_absent` test moves from the sentence to the code; the report gains the codes additively, within `pala-verification-report/1` | Rule 7 cannot hold while the verifier itself branches on a sentence and consumers have nothing else | **Done (0.14)** in the API; the report's codes wait for `/2` |
-| U21 | `container_check() -> ContainerCheck` | Half of question one is reachable only through a report | After 0.13 (additive) |
-| **U26 (r2)** | `empty_container` diagnosis; the verdict question raised as core clarification **C-8** (see below) | An empty file verifies `chain_ok` with no diagnosis and the report says `partial`, which means "intact, unanchored" — there is nothing intact | Diagnosis after 0.13; C-8 by decision |
-| U18 | `verify_segment_set(manifest_path)` — a function, not a reader method (decision 6) | With rotation, a single segment reports a violation by design (D1); only the set can be called whole | 0.14 |
+| U21 | `container_check() -> ContainerCheck` | Half of question one is reachable only through a report | Done (0.14) |
+| **U26 (r2)** | `empty_container` diagnosis; the verdict question raised as core clarification **C-8** (see below) | An empty file verifies `chain_ok` with no diagnosis and the report says `partial`, which means "intact, unanchored" — there is nothing intact | Done (0.14): the diagnosis; C-8 states what the unchanged answer means |
+| U18 | `verify_segment_set(manifest_path)` — a function, not a reader method (decision 6) | With rotation, a single segment reports a violation by design (D1); only the set can be called whole | Done (0.14), in `palimpsests.audit.segment_set`: `consistent` and `complete` kept apart |
 | **U27 (r2)** | `docs/WRITER-SURFACE.md`: the writer's own contract for runtime integrators (serve, hooks, embedders) | The writer is experimental until 1.0 and has two audiences — runtime integrators and consumers' test suites (decision 5) | Before 1.0 |
 
 ### The empty file — core clarification C-8 (r2)
 
 Today an empty file gives `chain_ok = True`, `count = 0`, no diagnosis, and a report verdict of `partial`. `partial` means the chain is intact and was not checked against an anchor; an empty file has no chain to be intact. §4.2 says a chain's first record MUST be a GENESIS; with zero records the rule is vacuous, so the text does not decide it.
 
-- **U26 adds the `empty_container` diagnosis** without changing the verdict — vocabularies are open, so this is safe in any minor.
-- **The verdict is a question for the core**, raised as clarification C-8, the path C-7 took: "a container with zero records is not a chain". Palimpsests' position: verdict `violation`. Changing a verdict silently in code, without the clarification, would move the core's meaning outside its text.
+- **U26 adds the `empty_container` diagnosis** without changing the verdict — vocabularies are open, so this is safe in any minor. Done (0.14).
+- **C-8 does not change the verdict either.** r2 proposed C-8 with the verdict `violation`. But `CLARIFICATIONS.md` defines a clarification as text that resolves an ambiguity *without changing any verifier's answer* — and the core is frozen — so a changed verdict cannot be a clarification. C-8 records the vacuous answer and what it means: a consistent result on zero records means nothing was there to contradict, never that a log was found intact; an implementation reporting in words should say the container is empty. Whether an empty container should carry a stronger verdict is a question for the report format, with `/2` — beside the violation codes of U24.
 
 ## Outside the surface
 
@@ -155,7 +155,7 @@ These stay importable but carry no promise to consumers. Naming them explicitly 
 - **Anything with a leading underscore,** including `_record_at`, `_decoded_records`, `_structure_pass`. The cache lock added in 0.12 is an implementation detail, not a thread-safety promise for every method.
 - **Parsing a rendered report.** `build_report` and `pala-verification-report/1` stay public as channel 2. What is outside is reading a verdict or a fact out of a rendered report instead of its fields or `derive_verdict`.
 - **The writer** — until its own contract exists (U27). `PalaWriter`, `AnchorStore`, `FileAnchorStore`, `Pkcs11AnchorStore`, segment cutting, locks.
-- **The SCITT bridge (r2)** — `scitt.verify_statement`, `StatementCheck` and its `root_status` vocabulary are **experimental** until bridge run B3 reproduces construction v3 independently. Then they join a channel of their own.
+- **The SCITT bridge's Python API (r2)** — `scitt.verify_statement`, `StatementCheck` and its `root_status` vocabulary stay **experimental** until they join a channel of their own. Statement construction v3 itself — the bytes — was reproduced independently in bridge run B3 and is no longer experimental (0.13.1).
 - **Sentence text:** `narrative`, `detail`, `expected`, `anchor_reason`, violation reasons, error messages. Carried verbatim by consumers, never parsed, free to improve.
 
 ## Decisions (r2 — the six open questions of r1)
@@ -185,9 +185,11 @@ Ordered by what each step unblocks. "PR" means one reviewable pull request.
 
 4. U19 + U20 together — one PR: the re-exports, `profiles/inference.py`, the contract test. The contract test lands with the exports so nothing is exported untested. **Done (0.14).** Two things it settled: the channel-5 names are re-exported lazily (`bootstats` and `timehealth` import the reader, so an eager import is circular); and `anchors.__all__` also lists the writer-side stores (`AnchorStore`, `FileAnchorStore`) — outside the reading surface, left in place until the writer's contract (U27) decides where they belong.
 5. U24 — violation codes; touches `incremental`, `verify`, `reader`. **Done (0.14).** The report stays `/1` without them: its schema is closed, so adding them there needs `/2`.
-6. U26 — `empty_container`; C-8 drafted beside it for the maintainers' decision.
-7. U21 — `container_check()`.
-8. U18 — `verify_segment_set` (0.14).
+6. U26 — `empty_container`; C-8. **Done (0.14)** — C-8 records the unchanged answer and its meaning (see above).
+7. U21 — `container_check()`. **Done (0.14).** The report's `container` section is now this object.
+8. U18 — `verify_segment_set` (0.14). **Done (0.14)**, as its own module `audit.segment_set`.
+
+The U track to 1.0 is complete except U27, the writer's contract. Waiting for the report's `/2`: the violation codes (U24), and whether an empty container takes a stronger verdict (C-8).
 
 **Before 1.0**
 
