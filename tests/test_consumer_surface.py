@@ -329,6 +329,8 @@ CHANNELS = {
     "palimpsests.audit.bootstats": ["boot_statistics"],
     "palimpsests.audit.pala.vectors": ["load"],
     "palimpsests.audit.pala.selftest": ["run_selftest"],
+    "palimpsests.audit.segment_set": ["verify_segment_set", "SegmentSetVerification",
+                                      "SegmentCheck"],
 }
 
 
