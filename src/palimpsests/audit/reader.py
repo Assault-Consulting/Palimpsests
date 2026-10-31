@@ -1121,6 +1121,19 @@ class AuditReader:
         return items
 
     def _derive_diagnosis(self, chain: VerifyResult) -> Diagnosis | None:
+        if not self._truncated and not len(self._headers):
+            # Zero bytes, zero records (U26). §7.1 holds vacuously — there is
+            # nothing to contradict — so the chain check passes; but there is
+            # no chain either, and a verdict without a sentence would read as
+            # "intact" (clarification C-8). The verdict is not changed here.
+            return Diagnosis(
+                "empty_container",
+                None,
+                "at least one record, beginning with a GENESIS",
+                "The container holds no records. Nothing in it contradicts the "
+                "format, and nothing in it is a chain: the check passes because "
+                "there was nothing to check, not because a log was found intact.",
+            )
         if self._truncated and self._truncated_at == 0 and not self._opens_with_magic():
             # Nothing at byte 0 is a PALA-1 record, so nothing was ever
             # written here by a PALA-1 writer: "interrupted mid-write" would
