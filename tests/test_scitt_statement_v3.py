@@ -187,6 +187,81 @@ def test_content_type_and_payload_must_agree(doc):
         scitt.verify_statement(unknown, pub, head)
 
 
+def _resign(stmt: bytes, key, *, header: dict | None = None, drop=(), payload=None) -> bytes:
+    """Rebuild a statement with an edited protected header or payload, signed
+    again with the vector key, so the signature verifies and only the edit is
+    left for the verifier to judge."""
+    import cbor2
+
+    prot, unprot, pl, _ = cbor2.loads(stmt).value
+    ph = {k: v for k, v in cbor2.loads(prot).items() if k not in drop}
+    ph.update(header or {})
+    prot = cbor2.dumps(ph, canonical=True)
+    pl = pl if payload is None else payload
+    sig = key.sign(cbor2.dumps(["Signature1", prot, b"", pl]))
+    return cbor2.dumps(cbor2.CBORTag(18, [prot, unprot, pl, sig]))
+
+
+def _later(doc):
+    st = doc["statements"]["later"]
+    return bytes.fromhex(st["expected"]["statement_hex"]), bytes.fromhex(
+        st["inputs"]["chain_head_hex"]
+    )
+
+
+def test_the_protected_header_is_exactly_this_constructions(doc):
+    stmt, head = _later(doc)
+    key = _key(doc)
+    for edit in ({"header": {99: "extra"}}, {"drop": (scitt._HDR_KID,)}):
+        with pytest.raises(ValueError, match="exactly labels 1, 3, 4"):
+            scitt.verify_statement(_resign(stmt, key, **edit), key.public_key(), head)
+
+
+def test_a_non_deterministic_payload_is_reported_not_refused(doc):
+    import cbor2
+
+    stmt, head = _later(doc)
+    key = _key(doc)
+    values = cbor2.loads(cbor2.loads(stmt).value[2])
+    reordered = cbor2.dumps(dict(reversed(list(values.items()))))  # keys 5..1
+    assert reordered != cbor2.dumps(values, canonical=True)
+    c = scitt.verify_statement(_resign(stmt, key, payload=reordered), key.public_key(), head)
+    assert c.payload == values and c.payload_encoding == "not deterministic"
+    assert c.root_status == "carried, not recomputed"
+
+
+def test_a_repeated_key_is_refused_in_either_map(doc):
+    import cbor2
+
+    stmt, head = _later(doc)
+    key = _key(doc)
+    prot, unprot, pl, _ = cbor2.loads(stmt).value
+    # payload: map of 6 entries declared, key 1 (the head) twice, a decoy first
+    body = pl[1:]
+    dup_payload = bytes([0xA6]) + b"\x01" + cbor2.dumps(b"\x00" * 32) + body
+    with pytest.raises(ValueError, match="payload repeats a key"):
+        scitt.verify_statement(_resign(stmt, key, payload=dup_payload), key.public_key(), head)
+    # protected header: content type twice, the v2 string first
+    ph = prot[1:]
+    dup_prot = bytes([0xA5]) + b"\x03" + cbor2.dumps(scitt.CONTENT_TYPE) + ph
+    sig = key.sign(cbor2.dumps(["Signature1", dup_prot, b"", pl]))
+    forged = cbor2.dumps(cbor2.CBORTag(18, [dup_prot, unprot, pl, sig]))
+    with pytest.raises(ValueError, match="protected header repeats a key"):
+        scitt.verify_statement(forged, key.public_key(), head)
+
+
+def test_the_published_statements_are_deterministic(doc):
+    pub = _key(doc).public_key()
+    for name in ("earlier", "later"):
+        st = doc["statements"][name]
+        c = scitt.verify_statement(
+            bytes.fromhex(st["expected"]["statement_hex"]),
+            pub,
+            bytes.fromhex(st["inputs"]["chain_head_hex"]),
+        )
+        assert c.payload_encoding == "deterministic"
+
+
 def test_a_damaged_proof_does_not_verify(doc):
     p = doc["consistency"]
     a, b = bytes.fromhex(p["first_root"]), bytes.fromhex(p["second_root"])
