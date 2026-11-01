@@ -148,3 +148,13 @@ which no statement carries.
 signed, not recomputed. With the chain: *recomputed* and compared.
 `verify_statement` reports which (`root_status`), and a report never
 calls a carried root verified.
+
+**What a verifier refuses, and what it reports.** The protected header
+carries exactly labels 1, 3, 4 and 15; a statement with any other label,
+or without one of them, is not this construction and is refused, though
+RFC 9052 permits further labels in general. A map that repeats a key —
+payload or protected header — is refused: the same signed bytes would
+read two ways. A payload whose keys are distinct but not in deterministic
+encoding is reported, not refused: `verify_statement` says so in
+`payload_encoding`, and the verdict on the values is reached apart from
+it.
