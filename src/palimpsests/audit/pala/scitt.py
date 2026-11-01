@@ -106,6 +106,10 @@ _HDR_ALG = 1
 _HDR_CONTENT_TYPE = 3  # RFC 9052 §3.1: what the payload is (B1 finding F2)
 _HDR_KID = 4  # RFC 9052 §3.1; required by RFC 9943 §6 absent x5t/x5chain (B1 F1)
 _HDR_CWT_CLAIMS = 15  # RFC 9597: CWT claims in COSE headers
+# This construction's protected header, exactly. RFC 9052 allows other labels
+# in general; a statement carrying any is not this construction and is
+# refused (outside reading of v3, L. Lemonnier, ambiguity 1).
+_PROTECTED_LABELS = frozenset({_HDR_ALG, _HDR_CONTENT_TYPE, _HDR_KID, _HDR_CWT_CLAIMS})
 
 # The payload's media type, vendor tree (unregistered), naming the
 # {1,2,3,4} map below. Declared in the *protected* header so a verifier
@@ -356,12 +360,40 @@ class StatementCheck:
     recomputed"`` (the statement carries a root, the signature covers it,
     and no chain was at hand to recompute it — so it is reported, never
     called verified).
+
+    ``payload_encoding`` is reported apart from the values:
+    ``"deterministic"`` when the signed payload bytes are the RFC 8949
+    §4.2.1 deterministic encoding of the map they decode to, ``"not
+    deterministic"`` otherwise. The construction requires deterministic
+    encoding; a signed map with correct values in another encoding is a
+    finding about the bytes, not a refusal of the values.
     """
 
     version: str  # "v2" | "v3"
     payload: dict
     root: bytes | None
     root_status: str
+    payload_encoding: str  # "deterministic" | "not deterministic"
+
+
+def _distinct_keys(raw: bytes, decoded: dict, what: str) -> None:
+    """Refuse a map that repeats a key. A decoder keeps one of the values —
+    cbor2 the last — and another reader may keep the other, so the same
+    signed bytes would read two ways (RFC 8949 §5.6: such a map is not
+    valid). Counted from the map's declared length; an indefinite-length map
+    cannot be counted and is not the deterministic encoding either."""
+    major, ai = raw[0] >> 5, raw[0] & 0x1F
+    if major != 5:
+        raise ValueError(f"{what} is not a CBOR map")
+    if ai < 24:
+        n = ai
+    elif ai in (24, 25, 26, 27):
+        width = 1 << (ai - 24)
+        n = int.from_bytes(raw[1 : 1 + width], "big")
+    else:
+        raise ValueError(f"{what} is an indefinite-length map; its keys cannot be counted")
+    if n != len(decoded):
+        raise ValueError(f"{what} repeats a key ({n} entries, {len(decoded)} distinct keys)")
 
 
 def _protected_header(message: bytes) -> dict:
@@ -371,7 +403,16 @@ def _protected_header(message: bytes) -> dict:
     phdr = _cbor2().loads(tag.value[0])
     if not isinstance(phdr, dict):
         raise ValueError("protected header is not a CBOR map")
+    _distinct_keys(tag.value[0], phdr, "the protected header")
     return phdr
+
+
+def _check_protected_labels(phdr: dict) -> None:
+    if set(phdr) != _PROTECTED_LABELS:
+        raise ValueError(
+            "this construction's protected header carries exactly labels 1, 3, 4 "
+            f"and 15 (alg, content type, kid, CWT claims); this one carries {sorted(phdr)}"
+        )
 
 
 def verify_statement(
@@ -384,6 +425,11 @@ def verify_statement(
     a v3 statement must also carry a 32-byte root in key 5. A root under
     the v2 type, or a v3 type without one, is refused — a statement that
     disagrees with its own signed description is not read either way.
+    The protected header must carry exactly labels 1, 3, 4 and 15 (alg,
+    content type, kid, CWT claims); any other label is refused, and so is
+    a repeated key in either map. A payload whose bytes are otherwise not
+    the deterministic encoding is reported in ``payload_encoding``, not
+    refused.
 
     ``reader`` (an ``AuditReader`` over the chain) lets the v3 root be
     *recomputed* — the derived root over records ``0..last_seq`` — and
@@ -394,6 +440,7 @@ def verify_statement(
     decoded = _cbor2().loads(payload)
     if not isinstance(decoded, dict):
         raise ValueError("statement payload is not a CBOR map")
+    _distinct_keys(payload, decoded, "the statement payload")
     if decoded.get(_PAYLOAD_HEAD) != expected_head:
         raise ValueError("statement does not commit to the expected chain head")
     if decoded.get(_PAYLOAD_FORMAT) != FORMAT_ID:
@@ -406,7 +453,13 @@ def verify_statement(
         # depends only on last_seq, so an inverted statement would otherwise
         # verify with a root correct for its last_seq (bridge run B3, F4).
         raise ValueError("a statement's range must satisfy 0 <= first_seq <= last_seq")
-    ctype = _protected_header(message).get(_HDR_CONTENT_TYPE)
+    phdr = _protected_header(message)
+    ctype = phdr.get(_HDR_CONTENT_TYPE)
+    encoding = (
+        "deterministic"
+        if _cbor2().dumps(decoded, canonical=True) == payload
+        else "not deterministic"
+    )
     v2_keys = {_PAYLOAD_HEAD, _PAYLOAD_FIRST_SEQ, _PAYLOAD_LAST_SEQ, _PAYLOAD_FORMAT}
     if ctype == CONTENT_TYPE:
         if set(decoded) != v2_keys:
@@ -414,7 +467,8 @@ def verify_statement(
                 "a v2 statement carries exactly payload keys 1-4; this one carries "
                 f"{sorted(decoded)} (a root under the v2 content type is not read)"
             )
-        return StatementCheck("v2", decoded, None, "absent")
+        _check_protected_labels(phdr)
+        return StatementCheck("v2", decoded, None, "absent", encoding)
     if ctype != CONTENT_TYPE_V3:
         raise ValueError(f"unknown statement content type {ctype!r}")
     if set(decoded) != v2_keys | {_PAYLOAD_ROOT}:
@@ -424,8 +478,9 @@ def verify_statement(
     root = decoded[_PAYLOAD_ROOT]
     if not isinstance(root, bytes) or len(root) != _HEAD_LEN:
         raise ValueError(f"a v3 root is {_HEAD_LEN} bytes")
+    _check_protected_labels(phdr)
     if reader is None:
-        return StatementCheck("v3", decoded, root, "carried, not recomputed")
+        return StatementCheck("v3", decoded, root, "carried, not recomputed", encoding)
     from palimpsests.audit.pala.proofs import chain_root
 
     last_seq = decoded[_PAYLOAD_LAST_SEQ]
@@ -441,7 +496,7 @@ def verify_statement(
             "the statement's root is not the derived root over records "
             f"0..{last_seq} of this chain"
         )
-    return StatementCheck("v3", decoded, root, "recomputed")
+    return StatementCheck("v3", decoded, root, "recomputed", encoding)
 
 
 def check_statement_against_head(
