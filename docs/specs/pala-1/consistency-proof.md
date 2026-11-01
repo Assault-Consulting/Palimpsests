@@ -103,7 +103,9 @@ alone — not from the package — over the 17-record inference companion
 chain: the derived root for every count `0..17`, eleven proofs
 (including `first == second`, a power-of-two `first`, and proofs whose
 `second` is not the full chain), and three documents that MUST verify
-`False`. The package reproduces every root and accepts every proof in
+`False`. The 17 record hashes themselves are published as
+`record_hashes`, so every root can be recomputed from the file alone.
+The package reproduces every root and accepts every proof in
 `tests/test_consistency_proofs.py`, which also regenerates the file and
 requires it to be byte-identical.
 

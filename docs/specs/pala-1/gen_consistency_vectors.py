@@ -107,6 +107,10 @@ out = {
     "source_chain_head": hashes[-1].hex(),
     "records": n,
     "leaves": "record_hash of each record, seq order; leaf(d) = SHA-256(0x00 || d)",
+    # The record hashes themselves, so roots_by_count can be recomputed from
+    # this file alone (bridge run B3, U3; outside reading of v3, not attempted
+    # for want of them).
+    "record_hashes": [h.hex() for h in hashes],
     "roots_by_count": roots,
     "proofs": proofs,
     "negative": {

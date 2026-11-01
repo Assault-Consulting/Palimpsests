@@ -70,6 +70,10 @@ encoded in ascending order:
 | 4 (kid) | the RFC 9679 COSE Key Thumbprint of the verification key — SHA-256, all 32 bytes — over the deterministic CBOR encoding of `{1: 1, -1: 6, -2: x}` (OKP, Ed25519, public key `x`) |
 | 15 (CWT claims) | `{1: issuer, 2: subject}`; `subject` is `pala-1:chain:` followed by the full chain head in lowercase hex |
 
+A protected header with any other label, without one of these four, or
+repeating one, is not this construction and is refused. RFC 9052 permits
+further labels in general; this construction does not.
+
 **The payload** is a CBOR map with integer keys in ascending order:
 
 | Key | Value |
@@ -79,6 +83,12 @@ encoded in ascending order:
 | 3 | `last_seq`, unsigned integer |
 | 4 | the text string `pala-1/v1.0` |
 | 5 | **new:** the derived root, 32 bytes |
+
+A payload map that repeats a key is refused: the same signed bytes would
+read two ways. A payload whose keys are distinct but not in this
+deterministic encoding is reported as a finding of its own, and the
+verdict on the values is reached apart from it; a verifier does not
+refuse on the encoding alone.
 
 **The derived root** (key 5) is the PALA-1 §4.3 tree over the record
 hashes of records `0 … last_seq`, in seq order — `consistency-proof.md`
@@ -150,7 +160,8 @@ ones a task names.
    `last_seq` or `last_seq + 2` records; a root over `first_seq … last_seq`;
    payload keys out of order or duplicated; key 5 of 31 or 33 bytes; a
    `first_seq` greater than `last_seq`. Report how a careful verifier
-   should treat each.
+   should treat each. Two are settled above: keys out of order are
+   reported, repeated keys refused.
 
 ## Deliverables
 
