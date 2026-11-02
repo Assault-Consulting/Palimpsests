@@ -169,3 +169,51 @@ def test_a_missing_server_is_one_sentence_and_127(mcp_proxy, monkeypatch, capsys
     monkeypatch.setenv("PATH", "")
     assert mcp_proxy.Proxy(["no-such-mcp-server"]).run() == 127
     assert "'no-such-mcp-server' is not on PATH" in capsys.readouterr().err
+
+
+# ── 2026-11-02: the verdict by expected source, and isolation on Windows ──
+
+
+def _pairs_of(by_source):
+    calls = sum(t["calls"] for t in by_source.values())
+    results = sum(t["results"] for t in by_source.values())
+    return {"calls": calls, "results": results,
+            "sources": sorted(s for s in by_source if s is not None), "by_source": by_source}
+
+
+def test_a_stub_serves_own_record_does_not_turn_a_working_plugin_red(cs):
+    """OpenCode's stub serve is also its model provider and records its own
+    wire-parsed call (source 0). The plugin's pair (source 1) is what is judged."""
+    pairs = _pairs_of({0: {"calls": 1, "results": 0}, 1: {"calls": 1, "results": 1}})
+    r = cs._verdict("opencode", "1.18.31", pairs, cs.REPORTED, completions=1)
+    assert r.state == "GREEN"
+    assert "not judged: 1 record(s) with source 0" in r.detail
+
+
+def test_records_without_the_reported_mark_are_still_red(cs):
+    pairs = _pairs_of({0: {"calls": 1, "results": 1}})
+    r = cs._verdict("litellm", "x", pairs, cs.REPORTED)
+    assert r.state == "RED" and "sources [0]" in r.detail
+
+
+def test_a_call_without_its_result_is_red(cs):
+    r = cs._verdict("x", "y", _pairs_of({1: {"calls": 1, "results": 0}}), cs.REPORTED)
+    assert r.state == "RED"
+
+
+def test_a_probe_home_includes_userprofile_on_windows(cs, monkeypatch, tmp_path):
+    monkeypatch.setattr(cs, "_WINDOWS", True)
+    env = cs._isolated_env(tmp_path, X="1")
+    assert env["HOME"] == env["USERPROFILE"] == str(tmp_path) and env["X"] == "1"
+    monkeypatch.setattr(cs, "_WINDOWS", False)
+    monkeypatch.delenv("USERPROFILE", raising=False)
+    assert "USERPROFILE" not in cs._isolated_env(tmp_path)
+
+
+def test_claude_code_on_windows_is_skip_and_touches_nothing(cs, monkeypatch, tmp_path):
+    monkeypatch.setattr(cs, "_WINDOWS", True)
+    monkeypatch.setattr(cs, "_resolve", lambda name: "/fake/claude")
+    monkeypatch.setattr(cs, "_version", lambda cmd: "2.1.310")
+    r = cs.probe_claude_code(tmp_path)
+    assert r.state == "SKIP" and "not isolable on Windows" in r.detail
+    assert not any(tmp_path.iterdir())  # nothing written, nothing started

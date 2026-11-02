@@ -52,8 +52,11 @@ directory is not on your `PATH`. `npm config get prefix` shows where it
 is; add `<prefix>/bin` (Linux/macOS) or `<prefix>` (Windows) to `PATH`.
 
 **The checker uses none of your accounts.** OpenCode is started with a
-temporary `HOME`, its own config and a stub model; your real
-`~/.config/opencode` is not touched.
+temporary home (`HOME`, and `USERPROFILE` on Windows), its own config and
+a stub model; your real `~/.config/opencode` is not touched. On Windows
+the `claude-code` probe is ⚪ SKIP for now: Claude Code cannot yet be
+pointed at a temporary home there without failing to start a turn, and
+the checker does not write into your real settings.
 
 ---
 
@@ -141,7 +144,8 @@ What the Detail line usually means on red:
 | `0 call(s), 0 result(s)` with completions reached | the client reached the model but no tool was reported. Either its hooks did not fire, or **the model never called a tool** — which the stub model rules out here, so in this checker it points at the hooks. On real traffic the second is common (see the OpenCode run records) and must be ruled out before blaming the surface |
 | `0 call(s), 0 result(s)` on `otel` | the framework no longer emits `execute_tool` spans in the shape the adapter reads (`gen_ai.operation.name`, a tool name in `gen_ai.tool.name` or the span name), or the exporter's wire changed under `/v1/traces` — compare a fresh capture with `tests/fixtures/otel/` |
 | `1 call(s), 0 result(s)` on OpenCode specifically | `tool.execute.after` did not fire **and** the `message.part.updated` fallback did not deliver — on 1.18.31 the fallback is what carries results, so this means the fallback surface changed |
-| `sources [0]` instead of `[1]` | the record arrived without the reported-by-client mark — a defect in **our** code, not the surface |
+| `sources [0]` instead of `[1]`, red | no record arrived with the reported-by-client mark — a defect in **our** code, not the surface |
+| `…; not judged: N record(s) with source 0`, green | the verdict counts only records with the expected mark. Where the stub serve is also the client's model provider (OpenCode), it records the tool call it parsed off its own wire as source 0; those are reported and not held against the surface |
 | — | a failure inside a probe is no longer red: it is 🟠 ERROR, §4a |
 
 ## 4a. When a probe is orange 🟠
