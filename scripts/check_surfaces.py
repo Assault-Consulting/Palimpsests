@@ -142,17 +142,18 @@ class StubServe:
         """Count kind 8/9 records on the chain and their source marks."""
         from palimpsests.audit.reader import AuditReader
 
-        out = {"calls": 0, "results": 0, "sources": set()}
+        out = {"calls": 0, "results": 0, "sources": set(), "by_source": {}}
         with AuditReader.open(self.chain) as reader:
             for rec in reader.records():
                 kind = getattr(rec, "kind_name", None)
-                if kind == "TOOL_CALL":
-                    out["calls"] += 1
-                elif kind == "TOOL_RESULT":
-                    out["results"] += 1
-                else:
+                if kind not in ("TOOL_CALL", "TOOL_RESULT"):
                     continue
-                out["sources"].add(getattr(rec, "source", None))
+                half = "calls" if kind == "TOOL_CALL" else "results"
+                out[half] += 1
+                src = getattr(rec, "source", None)
+                out["sources"].add(src)
+                tally = out["by_source"].setdefault(src, {"calls": 0, "results": 0})
+                tally[half] += 1
         out["sources"] = sorted(s for s in out["sources"] if s is not None)
         return out
 
@@ -167,11 +168,38 @@ def _verdict(
             "problem on this machine, not evidence about the surface",
             pairs,
         )
-    ok = pairs["calls"] >= 1 and pairs["results"] >= 1 and pairs["sources"] == [expect_source]
-    detail = (
-        f"{pairs['calls']} call(s), {pairs['results']} result(s), sources {pairs['sources']}"
-    )
+    # Judged on the records that carry the expected source. Records with
+    # another source are reported, not held against the surface: where the
+    # stub serve is also the client's model provider (OpenCode) it parses its
+    # own tool call off the wire and records it as source 0 — inevitably, and
+    # independent of the adapter under test (2026-11-02 surface check, notes).
+    by_source = pairs.get("by_source") or {}
+    mine = by_source.get(expect_source, {"calls": 0, "results": 0})
+    ok = mine["calls"] >= 1 and mine["results"] >= 1
+    detail = f"{mine['calls']} call(s), {mine['results']} result(s), sources {pairs['sources']}"
+    others = {s: t for s, t in by_source.items() if s != expect_source}
+    if others:
+        detail += "; not judged: " + ", ".join(
+            f"{t['calls'] + t['results']} record(s) with source {s}" for s, t in sorted(
+                others.items(), key=lambda kv: (kv[0] is None, kv[0] or 0))
+        )
     return Result(name, "GREEN" if ok else "RED", version, detail, pairs)
+
+
+_WINDOWS = os.name == "nt"
+
+
+def _isolated_env(home: Path, **extra: str) -> dict:
+    """The environment a client probe runs in: its own home directory.
+
+    On Windows, Node and Claude Code find the user's home through
+    ``USERPROFILE``, not ``HOME``; setting ``HOME`` alone left OpenCode and
+    Claude Code reading the user's real configuration while the probe's
+    lay in an ignored directory (2026-11-02 surface check)."""
+    env = dict(os.environ, HOME=str(home), **extra)
+    if _WINDOWS:
+        env["USERPROFILE"] = str(home)
+    return env
 
 
 class LaunchFailed(Exception):
@@ -354,8 +382,8 @@ def probe_opencode(workdir: Path) -> Result:
             "model": "palimpsests/stub"}))
         (home / ".local" / "share" / "opencode" / "auth.json").write_text(
             json.dumps({"palimpsests": {"type": "api", "key": serve.api_key}}))
-        env = dict(os.environ, HOME=str(home), PALIMPSESTS_SERVE_URL=serve.url,
-                   PALIMPSESTS_SERVE_API_KEY=serve.api_key)
+        env = _isolated_env(home, PALIMPSESTS_SERVE_URL=serve.url,
+                            PALIMPSESTS_SERVE_API_KEY=serve.api_key)
         # The completion count below says whether it got anywhere; a
         # timeout is not itself a verdict. OpenCode hangs on the first run
         # after its provider baseURL changes (seen three times in a traffic
@@ -382,6 +410,17 @@ def probe_claude_code(workdir: Path) -> Result:
     if exe is None:
         return Result("claude-code", "SKIP", detail="claude not on PATH")
     version = _version([exe, "--version"]) or "?"
+    if _WINDOWS:
+        # Not isolable here yet: with USERPROFILE redirected the client never
+        # completes a turn, and with HOME alone it reads the user's real
+        # settings — a false red. Writing the hooks into the user's settings
+        # is not something a checker may do (2026-11-02 surface check, notes).
+        return Result(
+            "claude-code", "SKIP", version,
+            "not isolable on Windows yet — the client cannot be pointed at a "
+            "temporary home without failing to start a turn; not evidence "
+            "about the surface (see run R1 for a manual check)",
+        )
     sys.path.insert(0, str(ROOT / "scripts"))
     from _anthropic_stub import AnthropicStub
 
@@ -401,10 +440,11 @@ def probe_claude_code(workdir: Path) -> Result:
             "hooks": {"PreToolUse": hook, "PostToolUse": hook, "PostToolUseFailure": hook},
             "permissions": {"allow": ["Read"]},
         }))
-        env = dict(os.environ, HOME=str(home), ANTHROPIC_BASE_URL=model.url,
-                   ANTHROPIC_API_KEY="sk-surface-stub",
-                   PALIMPSESTS_SERVE_API_KEY=serve.api_key,
-                   CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC="1", DISABLE_TELEMETRY="1")
+        env = _isolated_env(home, ANTHROPIC_BASE_URL=model.url,
+                            ANTHROPIC_API_KEY="sk-surface-stub",
+                            PALIMPSESTS_SERVE_API_KEY=serve.api_key,
+                            CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC="1",
+                            DISABLE_TELEMETRY="1")
         _run_tree([exe, "-p", "read NOTES.md"], cwd=repo, env=env, timeout=180)
         # The stand-in model plays the part of "completions" here: zero
         # tool-bearing requests means the client never got as far as
