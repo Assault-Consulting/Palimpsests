@@ -3,8 +3,8 @@
 <!-- SPDX-FileCopyrightText: Assault Consulting -->
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 
-Seven OpenCode sessions across seven fresh config dirs, and the zero from
-run 1 now has a measured cause: with `PALIMPSESTS_SERVE_API_KEY` unset in
+Seven runs on seven fresh config dirs, nine OpenCode sessions in all, and
+the zero from run 1 now has a measured cause: with `PALIMPSESTS_SERVE_API_KEY` unset in
 the window OpenCode is launched from, the plugin's two posts are refused
 `401` and nothing reaches the chain; with the key set, the same single
 turn puts a call and its result on the chain. Beyond that, a ten-prompt
