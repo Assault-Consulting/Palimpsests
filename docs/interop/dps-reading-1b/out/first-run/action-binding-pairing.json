@@ -1,0 +1,489 @@
+[
+ {
+  "id": "J01",
+  "expected": "consistent",
+  "got": "consistent",
+  "agrees": true
+ },
+ {
+  "id": "J02",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "results do not give each attachment_index from 0 to 1 once: [0]"
+  ]
+ },
+ {
+  "id": "J03",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "results do not give each attachment_index from 0 to 1 once: [0, 0, 1]",
+   "two results name the same decision_id"
+  ]
+ },
+ {
+  "id": "J04",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "attachment_count is 1; 2 attachments",
+   "results do not give each attachment_index from 0 to 1 once: [0]"
+  ]
+ },
+ {
+  "id": "J05",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "result 0: decision_id 'DR-2099-142', the attachment states 'DR-2099-101'"
+  ]
+ },
+ {
+  "id": "J06",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "result 0: specification results do not match the attachment's specifications"
+  ]
+ },
+ {
+  "id": "J07",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "result 0: observed results or execution state not carried through as recorded",
+   "result 0 issuer_signature: reported verified, the check finds failed",
+   "result 0 key_state: reported verified, the check finds not_checked",
+   "result 0 key_state: key_ref 'org-seal-1', the check finds None"
+  ]
+ },
+ {
+  "id": "J08",
+  "expected": "consistent",
+  "got": "consistent",
+  "agrees": true
+ },
+ {
+  "id": "J09",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "result 0 observed_results: reported verified, the check finds failed",
+   "result 0: observed results or execution state not carried through as recorded",
+   "result 0 issuer_signature: reported verified, the check finds failed",
+   "result 0 key_state: reported verified, the check finds not_checked"
+  ]
+ },
+ {
+  "id": "J10",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "result 0: executed_specifications differ from the check's",
+   "result 0 action_binding: reported verified, the check finds failed",
+   "result 0 issuer_signature: reported verified, the check finds failed",
+   "result 0 key_state: reported verified, the check finds not_checked"
+  ]
+ },
+ {
+  "id": "J11",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "result 1 observed_results: reported verified, the check finds not_checked",
+   "result 1: observed results or execution state not carried through as recorded"
+  ]
+ },
+ {
+  "id": "J12",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "result 0: specification results do not match the attachment's specifications",
+   "result 0 issuer_signature: reported verified, the check finds failed",
+   "result 0 key_state: reported verified, the check finds not_checked",
+   "result 0 key_state: key_ref 'org-seal-1', the check finds None"
+  ]
+ },
+ {
+  "id": "J13",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "attachment_count is 3; 2 attachments"
+  ]
+ },
+ {
+  "id": "J14",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "result 0 spec 0 digest: reported verified, the check finds failed",
+   "result 0 issuer_signature: reported verified, the check finds failed",
+   "result 0 key_state: reported verified, the check finds not_checked",
+   "result 0 key_state: key_ref 'org-seal-1', the check finds None"
+  ]
+ },
+ {
+  "id": "J15",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "result 1: observed results or execution state not carried through as recorded"
+  ]
+ },
+ {
+  "id": "J16",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "results do not give each attachment_index from 0 to 1 once: [0, 1, 1]",
+   "two results name the same decision_id",
+   "two attachments for the same decision record",
+   "result 1 record_statements: reported verified, the check finds failed"
+  ]
+ },
+ {
+  "id": "J17",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "result 0: attachment_digest is not the attachment's"
+  ]
+ },
+ {
+  "id": "J18",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "result 0: executed_specifications differ from the check's",
+   "result 0 issuer_signature: reported verified, the check finds failed",
+   "result 0 key_state: reported verified, the check finds not_checked",
+   "result 0 key_state: key_ref 'org-seal-1', the check finds None"
+  ]
+ },
+ {
+  "id": "J19",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "result 0: observed results or execution state not carried through as recorded",
+   "result 0 issuer_signature: reported verified, the check finds failed",
+   "result 0 key_state: reported verified, the check finds not_checked",
+   "result 0 key_state: key_ref 'org-seal-1', the check finds None"
+  ]
+ },
+ {
+  "id": "J20",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "result 0: reviews not carried through as the attachment records them",
+   "result 0 issuer_signature: reported verified, the check finds failed",
+   "result 0 key_state: reported verified, the check finds not_checked",
+   "result 0 key_state: key_ref 'org-seal-1', the check finds None"
+  ]
+ },
+ {
+  "id": "J22",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "result 0: reviews not carried through as the attachment records them",
+   "result 0 issuer_signature: reported verified, the check finds failed",
+   "result 0 key_state: reported verified, the check finds not_checked",
+   "result 0 key_state: key_ref 'org-seal-1', the check finds None"
+  ]
+ },
+ {
+  "id": "J21",
+  "expected": "consistent",
+  "got": "consistent",
+  "agrees": true
+ },
+ {
+  "id": "J23",
+  "expected": "consistent",
+  "got": "consistent",
+  "agrees": true
+ },
+ {
+  "id": "J24",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "result 0 issuer_signature: reported verified, the check finds failed",
+   "result 0 issuer_signature: key_ref 'org-seal-1', the check finds 'org-seal-x'",
+   "result 0 issuer_signature: holder 'Example issuer (test only)', the check finds None",
+   "result 0 certificate: reported verified, the check finds not_checked"
+  ]
+ },
+ {
+  "id": "J25",
+  "expected": "consistent",
+  "got": "consistent",
+  "agrees": true
+ },
+ {
+  "id": "J26",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "result 0 issuer_signature: holder 'Someone else', the check finds 'Example issuer (test only)'"
+  ]
+ },
+ {
+  "id": "J27",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "result 0 time_assurance: reported verified, the check finds not_checked",
+   "result 0 time_assurance: source_ref 'tsa-example-1', the check finds None",
+   "result 0 time_assurance: no_later_than '2026-10-01T10:30:00Z', the check finds None",
+   "result 0 time_assurance: timestamp_index 0, the check finds None"
+  ]
+ },
+ {
+  "id": "J28",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "result 0 key_state: time_basis 'independent_timestamp', the check finds 'stated_time'",
+   "result 0 key_state: time '2026-10-01T10:30:00Z', the check finds '2026-10-01T10:00:00Z'",
+   "result 0 key_state: timestamp_index 0, the check finds None"
+  ]
+ },
+ {
+  "id": "J29",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "result 0 issuer_signature: reported verified, the check finds not_checked",
+   "result 0 issuer_signature: key_ref 'org-seal-1', the check finds None",
+   "result 0 issuer_signature: algorithm 'Ed25519', the check finds None",
+   "result 0 issuer_signature: holder 'Example issuer (test only)', the check finds None"
+  ]
+ },
+ {
+  "id": "J30",
+  "expected": "consistent",
+  "got": "consistent",
+  "agrees": true
+ },
+ {
+  "id": "J31",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "result 1 issuer_signature: reported verified, the check finds not_checked",
+   "result 1 issuer_signature: key_ref 'org-seal-1', the check finds None",
+   "result 1 issuer_signature: algorithm 'Ed25519', the check finds None",
+   "result 1 issuer_signature: holder 'Example issuer (test only)', the check finds None"
+  ]
+ },
+ {
+  "id": "J32",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "trust_policy reported verified, the check finds failed",
+   "result 0 issuer_signature: reported verified, the check finds failed",
+   "result 0 issuer_signature: holder 'Example issuer (test only)', the check finds None",
+   "result 0 certificate: reported verified, the check finds not_checked"
+  ]
+ },
+ {
+  "id": "J33",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "signatures_attachment_digest is not the digest of the attachment beside"
+  ]
+ },
+ {
+  "id": "J34",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "result 0 certificate: reported verified, the check finds not_checked",
+   "result 0 time_assurance: reported verified, the check finds not_checked",
+   "result 0 time_assurance: source_ref 'tsa-example-1', the check finds None",
+   "result 0 time_assurance: no_later_than '2026-10-01T10:30:00Z', the check finds None"
+  ]
+ },
+ {
+  "id": "J35",
+  "expected": "consistent",
+  "got": "consistent",
+  "agrees": true
+ },
+ {
+  "id": "J36",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "result 0 time_assurance: no_later_than '2026-10-01T10:31:00Z', the check finds '2026-10-01T10:30:00Z'"
+  ]
+ },
+ {
+  "id": "J37",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "result 0 time_assurance: source_ref 'tsa-example-2', the check finds 'tsa-example-1'"
+  ]
+ },
+ {
+  "id": "J38",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "result 0 time_assurance: timestamp_index 1, the check finds 0"
+  ]
+ },
+ {
+  "id": "J39",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "trust_policy reported failed, the check finds verified",
+   "result 0 issuer_signature: reported failed, the check finds verified",
+   "result 0 key_state: reported failed, the check finds verified"
+  ]
+ },
+ {
+  "id": "J40",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "note": "report 'reference': this reading's own report stands in for the reference check's",
+  "reasons": [
+   "result 0 time_assurance: no_later_than '2026-10-01T10:30:00Z', the check finds '2026-10-01T09:30:00Z'",
+   "result 0 time_assurance: timestamp_index 0, the check finds 1"
+  ]
+ },
+ {
+  "id": "J41",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "note": "report 'reference': this reading's own report stands in for the reference check's",
+  "reasons": [
+   "result 0 time_assurance: reported verified, the check finds not_checked",
+   "result 0 time_assurance: source_ref 'tsa-example-1', the check finds None",
+   "result 0 time_assurance: no_later_than '2026-10-02T10:30:00Z', the check finds None",
+   "result 0 time_assurance: timestamp_index 0, the check finds None"
+  ]
+ },
+ {
+  "id": "J42",
+  "expected": "consistent",
+  "got": "consistent",
+  "agrees": true,
+  "note": "report 'reference': this reading's own report stands in for the reference check's"
+ },
+ {
+  "id": "K01",
+  "expected": "consistent",
+  "got": "consistent",
+  "agrees": true,
+  "note": "report 'reference': this reading's own report stands in for the reference check's"
+ },
+ {
+  "id": "K02",
+  "expected": "consistent",
+  "got": "consistent",
+  "agrees": true,
+  "note": "report 'reference': this reading's own report stands in for the reference check's"
+ },
+ {
+  "id": "K03",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "note": "report 'reference': this reading's own report stands in for the reference check's",
+  "reasons": [
+   "result 0 action_binding: reported verified, the check finds not_checked",
+   "result 0 standing sa1 bounds: reported verified, the check finds not_checked",
+   "result 0 standing sa1: max_requests differs",
+   "result 0 standing sa1: valid_from differs"
+  ]
+ },
+ {
+  "id": "K04",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "note": "report 'reference': this reading's own report stands in for the reference check's",
+  "reasons": [
+   "result 0: executed_specifications differ from the check's"
+  ]
+ },
+ {
+  "id": "K05",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "note": "report 'reference': this reading's own report stands in for the reference check's",
+  "reasons": [
+   "result 0 standing sa1: revocation reported 'none_recorded', recorded 'recorded'"
+  ]
+ },
+ {
+  "id": "K06",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "note": "report 'reference': this reading's own report stands in for the reference check's",
+  "reasons": [
+   "result 0 standing sa1: requests_recorded reported 2, recorded 3"
+  ]
+ },
+ {
+  "id": "K07",
+  "expected": "consistent",
+  "got": "consistent",
+  "agrees": true,
+  "note": "report 'reference': this reading's own report stands in for the reference check's"
+ },
+ {
+  "id": "K08",
+  "expected": "consistent",
+  "got": "consistent",
+  "agrees": true,
+  "note": "report 'reference': this reading's own report stands in for the reference check's"
+ }
+]

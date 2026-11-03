@@ -1,0 +1,67 @@
+[
+ {
+  "id": "W01",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "W02",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "W03",
+  "expected": "match",
+  "got": "match",
+  "agrees": true,
+  "note": "compared as parsed documents re-serialised compactly"
+ },
+ {
+  "id": "W04",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "W05",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "W06",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "W07",
+  "expected": "match",
+  "got": "match",
+  "agrees": true,
+  "note": "compared with findings removed (their wording is not fixed by the text)"
+ },
+ {
+  "id": "W08",
+  "expected": "match",
+  "got": "not attempted",
+  "agrees": "not attempted",
+  "note": "needs generate_vectors.py, which the boundary forbids reading or running"
+ },
+ {
+  "id": "W09",
+  "expected": "match",
+  "got": "match",
+  "agrees": true,
+  "note": "strict reader refuses: True; last-member reader: verified (decision_id DR-2099-101); first-member reader: failed (decision_id DR-2099-042)"
+ },
+ {
+  "id": "W10",
+  "expected": "match",
+  "got": "match",
+  "agrees": true,
+  "note": "strict reader refuses: True; last-member reader: verified (decision_id DR-2099-101); first-member reader: failed (decision_id DR-2099-101)"
+ }
+]

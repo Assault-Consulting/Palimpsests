@@ -1,0 +1,9 @@
+# Versions as the run used them (Python 3.12.3). The Standard's own runners pin cryptography 50.0.2.
+cryptography==46.0.6
+jsonschema==4.26.0
+referencing==0.37.0
+asn1crypto==1.5.1
+# installed as dependencies of the above
+jsonschema-specifications==2025.9.1
+rpds-py==2026.9.1
+attrs==26.1.0

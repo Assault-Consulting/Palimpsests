@@ -1,0 +1,181 @@
+[
+ {
+  "id": "V01",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V02",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V03",
+  "expected": "match",
+  "got": "match",
+  "agrees": true,
+  "note": "compared the published values with the records' stated seals; the SHA-256 over the covered bytes is checked in the person and seal suites"
+ },
+ {
+  "id": "V04",
+  "expected": "match",
+  "got": "not attempted",
+  "agrees": "not attempted",
+  "note": "compares with anchoring's vectors beyond the parts the two texts reuse; left out to keep the boundary"
+ },
+ {
+  "id": "V05",
+  "expected": "match",
+  "got": "not attempted",
+  "agrees": "not attempted",
+  "note": "not implemented in this run"
+ },
+ {
+  "id": "V06",
+  "expected": "match",
+  "got": "not attempted",
+  "agrees": "not attempted",
+  "note": "seed-derived keys computed (all match); the RSA key against RFC 9500's text not checked: RFC 9500 could not be fetched"
+ },
+ {
+  "id": "V07",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V08",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V09",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V10",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V11",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V12",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V13",
+  "expected": "match",
+  "got": "match",
+  "agrees": true,
+  "note": "re-signed with the seed of signed_with over signature_made_over_hex (else signed_bytes_hex)"
+ },
+ {
+  "id": "V14",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V15",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V16",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V17",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V18",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V19",
+  "expected": "match",
+  "got": "not attempted",
+  "agrees": "not attempted",
+  "note": "needs generate_vectors.py, which the boundary forbids"
+ },
+ {
+  "id": "V20",
+  "expected": "match",
+  "got": "not attempted",
+  "agrees": "not attempted",
+  "note": "RFC 9500 could not be fetched (rfc-editor.org not resolvable from the sandbox)"
+ },
+ {
+  "id": "V21",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V22",
+  "expected": "match",
+  "got": "match",
+  "agrees": true,
+  "note": "strict reader refuses: True; last-member reader finds the attachment as issued: True; first-member reader: False"
+ },
+ {
+  "id": "V23",
+  "expected": "match",
+  "got": "match",
+  "agrees": true,
+  "note": "strict reader refuses: True; last-member reader finds the attachment as issued: True; first-member reader: False"
+ },
+ {
+  "id": "V24",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V25",
+  "expected": "match",
+  "got": "match",
+  "agrees": true,
+  "note": "computed with the base attachment's copy against each seal; the attachments as their issuer wrote them are not in vectors.json under these names: partial"
+ },
+ {
+  "id": "V26",
+  "expected": "match",
+  "got": "match",
+  "agrees": true,
+  "note": "the 0.2.0 attachment rebuilt from the base attachment with a four-member copy of the seal"
+ },
+ {
+  "id": "V27",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V28",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ }
+]

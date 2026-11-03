@@ -1,0 +1,760 @@
+[
+ {
+  "id": "X01",
+  "expected": "pass",
+  "got": "pass",
+  "agrees": true
+ },
+ {
+  "id": "X02",
+  "expected": "pass",
+  "got": "pass",
+  "agrees": true
+ },
+ {
+  "id": "X03",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'0.3.0' was expected"
+ },
+ {
+  "id": "X04",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "{'stage_id': 'o1', 'kind': 'outcome', 'at': '2026-10-01T09:12:00Z', 'review_ref': 'v1', 'outcome': 'approved', 'actor_re"
+ },
+ {
+  "id": "X05",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "{'stage_id': 'o1', 'kind': 'outcome', 'at': '2026-10-02T09:20:00Z', 'review_ref': 'v1', 'outcome': 'rejected', 'actor_re"
+ },
+ {
+  "id": "X06",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "{'stage_id': 'o1', 'kind': 'outcome', 'at': '2026-10-02T09:20:00Z', 'review_ref': 'v1', 'outcome': 'rejected', 'actor_re"
+ },
+ {
+  "id": "X07",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "{'stage_id': 'o1', 'kind': 'outcome', 'at': '2026-10-01T09:12:00Z', 'review_ref': 'v1', 'outcome': 'approved_by_default'"
+ },
+ {
+  "id": "X08",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "{'stage_id': 'x1', 'kind': 'attempt', 'at': '2026-10-01T09:16:05Z', 'request_ref': 'q1', 'spec_digest': 'e8c60bd5473dee8"
+ },
+ {
+  "id": "X09",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "{'stage_id': 'x1', 'kind': 'attempt', 'at': '2026-10-01T09:16:05Z', 'request_ref': 'q1', 'recheck_ref': 'c1', 'spec_dige"
+ },
+ {
+  "id": "X10",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "{'stage_id': 'r1', 'kind': 'result', 'at': '2026-10-01T09:16:09Z', 'attempt_ref': 'x1', 'observed': 'succeeded', 'basis'"
+ },
+ {
+  "id": "X11",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "{'stage_id': 'r1', 'kind': 'result', 'at': '2026-10-01T09:16:09Z', 'attempt_ref': 'x1', 'observed': 'completed', 'basis'"
+ },
+ {
+  "id": "X12",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "{'stage_id': 'o1', 'kind': 'outcome', 'at': '2026-10-01T09:12:00Z', 'review_ref': 'v1', 'outcome': 'approved', 'actor_re"
+ },
+ {
+  "id": "X13",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "{'stage_id': 'o1', 'kind': 'outcome', 'at': '2026-10-01T09:12:00Z', 'review_ref': 'v1', 'outcome': 'approved', 'actor_re"
+ },
+ {
+  "id": "X14",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "{'stage_id': 'o1', 'kind': 'outcome', 'at': '2026-10-01T09:12:00Z', 'review_ref': 'v1', 'outcome': 'approved', 'actor_re"
+ },
+ {
+  "id": "X15",
+  "expected": "pass",
+  "got": "pass",
+  "agrees": true
+ },
+ {
+  "id": "X16",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'spec_digest' is a required property"
+ },
+ {
+  "id": "X17",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'policy_version' is a required property"
+ },
+ {
+  "id": "X18",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "{'kind': 'canonical_form', 'media_type': 'application/json', 'canonicalisation': 'sorted JSON'} is not valid under any o"
+ },
+ {
+  "id": "X19",
+  "expected": "pass",
+  "got": "pass",
+  "agrees": true
+ },
+ {
+  "id": "X20",
+  "expected": "pass",
+  "got": "pass",
+  "agrees": true
+ },
+ {
+  "id": "X21",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "Additional properties are not allowed ('trace_events' was unexpected)"
+ },
+ {
+  "id": "X22",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "{'stage_id': 'p1', 'kind': 'proposal', 'at': '2026-10-01T09:00:00Z', 'origin': 'ai', 'spec_digest': 'e8c60bd5473dee8ab80"
+ },
+ {
+  "id": "X23",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "{'stage_id': 'q1', 'kind': 'request', 'at': '2026-10-01T09:15:00Z', 'authorised_by': 'o1', 'spec_digest': 'e8c60bd5473de"
+ },
+ {
+  "id": "X24",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "{'stage_id': 'ca1', 'kind': 'change_authorisation', 'at': '2026-10-01T09:14:00Z', 'from_ref': 'o1', 'spec_digest': 'e8c6"
+ },
+ {
+  "id": "X25",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "[{'stage_id': 'p1', 'kind': 'proposal', 'at': '2026-10-02T09:00:00Z', 'origin': 'ai', 'spec_digest': 'e7e5ba7a4ebec5c1c6"
+ },
+ {
+  "id": "X26",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "Additional properties are not allowed ('issuer_public_key' was unexpected)"
+ },
+ {
+  "id": "X27",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'sealed_at' is a required property"
+ },
+ {
+  "id": "P01",
+  "expected": "pass",
+  "got": "pass",
+  "agrees": true
+ },
+ {
+  "id": "P02",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "Additional properties are not allowed ('overall' was unexpected)"
+ },
+ {
+  "id": "P03",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "Additional properties are not allowed ('compliance' was unexpected)"
+ },
+ {
+  "id": "P04",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'independent_source' was expected"
+ },
+ {
+  "id": "P05",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'issuer_signature' is not one of ['issuer_assertion', 'independent_source']; 'independent_source' was expected"
+ },
+ {
+  "id": "P06",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'trust_policy' was expected"
+ },
+ {
+  "id": "P07",
+  "expected": "pass",
+  "got": "pass",
+  "agrees": true
+ },
+ {
+  "id": "P08",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'attests' is a required property"
+ },
+ {
+  "id": "P09",
+  "expected": "pass",
+  "got": "pass",
+  "agrees": true
+ },
+ {
+  "id": "P10",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'source_ref' is a required property"
+ },
+ {
+  "id": "P11",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'independent_source' was expected"
+ },
+ {
+  "id": "P12",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'failed' was expected"
+ },
+ {
+  "id": "P13",
+  "expected": "pass",
+  "got": "pass",
+  "agrees": true
+ },
+ {
+  "id": "P14",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'completed' is not one of ['succeeded', 'failed', 'indeterminate', 'missing', 'multiple']"
+ },
+ {
+  "id": "P15",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "[] should be non-empty"
+ },
+ {
+  "id": "P16",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "['legal_requirements', 'conformance_level', 'events_not_in_attachment', 'truth_of_recorded_claims'] is too short"
+ },
+ {
+  "id": "P17",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'attachment_count' is a required property"
+ },
+ {
+  "id": "P18",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'attachment_index' is a required property"
+ },
+ {
+  "id": "P19",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'time_basis' is a required property"
+ },
+ {
+  "id": "P20",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'specifications' is a required property"
+ },
+ {
+  "id": "P21",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'not_checked' was expected"
+ },
+ {
+  "id": "P22",
+  "expected": "pass",
+  "got": "pass",
+  "agrees": true
+ },
+ {
+  "id": "X28",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "{'stage_id': 'ca1', 'kind': 'change_authorisation', 'at': '2026-10-01T09:14:00Z', 'from_ref': 'o1', 'spec_digest': 'e8c6"
+ },
+ {
+  "id": "P23",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'attachment_digest' is a required property"
+ },
+ {
+  "id": "P24",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'reviews' is a required property"
+ },
+ {
+  "id": "P25",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'basis' is a required property"
+ },
+ {
+  "id": "P26",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'approved' is not one of ['shown_to_reviewer', 'via_change_only', 'via_standing_approval', 'unbound']"
+ },
+ {
+  "id": "P27",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'failed' was expected"
+ },
+ {
+  "id": "P28",
+  "expected": "pass",
+  "got": "pass",
+  "agrees": true
+ },
+ {
+  "id": "P29",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "[{'spec_index': 0, 'reached_by': 'shown_to_reviewer'}] is expected to be empty"
+ },
+ {
+  "id": "P30",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'0.3.0' was expected"
+ },
+ {
+  "id": "P31",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "{'review_stage_id': 'v1', 'shown': 'as_proposed', 'edited_by': 'owner-example-1'} should not be valid under {'required':"
+ },
+ {
+  "id": "P32",
+  "expected": "pass",
+  "got": "pass",
+  "agrees": true
+ },
+ {
+  "id": "X29",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'Ed25519' was expected"
+ },
+ {
+  "id": "X30",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'dps-signatures 0.2.0 organisation_seal' was expected"
+ },
+ {
+  "id": "X31",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "Additional properties are not allowed ('holder' was unexpected)"
+ },
+ {
+  "id": "X32",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'2026-10-01T12:00:00+02:00' does not match '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$'"
+ },
+ {
+  "id": "X33",
+  "expected": "pass",
+  "got": "pass",
+  "agrees": true
+ },
+ {
+  "id": "X34",
+  "expected": "pass",
+  "got": "pass",
+  "agrees": true
+ },
+ {
+  "id": "P33",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'trust_policy' is a required property"
+ },
+ {
+  "id": "P34",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'verified' is not one of ['failed', 'not_checked', 'unavailable']"
+ },
+ {
+  "id": "P35",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'holder' is a required property"
+ },
+ {
+  "id": "P36",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'verified' was expected"
+ },
+ {
+  "id": "P37",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'no_later_than' is a required property"
+ },
+ {
+  "id": "P38",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'independent_source' was expected"
+ },
+ {
+  "id": "P39",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "{'status': 'not_checked', 'basis': 'issuer_assertion', 'timestamp_index': 0} should not be valid under {'anyOf': [{'requ"
+ },
+ {
+  "id": "P40",
+  "expected": "pass",
+  "got": "pass",
+  "agrees": true
+ },
+ {
+  "id": "P41",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'independent_timestamp' was expected"
+ },
+ {
+  "id": "P42",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'timestamp_index' is a required property"
+ },
+ {
+  "id": "P43",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'Ed25519' was expected"
+ },
+ {
+  "id": "P44",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'key_ref' is a required property"
+ },
+ {
+  "id": "P45",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'algorithm' is a required property"
+ },
+ {
+  "id": "P46",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'key_state' is a required property"
+ },
+ {
+  "id": "P47",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'reference_source' is a required property"
+ },
+ {
+  "id": "P48",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'failed' is not one of ['verified', 'not_checked']"
+ },
+ {
+  "id": "P49",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'source_ref' is a required property"
+ },
+ {
+  "id": "P50",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'timestamp_index' is a required property"
+ },
+ {
+  "id": "P51",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'key_ref' is a required property"
+ },
+ {
+  "id": "P52",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'time_basis' is a required property"
+ },
+ {
+  "id": "P53",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'time' is a required property"
+ },
+ {
+  "id": "C01",
+  "expected": "pass",
+  "got": "pass",
+  "agrees": true
+ },
+ {
+  "id": "C02",
+  "expected": "pass",
+  "got": "pass",
+  "agrees": true
+ },
+ {
+  "id": "C03",
+  "expected": "pass",
+  "got": "pass",
+  "agrees": true
+ },
+ {
+  "id": "C04",
+  "expected": "pass",
+  "got": "pass",
+  "agrees": true
+ },
+ {
+  "id": "C05",
+  "expected": "pass",
+  "got": "pass",
+  "agrees": true
+ },
+ {
+  "id": "Y01",
+  "expected": "pass",
+  "got": "pass",
+  "agrees": true
+ },
+ {
+  "id": "Y02",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "{'stage_id': 'v1', 'kind': 'review', 'at': '2026-10-01T09:10:00Z', 'reviewer_ref': 'owner-example-1', 'shown_bounds_dige"
+ },
+ {
+  "id": "Y03",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "{'stage_id': 'v1', 'kind': 'review', 'at': '2026-10-01T09:10:00Z', 'reviewer_ref': 'owner-example-1', 'shown_view_ref': "
+ },
+ {
+  "id": "Y04",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "{'stage_id': 'sa1', 'kind': 'standing_approval', 'at': '2026-10-01T09:12:00Z', 'review_ref': 'v1', 'actor_ref': 'owner-e"
+ },
+ {
+  "id": "Y05",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "{'stage_id': 'sa1', 'kind': 'standing_approval', 'at': '2026-10-01T09:12:00Z', 'review_ref': 'v1', 'actor_ref': 'owner-e"
+ },
+ {
+  "id": "Y06",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "{'stage_id': 'sa1', 'kind': 'standing_approval', 'at': '2026-10-01T09:12:00Z', 'review_ref': 'v1', 'actor_ref': 'owner-e"
+ },
+ {
+  "id": "Y07",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "{'stage_id': 'sa1', 'kind': 'standing_approval', 'at': '2026-10-01T09:12:00Z', 'review_ref': 'v1', 'actor_ref': 'owner-e"
+ },
+ {
+  "id": "Y08",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "{'stage_id': 'sa1', 'kind': 'standing_approval', 'at': '2026-10-01T09:12:00Z', 'review_ref': 'v1', 'actor_ref': 'owner-e"
+ },
+ {
+  "id": "Y09",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "{'stage_id': 'rv1', 'kind': 'standing_revocation', 'at': '2026-10-01T11:00:00Z', 'revokes_ref': 'sa1', 'actor_ref': 'own"
+ },
+ {
+  "id": "Y10",
+  "expected": "pass",
+  "got": "pass",
+  "agrees": true
+ },
+ {
+  "id": "Y11",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "[{'stage_id': 'v1', 'kind': 'review', 'at': '2026-10-01T09:10:00Z', 'reviewer_ref': 'owner-example-1', 'shown_bounds_dig"
+ },
+ {
+  "id": "Y12",
+  "expected": "pass",
+  "got": "pass",
+  "agrees": true
+ },
+ {
+  "id": "Y13",
+  "expected": "pass",
+  "got": "pass",
+  "agrees": true
+ },
+ {
+  "id": "Y14",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'max_requests' is a required property"
+ },
+ {
+  "id": "Y15",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'verified' is not one of ['not_checked', 'failed']"
+ },
+ {
+  "id": "Y16",
+  "expected": "pass",
+  "got": "pass",
+  "agrees": true
+ },
+ {
+  "id": "Y17",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'not_revoked' is not one of ['recorded', 'none_recorded']"
+ },
+ {
+  "id": "Y18",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "{'stage_id': 'sa1', 'bounds': {'status': 'unavailable'}, 'requests_recorded': 2, 'valid_from': '2026-10-01T09:00:00Z', '"
+ },
+ {
+  "id": "Y19",
+  "expected": "pass",
+  "got": "pass",
+  "agrees": true
+ },
+ {
+  "id": "Y20",
+  "expected": "fail",
+  "got": "fail",
+  "agrees": true,
+  "note": "'verified' is not one of ['not_checked', 'failed']"
+ }
+]
