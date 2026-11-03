@@ -138,6 +138,8 @@ Twelve changes turn today's code into the surface above. Two are 0.13 release bl
 | U21 | `container_check() -> ContainerCheck` | Half of question one is reachable only through a report | Done (0.14) |
 | **U26 (r2)** | `empty_container` diagnosis; the verdict question raised as core clarification **C-8** (see below) | An empty file verifies `chain_ok` with no diagnosis and the report says `partial`, which means "intact, unanchored" — there is nothing intact | Done (0.14): the diagnosis; C-8 states what the unchanged answer means |
 | U18 | `verify_segment_set(manifest_path)` — a function, not a reader method (decision 6) | With rotation, a single segment reports a violation by design (D1); only the set can be called whole | Done (0.14), in `palimpsests.audit.segment_set`: `consistent` and `complete` kept apart |
+| U28 | `verify()` reads references in place on a cold reader: the reference, the target's header hash and its kind; nothing decoded, nothing kept | Measured by Auditor on 0.13.1: on an agent's log every tool result references its call, so `verify()` decoded and kept the whole chain — 32.5 s and 2.47 GB at a million records | Done (0.14) |
+| U29 | `record_fields_at(index) -> RecordFields` (`kind`, `source`, `outcome` and their names), read in place, equal to `record_at(index)` on every record | Auditor's filters by kind, mark and outcome had no way to read a body field without decoding the record — 21.9 s and 2.04 GB at a million | Done (0.14) |
 | **U27 (r2)** | `docs/WRITER-SURFACE.md`: the writer's own contract for runtime integrators (serve, hooks, embedders) | The writer is experimental until 1.0 and has two audiences — runtime integrators and consumers' test suites (decision 5) | Before 1.0 |
 
 ### The empty file — core clarification C-8 (r2)
@@ -188,13 +190,14 @@ Ordered by what each step unblocks. "PR" means one reviewable pull request.
 6. U26 — `empty_container`; C-8. **Done (0.14)** — C-8 records the unchanged answer and its meaning (see above).
 7. U21 — `container_check()`. **Done (0.14).** The report's `container` section is now this object.
 8. U18 — `verify_segment_set` (0.14). **Done (0.14)**, as its own module `audit.segment_set`.
+9. U28 + U29 — found by Auditor while moving onto the 0.13 surface (its `UPSTREAM-FINDINGS-0_13.md`): `verify()` on an agent's log, and filtering without decoding. **Done (0.14)**, one PR.
 
 The U track to 1.0 is complete except U27, the writer's contract. Waiting for the report's `/2`: the violation codes (U24), and whether an empty container takes a stronger verdict (C-8).
 
 **Before 1.0**
 
-9. U27 — the writer's contract.
-10. Rules 1–3 and 8 take effect; the stability class in `INTEGRATION-SURFACE.md` changes from the pre-1.0 "public" to the 1.0 rules.
+10. U27 — the writer's contract.
+11. Rules 1–3 and 8 take effect; the stability class in `INTEGRATION-SURFACE.md` changes from the pre-1.0 "public" to the 1.0 rules.
 
 **Auditor side** (unchanged from r1): C-13 (guidance for the new patterns and codes, continuation fields, `origin_state_at`) and C-14 (tool outcome on the result card), after U19 lands; then the import rule in `check_no_wire_parsing.sh` and the canary against Palimpsests `main`.
 

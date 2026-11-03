@@ -125,7 +125,8 @@ def test_mixed_callers_on_a_cold_reader_agree(tmp_path):
 def test_lock_is_reentrant_for_the_holder(tmp_path):
     r = AuditReader.open(_chain(tmp_path))
     with r._lock:
-        ver = r.verify()  # verify → referential pass → _record_at, same thread
+        ver = r.verify()  # verify takes the lock again, same thread
         assert ver.chain.chain_ok
+        r.record_at(1)  # _record_at takes it again too (verify no longer decodes, U28)
         assert r._partial  # the sparse cache filled under the held lock
     r.close()

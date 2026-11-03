@@ -190,15 +190,14 @@ def test_decode_count_scales_with_references_not_chain_length(tmp_path):
     ver = r.verify()
     assert ver.chain.chain_ok
     assert [i.code for i in ver.advisory.items] == ["anchor_never_written"]  # header-level only
-    # the candidate (referencer and ack target) and the ack itself —
-    # nothing among the 600 bystanders
-    assert set(r._partial) == {cand_seq, cand_seq + 301}
+    # since U28 the references are read in place: verify() decodes nothing —
+    # not the 600 bystanders, and not the candidate or the ack either
+    assert r._partial == {}
     assert r._decoded is None
-    # and the report path reuses what verify() decoded rather than decoding again
+    # the report's safety section decodes the SAFETY records, and only them
     from palimpsests.audit.report import _safety_section
 
-    before = dict(r._partial)
     section = _safety_section(r)
     assert section["count"] == 2 and section["unacknowledged_candidates"] == 0
-    assert r._partial == before
+    assert set(r._partial) == {cand_seq, cand_seq + 301}
     r.close()

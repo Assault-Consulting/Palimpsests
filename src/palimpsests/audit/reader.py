@@ -163,6 +163,7 @@ __all__ = [
     "ManifestReading",
     "ContainerCheck",
     "VerifyResult",
+    "RecordFields",
     "Advisory",
     "AdvisoryItem",
     # records
@@ -460,6 +461,28 @@ class _HeaderSeq:
             pos += 4 + ln
         return False
 
+    def body_tlv_spans(self, index: int) -> list[tuple[int, int, int]] | None:
+        """The body's TLVs as ``(type, value_offset, length)``, read in place.
+
+        ``None`` exactly when ``decode_tlvs`` would reject the body — a
+        truncated item, or one overrunning the body — so a caller deciding
+        from the spans decides as ``decode_record`` does. An empty body is
+        an empty list.
+        """
+        data = self._data
+        pos, end = self.body_span(index)
+        out: list[tuple[int, int, int]] = []
+        while pos < end:
+            if pos + 4 > end:
+                return None
+            t, ln = struct.unpack_from("<HH", data, pos)
+            pos += 4
+            if pos + ln > end:
+                return None
+            out.append((t, pos, ln))
+            pos += ln
+        return out
+
     def fields_at(self, index: int) -> _HeaderFields | None:
         """:func:`_header_fields` read in place — same accept/reject rule."""
         off, hlen = self._off[index], self._hlen[index]
@@ -658,6 +681,24 @@ class ContainerCheck:
     bytes_parsed: int  # bytes of whole records walked
     bytes_total: int  # bytes in the file
     body_digest_mismatches: list[int]  # seqs whose body does not match its header's digest
+
+
+@dataclass(frozen=True)
+class RecordFields:
+    """A record's body fields a consumer filters on, without decoding it (U29).
+
+    Each field means exactly what the same field of :class:`DecodedRecord`
+    means, ``None`` included: ``kind is None`` — the record carries no kind;
+    ``kind`` set and ``kind_name`` ``None`` — a kind this build does not know.
+    ``record_fields_at(i)`` and ``record_at(i)`` agree on every record.
+    """
+
+    kind: int | None
+    kind_name: str | None
+    source: int | None
+    source_name: str | None
+    outcome: int | None
+    outcome_name: str | None
 
 
 @dataclass(frozen=True)
@@ -946,9 +987,15 @@ class AuditReader:
                 continue
             if probed not in _REFERENCING_KINDS:
                 continue
-            # phase 3 — decode the referencing record; its target is
-            # decoded on demand inside the check, through ``by_seq``
-            items.extend(self._check_reference(by_seq.at(i), by_seq))
+            if self._decoded is None:
+                # phase 3, cold reader — read in place, decode nothing (U28).
+                # On an agent's log every TOOL_RESULT references its call,
+                # so decoding both halves decoded — and, through the sparse
+                # cache, kept — the whole chain.
+                items.extend(self._check_reference_in_place(i, pos_by_seq))
+            else:
+                # phase 3, warm reader — the decoded records are at hand
+                items.extend(self._check_reference(by_seq.at(i), by_seq))
         items.extend(self._check_continuations(continuations))
         return items
 
@@ -1125,6 +1172,67 @@ class AuditReader:
                     f"{ref_seq}, which is not a TOOL_CALL",
                 )
             ]
+        return []
+
+    def _check_reference_in_place(
+        self, index: int, pos_by_seq: dict[int, int]
+    ) -> list[AdvisoryItem]:
+        """:meth:`_check_reference`, from bytes read in place (U28).
+
+        The same items for the same chain: the reference is the last
+        ``EVT_REF_SEQ`` / ``EVT_REF_HASH`` in the body (``dict`` keeps the
+        last), the target is resolved through the same seq map, its hash is
+        the hash of its header bytes, and its kind is read by the rules
+        :func:`decode_record` applies. A body ``decode_record`` would not
+        parse yields nothing, as there. Held by a differential test against
+        the decoded path on a warm reader.
+        """
+        headers = self._headers
+        fields, spans = self._fields_in_place(index)
+        if spans is None:
+            return []
+        data = self._data
+        raw_seq = raw_hash = None
+        for t, off, ln in spans:
+            if t == EVT_REF_SEQ:
+                raw_seq = bytes(data[off : off + ln])
+            elif t == EVT_REF_HASH:
+                raw_hash = bytes(data[off : off + ln])
+        if raw_seq is None or len(raw_seq) != 8 or raw_hash is None:
+            return []
+        (ref_seq,) = struct.unpack("<Q", raw_seq)
+        seq = headers.seq_at(index)
+        start = headers._off[index]
+        boot = bytes(data[start + 20 : start + 36])
+        who = fields.kind_name or f"kind {fields.kind}"
+        t_index = pos_by_seq.get(ref_seq)
+        if t_index is None:
+            return [AdvisoryItem(
+                "reference_unresolved", seq, boot,
+                f"{who} at seq {seq} references seq {ref_seq}, which is not in the chain",
+            )]
+        if _record_hash(headers[t_index]) != raw_hash:
+            return [AdvisoryItem(
+                "reference_hash_mismatch", seq, boot,
+                f"{who} at seq {seq} references seq {ref_seq}, but the referenced "
+                "record's hash differs from the bound EVT_REF_HASH",
+            )]
+        target_kind = self._fields_in_place(t_index)[0].kind
+        if fields.kind == KIND_OVERSIGHT_ACK and target_kind != KIND_INCIDENT_CANDIDATE:
+            return [AdvisoryItem(
+                "ack_target_not_a_candidate", seq, boot,
+                f"OVERSIGHT_ACK at seq {seq} resolves (hash-bound) to seq "
+                f"{ref_seq}, which is not an INCIDENT_CANDIDATE",
+            )]
+        if (
+            fields.kind in (KIND_TOOL_RESULT, KIND_GUARD_TOOL_LOOP_LIMIT)
+            and target_kind != KIND_TOOL_CALL
+        ):
+            return [AdvisoryItem(
+                "tool_target_not_a_call", seq, boot,
+                f"{who} at seq {seq} resolves (hash-bound) to seq "
+                f"{ref_seq}, which is not a TOOL_CALL",
+            )]
         return []
 
     def _check_shred_targets(
@@ -1510,6 +1618,69 @@ class AuditReader:
             return Header.decode(self._headers[index])
         except MalformedRecord:
             return None
+
+    def record_fields_at(self, index: int) -> RecordFields:
+        """``kind``, ``source`` and ``outcome`` of the record at ``index``,
+        with their names, without decoding the record (U29).
+
+        Read from the header and the body's TLVs in place, by the rules
+        :func:`decode_record` applies — so every field equals the same field
+        of ``record_at(index)``, ``None`` included. Nothing is cached: a
+        consumer filtering a whole file by kind pays a scan, not a decode,
+        and leaves no decoded records behind.
+
+        Raises :class:`IndexError` outside ``range(record_count)``, as
+        :meth:`record_at` does.
+        """
+        if not isinstance(index, int) or isinstance(index, bool):
+            raise TypeError(f"index must be an int, not {type(index).__name__}")
+        if not 0 <= index < len(self._headers):
+            raise IndexError(
+                f"record index {index} is outside this file's 0..{len(self._headers) - 1}"
+            )
+        cached = self._decoded
+        dr = cached[index] if cached is not None else self._partial.get(index)
+        if dr is not None:
+            return RecordFields(dr.kind, dr.kind_name, dr.source, dr.source_name,
+                                dr.outcome, dr.outcome_name)
+        return self._fields_in_place(index)[0]
+
+    def _fields_in_place(
+        self, index: int
+    ) -> tuple[RecordFields, list[tuple[int, int, int]] | None]:
+        """The record's fields by :func:`decode_record`'s rules, read in place,
+        and its body TLV spans — ``None`` where ``decode_record`` would have
+        no ``body_tlvs`` (an undecodable header, an encrypted or empty or
+        malformed body)."""
+        none = RecordFields(None, None, None, None, None, None)
+        headers = self._headers
+        hf = headers.fields_at(index)
+        start, end = headers.body_span(index)
+        if hf is None or headers.key_id_at(index) != 0 or end <= start:
+            return none, None
+        spans = headers.body_tlv_spans(index)
+        if spans is None or hf.record_type not in _KIND_BEARING:
+            return none, spans
+        data = self._data
+        kind = source = outcome = None
+        for t, off, ln in spans:
+            if ln < 2:
+                continue
+            if kind is None and t == EVT_KIND:
+                kind = struct.unpack_from("<H", data, off)[0]
+            elif source is None and t == EVT_SOURCE:
+                source = struct.unpack_from("<H", data, off)[0]
+            elif outcome is None and t == EVT_OUTCOME:
+                outcome = struct.unpack_from("<H", data, off)[0]
+        if kind in _SOURCE_BEARING_KINDS and source is None:
+            source = SOURCE_PARSED_FROM_WIRE  # absent means 0 (r5)
+        if kind != KIND_TOOL_RESULT:
+            outcome = None
+        return RecordFields(
+            kind, _KIND_NAMES.get(kind) if kind is not None else None,
+            source, _SOURCE_NAMES.get(source) if source is not None else None,
+            outcome, _OUTCOME_NAMES.get(outcome) if outcome is not None else None,
+        ), spans
 
     # ── header-only access (U14 PR-6) ───────────────────────────────────
     #

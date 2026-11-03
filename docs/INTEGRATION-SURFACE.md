@@ -14,7 +14,7 @@ it is not promised.
 
 | # | Channel | Surface | Stability |
 |---|---------|---------|-----------|
-| 1 | Reading | `palimpsests.audit.reader.AuditReader` (`open`, `verify`, `records`, `spans`, `boots`, `origin_at`, `unloaded_at`, `acknowledged_candidates`, `shredded_targets`; sparse access `record_count`, `record_at`, `record_by_seq`, `header_at` since 0.13; `Verification.manifest` since 0.13; `container_check()` since 0.14); a segmented chain as one set: `palimpsests.audit.segment_set.verify_segment_set` (since 0.14) | public (since 0.8) |
+| 1 | Reading | `palimpsests.audit.reader.AuditReader` (`open`, `verify`, `records`, `spans`, `boots`, `origin_at`, `unloaded_at`, `acknowledged_candidates`, `shredded_targets`; sparse access `record_count`, `record_at`, `record_by_seq`, `header_at` since 0.13; `Verification.manifest` since 0.13; `container_check()`, `record_fields_at()` since 0.14); a segmented chain as one set: `palimpsests.audit.segment_set.verify_segment_set` (since 0.14) | public (since 0.8) |
 | 2 | Report | `palimpsests.audit.report.build_report`, `derive_verdict`, format `pala-verification-report/1` | public (since 0.10) |
 | 3 | Proofs | `palimpsests.audit.pala.proofs.inclusion_proof`, `range_proofs`; prefix consistency `chain_root`, `consistency_proof`, `ConsistencyProof`, format `pala-consistency-proof/1` (since 0.12) | public (since 0.10) |
 | 4 | Bundle | `palimpsests.audit.pala.bundle.assemble_bundle`, format `pala-bundle/1` | public (since 0.10) |
@@ -149,7 +149,10 @@ math) should be segmented before interactive use. A streaming reader
 is backlog, not promise.
 
 A consumer that needs one record, a page of records or a count does not
-have to pay for the whole decode: `record_count`, `record_at(index)`,
+have to pay for the whole decode. A consumer that filters by kind, evidence
+mark or tool outcome reads `record_fields_at(index)` (since 0.14): the same
+values `record_at(index)` would give, read in place, nothing decoded or
+kept. And: `record_count`, `record_at(index)`,
 `record_by_seq(seq)` and `header_at(index)` read the index the walk built
 at open and decode only the record asked for. `records()` still
 materialises every record before its first item; use it for a full walk,
@@ -161,6 +164,16 @@ that set the origin asked about — and answers from that. Measured at
 1,000,002 records / 245 MB: the first origin question 2.7 s, each after it
 under a millisecond, `shredded_targets()` 0.6 s, against 20.6 s and
 1.99 GB peak RSS for the full decode they used to pay.
+
+**`verify()` on an agent's log.** The referential pass was bounded in 0.12
+by the number of references — which on an agent's log is about half the
+records, since every tool result references its call. Measured by Auditor on
+0.13.1: one million records of tool loops, `verify()` 32.5 s and 2.47 GB,
+every record decoded and kept. Since 0.14 a cold reader reads references in
+place — the reference, the target's header hash and its kind — and decodes
+nothing: on 200,000 records of tool loops, 5.8 s / 513 MB before, 1.7 s /
+97 MB after, no record kept. A reader whose chain is already decoded keeps
+the decoded path, and the two give the same advisories (tested).
 
 Measured at that boundary in 0.10, before the referential pass was
 bounded (0.12: it now decodes only the records that carry a reference
