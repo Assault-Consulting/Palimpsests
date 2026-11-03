@@ -1,0 +1,847 @@
+{
+ "release-decision": {
+  "schema_errors": {
+   "attachment": [],
+   "record": [
+    "partial: mode-drift not among the allowed inputs; that member's subschema left unchecked/layer-4-attestation.schema.json"
+   ]
+  },
+  "action_binding": {
+   "structural_validity": "verified",
+   "specification_digests": [
+    "verified"
+   ],
+   "specification_statements": [
+    "verified"
+   ],
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "identity_assurance": "not_checked",
+   "authority_assurance": "not_checked",
+   "time_assurance": "not_checked",
+   "issuer_signature": "not_checked",
+   "legal_signature": "not_checked",
+   "execution_state": "attempted",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ]
+   ],
+   "executed": [
+    [
+     0,
+     "shown_to_reviewer"
+    ]
+   ],
+   "reviews": [
+    [
+     "v1",
+     "as_proposed",
+     null
+    ]
+   ],
+   "trust_policy": "verified",
+   "attachment_digest": "5086c7674db770c6d01592ba697722a2fb468c16d1d5ab9226a7b5217c4bc1a8",
+   "report_schema_errors": []
+  },
+  "findings": {
+   "issuer_signature": [
+    "the attachment carries no signature"
+   ],
+   "time_assurance": [
+    "no verified issuer signature"
+   ]
+  },
+  "policy_used": "interop/aqta/approval-record/out/trust-policy.json (urn:isoluce:trust-policy:verifier-1): the release decision names none"
+ },
+ "aqta": {
+  "schema_errors": {
+   "attachment": [],
+   "record": [
+    "partial: mode-drift not among the allowed inputs; that member's subschema left unchecked/layer-4-attestation.schema.json"
+   ],
+   "signatures_attachment": [],
+   "trust_policy": []
+  },
+  "action_binding": {
+   "structural_validity": "verified",
+   "specification_digests": [
+    "verified"
+   ],
+   "specification_statements": [
+    "verified"
+   ],
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "identity_assurance": "not_checked",
+   "authority_assurance": "not_checked",
+   "time_assurance": "not_checked",
+   "issuer_signature": "not_checked",
+   "legal_signature": "not_checked",
+   "execution_state": "attempted",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ]
+   ],
+   "executed": [
+    [
+     0,
+     "shown_to_reviewer"
+    ]
+   ],
+   "reviews": [
+    [
+     "v1",
+     "as_proposed",
+     null
+    ]
+   ],
+   "trust_policy": "verified",
+   "attachment_digest": "ae40fd147808b9f61e02d631de691fac4bbf69c9d197e714b3158614e9fbfada",
+   "report_schema_errors": []
+  },
+  "action_binding_findings": {
+   "issuer_signature": [
+    "the attachment carries no signature"
+   ],
+   "time_assurance": [
+    "no verified issuer signature"
+   ]
+  },
+  "person_approval": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "identity": "verified",
+   "trust_policy": "verified",
+   "key_state_time_basis": "stated_time",
+   "key_state_time": "2026-10-29T16:12:00Z",
+   "identity_consistency": "consistent",
+   "identity_holder": "release-manager-claims",
+   "identity_issuer_named": "release-manager-claims",
+   "identity_source_ref": "urn:isoluce:directory:people"
+  },
+  "person_approval_findings": {},
+  "facts_outside_the_texts": {
+   "specification.bytes.json is the specification's bytes": true,
+   "review-view.txt hashes to the review's shown_view_digest": true,
+   "policy.json hashes to the specification's policy_version": true,
+   "arguments.canonical.json hashes to the specification's args_hash": true,
+   "approval.canonical.json read as JSON equals the signed assertion": true,
+   "record seal_hash = SHA-256 with the seal_hash value replaced by 64 zeros (the AB fixtures' convention)": true
+  }
+ },
+ "negatives": {
+  "N1": {
+   "action_binding": {
+    "structural_validity": "verified",
+    "specification_digests": [
+     "verified",
+     "verified"
+    ],
+    "specification_statements": [
+     "verified",
+     "verified"
+    ],
+    "record_statements": "verified",
+    "action_binding": "failed",
+    "stage_order": "verified",
+    "authorisation_recheck": "verified",
+    "observed_results": "verified",
+    "rationale_provenance": "verified",
+    "identity_assurance": "not_checked",
+    "authority_assurance": "not_checked",
+    "time_assurance": "not_checked",
+    "issuer_signature": "not_checked",
+    "legal_signature": "not_checked",
+    "execution_state": "attempted",
+    "observed": [
+     [
+      "x1",
+      "succeeded",
+      "target_response"
+     ]
+    ],
+    "executed": [
+     [
+      1,
+      "unbound"
+     ]
+    ],
+    "reviews": [
+     [
+      "v1",
+      "as_proposed",
+      null
+     ]
+    ],
+    "trust_policy": "verified",
+    "attachment_digest": "a6bc7b3690e747f34ce3d44e0fd147ce5e7f8d585381fee33626e192c539b6b9",
+    "report_schema_errors": []
+   },
+   "action_binding_findings": {
+    "action_binding": [
+     "request q1 names a specification other than the one approved",
+     "specification 1 was executed with no approval, change or standing approval binding it"
+    ],
+    "issuer_signature": [
+     "the attachment carries no signature"
+    ],
+    "time_assurance": [
+     "no verified issuer signature"
+    ]
+   },
+   "person_approval": {
+    "status": "verified",
+    "signature": "verified",
+    "subject": "verified",
+    "key_state": "verified",
+    "identity": "verified",
+    "trust_policy": "verified",
+    "key_state_time_basis": "stated_time",
+    "key_state_time": "2026-10-29T16:12:00Z",
+    "identity_consistency": "consistent",
+    "identity_holder": "release-manager-claims",
+    "identity_issuer_named": "release-manager-claims",
+    "identity_source_ref": "urn:isoluce:directory:people"
+   },
+   "person_approval_findings": {},
+   "values_chosen": [
+    "the executed specification is the base specification's bytes with pull_number \"4522\" and args_hash recomputed as the SHA-256 of arguments.canonical.json with \"4522\" (e71fe8dcd6041aa538a767f53000d949a269c23e1c41b1cdace2395c6b418ddc)",
+    "added as action_specifications[1], with the base summary",
+    "q1 and x1 name it; the action record is not changed, since no text of the two extensions reads it",
+    "attachment bytes: compact JSON, UTF-8"
+   ]
+  },
+  "N2": {
+   "action_binding": {
+    "structural_validity": "verified",
+    "specification_digests": [
+     "verified"
+    ],
+    "specification_statements": [
+     "verified"
+    ],
+    "record_statements": "verified",
+    "action_binding": "failed",
+    "stage_order": "verified",
+    "authorisation_recheck": "verified",
+    "observed_results": "verified",
+    "rationale_provenance": "verified",
+    "identity_assurance": "not_checked",
+    "authority_assurance": "not_checked",
+    "time_assurance": "not_checked",
+    "issuer_signature": "not_checked",
+    "legal_signature": "not_checked",
+    "execution_state": "attempted",
+    "observed": [
+     [
+      "x1",
+      "succeeded",
+      "target_response"
+     ],
+     [
+      "x2",
+      "succeeded",
+      "target_response"
+     ]
+    ],
+    "executed": [
+     [
+      0,
+      "shown_to_reviewer"
+     ]
+    ],
+    "reviews": [
+     [
+      "v1",
+      "as_proposed",
+      null
+     ]
+    ],
+    "trust_policy": "verified",
+    "attachment_digest": "184ffebdcb5b52fd5fec99e8b8e38fc03596b2ca414fb3cebe966c412a521db5",
+    "report_schema_errors": []
+   },
+   "action_binding_findings": {
+    "action_binding": [
+     "outcome o1 covers 2 requests, more than the 1 it states",
+     "specification 972eea738a43… is requested 2 times, more than the largest request_limit (1)"
+    ],
+    "issuer_signature": [
+     "the attachment carries no signature"
+    ],
+    "time_assurance": [
+     "no verified issuer signature"
+    ]
+   },
+   "person_approval": {
+    "status": "verified",
+    "signature": "verified",
+    "subject": "verified",
+    "key_state": "verified",
+    "identity": "verified",
+    "trust_policy": "verified",
+    "key_state_time_basis": "stated_time",
+    "key_state_time": "2026-10-29T16:12:00Z",
+    "identity_consistency": "consistent",
+    "identity_holder": "release-manager-claims",
+    "identity_issuer_named": "release-manager-claims",
+    "identity_source_ref": "urn:isoluce:directory:people"
+   },
+   "person_approval_findings": {},
+   "values_chosen": [
+    "q2/c2/x2/r2 at 16:14:00, 16:14:10, 16:14:15, 16:14:30Z; request_id urn:aqta:action:n2-second; same requester, executor and specification as q1/x1; r2 succeeded, target_response"
+   ]
+  },
+  "N3": {
+   "action_binding": {
+    "structural_validity": "verified",
+    "specification_digests": [
+     "verified"
+    ],
+    "specification_statements": [
+     "verified"
+    ],
+    "record_statements": "verified",
+    "action_binding": "verified",
+    "stage_order": "verified",
+    "authorisation_recheck": "verified",
+    "observed_results": "verified",
+    "rationale_provenance": "verified",
+    "identity_assurance": "not_checked",
+    "authority_assurance": "not_checked",
+    "time_assurance": "not_checked",
+    "issuer_signature": "not_checked",
+    "legal_signature": "not_checked",
+    "execution_state": "attempted",
+    "observed": [
+     [
+      "x1",
+      "succeeded",
+      "target_response"
+     ]
+    ],
+    "executed": [
+     [
+      0,
+      "shown_to_reviewer"
+     ]
+    ],
+    "reviews": [
+     [
+      "v1",
+      "as_proposed",
+      null
+     ]
+    ],
+    "trust_policy": "verified",
+    "attachment_digest": "ae40fd147808b9f61e02d631de691fac4bbf69c9d197e714b3158614e9fbfada",
+    "report_schema_errors": []
+   },
+   "action_binding_findings": {
+    "issuer_signature": [
+     "the attachment carries no signature"
+    ],
+    "time_assurance": [
+     "no verified issuer signature"
+    ]
+   },
+   "person_approval": {
+    "status": "failed",
+    "signature": "failed",
+    "subject": "verified",
+    "key_state": "not_checked",
+    "identity": "not_checked",
+    "trust_policy": "verified",
+    "identity_issuer_named": "release-manager-claims"
+   },
+   "person_approval_findings": {
+    "signature": [
+     "the policy does not list the key 'someone-else-key-1'"
+    ],
+    "key_state": [
+     "the signature is not verified"
+    ],
+    "identity": [
+     "the policy does not list the key"
+    ]
+   },
+   "values_chosen": [
+    "key: Ed25519, seed SHA-256('dps-reading-1b test key someone-else-key-1') (this reading's own test key), public key f11e578c1d7139adeb3a1e13f45237325a9ba4f9cf5a8872b000d1681df921a6",
+    "the assertion is the base approval with key_ref someone-else-key-1, re-signed over the bytes built with that key_ref; signed_at unchanged"
+   ]
+  },
+  "N3b": {
+   "action_binding": {
+    "structural_validity": "verified",
+    "specification_digests": [
+     "verified"
+    ],
+    "specification_statements": [
+     "verified"
+    ],
+    "record_statements": "verified",
+    "action_binding": "verified",
+    "stage_order": "verified",
+    "authorisation_recheck": "verified",
+    "observed_results": "verified",
+    "rationale_provenance": "verified",
+    "identity_assurance": "not_checked",
+    "authority_assurance": "not_checked",
+    "time_assurance": "not_checked",
+    "issuer_signature": "not_checked",
+    "legal_signature": "not_checked",
+    "execution_state": "attempted",
+    "observed": [
+     [
+      "x1",
+      "succeeded",
+      "target_response"
+     ]
+    ],
+    "executed": [
+     [
+      0,
+      "shown_to_reviewer"
+     ]
+    ],
+    "reviews": [
+     [
+      "v1",
+      "as_proposed",
+      null
+     ]
+    ],
+    "trust_policy": "verified",
+    "attachment_digest": "ae40fd147808b9f61e02d631de691fac4bbf69c9d197e714b3158614e9fbfada",
+    "report_schema_errors": []
+   },
+   "action_binding_findings": {
+    "issuer_signature": [
+     "the attachment carries no signature"
+    ],
+    "time_assurance": [
+     "no verified issuer signature"
+    ]
+   },
+   "person_approval": {
+    "status": "failed",
+    "signature": "failed",
+    "subject": "verified",
+    "key_state": "not_checked",
+    "identity": "failed",
+    "trust_policy": "verified",
+    "identity_holder": "Someone else (test only)",
+    "identity_issuer_named": "release-manager-claims"
+   },
+   "person_approval_findings": {
+    "signature": [
+     "the key is in role organisation, not person"
+    ],
+    "key_state": [
+     "the signature is not verified"
+    ],
+    "identity": [
+     "the policy binds the key to no person (role organisation)"
+    ]
+   },
+   "values_chosen": [
+    "the N3 signature; the policy adds someone-else-key-1, holder \"Someone else (test only)\", role organisation, Ed25519, valid 2026-09-01 to 2027-08-31, no identity source"
+   ]
+  },
+  "N4": {
+   "action_binding": {
+    "structural_validity": "verified",
+    "specification_digests": [
+     "verified"
+    ],
+    "specification_statements": [
+     "verified"
+    ],
+    "record_statements": "verified",
+    "action_binding": "verified",
+    "stage_order": "verified",
+    "authorisation_recheck": "verified",
+    "observed_results": "verified",
+    "rationale_provenance": "verified",
+    "identity_assurance": "not_checked",
+    "authority_assurance": "not_checked",
+    "time_assurance": "not_checked",
+    "issuer_signature": "not_checked",
+    "legal_signature": "not_checked",
+    "execution_state": "attempted",
+    "observed": [
+     [
+      "x1",
+      "succeeded",
+      "target_response"
+     ]
+    ],
+    "executed": [
+     [
+      0,
+      "shown_to_reviewer"
+     ]
+    ],
+    "reviews": [
+     [
+      "v1",
+      "as_proposed",
+      null
+     ]
+    ],
+    "trust_policy": "verified",
+    "attachment_digest": "ae40fd147808b9f61e02d631de691fac4bbf69c9d197e714b3158614e9fbfada",
+    "report_schema_errors": []
+   },
+   "action_binding_findings": {
+    "issuer_signature": [
+     "the attachment carries no signature"
+    ],
+    "time_assurance": [
+     "no verified issuer signature"
+    ]
+   },
+   "person_approval": {
+    "status": "verified",
+    "signature": "verified",
+    "subject": "verified",
+    "key_state": "verified",
+    "identity": "verified",
+    "trust_policy": "verified",
+    "key_state_time_basis": "stated_time",
+    "key_state_time": "2026-10-29T16:12:00Z",
+    "identity_consistency": "consistent",
+    "identity_holder": "release-manager-claims",
+    "identity_issuer_named": "release-manager-claims",
+    "identity_source_ref": "urn:isoluce:directory:people"
+   },
+   "person_approval_findings": {},
+   "facts_outside_the_texts": {
+    "policy held hashes to policy_version (outside the texts)": false
+   },
+   "values_chosen": [
+    "policy.json with max_approval_age_seconds 86400 in place of 900, nothing else changed (digest 35b33df0e23ee150c9b8fb5f884a8dfaa66cc57bcd8d99fe3c379375a56195e4)",
+    "no text of the two extensions defines a check that reads the issuer's policy document: the dimensions are those of the base; the digest comparison is given as a fact outside the texts"
+   ]
+  },
+  "N5": {
+   "action_binding": {
+    "structural_validity": "verified",
+    "specification_digests": [
+     "verified"
+    ],
+    "specification_statements": [
+     "verified"
+    ],
+    "record_statements": "verified",
+    "action_binding": "verified",
+    "stage_order": "verified",
+    "authorisation_recheck": "verified",
+    "observed_results": "verified",
+    "rationale_provenance": "verified",
+    "identity_assurance": "not_checked",
+    "authority_assurance": "not_checked",
+    "time_assurance": "not_checked",
+    "issuer_signature": "not_checked",
+    "legal_signature": "not_checked",
+    "execution_state": "attempted",
+    "observed": [
+     [
+      "x1",
+      "succeeded",
+      "target_response"
+     ]
+    ],
+    "executed": [
+     [
+      0,
+      "shown_to_reviewer"
+     ]
+    ],
+    "reviews": [
+     [
+      "v1",
+      "as_proposed",
+      null
+     ]
+    ],
+    "trust_policy": "verified",
+    "attachment_digest": "ae40fd147808b9f61e02d631de691fac4bbf69c9d197e714b3158614e9fbfada",
+    "report_schema_errors": []
+   },
+   "action_binding_findings": {
+    "issuer_signature": [
+     "the attachment carries no signature"
+    ],
+    "time_assurance": [
+     "no verified issuer signature"
+    ]
+   },
+   "person_approval": {
+    "status": "verified",
+    "signature": "verified",
+    "subject": "verified",
+    "key_state": "verified",
+    "identity": "verified",
+    "trust_policy": "verified",
+    "key_state_time_basis": "stated_time",
+    "key_state_time": "2026-10-29T16:12:00Z",
+    "identity_consistency": "consistent",
+    "identity_holder": "release-manager-claims",
+    "identity_issuer_named": "release-manager-claims",
+    "identity_source_ref": "urn:isoluce:directory:people"
+   },
+   "person_approval_findings": {},
+   "facts_outside_the_texts": {
+    "policy held": "none"
+   },
+   "values_chosen": [
+    "no policy document held; nothing else changed",
+    "as N4: no dimension of the texts reads it"
+   ]
+  },
+  "N6": {
+   "action_binding": {
+    "structural_validity": "verified",
+    "specification_digests": [
+     "verified"
+    ],
+    "specification_statements": [
+     "verified"
+    ],
+    "record_statements": "verified",
+    "action_binding": "verified",
+    "stage_order": "verified",
+    "authorisation_recheck": "verified",
+    "observed_results": "verified",
+    "rationale_provenance": "verified",
+    "identity_assurance": "not_checked",
+    "authority_assurance": "not_checked",
+    "time_assurance": "not_checked",
+    "issuer_signature": "not_checked",
+    "legal_signature": "not_checked",
+    "execution_state": "attempted",
+    "observed": [
+     [
+      "x1",
+      "succeeded",
+      "target_response"
+     ]
+    ],
+    "executed": [
+     [
+      0,
+      "shown_to_reviewer"
+     ]
+    ],
+    "reviews": [
+     [
+      "v1",
+      "as_proposed",
+      null
+     ]
+    ],
+    "trust_policy": "verified",
+    "attachment_digest": "555015800da8abe847a866d04041f80fd33a170c39ff8a4de1d760e9d1a7d937",
+    "report_schema_errors": []
+   },
+   "action_binding_findings": {
+    "issuer_signature": [
+     "the attachment carries no signature"
+    ],
+    "time_assurance": [
+     "no verified issuer signature"
+    ]
+   },
+   "person_approval": {
+    "status": "verified",
+    "signature": "verified",
+    "subject": "verified",
+    "key_state": "verified",
+    "identity": "verified",
+    "trust_policy": "verified",
+    "key_state_time_basis": "stated_time",
+    "key_state_time": "2026-10-29T16:12:00Z",
+    "identity_consistency": "consistent",
+    "identity_holder": "release-manager-claims",
+    "identity_issuer_named": "release-manager-claims",
+    "identity_source_ref": "urn:isoluce:directory:people"
+   },
+   "person_approval_findings": {},
+   "facts_outside_the_texts": {
+    "attempt after valid_until (outside the texts)": true,
+    "seconds from o1 to x1": 1680
+   },
+   "values_chosen": [
+    "recheck c1 at 16:39:50Z (result authorised), attempt x1 at 16:40:00Z (28 minutes after o1 at 16:12:00Z), result r1 at 16:40:17Z; request q1 unchanged at 16:12:30Z",
+    "no text of the two extensions compares an attempt's time with a specification's valid_until or with an issuer policy's maximum age"
+   ]
+  },
+  "N7": {
+   "action_binding": {
+    "structural_validity": "verified",
+    "specification_digests": [
+     "verified"
+    ],
+    "specification_statements": [
+     "verified"
+    ],
+    "record_statements": "verified",
+    "action_binding": "verified",
+    "stage_order": "verified",
+    "authorisation_recheck": "verified",
+    "observed_results": "verified",
+    "rationale_provenance": "verified",
+    "identity_assurance": "not_checked",
+    "authority_assurance": "not_checked",
+    "time_assurance": "not_checked",
+    "issuer_signature": "not_checked",
+    "legal_signature": "not_checked",
+    "execution_state": "attempted",
+    "observed": [
+     [
+      "x1",
+      "succeeded",
+      "target_response"
+     ]
+    ],
+    "executed": [
+     [
+      0,
+      "shown_to_reviewer"
+     ]
+    ],
+    "reviews": [
+     [
+      "v1",
+      "as_proposed",
+      null
+     ]
+    ],
+    "trust_policy": "verified",
+    "attachment_digest": "aa0be4260e635184e3682f578a1bc0bf777cbb996228a3108687bbdd145208b1",
+    "report_schema_errors": []
+   },
+   "action_binding_findings": {
+    "issuer_signature": [
+     "the attachment carries no signature"
+    ],
+    "time_assurance": [
+     "no verified issuer signature"
+    ]
+   },
+   "person_approval": {
+    "status": "failed",
+    "signature": "verified",
+    "subject": "failed",
+    "key_state": "verified",
+    "identity": "verified",
+    "trust_policy": "verified",
+    "key_state_time_basis": "stated_time",
+    "key_state_time": "2026-10-29T16:12:00Z",
+    "identity_consistency": "consistent",
+    "identity_holder": "release-manager-claims",
+    "identity_issuer_named": "release-manager-claims",
+    "identity_source_ref": "urn:isoluce:directory:people"
+   },
+   "person_approval_findings": {
+    "subject": [
+     "the review's shown digest is not the signed one",
+     "the outcome's approved digest is not the signed one"
+    ]
+   },
+   "values_chosen": [
+    "the specification's bytes rewritten with policy_version sha256:35b33df0e23ee150c9b8fb5f884a8dfaa66cc57bcd8d99fe3c379375a56195e4 (the N4 policy's digest); spec_digest, summary and every stage digest that named the old specification rewritten to f104a33907f4319f2d20836919943f9c2157008fd5caa14fd9685418b68eb187",
+    "the person's approval unchanged (it names the old digest); the decision record unchanged"
+   ]
+  },
+  "N7b": {
+   "action_binding": {
+    "structural_validity": "verified",
+    "specification_digests": [
+     "verified"
+    ],
+    "specification_statements": [
+     "verified"
+    ],
+    "record_statements": "verified",
+    "action_binding": "verified",
+    "stage_order": "verified",
+    "authorisation_recheck": "verified",
+    "observed_results": "verified",
+    "rationale_provenance": "verified",
+    "identity_assurance": "not_checked",
+    "authority_assurance": "not_checked",
+    "time_assurance": "not_checked",
+    "issuer_signature": "not_checked",
+    "legal_signature": "not_checked",
+    "execution_state": "attempted",
+    "observed": [
+     [
+      "x1",
+      "succeeded",
+      "target_response"
+     ]
+    ],
+    "executed": [
+     [
+      0,
+      "shown_to_reviewer"
+     ]
+    ],
+    "reviews": [
+     [
+      "v1",
+      "as_proposed",
+      null
+     ]
+    ],
+    "trust_policy": "verified",
+    "attachment_digest": "b5c60d696df56548da8695fa018951fcc1450b680cecd044e2488ee4e01e4323",
+    "report_schema_errors": []
+   },
+   "action_binding_findings": {
+    "issuer_signature": [
+     "the attachment carries no signature"
+    ],
+    "time_assurance": [
+     "no verified issuer signature"
+    ]
+   },
+   "person_approval": {
+    "status": "verified",
+    "signature": "verified",
+    "subject": "verified",
+    "key_state": "verified",
+    "identity": "verified",
+    "trust_policy": "verified",
+    "key_state_time_basis": "stated_time",
+    "key_state_time": "2026-10-29T16:12:00Z",
+    "identity_consistency": "consistent",
+    "identity_holder": "release-manager-claims",
+    "identity_issuer_named": "release-manager-claims",
+    "identity_source_ref": "urn:isoluce:directory:people"
+   },
+   "person_approval_findings": {},
+   "values_chosen": [
+    "o1.authority.authority_ref set to urn:isoluce:policy:production_change_review_relabelled#2026-10-01; nothing else changed"
+   ]
+  }
+ }
+}

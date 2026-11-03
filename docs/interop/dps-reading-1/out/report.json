@@ -1,0 +1,4394 @@
+{
+ "reading": "dps-reading-1",
+ "standard_commit": "c9043722384f784ae578ae0a64400be8a3864259",
+ "lemonnier_commit": "fdc5f6352795fc713309cd25ac2669d22840e0cc",
+ "meaning": "for suites of cases: true = the case behaved as its expected value says; false = it did not; 'not attempted' with why. For second-input rows: the dimension's status as this reading computed it.",
+ "totals_by_suite": {
+  "action-binding/digest": {
+   "cases": 15,
+   "as_expected": 15,
+   "not_as_expected": 0,
+   "not_attempted": 0
+  },
+  "action-binding/binding": {
+   "cases": 131,
+   "as_expected": 131,
+   "not_as_expected": 0,
+   "not_attempted": 0
+  },
+  "action-binding/signature": {
+   "cases": 41,
+   "as_expected": 41,
+   "not_as_expected": 0,
+   "not_attempted": 0
+  },
+  "action-binding/vector": {
+   "cases": 10,
+   "as_expected": 9,
+   "not_as_expected": 0,
+   "not_attempted": 1
+  },
+  "action-binding/schema": {
+   "cases": 112,
+   "as_expected": 112,
+   "not_as_expected": 0,
+   "not_attempted": 0
+  },
+  "signatures/schema": {
+   "cases": 137,
+   "as_expected": 110,
+   "not_as_expected": 0,
+   "not_attempted": 27
+  },
+  "action-binding/pairing": {
+   "cases": 50,
+   "as_expected": 50,
+   "not_as_expected": 0,
+   "not_attempted": 0
+  },
+  "signatures/pairing": {
+   "cases": 49,
+   "as_expected": 49,
+   "not_as_expected": 0,
+   "not_attempted": 0
+  },
+  "signatures/person": {
+   "cases": 118,
+   "as_expected": 118,
+   "not_as_expected": 0,
+   "not_attempted": 0
+  },
+  "signatures/seal": {
+   "cases": 45,
+   "as_expected": 43,
+   "not_as_expected": 2,
+   "not_attempted": 0
+  },
+  "signatures/timestamp": {
+   "cases": 41,
+   "as_expected": 41,
+   "not_as_expected": 0,
+   "not_attempted": 0
+  },
+  "signatures/vector": {
+   "cases": 28,
+   "as_expected": 25,
+   "not_as_expected": 0,
+   "not_attempted": 3
+  }
+ },
+ "totals": {
+  "cases": 777,
+  "as_expected": 744,
+  "not_as_expected": 2,
+  "not_attempted": 31
+ },
+ "checks": [
+  {
+   "suite": "action-binding/digest",
+   "id": "D01",
+   "result": true
+  },
+  {
+   "suite": "action-binding/digest",
+   "id": "D02",
+   "result": true
+  },
+  {
+   "suite": "action-binding/digest",
+   "id": "D03",
+   "result": true
+  },
+  {
+   "suite": "action-binding/digest",
+   "id": "D04",
+   "result": true
+  },
+  {
+   "suite": "action-binding/digest",
+   "id": "D05",
+   "result": true
+  },
+  {
+   "suite": "action-binding/digest",
+   "id": "D06",
+   "result": true
+  },
+  {
+   "suite": "action-binding/digest",
+   "id": "D07",
+   "result": true
+  },
+  {
+   "suite": "action-binding/digest",
+   "id": "D08",
+   "result": true
+  },
+  {
+   "suite": "action-binding/digest",
+   "id": "D09",
+   "result": true
+  },
+  {
+   "suite": "action-binding/digest",
+   "id": "D10",
+   "result": true
+  },
+  {
+   "suite": "action-binding/digest",
+   "id": "D11",
+   "result": true
+  },
+  {
+   "suite": "action-binding/digest",
+   "id": "D12",
+   "result": true
+  },
+  {
+   "suite": "action-binding/digest",
+   "id": "D13",
+   "result": true
+  },
+  {
+   "suite": "action-binding/digest",
+   "id": "E01",
+   "result": true
+  },
+  {
+   "suite": "action-binding/digest",
+   "id": "E02",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L01",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L02",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L03",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L04",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L05",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L06",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L07",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L08",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L09",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L10",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L11",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L12",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L13",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L14",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L15",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L16",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L17",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L18",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L19",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L20",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L21",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L22",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L23",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L24",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L25",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L26",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L27",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L28",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L29",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L30",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L31",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L32",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L33",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L34",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L35",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L36",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L37",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L38",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L39",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L40",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L41",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L42",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L43",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L44",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L45",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L46",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L47",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L48",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L49",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L50",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L51",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L52",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L53",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L54",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L55",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L56",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L57",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L58",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L59",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L60",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L61",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L62",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L63",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L64",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L65",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L66",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L67",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L68",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L69",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L70",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L71",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L72",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L73",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L74",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L75",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L76",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "L77",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S01",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S02",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S03",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S04",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S05",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S06",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S07",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S08",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S09",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S10",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S11",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S12",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S13",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S14",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S15",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S16",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S17",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S18",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S19",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S20",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S21",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S22",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S23",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S24",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S25",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S26",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S27",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S28",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S29",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S30",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S31",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S32",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S33",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S34",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S35",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S36",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S37",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S38",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S39",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S40",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S41",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S42",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S43",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S44",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S45",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S46",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S47",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S48",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S49",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S50",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S51",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S52",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S53",
+   "result": true
+  },
+  {
+   "suite": "action-binding/binding",
+   "id": "S54",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G01",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G02",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G03",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G04",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G05",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G06",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G07",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G08",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G09",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G10",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G11",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G12",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G13",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G14",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G15",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G16",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G17",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G18",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G19",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G20",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G21",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G22",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G23",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G24",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G25",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G26",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G27",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G28",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G29",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G30",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G31",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G32",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G33",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G34",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G35",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G36",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G37",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G38",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G39",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G40",
+   "result": true
+  },
+  {
+   "suite": "action-binding/signature",
+   "id": "G41",
+   "result": true
+  },
+  {
+   "suite": "action-binding/vector",
+   "id": "W01",
+   "result": true
+  },
+  {
+   "suite": "action-binding/vector",
+   "id": "W02",
+   "result": true
+  },
+  {
+   "suite": "action-binding/vector",
+   "id": "W03",
+   "result": true
+  },
+  {
+   "suite": "action-binding/vector",
+   "id": "W04",
+   "result": true
+  },
+  {
+   "suite": "action-binding/vector",
+   "id": "W05",
+   "result": true
+  },
+  {
+   "suite": "action-binding/vector",
+   "id": "W06",
+   "result": true
+  },
+  {
+   "suite": "action-binding/vector",
+   "id": "W07",
+   "result": true,
+   "detail": {
+    "note": "compared without finding texts; byte-for-byte equality not attempted (finding wording is not fixed by the text)"
+   }
+  },
+  {
+   "suite": "action-binding/vector",
+   "id": "W08",
+   "result": "not attempted",
+   "why": "needs generate_vectors.py, which the reading may not open"
+  },
+  {
+   "suite": "action-binding/vector",
+   "id": "W09",
+   "result": true
+  },
+  {
+   "suite": "action-binding/vector",
+   "id": "W10",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X01",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X02",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X03",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X04",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X05",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X06",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X07",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X08",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X09",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X10",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X11",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X12",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X13",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X14",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X15",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X16",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X17",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X18",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X19",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X20",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X21",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X22",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X23",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X24",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X25",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X26",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X27",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P01",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P02",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P03",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P04",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P05",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P06",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P07",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P08",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P09",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P10",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P11",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P12",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P13",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P14",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P15",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P16",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P17",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P18",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P19",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P20",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P21",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P22",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X28",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P23",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P24",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P25",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P26",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P27",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P28",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P29",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P30",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P31",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P32",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X29",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X30",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X31",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X32",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X33",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "X34",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P33",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P34",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P35",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P36",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P37",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P38",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P39",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P40",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P41",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P42",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P43",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P44",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P45",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P46",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P47",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P48",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P49",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P50",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P51",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P52",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "P53",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "C01",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "C02",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "C03",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "C04",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "C05",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "Y01",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "Y02",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "Y03",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "Y04",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "Y05",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "Y06",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "Y07",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "Y08",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "Y09",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "Y10",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "Y11",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "Y12",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "Y13",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "Y14",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "Y15",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "Y16",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "Y17",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "Y18",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "Y19",
+   "result": true
+  },
+  {
+   "suite": "action-binding/schema",
+   "id": "Y20",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "A01",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "A02",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "A03",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "A04",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "A05",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "A06",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "A07",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "A08",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "A09",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "A10",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "A11",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "A12",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "A13",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "A14",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "A15",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "A16",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "A17",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "A17b",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "A18",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B01",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B02",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B03",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B04",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B05",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B06",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B07",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B08",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B09",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B10",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B11",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B12",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B13",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B14",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B15",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B16",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B17",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B18",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B19",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B20",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B21",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B22",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B23",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B24",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B25",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "C01",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "C02",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "C03",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "C04",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "C05",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "C06",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "C07",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "C08",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "C09",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "C10",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "C11",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "C12",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "Y01",
+   "result": "not attempted",
+   "why": "the trust policy schema is anchoring 0.2.0's (../anchoring/schemas/trust-policy.schema.json), not among the inputs"
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "Y02",
+   "result": "not attempted",
+   "why": "the trust policy schema is anchoring 0.2.0's (../anchoring/schemas/trust-policy.schema.json), not among the inputs"
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "Y03",
+   "result": "not attempted",
+   "why": "the trust policy schema is anchoring 0.2.0's (../anchoring/schemas/trust-policy.schema.json), not among the inputs"
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "Y04",
+   "result": "not attempted",
+   "why": "the trust policy schema is anchoring 0.2.0's (../anchoring/schemas/trust-policy.schema.json), not among the inputs"
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "Y05",
+   "result": "not attempted",
+   "why": "the trust policy schema is anchoring 0.2.0's (../anchoring/schemas/trust-policy.schema.json), not among the inputs"
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "Y06",
+   "result": "not attempted",
+   "why": "the trust policy schema is anchoring 0.2.0's (../anchoring/schemas/trust-policy.schema.json), not among the inputs"
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "Y07",
+   "result": "not attempted",
+   "why": "the trust policy schema is anchoring 0.2.0's (../anchoring/schemas/trust-policy.schema.json), not among the inputs"
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "Y08",
+   "result": "not attempted",
+   "why": "the trust policy schema is anchoring 0.2.0's (../anchoring/schemas/trust-policy.schema.json), not among the inputs"
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "Y09",
+   "result": "not attempted",
+   "why": "the trust policy schema is anchoring 0.2.0's (../anchoring/schemas/trust-policy.schema.json), not among the inputs"
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "Y10",
+   "result": "not attempted",
+   "why": "the trust policy schema is anchoring 0.2.0's (../anchoring/schemas/trust-policy.schema.json), not among the inputs"
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "Y11",
+   "result": "not attempted",
+   "why": "the trust policy schema is anchoring 0.2.0's (../anchoring/schemas/trust-policy.schema.json), not among the inputs"
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "Y12",
+   "result": "not attempted",
+   "why": "the trust policy schema is anchoring 0.2.0's (../anchoring/schemas/trust-policy.schema.json), not among the inputs"
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "Y13",
+   "result": "not attempted",
+   "why": "the trust policy schema is anchoring 0.2.0's (../anchoring/schemas/trust-policy.schema.json), not among the inputs"
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "Y14",
+   "result": "not attempted",
+   "why": "the trust policy schema is anchoring 0.2.0's (../anchoring/schemas/trust-policy.schema.json), not among the inputs"
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "Y15",
+   "result": "not attempted",
+   "why": "the trust policy schema is anchoring 0.2.0's (../anchoring/schemas/trust-policy.schema.json), not among the inputs"
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "Y16",
+   "result": "not attempted",
+   "why": "the trust policy schema is anchoring 0.2.0's (../anchoring/schemas/trust-policy.schema.json), not among the inputs"
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "Y17",
+   "result": "not attempted",
+   "why": "the trust policy schema is anchoring 0.2.0's (../anchoring/schemas/trust-policy.schema.json), not among the inputs"
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "Y18",
+   "result": "not attempted",
+   "why": "the trust policy schema is anchoring 0.2.0's (../anchoring/schemas/trust-policy.schema.json), not among the inputs"
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "Y19",
+   "result": "not attempted",
+   "why": "the trust policy schema is anchoring 0.2.0's (../anchoring/schemas/trust-policy.schema.json), not among the inputs"
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "Y20",
+   "result": "not attempted",
+   "why": "the trust policy schema is anchoring 0.2.0's (../anchoring/schemas/trust-policy.schema.json), not among the inputs"
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "Y21",
+   "result": "not attempted",
+   "why": "the trust policy schema is anchoring 0.2.0's (../anchoring/schemas/trust-policy.schema.json), not among the inputs"
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "Y22",
+   "result": "not attempted",
+   "why": "the trust policy schema is anchoring 0.2.0's (../anchoring/schemas/trust-policy.schema.json), not among the inputs"
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "Y23",
+   "result": "not attempted",
+   "why": "the trust policy schema is anchoring 0.2.0's (../anchoring/schemas/trust-policy.schema.json), not among the inputs"
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "Y24",
+   "result": "not attempted",
+   "why": "the trust policy schema is anchoring 0.2.0's (../anchoring/schemas/trust-policy.schema.json), not among the inputs"
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "Y25",
+   "result": "not attempted",
+   "why": "the trust policy schema is anchoring 0.2.0's (../anchoring/schemas/trust-policy.schema.json), not among the inputs"
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "Y26",
+   "result": "not attempted",
+   "why": "the trust policy schema is anchoring 0.2.0's (../anchoring/schemas/trust-policy.schema.json), not among the inputs"
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "Y27",
+   "result": "not attempted",
+   "why": "the trust policy schema is anchoring 0.2.0's (../anchoring/schemas/trust-policy.schema.json), not among the inputs"
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P01",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P02",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P03",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P04",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P05",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P06",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P07",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P08",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P09",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P10",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P11",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P12",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P13",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P14",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P15",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P16",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P17",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P18",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P19",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P20",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P21",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P22",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P23",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P24",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P25",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P26",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P27",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P28",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P29",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P30",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P31",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P32",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P33",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P34",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P35",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P36",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "X01",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "X02",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "X03",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "X04",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "X05",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "X06",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "X07",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "X08",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "X09",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B40",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B41",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B42",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B43",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B44",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B45",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "B46",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P60",
+   "result": true
+  },
+  {
+   "suite": "signatures/schema",
+   "id": "P61",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J01",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J02",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J03",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J04",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J05",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J06",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J07",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J08",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J09",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J10",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J11",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J12",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J13",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J14",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J15",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J16",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J17",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J18",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J19",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J20",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J22",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J21",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J23",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J24",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J25",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J26",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J27",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J28",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J29",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J30",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J31",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J32",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J33",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J34",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J35",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J36",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J37",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J38",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J39",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J40",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J41",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "J42",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "K01",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "K02",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "K03",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "K04",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "K05",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "K06",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "K07",
+   "result": true
+  },
+  {
+   "suite": "action-binding/pairing",
+   "id": "K08",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J01",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J02",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J03",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J04",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J05",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J06",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J07",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J08",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J09",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J10",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J11",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J12",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J13",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J14",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J15",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J16",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J17",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J18",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J19",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J20",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J21",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J22",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J23",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J24",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J25",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J26",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J27",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J28",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J29",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J30",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J31",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J32",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J33",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J34",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J35",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J36",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J37",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J38",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J39",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J40",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J41",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J42",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J43",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J46",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J47",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J48",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J49",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J50",
+   "result": true
+  },
+  {
+   "suite": "signatures/pairing",
+   "id": "J51",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N01",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N02",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N03",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N04",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N05",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N06",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N07",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N08",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N09",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N10",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N11",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N12",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N13",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N14",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N15",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N16",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N17",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N18",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N19",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N20",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N21",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N22",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N23",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N24",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N25",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N26",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N27",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N28",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N29",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N30",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N31",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N32",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N33",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N34",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N35",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N36",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N37",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N38",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N39",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N40",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N41",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N42",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N43",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N44",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N45",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N46",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N47",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N48",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N49",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N50",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N51",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N52",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N53",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N54",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N55",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N56",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N57",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N58",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N59",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N60",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N61",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N62",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N63",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N64",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N65",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N66",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N67",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N68",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N69",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N70",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N71",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N72",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N73",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N74",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N75",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N76",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N77",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N78",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N79",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N80",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N81",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N82",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N83",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N84",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N85",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N86",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N87",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N88",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N89",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N90",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N91",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N92",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N93",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N94",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N95",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N96",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N97",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N98",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N99",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N100",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N101",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N102",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N103",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N104",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N105",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N106",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N107",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N108",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N109",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N110",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N111",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N112",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N113",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N114",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N115",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N116",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N117",
+   "result": true
+  },
+  {
+   "suite": "signatures/person",
+   "id": "N118",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O01",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O02",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O03",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O04",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O05",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O06",
+   "result": false,
+   "detail": {
+    "diffs": {
+     "status": {
+      "expected": "failed",
+      "got": "verified"
+     },
+     "subject": {
+      "expected": "failed",
+      "got": "verified"
+     }
+    },
+    "got": {
+     "signature_findings": [],
+     "subject_findings": [],
+     "key_state_detail": {
+      "key_ref": "org-seal-1",
+      "status": "verified",
+      "time_basis": "stated_time",
+      "time": "2026-10-01T09:30:00Z"
+     },
+     "embedded_copy_findings": [
+      "value differs"
+     ]
+    }
+   }
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O07",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O08",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O09",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O10",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O11",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O12",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O13",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O14",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O15",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O16",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O17",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O18",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O19",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O20",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O21",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O22",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O23",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O24",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O25",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O26",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O27",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O28",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O29",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O30",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O31",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O32",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O33",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O34",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O35",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O36",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O37",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O38",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O39",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O40",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O41",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O42",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O45",
+   "result": true
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O46",
+   "result": false,
+   "detail": {
+    "diffs": {
+     "status": {
+      "expected": "failed",
+      "got": "verified"
+     },
+     "subject": {
+      "expected": "failed",
+      "got": "verified"
+     }
+    },
+    "got": {
+     "signature_findings": [],
+     "subject_findings": [],
+     "key_state_detail": {
+      "key_ref": "org-seal-1",
+      "status": "verified",
+      "time_basis": "stated_time",
+      "time": "2026-10-01T09:30:00Z"
+     },
+     "embedded_copy_findings": [
+      "sealed_at differs"
+     ]
+    }
+   }
+  },
+  {
+   "suite": "signatures/seal",
+   "id": "O47",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T01",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T02",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T03",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T04",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T05",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T06",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T07",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T08",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T09",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T10",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T11",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T12",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T13",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T14",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T15",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T16",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T17",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T18",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T19",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T20",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T21",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T22",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T23",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T24",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T25",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T26",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T27",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T28",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T29",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T30",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T31",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T32",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T33",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T34",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T35",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T36",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T37",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T38",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T39",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T40",
+   "result": true
+  },
+  {
+   "suite": "signatures/timestamp",
+   "id": "T41",
+   "result": true
+  },
+  {
+   "suite": "signatures/vector",
+   "id": "V01",
+   "result": true
+  },
+  {
+   "suite": "signatures/vector",
+   "id": "V02",
+   "result": true
+  },
+  {
+   "suite": "signatures/vector",
+   "id": "V03",
+   "result": true
+  },
+  {
+   "suite": "signatures/vector",
+   "id": "V04",
+   "result": "not attempted",
+   "why": "needs anchoring 0.2.0's vectors, not among the inputs"
+  },
+  {
+   "suite": "signatures/vector",
+   "id": "V05",
+   "result": true
+  },
+  {
+   "suite": "signatures/vector",
+   "id": "V06",
+   "result": true
+  },
+  {
+   "suite": "signatures/vector",
+   "id": "V07",
+   "result": true
+  },
+  {
+   "suite": "signatures/vector",
+   "id": "V08",
+   "result": true
+  },
+  {
+   "suite": "signatures/vector",
+   "id": "V09",
+   "result": true
+  },
+  {
+   "suite": "signatures/vector",
+   "id": "V10",
+   "result": true
+  },
+  {
+   "suite": "signatures/vector",
+   "id": "V11",
+   "result": true
+  },
+  {
+   "suite": "signatures/vector",
+   "id": "V12",
+   "result": true
+  },
+  {
+   "suite": "signatures/vector",
+   "id": "V13",
+   "result": true
+  },
+  {
+   "suite": "signatures/vector",
+   "id": "V14",
+   "result": true
+  },
+  {
+   "suite": "signatures/vector",
+   "id": "V15",
+   "result": true
+  },
+  {
+   "suite": "signatures/vector",
+   "id": "V16",
+   "result": true
+  },
+  {
+   "suite": "signatures/vector",
+   "id": "V17",
+   "result": true
+  },
+  {
+   "suite": "signatures/vector",
+   "id": "V18",
+   "result": true
+  },
+  {
+   "suite": "signatures/vector",
+   "id": "V19",
+   "result": "not attempted",
+   "why": "needs generate_vectors.py, which the reading may not open"
+  },
+  {
+   "suite": "signatures/vector",
+   "id": "V20",
+   "result": "not attempted",
+   "why": "RFC 9500's text was not fetched; the case's own printed values are not an independent check"
+  },
+  {
+   "suite": "signatures/vector",
+   "id": "V21",
+   "result": true
+  },
+  {
+   "suite": "signatures/vector",
+   "id": "V22",
+   "result": true
+  },
+  {
+   "suite": "signatures/vector",
+   "id": "V23",
+   "result": true
+  },
+  {
+   "suite": "signatures/vector",
+   "id": "V24",
+   "result": true
+  },
+  {
+   "suite": "signatures/vector",
+   "id": "V25",
+   "result": true
+  },
+  {
+   "suite": "signatures/vector",
+   "id": "V26",
+   "result": true
+  },
+  {
+   "suite": "signatures/vector",
+   "id": "V27",
+   "result": true
+  },
+  {
+   "suite": "signatures/vector",
+   "id": "V28",
+   "result": true
+  },
+  {
+   "suite": "second-input/release-decision",
+   "id": "structural_validity",
+   "result": "verified"
+  },
+  {
+   "suite": "second-input/release-decision",
+   "id": "record_statements",
+   "result": "verified"
+  },
+  {
+   "suite": "second-input/release-decision",
+   "id": "action_binding",
+   "result": "verified"
+  },
+  {
+   "suite": "second-input/release-decision",
+   "id": "stage_order",
+   "result": "verified"
+  },
+  {
+   "suite": "second-input/release-decision",
+   "id": "authorisation_recheck",
+   "result": "verified"
+  },
+  {
+   "suite": "second-input/release-decision",
+   "id": "observed_results",
+   "result": "verified"
+  },
+  {
+   "suite": "second-input/release-decision",
+   "id": "rationale_provenance",
+   "result": "verified"
+  },
+  {
+   "suite": "second-input/release-decision",
+   "id": "identity_assurance",
+   "result": "not_checked"
+  },
+  {
+   "suite": "second-input/release-decision",
+   "id": "authority_assurance",
+   "result": "not_checked"
+  },
+  {
+   "suite": "second-input/release-decision",
+   "id": "time_assurance",
+   "result": "not_checked"
+  },
+  {
+   "suite": "second-input/release-decision",
+   "id": "issuer_signature",
+   "result": "not_checked"
+  },
+  {
+   "suite": "second-input/release-decision",
+   "id": "legal_signature",
+   "result": "not_checked"
+  },
+  {
+   "suite": "second-input/release-decision",
+   "id": "specification_digests",
+   "result": "verified"
+  },
+  {
+   "suite": "second-input/release-decision",
+   "id": "specification_statements",
+   "result": "verified"
+  },
+  {
+   "suite": "second-input/aqta",
+   "id": "action_binding.structural_validity",
+   "result": "verified"
+  },
+  {
+   "suite": "second-input/aqta",
+   "id": "action_binding.specification_digests",
+   "result": "verified"
+  },
+  {
+   "suite": "second-input/aqta",
+   "id": "action_binding.specification_statements",
+   "result": "verified"
+  },
+  {
+   "suite": "second-input/aqta",
+   "id": "action_binding.record_statements",
+   "result": "verified"
+  },
+  {
+   "suite": "second-input/aqta",
+   "id": "action_binding.action_binding",
+   "result": "verified"
+  },
+  {
+   "suite": "second-input/aqta",
+   "id": "action_binding.stage_order",
+   "result": "verified"
+  },
+  {
+   "suite": "second-input/aqta",
+   "id": "action_binding.authorisation_recheck",
+   "result": "verified"
+  },
+  {
+   "suite": "second-input/aqta",
+   "id": "action_binding.observed_results",
+   "result": "verified"
+  },
+  {
+   "suite": "second-input/aqta",
+   "id": "action_binding.rationale_provenance",
+   "result": "verified"
+  },
+  {
+   "suite": "second-input/aqta",
+   "id": "action_binding.identity_assurance",
+   "result": "not_checked"
+  },
+  {
+   "suite": "second-input/aqta",
+   "id": "action_binding.authority_assurance",
+   "result": "not_checked"
+  },
+  {
+   "suite": "second-input/aqta",
+   "id": "action_binding.time_assurance",
+   "result": "not_checked"
+  },
+  {
+   "suite": "second-input/aqta",
+   "id": "action_binding.issuer_signature",
+   "result": "not_checked"
+  },
+  {
+   "suite": "second-input/aqta",
+   "id": "action_binding.legal_signature",
+   "result": "not_checked"
+  },
+  {
+   "suite": "second-input/aqta",
+   "id": "person_approval.status",
+   "result": "verified"
+  },
+  {
+   "suite": "second-input/aqta",
+   "id": "person_approval.signature",
+   "result": "verified"
+  },
+  {
+   "suite": "second-input/aqta",
+   "id": "person_approval.subject",
+   "result": "verified"
+  },
+  {
+   "suite": "second-input/aqta",
+   "id": "person_approval.key_state",
+   "result": "verified"
+  },
+  {
+   "suite": "second-input/aqta",
+   "id": "person_approval.identity",
+   "result": "verified"
+  },
+  {
+   "suite": "second-input/aqta-negatives-rebuilt",
+   "id": "N1",
+   "result": {
+    "action_binding_dimensions_not_verified": [
+     "action_binding"
+    ],
+    "executed": [
+     [
+      1,
+      "unbound"
+     ]
+    ],
+    "person_approval": {
+     "status": "verified",
+     "signature": "verified",
+     "subject": "verified",
+     "key_state": "verified",
+     "identity": "verified"
+    }
+   }
+  },
+  {
+   "suite": "second-input/aqta-negatives-rebuilt",
+   "id": "N2",
+   "result": {
+    "action_binding_dimensions_not_verified": [
+     "action_binding"
+    ],
+    "executed": [
+     [
+      0,
+      "shown_to_reviewer"
+     ]
+    ],
+    "person_approval": {
+     "status": "verified",
+     "signature": "verified",
+     "subject": "verified",
+     "key_state": "verified",
+     "identity": "verified"
+    }
+   }
+  },
+  {
+   "suite": "second-input/aqta-negatives-rebuilt",
+   "id": "N3",
+   "result": {
+    "action_binding_dimensions_not_verified": [],
+    "executed": [
+     [
+      0,
+      "shown_to_reviewer"
+     ]
+    ],
+    "person_approval": {
+     "status": "failed",
+     "signature": "failed",
+     "subject": "verified",
+     "key_state": "not_checked",
+     "identity": "not_checked"
+    }
+   }
+  },
+  {
+   "suite": "second-input/aqta-negatives-rebuilt",
+   "id": "N3b",
+   "result": {
+    "action_binding_dimensions_not_verified": [],
+    "executed": [
+     [
+      0,
+      "shown_to_reviewer"
+     ]
+    ],
+    "person_approval": {
+     "status": "failed",
+     "signature": "failed",
+     "subject": "verified",
+     "key_state": "not_checked",
+     "identity": "failed"
+    }
+   }
+  },
+  {
+   "suite": "second-input/aqta-negatives-rebuilt",
+   "id": "N4",
+   "result": "same as base: the change is to policy.json, which neither extension reads: every dimension of both extensions is the base's"
+  },
+  {
+   "suite": "second-input/aqta-negatives-rebuilt",
+   "id": "N5",
+   "result": "same as base: policy.json not held: neither extension reads it; every dimension is the base's"
+  },
+  {
+   "suite": "second-input/aqta-negatives-rebuilt",
+   "id": "N6",
+   "result": {
+    "action_binding_dimensions_not_verified": [],
+    "executed": [
+     [
+      0,
+      "shown_to_reviewer"
+     ]
+    ],
+    "person_approval": {
+     "status": "verified",
+     "signature": "verified",
+     "subject": "verified",
+     "key_state": "verified",
+     "identity": "verified"
+    }
+   }
+  },
+  {
+   "suite": "second-input/aqta-negatives-rebuilt",
+   "id": "N7",
+   "result": {
+    "action_binding_dimensions_not_verified": [],
+    "executed": [
+     [
+      0,
+      "shown_to_reviewer"
+     ]
+    ],
+    "person_approval": {
+     "status": "failed",
+     "signature": "verified",
+     "subject": "failed",
+     "key_state": "verified",
+     "identity": "verified"
+    }
+   }
+  },
+  {
+   "suite": "second-input/aqta-negatives-rebuilt",
+   "id": "N7b",
+   "result": {
+    "action_binding_dimensions_not_verified": [],
+    "executed": [
+     [
+      0,
+      "shown_to_reviewer"
+     ]
+    ],
+    "person_approval": {
+     "status": "verified",
+     "signature": "verified",
+     "subject": "verified",
+     "key_state": "verified",
+     "identity": "verified"
+    }
+   }
+  },
+  {
+   "suite": "second-input/aqta",
+   "id": "seal_action_record",
+   "result": "not attempted",
+   "why": "outside both extensions"
+  },
+  {
+   "suite": "second-input/aqta",
+   "id": "policy_checks",
+   "result": "not attempted",
+   "why": "outside both extensions"
+  },
+  {
+   "suite": "second-input/aqta",
+   "id": "composition_args_hash_bound",
+   "result": "not attempted",
+   "why": "outside both extensions"
+  }
+ ]
+}

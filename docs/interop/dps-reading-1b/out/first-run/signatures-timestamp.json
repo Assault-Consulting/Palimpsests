@@ -1,0 +1,887 @@
+[
+ {
+  "id": "T01",
+  "expected": {
+   "existed_no_later_than": "2026-10-01T09:15:00Z",
+   "consistency": "consistent"
+  },
+  "got": {
+   "status": "verified",
+   "signer_time": "verified",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "verified",
+   "signer_certificate": "verified",
+   "tsa_state": "verified",
+   "existed_no_later_than": "2026-10-01T09:15:00Z",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T02",
+  "expected": {
+   "status": "failed",
+   "message_imprint": "failed",
+   "signer_time": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signer_time": "not_checked",
+   "token": "verified",
+   "message_imprint": "failed",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "verified",
+   "signer_certificate": "verified",
+   "tsa_state": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T03",
+  "expected": {
+   "status": "failed",
+   "subject_bytes": "failed",
+   "signer_time": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signer_time": "not_checked",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "failed",
+   "message_digest": "verified",
+   "tsa_signature": "verified",
+   "signer_certificate": "verified",
+   "tsa_state": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T04",
+  "expected": {
+   "status": "failed",
+   "tsa_signature": "failed",
+   "signer_certificate": "not_checked",
+   "tsa_state": "not_checked",
+   "signer_time": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signer_time": "not_checked",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "failed",
+   "signer_certificate": "not_checked",
+   "tsa_state": "failed"
+  },
+  "agrees": false,
+  "differs": {
+   "tsa_state": [
+    "not_checked",
+    "failed"
+   ]
+  },
+  "findings": [
+   "the policy lists no authority 'tsa-example-2'",
+   "no pinned certificate read",
+   "the policy lists no authority 'tsa-example-2'"
+  ]
+ },
+ {
+  "id": "T05",
+  "expected": {
+   "signer_time": "failed",
+   "consistency": "inconsistent",
+   "existed_no_later_than": "2026-10-01T09:00:00Z"
+  },
+  "got": {
+   "status": "verified",
+   "signer_time": "failed",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "verified",
+   "signer_certificate": "verified",
+   "tsa_state": "verified",
+   "existed_no_later_than": "2026-10-01T09:00:00Z",
+   "consistency": "inconsistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T06",
+  "expected": {
+   "status": "not_checked",
+   "subject_bytes": "not_checked",
+   "signer_time": "not_checked"
+  },
+  "got": {
+   "status": "not_checked",
+   "signer_time": "not_checked",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "not_checked",
+   "message_digest": "verified",
+   "tsa_signature": "verified",
+   "signer_certificate": "verified",
+   "tsa_state": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T07",
+  "expected": {
+   "status": "failed",
+   "tsa_signature": "failed",
+   "signer_time": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signer_time": "not_checked",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "failed",
+   "signer_certificate": "verified",
+   "tsa_state": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T08",
+  "expected": {
+   "status": "failed",
+   "token": "failed",
+   "message_imprint": "not_checked",
+   "message_digest": "not_checked",
+   "tsa_signature": "not_checked",
+   "signer_certificate": "not_checked",
+   "tsa_state": "not_checked",
+   "signer_time": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signer_time": "not_checked",
+   "token": "failed",
+   "message_imprint": "not_checked",
+   "subject_bytes": "verified",
+   "message_digest": "not_checked",
+   "tsa_signature": "not_checked",
+   "signer_certificate": "not_checked",
+   "tsa_state": "not_checked"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T09",
+  "expected": {
+   "consistency": "consistent"
+  },
+  "got": {
+   "status": "verified",
+   "signer_time": "verified",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "verified",
+   "signer_certificate": "verified",
+   "tsa_state": "verified",
+   "existed_no_later_than": "2026-10-01T09:35:00Z",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T10",
+  "expected": {
+   "status": "failed",
+   "tsa_state": "failed",
+   "signer_time": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signer_time": "not_checked",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "verified",
+   "signer_certificate": "verified",
+   "tsa_state": "failed"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T11",
+  "expected": {
+   "status": "failed",
+   "tsa_state": "failed",
+   "signer_time": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signer_time": "not_checked",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "verified",
+   "signer_certificate": "verified",
+   "tsa_state": "failed"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T12",
+  "expected": {
+   "status": "failed",
+   "tsa_signature": "failed",
+   "signer_certificate": "not_checked",
+   "tsa_state": "failed",
+   "signer_time": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signer_time": "not_checked",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "failed",
+   "signer_certificate": "not_checked",
+   "tsa_state": "failed"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T13",
+  "expected": {
+   "gen_time": "2026-10-02T23:59:59Z",
+   "existed_no_later_than": "2026-10-03T00:00:01Z"
+  },
+  "got": {
+   "status": "verified",
+   "signer_time": "verified",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "verified",
+   "signer_certificate": "verified",
+   "tsa_state": "verified",
+   "existed_no_later_than": "2026-10-03T00:00:01Z",
+   "consistency": "consistent",
+   "gen_time": "2026-10-02T23:59:59Z"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T14",
+  "expected": {
+   "status": "failed",
+   "tsa_state": "failed",
+   "signer_time": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signer_time": "not_checked",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "verified",
+   "signer_certificate": "verified",
+   "tsa_state": "failed"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T15",
+  "expected": {
+   "signer_certificate": "not_checked"
+  },
+  "got": {
+   "status": "verified",
+   "signer_time": "verified",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "verified",
+   "signer_certificate": "not_checked",
+   "tsa_state": "verified",
+   "existed_no_later_than": "2026-10-01T09:15:00Z",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T16",
+  "expected": {
+   "status": "failed",
+   "signer_certificate": "failed",
+   "signer_time": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signer_time": "not_checked",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "verified",
+   "signer_certificate": "failed",
+   "tsa_state": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T17",
+  "expected": {
+   "signer_certificate": "not_checked"
+  },
+  "got": {
+   "status": "verified",
+   "signer_time": "verified",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "verified",
+   "signer_certificate": "not_checked",
+   "tsa_state": "verified",
+   "existed_no_later_than": "2026-10-01T09:15:00Z",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T18",
+  "expected": {
+   "status": "failed",
+   "signer_certificate": "failed",
+   "signer_time": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signer_time": "not_checked",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "verified",
+   "signer_certificate": "failed",
+   "tsa_state": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T19",
+  "expected": {
+   "status": "failed",
+   "tsa_signature": "failed",
+   "signer_time": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signer_time": "not_checked",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "failed",
+   "signer_certificate": "verified",
+   "tsa_state": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T20",
+  "expected": {
+   "status": "failed",
+   "message_digest": "failed",
+   "signer_time": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signer_time": "not_checked",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "failed",
+   "tsa_signature": "verified",
+   "signer_certificate": "verified",
+   "tsa_state": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T21",
+  "expected": {
+   "status": "failed",
+   "token": "failed",
+   "message_imprint": "not_checked",
+   "message_digest": "not_checked",
+   "tsa_signature": "not_checked",
+   "signer_certificate": "not_checked",
+   "tsa_state": "not_checked",
+   "signer_time": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signer_time": "not_checked",
+   "token": "failed",
+   "message_imprint": "not_checked",
+   "subject_bytes": "verified",
+   "message_digest": "not_checked",
+   "tsa_signature": "not_checked",
+   "signer_certificate": "not_checked",
+   "tsa_state": "not_checked"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T22",
+  "expected": {
+   "status": "failed",
+   "token": "failed",
+   "message_imprint": "not_checked",
+   "message_digest": "not_checked",
+   "tsa_signature": "not_checked",
+   "signer_certificate": "not_checked",
+   "tsa_state": "not_checked",
+   "signer_time": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signer_time": "not_checked",
+   "token": "failed",
+   "message_imprint": "not_checked",
+   "subject_bytes": "verified",
+   "message_digest": "not_checked",
+   "tsa_signature": "not_checked",
+   "signer_certificate": "not_checked",
+   "tsa_state": "not_checked"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T23",
+  "expected": {
+   "status": "failed",
+   "token": "failed",
+   "message_imprint": "not_checked",
+   "message_digest": "not_checked",
+   "tsa_signature": "not_checked",
+   "signer_certificate": "not_checked",
+   "tsa_state": "not_checked",
+   "signer_time": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signer_time": "not_checked",
+   "token": "failed",
+   "message_imprint": "not_checked",
+   "subject_bytes": "verified",
+   "message_digest": "not_checked",
+   "tsa_signature": "not_checked",
+   "signer_certificate": "not_checked",
+   "tsa_state": "not_checked"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T24",
+  "expected": {
+   "status": "failed",
+   "token": "failed",
+   "message_imprint": "not_checked",
+   "message_digest": "not_checked",
+   "tsa_signature": "not_checked",
+   "signer_certificate": "not_checked",
+   "tsa_state": "not_checked",
+   "signer_time": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signer_time": "not_checked",
+   "token": "failed",
+   "message_imprint": "not_checked",
+   "subject_bytes": "verified",
+   "message_digest": "not_checked",
+   "tsa_signature": "not_checked",
+   "signer_certificate": "not_checked",
+   "tsa_state": "not_checked"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T25",
+  "expected": {
+   "status": "failed",
+   "tsa_signature": "failed",
+   "signer_time": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signer_time": "not_checked",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "failed",
+   "signer_certificate": "verified",
+   "tsa_state": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T26",
+  "expected": {
+   "status": "not_supported",
+   "tsa_signature": "not_supported",
+   "signer_time": "not_checked"
+  },
+  "got": {
+   "status": "not_supported",
+   "signer_time": "not_checked",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "not_supported",
+   "signer_certificate": "verified",
+   "tsa_state": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T27",
+  "expected": {
+   "status": "failed",
+   "tsa_signature": "failed",
+   "signer_certificate": "not_checked",
+   "signer_time": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signer_time": "not_checked",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "failed",
+   "signer_certificate": "not_checked",
+   "tsa_state": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T28",
+  "expected": {
+   "status": "failed",
+   "tsa_signature": "failed",
+   "signer_certificate": "not_checked",
+   "tsa_state": "failed",
+   "signer_time": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signer_time": "not_checked",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "failed",
+   "signer_certificate": "not_checked",
+   "tsa_state": "failed"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T29",
+  "expected": {
+   "status": "failed",
+   "tsa_state": "failed",
+   "signer_time": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signer_time": "not_checked",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "verified",
+   "signer_certificate": "verified",
+   "tsa_state": "failed"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T30",
+  "expected": {
+   "existed_no_later_than": "2026-10-01T09:15:00Z"
+  },
+  "got": {
+   "status": "verified",
+   "signer_time": "verified",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "verified",
+   "signer_certificate": "verified",
+   "tsa_state": "verified",
+   "existed_no_later_than": "2026-10-01T09:15:00Z",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T31",
+  "expected": {
+   "existed_no_later_than": "2026-10-01T09:15:00Z",
+   "consistency": "consistent"
+  },
+  "got": {
+   "status": "verified",
+   "signer_time": "verified",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "verified",
+   "signer_certificate": "verified",
+   "tsa_state": "verified",
+   "existed_no_later_than": "2026-10-01T09:15:00Z",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T32",
+  "expected": {
+   "status": "failed",
+   "message_imprint": "failed",
+   "signer_time": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signer_time": "not_checked",
+   "token": "verified",
+   "message_imprint": "failed",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "verified",
+   "signer_certificate": "verified",
+   "tsa_state": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T33",
+  "expected": {
+   "status": "failed",
+   "tsa_signature": "failed",
+   "signer_time": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signer_time": "not_checked",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "failed",
+   "signer_certificate": "verified",
+   "tsa_state": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T34",
+  "expected": {
+   "status": "failed",
+   "tsa_signature": "failed",
+   "signer_certificate": "failed",
+   "signer_time": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signer_time": "not_checked",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "failed",
+   "signer_certificate": "failed",
+   "tsa_state": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T35",
+  "expected": {
+   "status": "not_supported",
+   "tsa_signature": "not_supported",
+   "signer_time": "not_checked"
+  },
+  "got": {
+   "status": "not_supported",
+   "signer_time": "not_checked",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "not_supported",
+   "signer_certificate": "verified",
+   "tsa_state": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T36",
+  "expected": {
+   "status": "failed",
+   "tsa_signature": "failed",
+   "signer_time": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signer_time": "not_checked",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "failed",
+   "signer_certificate": "verified",
+   "tsa_state": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T37",
+  "expected": {
+   "signer_certificate": "not_checked"
+  },
+  "got": {
+   "status": "verified",
+   "signer_time": "verified",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "verified",
+   "signer_certificate": "not_checked",
+   "tsa_state": "verified",
+   "existed_no_later_than": "2026-10-01T09:15:00Z",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T38",
+  "expected": {
+   "status": "failed",
+   "tsa_signature": "failed",
+   "signer_certificate": "not_checked",
+   "tsa_state": "not_checked",
+   "signer_time": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signer_time": "not_checked",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "failed",
+   "signer_certificate": "not_checked",
+   "tsa_state": "failed"
+  },
+  "agrees": false,
+  "differs": {
+   "tsa_state": [
+    "not_checked",
+    "failed"
+   ]
+  },
+  "findings": [
+   "the policy lists no authority 'tsa-rsa-1'",
+   "no pinned certificate read",
+   "the policy lists no authority 'tsa-rsa-1'"
+  ]
+ },
+ {
+  "id": "T39",
+  "expected": {
+   "status": "failed",
+   "tsa_signature": "failed",
+   "signer_certificate": "not_checked",
+   "tsa_state": "failed",
+   "signer_time": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signer_time": "not_checked",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "failed",
+   "signer_certificate": "not_checked",
+   "tsa_state": "failed"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T40",
+  "expected": {
+   "signer_time": "not_checked"
+  },
+  "got": {
+   "status": "verified",
+   "signer_time": "not_checked",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "verified",
+   "signer_certificate": "verified",
+   "tsa_state": "verified",
+   "existed_no_later_than": "2026-10-01T09:15:00Z"
+  },
+  "agrees": true
+ },
+ {
+  "id": "T41",
+  "expected": {
+   "existed_no_later_than": "2026-10-03T09:15:00Z",
+   "consistency": "consistent"
+  },
+  "got": {
+   "status": "verified",
+   "signer_time": "verified",
+   "token": "verified",
+   "message_imprint": "verified",
+   "subject_bytes": "verified",
+   "message_digest": "verified",
+   "tsa_signature": "verified",
+   "signer_certificate": "verified",
+   "tsa_state": "verified",
+   "existed_no_later_than": "2026-10-03T09:15:00Z",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ }
+]

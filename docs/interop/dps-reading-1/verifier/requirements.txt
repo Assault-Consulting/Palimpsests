@@ -1,0 +1,4 @@
+# as the run used them
+cryptography==46.0.6
+asn1crypto==1.5.1
+jsonschema==4.26.0

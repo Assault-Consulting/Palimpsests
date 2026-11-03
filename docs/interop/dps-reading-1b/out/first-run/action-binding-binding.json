@@ -1,0 +1,3882 @@
+[
+ {
+  "id": "L01",
+  "expected": {
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ]
+   ],
+   "executed": [
+    [
+     0,
+     "shown_to_reviewer"
+    ]
+   ],
+   "reviews": [
+    [
+     "v1",
+     "as_proposed",
+     null
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ]
+   ],
+   "executed": [
+    [
+     0,
+     "shown_to_reviewer"
+    ]
+   ],
+   "reviews": [
+    [
+     "v1",
+     "as_proposed",
+     null
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "L02",
+  "expected": {
+   "authorisation_recheck": "not_checked",
+   "observed_results": "not_checked",
+   "execution_state": "not_requested",
+   "observed": []
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "not_checked",
+   "observed_results": "not_checked",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "not_requested",
+   "observed": []
+  },
+  "agrees": true
+ },
+ {
+  "id": "L03",
+  "expected": {
+   "observed": [
+    [
+     "x1",
+     "indeterminate",
+     "executor_observation"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "observed": [
+    [
+     "x1",
+     "indeterminate",
+     "executor_observation"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "L04",
+  "expected": {
+   "observed": [
+    [
+     "x1",
+     "failed",
+     "target_response"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "observed": [
+    [
+     "x1",
+     "failed",
+     "target_response"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "L05",
+  "expected": {
+   "record_statements": "not_checked",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ]
+   ],
+   "executed": [
+    [
+     1,
+     "shown_to_reviewer"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "not_checked",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ]
+   ],
+   "executed": [
+    [
+     1,
+     "shown_to_reviewer"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "L06",
+  "expected": {
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ]
+   ],
+   "executed": [
+    [
+     1,
+     "via_change_only"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ]
+   ],
+   "executed": [
+    [
+     1,
+     "via_change_only"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "L07",
+  "expected": {
+   "observed_results": "not_checked",
+   "execution_state": "requested_not_attempted",
+   "observed": []
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "not_checked",
+   "observed_results": "not_checked",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "requested_not_attempted",
+   "observed": []
+  },
+  "agrees": false,
+  "differs": {
+   "authorisation_recheck": [
+    "verified",
+    "not_checked"
+   ]
+  },
+  "findings": [
+   "nothing was attempted",
+   "nothing was attempted"
+  ]
+ },
+ {
+  "id": "L08",
+  "expected": {
+   "authorisation_recheck": "not_checked",
+   "observed_results": "not_checked",
+   "execution_state": "not_requested",
+   "observed": [],
+   "record_statements": "not_checked"
+  },
+  "got": {
+   "record_statements": "not_checked",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "not_checked",
+   "observed_results": "not_checked",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "not_requested",
+   "observed": []
+  },
+  "agrees": true
+ },
+ {
+  "id": "L09",
+  "expected": {
+   "observed": [
+    [
+     "x1",
+     "indeterminate",
+     "executor_observation"
+    ],
+    [
+     "x2",
+     "succeeded",
+     "independent_observation"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "observed": [
+    [
+     "x1",
+     "indeterminate",
+     "executor_observation"
+    ],
+    [
+     "x2",
+     "succeeded",
+     "independent_observation"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "L10",
+  "expected": {
+   "record_statements": "not_checked",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "not_checked",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "L11",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L12",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L13",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L14",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L15",
+  "expected": {
+   "specification_digests": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "failed",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L16",
+  "expected": {
+   "specification_statements": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "failed",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L17",
+  "expected": {
+   "stage_order": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "failed",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L18",
+  "expected": {
+   "stage_order": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "failed",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L19",
+  "expected": {
+   "action_binding": "failed",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "L20",
+  "expected": {
+   "action_binding": "failed",
+   "record_statements": "not_checked",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "not_checked",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "L21",
+  "expected": {
+   "authorisation_recheck": "not_checked",
+   "observed_results": "not_checked",
+   "execution_state": "not_requested",
+   "observed": [],
+   "record_statements": "failed"
+  },
+  "got": {
+   "record_statements": "failed",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "not_checked",
+   "observed_results": "not_checked",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "not_requested",
+   "observed": []
+  },
+  "agrees": true
+ },
+ {
+  "id": "L22",
+  "expected": {
+   "authorisation_recheck": "not_checked",
+   "observed_results": "not_checked",
+   "execution_state": "not_requested",
+   "observed": [],
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "not_checked",
+   "observed_results": "not_checked",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "not_requested",
+   "observed": []
+  },
+  "agrees": true
+ },
+ {
+  "id": "L23",
+  "expected": {
+   "authorisation_recheck": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "failed",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": false,
+  "differs": {
+   "action_binding": [
+    "verified",
+    "failed"
+   ]
+  },
+  "findings": [
+   "attempt x1: recheck_ref names a request",
+   "attempt x1 does not follow a recheck of its request"
+  ]
+ },
+ {
+  "id": "L24",
+  "expected": {
+   "authorisation_recheck": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "failed",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L25",
+  "expected": {
+   "authorisation_recheck": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "failed",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L26",
+  "expected": {
+   "authorisation_recheck": "failed",
+   "stage_order": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "failed",
+   "authorisation_recheck": "failed",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L27",
+  "expected": {
+   "authorisation_recheck": "failed",
+   "observed": [
+    [
+     "x1",
+     "indeterminate",
+     "executor_observation"
+    ],
+    [
+     "x2",
+     "succeeded",
+     "target_response"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "observed": [
+    [
+     "x1",
+     "indeterminate",
+     "executor_observation"
+    ],
+    [
+     "x2",
+     "succeeded",
+     "target_response"
+    ]
+   ]
+  },
+  "agrees": false,
+  "differs": {
+   "authorisation_recheck": [
+    "failed",
+    "verified"
+   ]
+  },
+  "findings": []
+ },
+ {
+  "id": "L28",
+  "expected": {
+   "observed_results": "failed",
+   "observed": [
+    [
+     "x1",
+     "missing",
+     null
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "failed",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "observed": [
+    [
+     "x1",
+     "missing"
+    ]
+   ]
+  },
+  "agrees": false,
+  "differs": {
+   "observed": [
+    [
+     [
+      "x1",
+      "missing",
+      null
+     ]
+    ],
+    [
+     [
+      "x1",
+      "missing"
+     ]
+    ]
+   ]
+  },
+  "findings": [
+   "attempt x1 has no result"
+  ]
+ },
+ {
+  "id": "L29",
+  "expected": {
+   "observed_results": "failed",
+   "observed": [
+    [
+     "x1",
+     "multiple",
+     null
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "failed",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "observed": [
+    [
+     "x1",
+     "multiple"
+    ]
+   ]
+  },
+  "agrees": false,
+  "differs": {
+   "observed": [
+    [
+     [
+      "x1",
+      "multiple",
+      null
+     ]
+    ],
+    [
+     [
+      "x1",
+      "multiple"
+     ]
+    ]
+   ]
+  },
+  "findings": [
+   "attempt x1 has 2 results"
+  ]
+ },
+ {
+  "id": "L30",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L31",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L32",
+  "expected": {},
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L33",
+  "expected": {
+   "rationale_provenance": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "failed",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L34",
+  "expected": {},
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L35",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L36",
+  "expected": {
+   "record_statements": "failed"
+  },
+  "got": {
+   "record_statements": "failed",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L37",
+  "expected": {
+   "record_statements": "failed"
+  },
+  "got": {
+   "record_statements": "failed",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L38",
+  "expected": {
+   "record_statements": "not_checked"
+  },
+  "got": {
+   "record_statements": "not_checked",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L39",
+  "expected": {
+   "specification_digests": "unavailable",
+   "specification_statements": "not_checked"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "unavailable",
+   "specification_statements": "not_checked",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L40",
+  "expected": {
+   "specification_statements": "not_checked"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": false,
+  "differs": {
+   "specification_statements": [
+    "not_checked",
+    "verified"
+   ]
+  },
+  "findings": []
+ },
+ {
+  "id": "L41",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L42",
+  "expected": {
+   "stage_order": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": false,
+  "differs": {
+   "action_binding": [
+    "verified",
+    "failed"
+   ],
+   "stage_order": [
+    "failed",
+    "verified"
+   ]
+  },
+  "findings": [
+   "stage_id used twice: x1"
+  ]
+ },
+ {
+  "id": "L43",
+  "expected": {
+   "observed_results": "failed",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ]
+   ]
+  },
+  "agrees": false,
+  "differs": {
+   "action_binding": [
+    "verified",
+    "failed"
+   ],
+   "observed_results": [
+    "failed",
+    "verified"
+   ]
+  },
+  "findings": [
+   "result r2: attempt_ref names a request"
+  ]
+ },
+ {
+  "id": "L44",
+  "expected": {
+   "rationale_provenance": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": false,
+  "differs": {
+   "rationale_provenance": [
+    "failed",
+    "verified"
+   ]
+  },
+  "findings": []
+ },
+ {
+  "id": "L45",
+  "expected": {
+   "specification_statements": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "failed",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L46",
+  "expected": {
+   "record_statements": "failed"
+  },
+  "got": {
+   "record_statements": "failed",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L47",
+  "expected": {
+   "record_statements": "not_checked",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ]
+   ],
+   "executed": [
+    [
+     0,
+     "shown_to_reviewer"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "not_checked",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ]
+   ],
+   "executed": [
+    [
+     0,
+     "shown_to_reviewer"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "L48",
+  "expected": {
+   "action_binding": "failed",
+   "record_statements": "not_checked",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "not_checked",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "L49",
+  "expected": {
+   "action_binding": "failed",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ],
+    [
+     "x2",
+     "succeeded",
+     "target_response"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ],
+    [
+     "x2",
+     "succeeded",
+     "target_response"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "L50",
+  "expected": {
+   "action_binding": "failed",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ],
+    [
+     "x2",
+     "succeeded",
+     "target_response"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ],
+    [
+     "x2",
+     "succeeded",
+     "target_response"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "L51",
+  "expected": {
+   "action_binding": "failed",
+   "executed": [
+    [
+     1,
+     "via_change_only"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "executed": [
+    [
+     1,
+     "via_change_only"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "L52",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L53",
+  "expected": {},
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L54",
+  "expected": {
+   "authorisation_recheck": "not_checked",
+   "observed_results": "not_checked",
+   "execution_state": "not_requested",
+   "observed": [],
+   "record_statements": "not_checked"
+  },
+  "got": {
+   "record_statements": "not_checked",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "not_checked",
+   "observed_results": "not_checked",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "not_requested",
+   "observed": []
+  },
+  "agrees": true
+ },
+ {
+  "id": "L55",
+  "expected": {
+   "reviews": [
+    [
+     "v1",
+     "differs_from_proposal",
+     "owner-example-1"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "reviews": [
+    [
+     "v1",
+     "differs_from_proposal",
+     "owner-example-1"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "L56",
+  "expected": {
+   "action_binding": "failed",
+   "reviews": [
+    [
+     "v1",
+     "proposal_not_named",
+     null
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "reviews": [
+    [
+     "v1",
+     "proposal_not_named",
+     null
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "L57",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L58",
+  "expected": {},
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L59",
+  "expected": {
+   "action_binding": "failed",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ],
+    [
+     "x2",
+     "succeeded",
+     "target_response"
+    ]
+   ],
+   "executed": [
+    [
+     0,
+     "shown_to_reviewer"
+    ],
+    [
+     1,
+     "via_change_only"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ],
+    [
+     "x2",
+     "succeeded",
+     "target_response"
+    ]
+   ],
+   "executed": [
+    [
+     0,
+     "shown_to_reviewer"
+    ],
+    [
+     1,
+     "via_change_only"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "L60",
+  "expected": {
+   "action_binding": "failed",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ],
+    [
+     "x2",
+     "succeeded",
+     "target_response"
+    ]
+   ],
+   "executed": [
+    [
+     0,
+     "shown_to_reviewer"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ],
+    [
+     "x2",
+     "succeeded",
+     "target_response"
+    ]
+   ],
+   "executed": [
+    [
+     0,
+     "shown_to_reviewer"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "L61",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L62",
+  "expected": {
+   "action_binding": "failed",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ],
+    [
+     "x2",
+     "succeeded",
+     "target_response"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ],
+    [
+     "x2",
+     "succeeded",
+     "target_response"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "L63",
+  "expected": {
+   "action_binding": "failed",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ],
+    [
+     "x2",
+     "succeeded",
+     "target_response"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ],
+    [
+     "x2",
+     "succeeded",
+     "target_response"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "L64",
+  "expected": {
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ]
+   ],
+   "executed": [
+    [
+     0,
+     "shown_to_reviewer"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ]
+   ],
+   "executed": [
+    [
+     0,
+     "shown_to_reviewer"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "L65",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L66",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L67",
+  "expected": {
+   "action_binding": "failed",
+   "executed": [
+    [
+     1,
+     "via_change_only"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "executed": [
+    [
+     1,
+     "via_change_only"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "L68",
+  "expected": {
+   "action_binding": "failed",
+   "reviews": [
+    [
+     "v1",
+     "differs_from_proposal",
+     null
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "reviews": [
+    [
+     "v1",
+     "differs_from_proposal",
+     null
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "L69",
+  "expected": {
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ]
+   ],
+   "executed": [
+    [
+     1,
+     "via_change_only"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ]
+   ],
+   "executed": [
+    [
+     1,
+     "via_change_only"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "L70",
+  "expected": {
+   "record_statements": "not_checked"
+  },
+  "got": {
+   "record_statements": "not_checked",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L71",
+  "expected": {
+   "authorisation_recheck": "not_checked",
+   "observed_results": "not_checked",
+   "execution_state": "not_requested",
+   "observed": [],
+   "record_statements": "not_checked"
+  },
+  "got": {
+   "record_statements": "not_checked",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "not_checked",
+   "observed_results": "not_checked",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "not_requested",
+   "observed": []
+  },
+  "agrees": true
+ },
+ {
+  "id": "L72",
+  "expected": {
+   "stage_order": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "failed",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L73",
+  "expected": {
+   "stage_order": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "failed",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L74",
+  "expected": {
+   "stage_order": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "failed",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L75",
+  "expected": {
+   "stage_order": "failed",
+   "authorisation_recheck": "not_checked",
+   "observed_results": "not_checked",
+   "execution_state": "not_requested"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "failed",
+   "authorisation_recheck": "not_checked",
+   "observed_results": "not_checked",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "not_requested"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L76",
+  "expected": {
+   "rationale_provenance": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "failed",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "L77",
+  "expected": {},
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S01",
+  "expected": {
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ],
+    [
+     "x2",
+     "succeeded",
+     "target_response"
+    ]
+   ],
+   "executed": [
+    [
+     0,
+     "via_standing_approval"
+    ],
+    [
+     1,
+     "via_standing_approval"
+    ]
+   ],
+   "reviews": [
+    [
+     "v1",
+     "proposal_not_named",
+     null
+    ]
+   ],
+   "standing": [
+    [
+     "sa1",
+     "verified",
+     2,
+     2,
+     "none_recorded"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ],
+    [
+     "x2",
+     "succeeded",
+     "target_response"
+    ]
+   ],
+   "executed": [
+    [
+     0,
+     "via_standing_approval"
+    ],
+    [
+     1,
+     "via_standing_approval"
+    ]
+   ],
+   "reviews": [
+    [
+     "v1",
+     "proposal_not_named",
+     null
+    ]
+   ],
+   "standing": [
+    [
+     "sa1",
+     "verified",
+     2,
+     2,
+     "none_recorded"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "S02",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S03",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S04",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S05",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S06",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S07",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S08",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S09",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S10",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S11",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S12",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S13",
+  "expected": {
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ],
+    [
+     "x2",
+     "succeeded",
+     "target_response"
+    ]
+   ],
+   "executed": [
+    [
+     11,
+     "via_standing_approval"
+    ],
+    [
+     1,
+     "via_standing_approval"
+    ]
+   ],
+   "reviews": [
+    [
+     "v1",
+     "proposal_not_named",
+     null
+    ]
+   ],
+   "standing": [
+    [
+     "sa1",
+     "verified",
+     2,
+     2,
+     "none_recorded"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ],
+    [
+     "x2",
+     "succeeded",
+     "target_response"
+    ]
+   ],
+   "executed": [
+    [
+     1,
+     "via_standing_approval"
+    ],
+    [
+     11,
+     "via_standing_approval"
+    ]
+   ],
+   "reviews": [
+    [
+     "v1",
+     "proposal_not_named",
+     null
+    ]
+   ],
+   "standing": [
+    [
+     "sa1",
+     "verified",
+     2,
+     2,
+     "none_recorded"
+    ]
+   ]
+  },
+  "agrees": false,
+  "differs": {
+   "executed": [
+    [
+     [
+      11,
+      "via_standing_approval"
+     ],
+     [
+      1,
+      "via_standing_approval"
+     ]
+    ],
+    [
+     [
+      1,
+      "via_standing_approval"
+     ],
+     [
+      11,
+      "via_standing_approval"
+     ]
+    ]
+   ]
+  },
+  "findings": []
+ },
+ {
+  "id": "S14",
+  "expected": {
+   "action_binding": "not_checked",
+   "standing": [
+    [
+     "sa1",
+     "not_checked",
+     2,
+     null,
+     "none_recorded"
+    ]
+   ],
+   "executed": [
+    [
+     0,
+     "via_standing_approval"
+    ],
+    [
+     1,
+     "via_standing_approval"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "not_checked",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "standing": [
+    [
+     "sa1",
+     "not_checked",
+     2,
+     null,
+     "none_recorded"
+    ]
+   ],
+   "executed": [
+    [
+     0,
+     "via_standing_approval"
+    ],
+    [
+     1,
+     "via_standing_approval"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "S15",
+  "expected": {
+   "action_binding": "failed",
+   "standing": [
+    [
+     "sa1",
+     "failed",
+     2,
+     null,
+     "none_recorded"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "standing": [
+    [
+     "sa1",
+     "failed",
+     2,
+     null,
+     "none_recorded"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "S16",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S17",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S18",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S19",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S20",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S21",
+  "expected": {
+   "action_binding": "failed",
+   "standing": [
+    [
+     "sa1",
+     "verified",
+     2,
+     1,
+     "none_recorded"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "standing": [
+    [
+     "sa1",
+     "verified",
+     2,
+     1,
+     "none_recorded"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "S22",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S23",
+  "expected": {
+   "action_binding": "not_checked",
+   "standing": [
+    [
+     "sa1",
+     "unavailable",
+     2,
+     null,
+     "none_recorded"
+    ]
+   ],
+   "executed": [
+    [
+     0,
+     "via_standing_approval"
+    ],
+    [
+     1,
+     "via_standing_approval"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "not_checked",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "standing": [
+    [
+     "sa1",
+     "unavailable",
+     2,
+     null,
+     "none_recorded"
+    ]
+   ],
+   "executed": [
+    [
+     0,
+     "via_standing_approval"
+    ],
+    [
+     1,
+     "via_standing_approval"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "S24",
+  "expected": {
+   "action_binding": "failed",
+   "standing": [
+    [
+     "sa1",
+     "failed",
+     2,
+     null,
+     "none_recorded"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "standing": [
+    [
+     "sa1",
+     "failed",
+     2,
+     null,
+     "none_recorded"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "S25",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S26",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S27",
+  "expected": {
+   "action_binding": "failed",
+   "record_statements": "failed"
+  },
+  "got": {
+   "record_statements": "failed",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S28",
+  "expected": {
+   "action_binding": "failed",
+   "record_statements": "failed"
+  },
+  "got": {
+   "record_statements": "failed",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S29",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S30",
+  "expected": {
+   "action_binding": "failed",
+   "reviews": [
+    [
+     "v1",
+     "proposal_not_named",
+     null
+    ],
+    [
+     "v2",
+     "proposal_not_named",
+     null
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "reviews": [
+    [
+     "v1",
+     "proposal_not_named",
+     null
+    ],
+    [
+     "v2",
+     "proposal_not_named",
+     null
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "S31",
+  "expected": {
+   "action_binding": "failed",
+   "authorisation_recheck": "failed",
+   "standing": [
+    [
+     "sa1",
+     "verified",
+     2,
+     2,
+     "recorded"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "failed",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "standing": [
+    [
+     "sa1",
+     "verified",
+     2,
+     2,
+     "recorded"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "S32",
+  "expected": {
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ],
+    [
+     "x2",
+     "succeeded",
+     "target_response"
+    ]
+   ],
+   "executed": [
+    [
+     0,
+     "via_standing_approval"
+    ],
+    [
+     1,
+     "via_standing_approval"
+    ]
+   ],
+   "reviews": [
+    [
+     "v1",
+     "proposal_not_named",
+     null
+    ]
+   ],
+   "standing": [
+    [
+     "sa1",
+     "verified",
+     2,
+     2,
+     "recorded"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ],
+    [
+     "x2",
+     "succeeded",
+     "target_response"
+    ]
+   ],
+   "executed": [
+    [
+     0,
+     "via_standing_approval"
+    ],
+    [
+     1,
+     "via_standing_approval"
+    ]
+   ],
+   "reviews": [
+    [
+     "v1",
+     "proposal_not_named",
+     null
+    ]
+   ],
+   "standing": [
+    [
+     "sa1",
+     "verified",
+     2,
+     2,
+     "recorded"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "S33",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S34",
+  "expected": {
+   "action_binding": "failed",
+   "stage_order": "failed",
+   "authorisation_recheck": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "failed",
+   "authorisation_recheck": "failed",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S35",
+  "expected": {
+   "stage_order": "failed",
+   "record_statements": "failed",
+   "rationale_provenance": "failed"
+  },
+  "got": {
+   "record_statements": "failed",
+   "action_binding": "verified",
+   "stage_order": "failed",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "failed",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S36",
+  "expected": {
+   "action_binding": "failed",
+   "executed": [
+    [
+     0,
+     "unbound"
+    ],
+    [
+     1,
+     "unbound"
+    ]
+   ],
+   "standing": []
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "executed": [
+    [
+     0,
+     "shown_to_reviewer"
+    ],
+    [
+     1,
+     "unbound"
+    ]
+   ],
+   "standing": []
+  },
+  "agrees": false,
+  "differs": {
+   "executed": [
+    [
+     [
+      0,
+      "unbound"
+     ],
+     [
+      1,
+      "unbound"
+     ]
+    ],
+    [
+     [
+      0,
+      "shown_to_reviewer"
+     ],
+     [
+      1,
+      "unbound"
+     ]
+    ]
+   ]
+  },
+  "findings": [
+   "outcome o1 approves bounds: an approval of bounds is never an outcome",
+   "request q2 names a specification other than the one approved",
+   "outcome o1 covers 2 requests, more than the 1 it states",
+   "specification 1 was executed with no approval, change or standing approval binding it"
+  ]
+ },
+ {
+  "id": "S37",
+  "expected": {
+   "execution_state": "not_requested",
+   "authorisation_recheck": "not_checked",
+   "observed_results": "not_checked",
+   "executed": [],
+   "standing": []
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "not_checked",
+   "observed_results": "not_checked",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "not_requested",
+   "executed": [],
+   "standing": []
+  },
+  "agrees": true
+ },
+ {
+  "id": "S38",
+  "expected": {
+   "record_statements": "not_checked"
+  },
+  "got": {
+   "record_statements": "not_checked",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S39",
+  "expected": {
+   "specification_digests": "unavailable",
+   "specification_statements": "not_checked",
+   "action_binding": "not_checked",
+   "standing": [
+    [
+     "sa1",
+     "verified",
+     2,
+     2,
+     "none_recorded"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "not_checked",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "unavailable",
+   "specification_statements": "not_checked",
+   "execution_state": "attempted",
+   "standing": [
+    [
+     "sa1",
+     "verified",
+     2,
+     2,
+     "none_recorded"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "S40",
+  "expected": {
+   "action_binding": "failed",
+   "standing": [
+    [
+     "sa1",
+     "verified",
+     3,
+     2,
+     "none_recorded"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "standing": [
+    [
+     "sa1",
+     "verified",
+     3,
+     2,
+     "none_recorded"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "S41",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S42",
+  "expected": {
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ],
+    [
+     "x2",
+     "succeeded",
+     "target_response"
+    ]
+   ],
+   "executed": [
+    [
+     0,
+     "via_standing_approval"
+    ],
+    [
+     1,
+     "via_standing_approval"
+    ]
+   ],
+   "reviews": [
+    [
+     "v1",
+     "proposal_not_named",
+     null
+    ]
+   ],
+   "standing": [
+    [
+     "sa1",
+     "verified",
+     2,
+     2,
+     "none_recorded"
+    ]
+   ],
+   "record_statements": "not_checked"
+  },
+  "got": {
+   "record_statements": "not_checked",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ],
+    [
+     "x2",
+     "succeeded",
+     "target_response"
+    ]
+   ],
+   "executed": [
+    [
+     0,
+     "via_standing_approval"
+    ],
+    [
+     1,
+     "via_standing_approval"
+    ]
+   ],
+   "reviews": [
+    [
+     "v1",
+     "proposal_not_named",
+     null
+    ]
+   ],
+   "standing": [
+    [
+     "sa1",
+     "verified",
+     2,
+     2,
+     "none_recorded"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "S43",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S44",
+  "expected": {
+   "rationale_provenance": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "failed",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S45",
+  "expected": {
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ],
+    [
+     "x2",
+     "succeeded",
+     "target_response"
+    ]
+   ],
+   "executed": [
+    [
+     0,
+     "via_standing_approval"
+    ],
+    [
+     1,
+     "via_standing_approval"
+    ]
+   ],
+   "reviews": [
+    [
+     "v1",
+     "proposal_not_named",
+     null
+    ]
+   ],
+   "standing": [
+    [
+     "sa1",
+     "verified",
+     2,
+     2,
+     "none_recorded"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "verified",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "observed": [
+    [
+     "x1",
+     "succeeded",
+     "target_response"
+    ],
+    [
+     "x2",
+     "succeeded",
+     "target_response"
+    ]
+   ],
+   "executed": [
+    [
+     0,
+     "via_standing_approval"
+    ],
+    [
+     1,
+     "via_standing_approval"
+    ]
+   ],
+   "reviews": [
+    [
+     "v1",
+     "proposal_not_named",
+     null
+    ]
+   ],
+   "standing": [
+    [
+     "sa1",
+     "verified",
+     2,
+     2,
+     "none_recorded"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "S46",
+  "expected": {
+   "action_binding": "failed"
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S47",
+  "expected": {
+   "action_binding": "failed",
+   "record_statements": "failed"
+  },
+  "got": {
+   "record_statements": "failed",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted"
+  },
+  "agrees": true
+ },
+ {
+  "id": "S48",
+  "expected": {
+   "action_binding": "failed",
+   "authorisation_recheck": "failed",
+   "standing": [
+    [
+     "sa1",
+     "verified",
+     2,
+     2,
+     "recorded"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "failed",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "standing": [
+    [
+     "sa1",
+     "verified",
+     2,
+     2,
+     "recorded"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "S49",
+  "expected": {
+   "action_binding": "failed",
+   "authorisation_recheck": "failed",
+   "standing": [
+    [
+     "sa1",
+     "verified",
+     2,
+     2,
+     "recorded"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "failed",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "standing": [
+    [
+     "sa1",
+     "verified",
+     2,
+     2,
+     "recorded"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "S50",
+  "expected": {
+   "action_binding": "failed",
+   "authorisation_recheck": "failed",
+   "standing": [
+    [
+     "sa1",
+     "verified",
+     2,
+     2,
+     "recorded"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "failed",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "standing": [
+    [
+     "sa1",
+     "verified",
+     2,
+     2,
+     "recorded"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "S51",
+  "expected": {
+   "action_binding": "failed",
+   "standing": [
+    [
+     "sa1",
+     "verified",
+     2,
+     2,
+     "none_recorded"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "standing": [
+    [
+     "sa1",
+     "verified",
+     2,
+     2,
+     "none_recorded"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "S52",
+  "expected": {
+   "action_binding": "failed",
+   "standing": [
+    [
+     "sa1",
+     "failed",
+     2,
+     null,
+     "none_recorded"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "verified",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "standing": [
+    [
+     "sa1",
+     "failed",
+     2,
+     null,
+     "none_recorded"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "S53",
+  "expected": {
+   "action_binding": "failed",
+   "stage_order": "failed",
+   "standing": [
+    [
+     "sa1",
+     "verified",
+     2,
+     2,
+     "none_recorded"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "failed",
+   "authorisation_recheck": "verified",
+   "observed_results": "verified",
+   "rationale_provenance": "verified",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "standing": [
+    [
+     "sa1",
+     "verified",
+     2,
+     2,
+     "none_recorded"
+    ]
+   ]
+  },
+  "agrees": true
+ },
+ {
+  "id": "S54",
+  "expected": {
+   "action_binding": "failed",
+   "stage_order": "failed",
+   "authorisation_recheck": "failed",
+   "rationale_provenance": "failed",
+   "standing": [
+    [
+     "sa1",
+     "verified",
+     2,
+     2,
+     "recorded"
+    ]
+   ]
+  },
+  "got": {
+   "record_statements": "verified",
+   "action_binding": "failed",
+   "stage_order": "failed",
+   "authorisation_recheck": "failed",
+   "observed_results": "verified",
+   "rationale_provenance": "failed",
+   "specification_digests": "verified",
+   "specification_statements": "verified",
+   "execution_state": "attempted",
+   "standing": [
+    [
+     "sa1",
+     "verified",
+     2,
+     2,
+     "recorded"
+    ]
+   ]
+  },
+  "agrees": true
+ }
+]

@@ -1,0 +1,442 @@
+[
+ {
+  "id": "J01",
+  "expected": "consistent",
+  "got": "consistent",
+  "agrees": true
+ },
+ {
+  "id": "J02",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "person_signature results do not give each index once: [0, 1, 2, 3, 5]"
+  ]
+ },
+ {
+  "id": "J03",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "person_signature results do not give each index once: [0, 1, 2, 3, 0, 4, 5]"
+  ]
+ },
+ {
+  "id": "J04",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "person_signature_count 4; the attachment has 6",
+   "person_signature results do not give each index once: [0, 1, 2, 3, 5]"
+  ]
+ },
+ {
+  "id": "J05",
+  "expected": "inconsistent",
+  "got": "consistent",
+  "agrees": false
+ },
+ {
+  "id": "J06",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "attachment_digest is not the attachment's",
+   "person_signature 4: reported 'verified', the check finds 'unavailable'",
+   "person_signature 4 key_state: reported 'verified', the check finds 'unavailable'"
+  ]
+ },
+ {
+  "id": "J07",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "documents do not match those held",
+   "organisation_seal 2: reported 'verified', the check finds 'failed'",
+   "organisation_seal 2 subject: reported 'verified', the check finds 'failed'"
+  ]
+ },
+ {
+  "id": "J08",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "documents do not match those held"
+  ]
+ },
+ {
+  "id": "J09",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "documents do not match those held"
+  ]
+ },
+ {
+  "id": "J10",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "documents do not match those held"
+  ]
+ },
+ {
+  "id": "J11",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "person_signature 1: authenticator user_verified differs"
+  ]
+ },
+ {
+  "id": "J12",
+  "expected": "consistent",
+  "got": "consistent",
+  "agrees": true
+ },
+ {
+  "id": "J13",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "person_signature 3: signature key_ref differs",
+   "person_signature 3 key_state key_ref differs",
+   "person_signature 3 identity: reported 'verified', the check finds 'failed'"
+  ]
+ },
+ {
+  "id": "J14",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "person_signature 0: reported 'verified', the check finds 'failed'",
+   "person_signature 0 signature: reported 'verified', the check finds 'failed'",
+   "person_signature 0: signature key_ref differs"
+  ]
+ },
+ {
+  "id": "J15",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "person_signature 2: reported 'verified', the check finds 'failed'",
+   "person_signature 2 signature: reported 'verified', the check finds 'failed'",
+   "person_signature 2 subject: reported 'verified', the check finds 'failed'"
+  ]
+ },
+ {
+  "id": "J16",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "person_signature 4: reported 'verified', the check finds 'unavailable'",
+   "person_signature 4 key_state: reported 'verified', the check finds 'unavailable'",
+   "person_signature 4 key_state time_basis differs"
+  ]
+ },
+ {
+  "id": "J17",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "person_signature 2 key_state time_basis differs",
+   "person_signature 2 key_state timestamp_index differs"
+  ]
+ },
+ {
+  "id": "J18",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "organisation_seal 0: reported 'verified', the check finds 'failed'",
+   "organisation_seal 0 subject: reported 'verified', the check finds 'failed'",
+   "organisation_seal 0 embedded_copy: reported 'verified', the check finds 'failed'"
+  ]
+ },
+ {
+  "id": "J19",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "organisation_seal 0: key_ref differs"
+  ]
+ },
+ {
+  "id": "J20",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "timestamp 0: tsa_ref differs"
+  ]
+ },
+ {
+  "id": "J21",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "timestamp 0 signer_time: reported 'verified', the check finds 'failed'",
+   "timestamp 0: signer_time consistency differs"
+  ]
+ },
+ {
+  "id": "J22",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "trust_policy reported 'verified'",
+   "person_signature 0: reported 'verified', the check finds 'failed'",
+   "person_signature 0 signature: reported 'verified', the check finds 'failed'"
+  ]
+ },
+ {
+  "id": "J23",
+  "expected": "consistent",
+  "got": "consistent",
+  "agrees": true
+ },
+ {
+  "id": "J24",
+  "expected": "inconsistent",
+  "got": "consistent",
+  "agrees": false
+ },
+ {
+  "id": "J25",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "person_signature 0: decision_id differs"
+  ]
+ },
+ {
+  "id": "J26",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "organisation_seal 0 certificate: reported 'verified', the check finds 'not_checked'",
+   "organisation_seal 1 certificate: reported 'verified', the check finds 'not_checked'",
+   "organisation_seal 2 certificate: reported 'verified', the check finds 'not_checked'"
+  ]
+ },
+ {
+  "id": "J27",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "timestamp_count 0; the attachment has 1",
+   "timestamp results do not give each index once: []"
+  ]
+ },
+ {
+  "id": "J28",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "timestamp 0: existed_no_later_than differs"
+  ]
+ },
+ {
+  "id": "J29",
+  "expected": "consistent",
+  "got": "consistent",
+  "agrees": true
+ },
+ {
+  "id": "J30",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "organisation_seal 0: reported 'verified', the check finds 'failed'",
+   "organisation_seal 0 subject: reported 'verified', the check finds 'failed'",
+   "organisation_seal 0 embedded_copy: reported 'verified', the check finds 'failed'"
+  ]
+ },
+ {
+  "id": "J31",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "person_signature 0 identity source_ref differs"
+  ]
+ },
+ {
+  "id": "J32",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "person_signature 0 key_state time differs"
+  ]
+ },
+ {
+  "id": "J33",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "attachment_digest is not the attachment's"
+  ]
+ },
+ {
+  "id": "J34",
+  "expected": "consistent",
+  "got": "consistent",
+  "agrees": true
+ },
+ {
+  "id": "J35",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "attachment_digest is not the attachment's"
+  ]
+ },
+ {
+  "id": "J36",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "person_signature results do not give each index once: [0.0, 1, 2, 3, 4, 5]"
+  ]
+ },
+ {
+  "id": "J37",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "person_signature_count 5.0; the attachment has 6"
+  ]
+ },
+ {
+  "id": "J38",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "timestamp results do not give each index once: [0.0]"
+  ]
+ },
+ {
+  "id": "J39",
+  "expected": "consistent",
+  "got": "consistent",
+  "agrees": true
+ },
+ {
+  "id": "J40",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "timestamp 0: tsa_ref differs"
+  ]
+ },
+ {
+  "id": "J41",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "person_signature 4: reported 'verified', the check finds 'unavailable'",
+   "person_signature 4 key_state: reported 'verified', the check finds 'unavailable'",
+   "person_signature 4 key_state time_basis differs"
+  ]
+ },
+ {
+  "id": "J42",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "trust_policy reported 'failed'",
+   "person_signature 0: reported 'failed', the check finds 'verified'",
+   "person_signature 0 signature: reported 'failed', the check finds 'verified'"
+  ]
+ },
+ {
+  "id": "J43",
+  "expected": "consistent",
+  "got": "consistent",
+  "agrees": true
+ },
+ {
+  "id": "J46",
+  "expected": "consistent",
+  "got": "consistent",
+  "agrees": true
+ },
+ {
+  "id": "J47",
+  "expected": "inconsistent",
+  "got": "not attempted",
+  "agrees": "not attempted",
+  "note": "deep_subject_of: the nesting construction is not implemented in this run"
+ },
+ {
+  "id": "J48",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "organisation_seal 0: reported 'verified', the check finds 'failed'",
+   "organisation_seal 0 subject: reported 'verified', the check finds 'failed'",
+   "organisation_seal 0 embedded_copy: reported 'verified', the check finds 'failed'"
+  ]
+ },
+ {
+  "id": "J49",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "documents do not match those held",
+   "person_signature 5: reported 'verified', the check finds 'failed'",
+   "person_signature 5 subject: reported 'verified', the check finds 'failed'"
+  ]
+ },
+ {
+  "id": "J50",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agrees": true,
+  "reasons": [
+   "attachment_digest is not the attachment's",
+   "person_signature 5: reported 'verified', the check finds 'failed'",
+   "person_signature 5 signature: reported 'verified', the check finds 'failed'"
+  ]
+ },
+ {
+  "id": "J51",
+  "expected": "inconsistent",
+  "got": "consistent",
+  "agrees": false
+ }
+]

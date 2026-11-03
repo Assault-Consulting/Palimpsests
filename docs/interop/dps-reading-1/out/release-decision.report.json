@@ -1,0 +1,105 @@
+{
+ "profile": "dps-action-binding-report",
+ "profile_version": "0.3.0",
+ "attachment_count": 1,
+ "trust_policy_ref": "urn:dps-reading-1:verifier-policy:no-keys",
+ "trust_policy": {
+  "status": "verified"
+ },
+ "results": [
+  {
+   "attachment_index": 0,
+   "decision_id": "DR-2026-0412",
+   "attachment_digest": "5086c7674db770c6d01592ba697722a2fb468c16d1d5ab9226a7b5217c4bc1a8",
+   "structural_validity": {
+    "status": "verified"
+   },
+   "specifications": [
+    {
+     "spec_index": 0,
+     "spec_digest": "19ade2a46319ac6622333cd6731ac400ed11daa7d6955b5daa5864da91c2b711",
+     "digest": {
+      "status": "verified"
+     },
+     "statements": {
+      "status": "verified"
+     }
+    }
+   ],
+   "reviews": [
+    {
+     "review_stage_id": "v1",
+     "shown": "as_proposed"
+    }
+   ],
+   "executed_specifications": [
+    {
+     "spec_index": 0,
+     "reached_by": "shown_to_reviewer"
+    }
+   ],
+   "record_statements": {
+    "status": "verified"
+   },
+   "action_binding": {
+    "status": "verified"
+   },
+   "stage_order": {
+    "status": "verified",
+    "time_basis": "issuer_assertion"
+   },
+   "authorisation_recheck": {
+    "status": "verified"
+   },
+   "observed_results": {
+    "status": "verified",
+    "execution_state": "attempted",
+    "attempts": [
+     {
+      "attempt_stage_id": "x1",
+      "observed": "succeeded",
+      "basis": "target_response"
+     }
+    ]
+   },
+   "rationale_provenance": {
+    "status": "verified"
+   },
+   "identity_assurance": {
+    "status": "not_checked",
+    "basis": "issuer_assertion"
+   },
+   "authority_assurance": {
+    "status": "not_checked",
+    "basis": "issuer_assertion"
+   },
+   "time_assurance": {
+    "status": "not_checked",
+    "basis": "issuer_assertion"
+   },
+   "issuer_signature": {
+    "status": "not_checked",
+    "findings": [
+     "the attachment carries no issuer signature"
+    ]
+   },
+   "legal_signature": {
+    "status": "not_checked",
+    "basis": "issuer_assertion",
+    "findings": [
+     "no legal signature is referenced"
+    ]
+   }
+  }
+ ],
+ "scope_of_conclusion": {
+  "covers": "supplied_attachments_only",
+  "not_assessed": [
+   "legal_requirements",
+   "conformance_level",
+   "events_not_in_attachment",
+   "truth_of_recorded_claims",
+   "what_the_reviewer_saw"
+  ]
+ }
+}

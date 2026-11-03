@@ -1,0 +1,2179 @@
+[
+ {
+  "id": "N01",
+  "expected": {},
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N02",
+  "expected": {
+   "user_present": true,
+   "user_verified": true
+  },
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "user_present": true,
+   "user_verified": true,
+   "cross_origin": false,
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N03",
+  "expected": {
+   "user_verified": false
+  },
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "user_present": true,
+   "user_verified": false,
+   "cross_origin": false,
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N04",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "user_present": false
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified",
+   "user_present": false,
+   "user_verified": true,
+   "cross_origin": false
+  },
+  "agrees": true
+ },
+ {
+  "id": "N05",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified",
+   "user_present": true,
+   "user_verified": true,
+   "cross_origin": false
+  },
+  "agrees": true
+ },
+ {
+  "id": "N06",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified",
+   "user_present": true,
+   "user_verified": true,
+   "cross_origin": false
+  },
+  "agrees": true
+ },
+ {
+  "id": "N07",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified",
+   "user_present": true,
+   "user_verified": true,
+   "cross_origin": false
+  },
+  "agrees": true
+ },
+ {
+  "id": "N08",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified",
+   "user_present": true,
+   "user_verified": true,
+   "cross_origin": false
+  },
+  "agrees": true
+ },
+ {
+  "id": "N09",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified",
+   "user_present": true,
+   "user_verified": true,
+   "cross_origin": false
+  },
+  "agrees": true
+ },
+ {
+  "id": "N10",
+  "expected": {
+   "status": "not_supported",
+   "signature": "not_supported",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "not_supported",
+   "signature": "not_supported",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N11",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified",
+   "user_present": true,
+   "user_verified": true,
+   "cross_origin": false
+  },
+  "agrees": true
+ },
+ {
+  "id": "N12",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified",
+   "user_present": true,
+   "user_verified": true,
+   "cross_origin": false
+  },
+  "agrees": true
+ },
+ {
+  "id": "N13",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N14",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N15",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N16",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N17",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N18",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N19",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N20",
+  "expected": {
+   "status": "not_supported",
+   "signature": "not_supported",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "not_supported",
+   "signature": "not_supported",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N21",
+  "expected": {
+   "status": "failed",
+   "key_state": "failed",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "failed",
+   "identity": "not_checked",
+   "policy": "verified",
+   "time_basis": "stated_time"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N22",
+  "expected": {
+   "status": "failed",
+   "key_state": "failed",
+   "identity": "failed",
+   "consistency": "inconsistent"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "failed",
+   "identity": "failed",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "consistency": "inconsistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N23",
+  "expected": {
+   "status": "failed",
+   "subject": "failed",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "failed",
+   "key_state": "verified",
+   "identity": "not_checked",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "identity_reason": "none_read"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N24",
+  "expected": {
+   "status": "failed",
+   "subject": "failed",
+   "identity": "failed",
+   "consistency": "inconsistent"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "failed",
+   "key_state": "verified",
+   "identity": "failed",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "consistency": "inconsistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N25",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "failed",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N26",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "failed",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N27",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N28",
+  "expected": {
+   "status": "not_checked",
+   "subject": "not_checked",
+   "identity": "not_checked",
+   "identity_reason": "not_held"
+  },
+  "got": {
+   "status": "not_checked",
+   "signature": "verified",
+   "subject": "not_checked",
+   "key_state": "verified",
+   "identity": "not_checked",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "identity_reason": "not_held"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N29",
+  "expected": {
+   "status": "failed",
+   "subject": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "failed",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N30",
+  "expected": {
+   "status": "failed",
+   "subject": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "failed",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N31",
+  "expected": {
+   "identity": "failed",
+   "consistency": "inconsistent"
+  },
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "identity": "failed",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "consistency": "inconsistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N32",
+  "expected": {
+   "status": "failed",
+   "key_state": "failed",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "failed",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N33",
+  "expected": {
+   "status": "failed",
+   "key_state": "failed",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "failed",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N34",
+  "expected": {
+   "status": "failed",
+   "key_state": "failed",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "failed",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N35",
+  "expected": {},
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N36",
+  "expected": {
+   "time_basis": "independent_timestamp"
+  },
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "independent_timestamp",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N37",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N38",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N39",
+  "expected": {
+   "status": "failed",
+   "subject": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "failed",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N40",
+  "expected": {
+   "status": "failed",
+   "key_state": "failed",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "failed",
+   "identity": "not_checked",
+   "policy": "verified",
+   "time_basis": "stated_time"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N41",
+  "expected": {
+   "status": "failed",
+   "key_state": "failed",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "failed",
+   "identity": "not_checked",
+   "policy": "verified",
+   "time_basis": "stated_time"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N42",
+  "expected": {},
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N43",
+  "expected": {
+   "status": "failed",
+   "subject": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "failed",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N44",
+  "expected": {
+   "covers_affirmation_record": true
+  },
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "consistency": "consistent",
+   "covers_affirmation_record": true
+  },
+  "agrees": true
+ },
+ {
+  "id": "N45",
+  "expected": {
+   "identity": "failed",
+   "consistency": "inconsistent"
+  },
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "identity": "failed",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "consistency": "inconsistent",
+   "covers_affirmation_record": true
+  },
+  "agrees": true
+ },
+ {
+  "id": "N46",
+  "expected": {
+   "status": "failed",
+   "subject": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "failed",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N47",
+  "expected": {
+   "covers_affirmation_record": true
+  },
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "consistency": "consistent",
+   "covers_affirmation_record": true
+  },
+  "agrees": true
+ },
+ {
+  "id": "N48",
+  "expected": {
+   "status": "failed",
+   "subject": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "failed",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N49",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "failed",
+   "policy": "verified",
+   "covers_affirmation_record": true
+  },
+  "agrees": true
+ },
+ {
+  "id": "N50",
+  "expected": {
+   "status": "unavailable",
+   "subject": "unavailable",
+   "identity": "not_checked",
+   "identity_reason": "none_read"
+  },
+  "got": {
+   "status": "unavailable",
+   "signature": "verified",
+   "subject": "unavailable",
+   "key_state": "verified",
+   "identity": "not_checked",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "identity_reason": "none_read",
+   "covers_affirmation_record": true
+  },
+  "agrees": true
+ },
+ {
+  "id": "N51",
+  "expected": {
+   "status": "not_checked",
+   "subject": "not_checked",
+   "identity": "not_checked",
+   "identity_reason": "not_held"
+  },
+  "got": {
+   "status": "not_checked",
+   "signature": "verified",
+   "subject": "not_checked",
+   "key_state": "verified",
+   "identity": "not_checked",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "identity_reason": "not_held"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N52",
+  "expected": {
+   "status": "failed",
+   "subject": "failed",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "failed",
+   "key_state": "verified",
+   "identity": "not_checked",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "identity_reason": "none_read"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N53",
+  "expected": {
+   "status": "unavailable",
+   "key_state": "unavailable",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "unavailable",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "unavailable",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N54",
+  "expected": {
+   "time_basis": "independent_timestamp"
+  },
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "independent_timestamp",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N55",
+  "expected": {
+   "status": "failed",
+   "key_state": "failed",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "failed",
+   "identity": "not_checked",
+   "policy": "verified",
+   "time_basis": "independent_timestamp"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N56",
+  "expected": {
+   "status": "failed",
+   "key_state": "failed",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "failed",
+   "identity": "not_checked",
+   "policy": "verified",
+   "time_basis": "independent_timestamp"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N57",
+  "expected": {
+   "status": "failed",
+   "key_state": "failed",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "failed",
+   "identity": "not_checked",
+   "policy": "verified",
+   "time_basis": "independent_timestamp"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N58",
+  "expected": {
+   "time_basis": "independent_timestamp"
+  },
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "independent_timestamp",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N59",
+  "expected": {
+   "status": "unavailable",
+   "key_state": "unavailable",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "unavailable",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "unavailable",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N60",
+  "expected": {
+   "status": "unavailable",
+   "key_state": "unavailable",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "unavailable",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "unavailable",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N61",
+  "expected": {
+   "time_basis": "independent_timestamp"
+  },
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "independent_timestamp",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N62",
+  "expected": {
+   "policy": "failed",
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "failed",
+   "identity": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "failed",
+   "identity": "failed",
+   "policy": "failed"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N63",
+  "expected": {
+   "policy": "failed",
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "failed",
+   "identity": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "failed",
+   "identity": "failed",
+   "policy": "failed"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N64",
+  "expected": {
+   "policy": "failed",
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "failed",
+   "identity": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "failed",
+   "identity": "failed",
+   "policy": "failed"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N65",
+  "expected": {
+   "policy": "failed",
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "failed",
+   "identity": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "failed",
+   "identity": "failed",
+   "policy": "failed"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N66",
+  "expected": {
+   "policy": "failed",
+   "status": "failed",
+   "signature": "failed",
+   "subject": "failed",
+   "key_state": "failed",
+   "identity": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "failed",
+   "key_state": "failed",
+   "identity": "failed",
+   "policy": "failed"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N67",
+  "expected": {},
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N68",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N69",
+  "expected": {
+   "identity": "failed"
+  },
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "identity": "failed",
+   "policy": "verified",
+   "time_basis": "stated_time"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N70",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N71",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N72",
+  "expected": {
+   "policy": "failed",
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "failed",
+   "identity": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "failed",
+   "identity": "failed",
+   "policy": "failed"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N73",
+  "expected": {
+   "time_basis": "independent_timestamp"
+  },
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "independent_timestamp",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N74",
+  "expected": {},
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N75",
+  "expected": {
+   "time_basis": "independent_timestamp"
+  },
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "independent_timestamp",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N76",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N77",
+  "expected": {
+   "policy": "failed",
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "failed",
+   "identity": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "failed",
+   "identity": "failed",
+   "policy": "failed"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N78",
+  "expected": {
+   "policy": "failed",
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "failed",
+   "identity": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "failed",
+   "identity": "failed",
+   "policy": "failed"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N79",
+  "expected": {
+   "policy": "failed",
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "failed",
+   "identity": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "failed",
+   "identity": "failed",
+   "policy": "failed"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N80",
+  "expected": {},
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "user_present": true,
+   "user_verified": true,
+   "cross_origin": false,
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N81",
+  "expected": {
+   "policy": "failed",
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "failed",
+   "identity": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "failed",
+   "identity": "failed",
+   "policy": "failed"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N82",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N83",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "cross_origin": true,
+   "top_origin": "https://top.example.org"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified",
+   "user_present": true,
+   "user_verified": true,
+   "cross_origin": true,
+   "top_origin": "https://top.example.org"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N84",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N85",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N86",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "cross_origin": true
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified",
+   "user_present": true,
+   "user_verified": true,
+   "cross_origin": true
+  },
+  "agrees": true
+ },
+ {
+  "id": "N87",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "cross_origin": false,
+   "top_origin": "https://top.example.org"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified",
+   "user_present": true,
+   "user_verified": true,
+   "cross_origin": false,
+   "top_origin": "https://top.example.org"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N88",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "cross_origin": null
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified",
+   "user_present": true,
+   "user_verified": true
+  },
+  "agrees": true
+ },
+ {
+  "id": "N89",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N90",
+  "expected": {
+   "policy": "failed",
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "failed",
+   "identity": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "failed",
+   "identity": "failed",
+   "policy": "failed"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N91",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "cross_origin": null
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N92",
+  "expected": {
+   "identity": "not_checked",
+   "covers_affirmation_record": true,
+   "identity_reason": "not_read"
+  },
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "identity": "not_checked",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "identity_reason": "not_read",
+   "covers_affirmation_record": true
+  },
+  "agrees": true
+ },
+ {
+  "id": "N93",
+  "expected": {
+   "cross_origin": null
+  },
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "user_present": true,
+   "user_verified": true,
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N94",
+  "expected": {},
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N95",
+  "expected": {
+   "user_present": true,
+   "user_verified": true
+  },
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "user_present": true,
+   "user_verified": true,
+   "cross_origin": false,
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N96",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N97",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N98",
+  "expected": {
+   "status": "failed",
+   "subject": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "failed",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N99",
+  "expected": {
+   "status": "failed",
+   "subject": "failed",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "failed",
+   "key_state": "verified",
+   "identity": "not_checked",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "identity_reason": "none_read"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N100",
+  "expected": {
+   "status": "failed",
+   "subject": "failed",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "failed",
+   "key_state": "verified",
+   "identity": "not_checked",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "identity_reason": "none_read"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N101",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N102",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "failed",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N103",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N104",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N105",
+  "expected": {
+   "status": "failed",
+   "subject": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "failed",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N106",
+  "expected": {
+   "status": "failed",
+   "subject": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "failed",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N107",
+  "expected": {
+   "identity": "failed",
+   "consistency": "inconsistent"
+  },
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "identity": "failed",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "consistency": "inconsistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N108",
+  "expected": {
+   "status": "not_checked",
+   "subject": "not_checked",
+   "identity": "not_checked",
+   "identity_reason": "not_held"
+  },
+  "got": {
+   "status": "not_checked",
+   "signature": "verified",
+   "subject": "not_checked",
+   "key_state": "verified",
+   "identity": "not_checked",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "identity_reason": "not_held"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N109",
+  "expected": {
+   "status": "failed",
+   "subject": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "failed",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N110",
+  "expected": {
+   "status": "failed",
+   "subject": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "failed",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N111",
+  "expected": {
+   "status": "failed",
+   "subject": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "failed",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N112",
+  "expected": {
+   "status": "failed",
+   "subject": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "failed",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N113",
+  "expected": {},
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N114",
+  "expected": {
+   "status": "failed",
+   "subject": "failed",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "failed",
+   "key_state": "verified",
+   "identity": "not_checked",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "identity_reason": "none_read"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N115",
+  "expected": {
+   "time_basis": "independent_timestamp"
+  },
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "independent_timestamp",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N116",
+  "expected": {
+   "status": "unavailable",
+   "key_state": "unavailable",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "unavailable",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "unavailable",
+   "identity": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N117",
+  "expected": {
+   "time_basis": "independent_timestamp"
+  },
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "identity": "verified",
+   "policy": "verified",
+   "time_basis": "independent_timestamp",
+   "consistency": "consistent"
+  },
+  "agrees": true
+ },
+ {
+  "id": "N118",
+  "expected": {
+   "status": "failed",
+   "key_state": "failed",
+   "identity": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "failed",
+   "identity": "not_checked",
+   "policy": "verified",
+   "time_basis": "independent_timestamp"
+  },
+  "agrees": true
+ }
+]

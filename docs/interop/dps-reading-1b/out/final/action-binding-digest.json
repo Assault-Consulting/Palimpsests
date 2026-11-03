@@ -1,0 +1,92 @@
+[
+ {
+  "id": "D01",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "D02",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "D03",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "D04",
+  "expected": "mismatch",
+  "got": "mismatch",
+  "agrees": true
+ },
+ {
+  "id": "D05",
+  "expected": "mismatch",
+  "got": "mismatch",
+  "agrees": true
+ },
+ {
+  "id": "D06",
+  "expected": "mismatch",
+  "got": "mismatch",
+  "agrees": true
+ },
+ {
+  "id": "D07",
+  "expected": "mismatch",
+  "got": "mismatch",
+  "agrees": true
+ },
+ {
+  "id": "D08",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "D09",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "D10",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "D11",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "D12",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "D13",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "E01",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "E02",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ }
+]

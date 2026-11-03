@@ -1,0 +1,788 @@
+[
+ {
+  "id": "O01",
+  "expected": {
+   "certificate": "verified",
+   "embedded_copy": "verified"
+  },
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "certificate": "verified",
+   "embedded_copy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O02",
+  "expected": {
+   "status": "failed",
+   "subject": "failed",
+   "embedded_copy": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "failed",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "certificate": "verified",
+   "embedded_copy": "failed"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O03",
+  "expected": {
+   "embedded_copy": "not_checked"
+  },
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "certificate": "verified"
+  },
+  "agrees": false,
+  "differs": {
+   "embedded_copy": [
+    "not_checked",
+    null
+   ]
+  },
+  "findings": []
+ },
+ {
+  "id": "O04",
+  "expected": {
+   "status": "failed",
+   "subject": "failed",
+   "embedded_copy": "verified"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "failed",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "certificate": "verified",
+   "embedded_copy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O05",
+  "expected": {
+   "status": "failed",
+   "subject": "failed",
+   "embedded_copy": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "failed",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "certificate": "verified"
+  },
+  "agrees": false,
+  "differs": {
+   "embedded_copy": [
+    "not_checked",
+    null
+   ]
+  },
+  "findings": [
+   "the sealed digest is not the attachment's"
+  ]
+ },
+ {
+  "id": "O06",
+  "expected": {
+   "status": "failed",
+   "subject": "failed",
+   "embedded_copy": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "failed",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "certificate": "verified",
+   "embedded_copy": "failed"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O07",
+  "expected": {
+   "status": "not_checked",
+   "subject": "not_checked"
+  },
+  "got": {
+   "status": "not_checked",
+   "signature": "verified",
+   "subject": "not_checked",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "certificate": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O08",
+  "expected": {
+   "certificate": "verified"
+  },
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "certificate": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O09",
+  "expected": {},
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "certificate": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O10",
+  "expected": {
+   "status": "failed",
+   "subject": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "failed",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "certificate": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O11",
+  "expected": {
+   "status": "unavailable",
+   "subject": "unavailable"
+  },
+  "got": {
+   "status": "unavailable",
+   "signature": "verified",
+   "subject": "unavailable",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "certificate": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O12",
+  "expected": {
+   "status": "not_checked",
+   "subject": "not_checked"
+  },
+  "got": {
+   "status": "not_checked",
+   "signature": "verified",
+   "subject": "not_checked",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "certificate": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O13",
+  "expected": {},
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "certificate": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O14",
+  "expected": {
+   "status": "failed",
+   "subject": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "failed",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "certificate": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O15",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "certificate": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "policy": "verified",
+   "certificate": "not_checked"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O16",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "policy": "verified",
+   "certificate": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O17",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "policy": "verified",
+   "certificate": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O18",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "policy": "verified",
+   "certificate": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O19",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "not_checked",
+   "key_state": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "not_checked",
+   "key_state": "not_checked",
+   "policy": "verified",
+   "certificate": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O20",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "failed",
+   "key_state": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "failed",
+   "key_state": "not_checked",
+   "policy": "verified",
+   "certificate": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O21",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "failed",
+   "key_state": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "failed",
+   "key_state": "not_checked",
+   "policy": "verified",
+   "certificate": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O22",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "policy": "verified",
+   "certificate": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O23",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "policy": "verified",
+   "certificate": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O24",
+  "expected": {
+   "status": "not_supported",
+   "signature": "not_supported",
+   "key_state": "not_checked"
+  },
+  "got": {
+   "status": "not_supported",
+   "signature": "not_supported",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O25",
+  "expected": {
+   "status": "failed",
+   "key_state": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "failed",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "certificate": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O26",
+  "expected": {
+   "status": "failed",
+   "key_state": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "failed",
+   "policy": "verified",
+   "certificate": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O27",
+  "expected": {
+   "status": "failed",
+   "key_state": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "failed",
+   "policy": "verified",
+   "certificate": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O28",
+  "expected": {
+   "certificate": "not_checked"
+  },
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "certificate": "not_checked"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O29",
+  "expected": {
+   "status": "failed",
+   "key_state": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "failed",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "certificate": "not_checked"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O30",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O31",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O32",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O33",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "certificate": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "policy": "verified",
+   "certificate": "failed"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O34",
+  "expected": {
+   "certificate": "not_checked"
+  },
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "certificate": "not_checked"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O35",
+  "expected": {
+   "time_basis": "independent_timestamp"
+  },
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "independent_timestamp",
+   "certificate": "verified",
+   "embedded_copy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O36",
+  "expected": {
+   "policy": "failed",
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "failed",
+   "policy": "failed",
+   "embedded_copy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O37",
+  "expected": {
+   "status": "failed",
+   "subject": "failed",
+   "embedded_copy": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "failed",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "certificate": "verified",
+   "embedded_copy": "failed"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O38",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "certificate": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "policy": "verified",
+   "certificate": "failed"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O39",
+  "expected": {
+   "certificate": "verified"
+  },
+  "got": {
+   "status": "verified",
+   "signature": "verified",
+   "subject": "verified",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "certificate": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O40",
+  "expected": {
+   "policy": "failed",
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "failed",
+   "policy": "failed"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O41",
+  "expected": {
+   "status": "failed",
+   "subject": "failed",
+   "embedded_copy": "verified"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "failed",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "certificate": "verified",
+   "embedded_copy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O42",
+  "expected": {
+   "policy": "failed",
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "failed",
+   "policy": "failed"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O45",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "key_state": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "policy": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O46",
+  "expected": {
+   "status": "failed",
+   "subject": "failed",
+   "certificate": "verified",
+   "embedded_copy": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "verified",
+   "subject": "failed",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "certificate": "verified",
+   "embedded_copy": "failed"
+  },
+  "agrees": true
+ },
+ {
+  "id": "O47",
+  "expected": {
+   "status": "failed",
+   "signature": "failed",
+   "certificate": "failed",
+   "key_state": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "signature": "failed",
+   "subject": "verified",
+   "key_state": "not_checked",
+   "policy": "verified",
+   "certificate": "failed"
+  },
+  "agrees": true
+ }
+]

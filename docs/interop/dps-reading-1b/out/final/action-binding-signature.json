@@ -1,0 +1,699 @@
+[
+ {
+  "id": "G01",
+  "expected": {
+   "time_basis": "independent_timestamp",
+   "time_assurance": "verified",
+   "holder": "Example issuer (test only)",
+   "certificate": "verified",
+   "no_later_than": "2026-10-01T10:30:00Z"
+  },
+  "got": {
+   "status": "verified",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "independent_timestamp",
+   "time_assurance": "verified",
+   "holder": "Example issuer (test only)",
+   "certificate": "verified",
+   "no_later_than": "2026-10-01T10:30:00Z",
+   "timestamp_index": 0
+  },
+  "agrees": true
+ },
+ {
+  "id": "G02",
+  "expected": {},
+  "got": {
+   "status": "verified",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "time_assurance": "not_checked",
+   "holder": "Example issuer (test only)",
+   "certificate": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G03",
+  "expected": {},
+  "got": {
+   "status": "verified",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "time_assurance": "not_checked",
+   "holder": "Example issuer (test only)",
+   "certificate": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G04",
+  "expected": {
+   "status": "not_checked",
+   "key_state": "not_checked"
+  },
+  "got": {
+   "status": "not_checked",
+   "key_state": "not_checked",
+   "policy": "verified",
+   "time_basis": null,
+   "time_assurance": "not_checked"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G05",
+  "expected": {},
+  "got": {
+   "status": "verified",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "time_assurance": "not_checked",
+   "holder": "Example issuer (test only)",
+   "certificate": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G06",
+  "expected": {
+   "status": "failed",
+   "key_state": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "key_state": "not_checked",
+   "policy": "verified",
+   "time_basis": null,
+   "time_assurance": "not_checked",
+   "holder": "Example issuer (test only)",
+   "certificate": "verified",
+   "sealed_at_note": "earlier_than_a_stage"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G07",
+  "expected": {
+   "status": "failed",
+   "key_state": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "key_state": "not_checked",
+   "policy": "verified",
+   "time_basis": null,
+   "time_assurance": "not_checked",
+   "holder": "Example issuer (test only)",
+   "certificate": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G08",
+  "expected": {
+   "status": "failed",
+   "key_state": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "key_state": "not_checked",
+   "policy": "verified",
+   "time_basis": null,
+   "time_assurance": "not_checked",
+   "holder": "Example issuer (test only)",
+   "certificate": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G09",
+  "expected": {
+   "status": "failed",
+   "key_state": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "key_state": "not_checked",
+   "policy": "verified",
+   "time_basis": null,
+   "time_assurance": "not_checked",
+   "holder": "Example issuer (test only)",
+   "certificate": "not_checked"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G10",
+  "expected": {
+   "status": "failed",
+   "key_state": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "key_state": "not_checked",
+   "policy": "verified",
+   "time_basis": null,
+   "time_assurance": "not_checked",
+   "holder": "Example issuer (test only)",
+   "certificate": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G11",
+  "expected": {
+   "status": "failed",
+   "key_state": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "key_state": "not_checked",
+   "policy": "verified",
+   "time_basis": null,
+   "time_assurance": "not_checked"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G12",
+  "expected": {
+   "status": "failed",
+   "key_state": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "key_state": "not_checked",
+   "policy": "verified",
+   "time_basis": null,
+   "time_assurance": "not_checked",
+   "certificate": "not_checked"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G13",
+  "expected": {
+   "status": "failed",
+   "key_state": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "key_state": "not_checked",
+   "policy": "verified",
+   "time_basis": null,
+   "time_assurance": "not_checked",
+   "certificate": "not_checked"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G14",
+  "expected": {},
+  "got": {
+   "status": "verified",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "time_assurance": "not_checked",
+   "holder": "Example issuer (test only)",
+   "certificate": "not_checked"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G15",
+  "expected": {
+   "status": "failed",
+   "key_state": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "key_state": "failed",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "time_assurance": "not_checked",
+   "holder": "Example issuer (test only)",
+   "certificate": "not_checked"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G16",
+  "expected": {
+   "status": "failed",
+   "key_state": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "key_state": "failed",
+   "policy": "verified",
+   "time_basis": "independent_timestamp",
+   "time_assurance": "not_checked",
+   "holder": "Example issuer (test only)",
+   "certificate": "not_checked"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G17",
+  "expected": {
+   "status": "unavailable",
+   "key_state": "unavailable"
+  },
+  "got": {
+   "status": "unavailable",
+   "key_state": "unavailable",
+   "policy": "verified",
+   "time_basis": null,
+   "time_assurance": "not_checked",
+   "holder": "Example issuer (test only)",
+   "certificate": "not_checked"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G18",
+  "expected": {
+   "time_basis": "independent_timestamp",
+   "time_assurance": "verified",
+   "no_later_than": "2026-10-01T10:30:00Z"
+  },
+  "got": {
+   "status": "verified",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "independent_timestamp",
+   "time_assurance": "verified",
+   "holder": "Example issuer (test only)",
+   "certificate": "not_checked",
+   "no_later_than": "2026-10-01T10:30:00Z",
+   "timestamp_index": 0
+  },
+  "agrees": true
+ },
+ {
+  "id": "G19",
+  "expected": {
+   "status": "failed",
+   "key_state": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "key_state": "failed",
+   "policy": "verified",
+   "time_basis": "independent_timestamp",
+   "time_assurance": "not_checked",
+   "holder": "Example issuer (test only)",
+   "certificate": "not_checked"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G20",
+  "expected": {
+   "policy": "failed",
+   "status": "failed",
+   "key_state": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "key_state": "failed",
+   "policy": "failed",
+   "time_basis": null,
+   "time_assurance": "not_checked"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G21",
+  "expected": {
+   "holder": "Second issuer (test only)",
+   "certificate": "not_checked"
+  },
+  "got": {
+   "status": "verified",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "time_assurance": "not_checked",
+   "holder": "Second issuer (test only)",
+   "certificate": "not_checked"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G22",
+  "expected": {
+   "status": "failed",
+   "key_state": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "key_state": "failed",
+   "policy": "verified",
+   "time_basis": null,
+   "time_assurance": "not_checked",
+   "holder": "Example issuer (test only)",
+   "certificate": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G23",
+  "expected": {
+   "status": "failed",
+   "key_state": "failed"
+  },
+  "got": {
+   "status": "failed",
+   "key_state": "failed",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "time_assurance": "not_checked",
+   "holder": "Example issuer (test only)",
+   "certificate": "verified",
+   "sealed_at_note": "earlier_than_a_stage"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G24",
+  "expected": {
+   "status": "failed",
+   "key_state": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "key_state": "not_checked",
+   "policy": "verified",
+   "time_basis": null,
+   "time_assurance": "not_checked",
+   "holder": "Example issuer (test only)",
+   "certificate": "not_checked"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G25",
+  "expected": {
+   "status": "failed",
+   "key_state": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "key_state": "not_checked",
+   "policy": "verified",
+   "time_basis": null,
+   "time_assurance": "not_checked",
+   "holder": "Example issuer (test only)",
+   "certificate": "not_checked"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G26",
+  "expected": {
+   "status": "failed",
+   "key_state": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "key_state": "not_checked",
+   "policy": "verified",
+   "time_basis": null,
+   "time_assurance": "not_checked",
+   "holder": "Example issuer (test only)",
+   "certificate": "not_checked"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G27",
+  "expected": {
+   "status": "failed",
+   "key_state": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "key_state": "not_checked",
+   "policy": "verified",
+   "time_basis": null,
+   "time_assurance": "not_checked",
+   "holder": "Example issuer (test only)",
+   "certificate": "not_checked"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G28",
+  "expected": {
+   "status": "failed",
+   "key_state": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "key_state": "not_checked",
+   "policy": "verified",
+   "time_basis": null,
+   "time_assurance": "not_checked",
+   "holder": "Example issuer (test only)",
+   "certificate": "not_checked"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G29",
+  "expected": {
+   "status": "not_checked",
+   "key_state": "not_checked"
+  },
+  "got": {
+   "status": "not_checked",
+   "key_state": "not_checked",
+   "policy": "verified",
+   "time_basis": null,
+   "time_assurance": "not_checked"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G30",
+  "expected": {
+   "status": "failed",
+   "key_state": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "key_state": "not_checked",
+   "policy": "verified",
+   "time_basis": null,
+   "time_assurance": "not_checked",
+   "holder": "Example issuer (test only)",
+   "certificate": "not_checked"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G31",
+  "expected": {},
+  "got": {
+   "status": "verified",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "time_assurance": "not_checked",
+   "holder": "Example issuer (test only)",
+   "certificate": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G32",
+  "expected": {},
+  "got": {
+   "status": "verified",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "time_assurance": "not_checked",
+   "holder": "Example issuer (test only)",
+   "certificate": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G33",
+  "expected": {
+   "time_basis": "independent_timestamp",
+   "time_assurance": "verified",
+   "no_later_than": "2026-10-01T09:30:00Z"
+  },
+  "got": {
+   "status": "verified",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "independent_timestamp",
+   "time_assurance": "verified",
+   "holder": "Example issuer (test only)",
+   "certificate": "verified",
+   "no_later_than": "2026-10-01T09:30:00Z",
+   "timestamp_index": 0
+  },
+  "agrees": true
+ },
+ {
+  "id": "G34",
+  "expected": {
+   "status": "failed",
+   "key_state": "not_checked"
+  },
+  "got": {
+   "status": "failed",
+   "key_state": "not_checked",
+   "policy": "verified",
+   "time_basis": null,
+   "time_assurance": "not_checked",
+   "holder": "Example issuer (test only)",
+   "certificate": "not_checked"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G35",
+  "expected": {
+   "sealed_at_note": "earlier_than_a_stage"
+  },
+  "got": {
+   "status": "verified",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "time_assurance": "not_checked",
+   "holder": "Example issuer (test only)",
+   "certificate": "verified",
+   "sealed_at_note": "earlier_than_a_stage"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G36",
+  "expected": {},
+  "got": {
+   "status": "verified",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "time_assurance": "not_checked",
+   "holder": "Example issuer (test only)",
+   "certificate": "verified"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G37",
+  "expected": {
+   "time_basis": "independent_timestamp",
+   "time_assurance": "verified",
+   "no_later_than": "2026-10-01T09:20:00Z"
+  },
+  "got": {
+   "status": "verified",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "independent_timestamp",
+   "time_assurance": "verified",
+   "holder": "Example issuer (test only)",
+   "certificate": "verified",
+   "no_later_than": "2026-10-01T09:20:00Z",
+   "timestamp_index": 0
+  },
+  "agrees": true
+ },
+ {
+  "id": "G38",
+  "expected": {
+   "time_basis": "independent_timestamp",
+   "time_assurance": "verified",
+   "no_later_than": "2026-10-01T09:30:00Z",
+   "timestamp_index": 1
+  },
+  "got": {
+   "status": "verified",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "independent_timestamp",
+   "time_assurance": "verified",
+   "holder": "Example issuer (test only)",
+   "certificate": "verified",
+   "no_later_than": "2026-10-01T09:30:00Z",
+   "timestamp_index": 1
+  },
+  "agrees": true
+ },
+ {
+  "id": "G39",
+  "expected": {
+   "time_basis": "independent_timestamp",
+   "time_assurance": "verified",
+   "stage_after_timestamp": true
+  },
+  "got": {
+   "status": "verified",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "independent_timestamp",
+   "time_assurance": "verified",
+   "holder": "Example issuer (test only)",
+   "certificate": "verified",
+   "no_later_than": "2026-10-01T10:15:00Z",
+   "timestamp_index": 0,
+   "sealed_at_note": "earlier_than_a_stage",
+   "stage_after_timestamp": true
+  },
+  "agrees": true
+ },
+ {
+  "id": "G40",
+  "expected": {
+   "sealed_at_note": "earlier_than_a_stage"
+  },
+  "got": {
+   "status": "verified",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "stated_time",
+   "time_assurance": "not_checked",
+   "holder": "Example issuer (test only)",
+   "certificate": "verified",
+   "sealed_at_note": "earlier_than_a_stage"
+  },
+  "agrees": true
+ },
+ {
+  "id": "G41",
+  "expected": {
+   "time_basis": "independent_timestamp",
+   "time_assurance": "verified",
+   "stage_after_timestamp": true
+  },
+  "got": {
+   "status": "verified",
+   "key_state": "verified",
+   "policy": "verified",
+   "time_basis": "independent_timestamp",
+   "time_assurance": "verified",
+   "holder": "Example issuer (test only)",
+   "certificate": "verified",
+   "no_later_than": "2026-10-01T10:15:00Z",
+   "timestamp_index": 0,
+   "sealed_at_note": "earlier_than_a_stage",
+   "stage_after_timestamp": true
+  },
+  "agrees": true
+ }
+]

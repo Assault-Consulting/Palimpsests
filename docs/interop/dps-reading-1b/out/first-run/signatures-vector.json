@@ -1,0 +1,181 @@
+[
+ {
+  "id": "V01",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V02",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V03",
+  "expected": "match",
+  "got": "match",
+  "agrees": true,
+  "note": "compared the published values with the records' stated seals; the SHA-256 over the covered bytes is checked in the person and seal suites"
+ },
+ {
+  "id": "V04",
+  "expected": "match",
+  "got": "not attempted",
+  "agrees": "not attempted",
+  "note": "compares with anchoring's vectors beyond the parts the two texts reuse; left out to keep the boundary"
+ },
+ {
+  "id": "V05",
+  "expected": "match",
+  "got": "not attempted",
+  "agrees": "not attempted",
+  "note": "not implemented in this run"
+ },
+ {
+  "id": "V06",
+  "expected": "match",
+  "got": "not attempted",
+  "agrees": "not attempted",
+  "note": "seed-derived keys computed (all match); the RSA key against RFC 9500's text not checked: RFC 9500 could not be fetched"
+ },
+ {
+  "id": "V07",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V08",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V09",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V10",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V11",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V12",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V13",
+  "expected": "match",
+  "got": "mismatch",
+  "agrees": false,
+  "note": "not reproduced as expected: ['approval_a_moved_to_b0', 'approval_a_other_profile', 'approval_a_other_version', 'approval_a_other_type', 'approval_a_view_dropped', 'approval_a_time_changed', 'review_b0_as_approval', 'review_b0_escalated', 'standing_a_bounds_changed', 'standing_a_view_dropped', 'standing_a_time_changed', 'standing_a_as_approval', 'approval_a_as_standing', 'seal_record_moved_to_org0', 'seal_record_other_profile', 'seal_record_other_version', 'seal_record_other_type', 'seal_record_kind_changed', 'seal_record_id_changed', 'seal_record_digest_changed', 'seal_record_time_changed']"
+ },
+ {
+  "id": "V14",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V15",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V16",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V17",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V18",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V19",
+  "expected": "match",
+  "got": "not attempted",
+  "agrees": "not attempted",
+  "note": "needs generate_vectors.py, which the boundary forbids"
+ },
+ {
+  "id": "V20",
+  "expected": "match",
+  "got": "not attempted",
+  "agrees": "not attempted",
+  "note": "RFC 9500 could not be fetched (rfc-editor.org not resolvable from the sandbox)"
+ },
+ {
+  "id": "V21",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V22",
+  "expected": "match",
+  "got": "match",
+  "agrees": true,
+  "note": "strict reader refuses: True; last-member reader finds the attachment as issued: True; first-member reader: False"
+ },
+ {
+  "id": "V23",
+  "expected": "match",
+  "got": "match",
+  "agrees": true,
+  "note": "strict reader refuses: True; last-member reader finds the attachment as issued: True; first-member reader: False"
+ },
+ {
+  "id": "V24",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V25",
+  "expected": "match",
+  "got": "match",
+  "agrees": true,
+  "note": "computed with the base attachment's copy against each seal; the attachments as their issuer wrote them are not in vectors.json under these names: partial"
+ },
+ {
+  "id": "V26",
+  "expected": "match",
+  "got": "match",
+  "agrees": true,
+  "note": "the 0.2.0 attachment rebuilt from the base attachment with a four-member copy of the seal"
+ },
+ {
+  "id": "V27",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ },
+ {
+  "id": "V28",
+  "expected": "match",
+  "got": "match",
+  "agrees": true
+ }
+]
