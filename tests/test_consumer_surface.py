@@ -28,7 +28,7 @@ SRC = REPO / "src" / "palimpsests" / "audit"
 
 READER_ALL = {
     "AuditReader", "Verification", "Diagnosis", "ManifestReading", "ContainerCheck",
-    "VerifyResult", "RecordFields",
+    "VerifyResult", "RecordFields", "RecordBytes",
     "Advisory", "AdvisoryItem",
     "DecodedRecord", "Header", "decode_record",
     "SpanView", "BootView", "OriginView", "OriginState", "ContinuationView",
@@ -202,7 +202,8 @@ FIELDS = {
     "ContainerCheck": ["well_formed", "malformed", "bytes_parsed", "bytes_total",
                        "body_digest_mismatches"],
     "RecordFields": ["kind", "kind_name", "source", "source_name", "outcome",
-                     "outcome_name"],
+                     "outcome_name", "detail"],
+    "RecordBytes": ["offset", "header", "body"],
     "DecodedRecord": ["seq", "index", "record_type", "type_name", "header", "body_tlvs",
                       "kind", "kind_name", "record_hash", "detail", "operator_id",
                       "disposition", "disposition_name", "source", "source_name",
@@ -239,6 +240,7 @@ READER_METHODS = {
     "open", "from_bytes", "close", "verify", "container_check", "head", "records",
     "safety_records",
     "record_count", "record_at", "record_by_seq", "header_at", "record_fields_at",
+    "record_bytes_at", "header_tlv_spans_at", "body_tlv_spans_at",
     "boots", "spans", "structure",
     "origin_at", "unloaded_at", "origin_state_at",
     "acknowledged_candidates", "shredded_targets",
