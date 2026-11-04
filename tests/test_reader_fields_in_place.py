@@ -115,7 +115,7 @@ def test_record_fields_equal_the_decoded_record_everywhere(tmp_path):
             for i, f in enumerate(fields):
                 d = r.record_at(i)
                 assert f == RecordFields(d.kind, d.kind_name, d.source, d.source_name,
-                                         d.outcome, d.outcome_name), (chain.name, i)
+                                         d.outcome, d.outcome_name, d.detail), (chain.name, i)
 
 
 def test_record_fields_index_rules(tmp_path):
