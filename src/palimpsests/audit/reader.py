@@ -164,6 +164,7 @@ __all__ = [
     "ContainerCheck",
     "VerifyResult",
     "RecordFields",
+    "RecordBytes",
     "Advisory",
     "AdvisoryItem",
     # records
@@ -699,6 +700,26 @@ class RecordFields:
     source_name: str | None
     outcome: int | None
     outcome_name: str | None
+    #: The first ``EVT_DETAIL`` on an EVENT/SAFETY body, UTF-8 with
+    #: replacement — any length, so an empty one is ``""``, not ``None``
+    #: (U30). The same value ``record_at(i).detail`` gives.
+    detail: str | None = None
+
+
+@dataclass(frozen=True)
+class RecordBytes:
+    """A record's bytes exactly as the file holds them (U31).
+
+    ``Header.decode`` keeps every field and every TLV, so for a header it
+    accepts, ``header == header_at(i).encode()``. This accessor matters for
+    the rest: a header it does not accept (an unknown version, malformed
+    TLVs), where there is nothing to re-encode and these bytes are the only
+    view; and every body, ciphertext included, which no other call returns.
+    """
+
+    offset: int  # where the record starts in the file
+    header: bytes  # the fixed header and its TLVs, as stored
+    body: bytes  # as stored; ciphertext for an encrypted body
 
 
 @dataclass(frozen=True)
@@ -1642,11 +1663,66 @@ class AuditReader:
         dr = cached[index] if cached is not None else self._partial.get(index)
         if dr is not None:
             return RecordFields(dr.kind, dr.kind_name, dr.source, dr.source_name,
-                                dr.outcome, dr.outcome_name)
-        return self._fields_in_place(index)[0]
+                                dr.outcome, dr.outcome_name, dr.detail)
+        return self._fields_in_place(index, want_detail=True)[0]
+
+    def _check_index(self, index: int) -> None:
+        if not isinstance(index, int) or isinstance(index, bool):
+            raise TypeError(f"index must be an int, not {type(index).__name__}")
+        if not 0 <= index < len(self._headers):
+            raise IndexError(
+                f"record index {index} is outside this file's 0..{len(self._headers) - 1}"
+            )
+
+    def record_bytes_at(self, index: int) -> RecordBytes:
+        """The record at ``index`` as the file holds it — see
+        :class:`RecordBytes`. Nothing is decoded or cached (U31)."""
+        self._check_index(index)
+        headers = self._headers
+        off = headers._off[index]
+        start, end = headers.body_span(index)
+        return RecordBytes(off, bytes(self._data[off:start]), bytes(self._data[start:end]))
+
+    def header_tlv_spans_at(self, index: int) -> list[tuple[int, int, int]] | None:
+        """The header's TLVs as ``(type, value_offset, length)``, offsets from
+        the record's start, read in place (U31).
+
+        ``None`` exactly when ``header_at(index)`` is ``None`` — an unknown
+        format version, whose TLV area is opaque under §7.6 (clarification
+        C-4), or a header the decoder rejects. Otherwise the spans give the
+        TLVs ``Header.decode`` lists, in order.
+        """
+        self._check_index(index)
+        headers = self._headers
+        if headers.fields_at(index) is None:
+            return None
+        data, off = self._data, headers._off[index]
+        pos, end = off + FIXED_HEADER_LEN, off + headers._hlen[index]
+        out: list[tuple[int, int, int]] = []
+        while pos < end:  # fields_at has already checked these bounds
+            t, ln = struct.unpack_from("<HH", data, pos)
+            out.append((t, pos + 4 - off, ln))
+            pos += 4 + ln
+        return out
+
+    def body_tlv_spans_at(self, index: int) -> list[tuple[int, int, int]] | None:
+        """The body's TLVs as ``(type, value_offset, length)``, offsets from
+        the record's start, read in place (U31).
+
+        ``None`` exactly when ``record_at(index).body_tlvs`` is ``None``: a
+        header the decoder rejects, an encrypted body (ciphertext is not a
+        TLV list), an empty body, or a malformed one. Otherwise the spans
+        give ``body_tlvs``, in order.
+        """
+        self._check_index(index)
+        spans = self._fields_in_place(index)[1]  # None by the same rules as body_tlvs
+        if spans is None:
+            return None
+        off = self._headers._off[index]
+        return [(t, vo - off, ln) for t, vo, ln in spans]
 
     def _fields_in_place(
-        self, index: int
+        self, index: int, *, want_detail: bool = False
     ) -> tuple[RecordFields, list[tuple[int, int, int]] | None]:
         """The record's fields by :func:`decode_record`'s rules, read in place,
         and its body TLV spans — ``None`` where ``decode_record`` would have
@@ -1662,15 +1738,17 @@ class AuditReader:
         if spans is None or hf.record_type not in _KIND_BEARING:
             return none, spans
         data = self._data
-        kind = source = outcome = None
+        kind = source = outcome = detail = None
         for t, off, ln in spans:
-            if ln < 2:
-                continue
-            if kind is None and t == EVT_KIND:
+            # decode_record's rules, tag by tag: the first occurrence wins;
+            # the numeric fields need two bytes, EVT_DETAIL any length.
+            if kind is None and t == EVT_KIND and ln >= 2:
                 kind = struct.unpack_from("<H", data, off)[0]
-            elif source is None and t == EVT_SOURCE:
+            elif want_detail and detail is None and t == EVT_DETAIL:
+                detail = bytes(data[off : off + ln]).decode("utf-8", "replace")
+            elif source is None and t == EVT_SOURCE and ln >= 2:
                 source = struct.unpack_from("<H", data, off)[0]
-            elif outcome is None and t == EVT_OUTCOME:
+            elif outcome is None and t == EVT_OUTCOME and ln >= 2:
                 outcome = struct.unpack_from("<H", data, off)[0]
         if kind in _SOURCE_BEARING_KINDS and source is None:
             source = SOURCE_PARSED_FROM_WIRE  # absent means 0 (r5)
@@ -1680,6 +1758,7 @@ class AuditReader:
             kind, _KIND_NAMES.get(kind) if kind is not None else None,
             source, _SOURCE_NAMES.get(source) if source is not None else None,
             outcome, _OUTCOME_NAMES.get(outcome) if outcome is not None else None,
+            detail,
         ), spans
 
     # ── header-only access (U14 PR-6) ───────────────────────────────────
