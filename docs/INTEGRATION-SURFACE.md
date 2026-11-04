@@ -14,7 +14,7 @@ it is not promised.
 
 | # | Channel | Surface | Stability |
 |---|---------|---------|-----------|
-| 1 | Reading | `palimpsests.audit.reader.AuditReader` (`open`, `verify`, `records`, `spans`, `boots`, `origin_at`, `unloaded_at`, `acknowledged_candidates`, `shredded_targets`; sparse access `record_count`, `record_at`, `record_by_seq`, `header_at` since 0.13; `Verification.manifest` since 0.13; `container_check()`, `record_fields_at()` since 0.14); a segmented chain as one set: `palimpsests.audit.segment_set.verify_segment_set` (since 0.14) | public (since 0.8) |
+| 1 | Reading | `palimpsests.audit.reader.AuditReader` (`open`, `verify`, `records`, `spans`, `boots`, `origin_at`, `unloaded_at`, `acknowledged_candidates`, `shredded_targets`; sparse access `record_count`, `record_at`, `record_by_seq`, `header_at` since 0.13; `Verification.manifest` since 0.13; `container_check()`, `record_fields_at()` since 0.14; for a byte view `record_bytes_at()`, `header_tlv_spans_at()`, `body_tlv_spans_at()` since 0.14); a segmented chain as one set: `palimpsests.audit.segment_set.verify_segment_set` (since 0.14) | public (since 0.8) |
 | 2 | Report | `palimpsests.audit.report.build_report`, `derive_verdict`, format `pala-verification-report/1` | public (since 0.10) |
 | 3 | Proofs | `palimpsests.audit.pala.proofs.inclusion_proof`, `range_proofs`; prefix consistency `chain_root`, `consistency_proof`, `ConsistencyProof`, format `pala-consistency-proof/1` (since 0.12) | public (since 0.10) |
 | 4 | Bundle | `palimpsests.audit.pala.bundle.assemble_bundle`, format `pala-bundle/1` | public (since 0.10) |
@@ -150,9 +150,14 @@ is backlog, not promise.
 
 A consumer that needs one record, a page of records or a count does not
 have to pay for the whole decode. A consumer that filters by kind, evidence
-mark or tool outcome reads `record_fields_at(index)` (since 0.14): the same
-values `record_at(index)` would give, read in place, nothing decoded or
-kept. And: `record_count`, `record_at(index)`,
+mark, tool outcome or `detail` reads `record_fields_at(index)` (since 0.14):
+the same values `record_at(index)` would give, read in place, nothing
+decoded or kept. A consumer that shows bytes reads `record_bytes_at(index)` —
+the record as the file holds it — and `header_tlv_spans_at` /
+`body_tlv_spans_at` for where each TLV sits, as offsets from the record's
+start. `Header.decode` keeps every field and TLV, so an accepted header
+re-encodes to its own bytes; the stored bytes are what there is to show for
+a header it rejects, and for every body. And: `record_count`, `record_at(index)`,
 `record_by_seq(seq)` and `header_at(index)` read the index the walk built
 at open and decode only the record asked for. `records()` still
 materialises every record before its first item; use it for a full walk,
