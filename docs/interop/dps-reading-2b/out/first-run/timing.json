@@ -1,0 +1,9 @@
+{
+ "started_utc": "2026-11-05T13:26:12Z",
+ "small_groups_seconds": 0.009,
+ "d6_substitution_seconds": 0.179,
+ "d6_insert_delete_seconds": 0.187,
+ "a7_substitution_claimed_from_presented_seconds": 8.538,
+ "ended_utc": "2026-11-05T13:26:22Z",
+ "total_seconds": 9.987
+}

@@ -1,0 +1,2854 @@
+[
+ {
+  "id": "P1-v1",
+  "group": "P1 positive, no validated_chain",
+  "vector": 1,
+  "validated_chain": "none",
+  "claimed_hash": "sha256:a183f624efbbda7d6208b9b5a6f9b0c2c95d90382eb209c44a1131954071f30b",
+  "expected": {
+   "verdict": "unverifiable",
+   "step": "7b",
+   "from": "prompt task 3; D.3; D.6 second vector"
+  },
+  "verdict": "unverifiable",
+  "return_step": "8",
+  "decided_by_step": "7b",
+  "cause": "no branch verified; unevaluated: unavailable (step 7b)",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "a183f624efbbda7d6208b9b5a6f9b0c2c95d90382eb209c44a1131954071f30b"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": null,
+     "validated_chain": "none"
+    }
+   ],
+   "8": {
+    "states": [
+     "unavailable"
+    ]
+   },
+   "9": "not reached",
+   "10": "not reached",
+   "11": "not reached"
+  }
+ },
+ {
+  "id": "P1-v2",
+  "group": "P1 positive, no validated_chain",
+  "vector": 2,
+  "validated_chain": "none",
+  "claimed_hash": "sha256:0df073a986e5e5141c96ec32303b8552ded255e4404d0aff996936a846b48cff",
+  "expected": {
+   "verdict": "unverifiable",
+   "step": "7b",
+   "from": "prompt task 3; D.3; D.6 second vector"
+  },
+  "verdict": "unverifiable",
+  "return_step": "8",
+  "decided_by_step": "7b",
+  "cause": "no branch verified; unevaluated: unavailable (step 7b)",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "0df073a986e5e5141c96ec32303b8552ded255e4404d0aff996936a846b48cff"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": null,
+     "validated_chain": "none"
+    }
+   ],
+   "8": {
+    "states": [
+     "unavailable"
+    ]
+   },
+   "9": "not reached",
+   "10": "not reached",
+   "11": "not reached"
+  }
+ },
+ {
+  "id": "P1-v3",
+  "group": "P1 positive, no validated_chain",
+  "vector": 3,
+  "validated_chain": "none",
+  "claimed_hash": "sha256:d82bf84f17057c0e3d7aa6f249dfc2e80a877b910ce4ce14dc40e653fd5be40b",
+  "expected": {
+   "verdict": "unverifiable",
+   "step": "7b",
+   "from": "prompt task 3; D.3; D.6 second vector"
+  },
+  "verdict": "unverifiable",
+  "return_step": "8",
+  "decided_by_step": "7b",
+  "cause": "no branch verified; unevaluated: unavailable (step 7b)",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "d82bf84f17057c0e3d7aa6f249dfc2e80a877b910ce4ce14dc40e653fd5be40b"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": null,
+     "validated_chain": "none"
+    }
+   ],
+   "8": {
+    "states": [
+     "unavailable"
+    ]
+   },
+   "9": "not reached",
+   "10": "not reached",
+   "11": "not reached"
+  }
+ },
+ {
+  "id": "P1-v4",
+  "group": "P1 positive, no validated_chain",
+  "vector": 4,
+  "validated_chain": "none",
+  "claimed_hash": "sha256:94a86d117047f2af9a2f5635d0c530cc85fc23d20f5d4b42926b94abee7a06ec",
+  "expected": {
+   "verdict": "unverifiable",
+   "step": "7b",
+   "from": "prompt task 3; D.3; D.6 second vector"
+  },
+  "verdict": "unverifiable",
+  "return_step": "8",
+  "decided_by_step": "7b",
+  "cause": "no branch verified; unevaluated: unavailable (step 7b)",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "94a86d117047f2af9a2f5635d0c530cc85fc23d20f5d4b42926b94abee7a06ec"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": null,
+     "validated_chain": "none"
+    }
+   ],
+   "8": {
+    "states": [
+     "unavailable"
+    ]
+   },
+   "9": "not reached",
+   "10": "not reached",
+   "11": "not reached"
+  }
+ },
+ {
+  "id": "P2-v1",
+  "group": "P2 positive, fixture-12 as validated_chain",
+  "vector": 1,
+  "validated_chain": "fixture-12: headers 957289-957300 of Lemonnier's file (12), declared validated for the test, not validated by this run",
+  "claimed_hash": "sha256:a183f624efbbda7d6208b9b5a6f9b0c2c95d90382eb209c44a1131954071f30b",
+  "expected": {
+   "verdict": "valid",
+   "step": "11",
+   "from": "D.3: valid for a verifier that has placed block 957289 on the validated most-work chain"
+  },
+  "verdict": "valid",
+  "return_step": "11",
+  "decided_by_step": "11",
+  "cause": "steps 1 to 10 passed",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "a183f624efbbda7d6208b9b5a6f9b0c2c95d90382eb209c44a1131954071f30b"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": "the candidate",
+     "validated_chain": "fixture-12: headers 957289-957300 of Lemonnier's file (12), declared validated for the test, not validated by this run"
+    }
+   ],
+   "8": {
+    "states": [
+     "verified"
+    ],
+    "selected_H": 957289
+   },
+   "9": {
+    "k": 12,
+    "MIN_CONFIRMATIONS": 6
+   },
+   "10": {
+    "block_height_H": 957289,
+    "block_time_RWCP": "2026-07-09T10:02:59Z",
+    "median_time_past": "not attempted: OPTIONAL, and the eleven headers before H are not held"
+   },
+   "11": "valid"
+  },
+  "note": "the header set was declared validated for the test and was not validated by this run"
+ },
+ {
+  "id": "P2-v2",
+  "group": "P2 positive, fixture-12 as validated_chain",
+  "vector": 2,
+  "validated_chain": "fixture-12: headers 957289-957300 of Lemonnier's file (12), declared validated for the test, not validated by this run",
+  "claimed_hash": "sha256:0df073a986e5e5141c96ec32303b8552ded255e4404d0aff996936a846b48cff",
+  "expected": {
+   "verdict": "valid",
+   "step": "11",
+   "from": "D.3: valid for a verifier that has placed block 957289 on the validated most-work chain"
+  },
+  "verdict": "valid",
+  "return_step": "11",
+  "decided_by_step": "11",
+  "cause": "steps 1 to 10 passed",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "0df073a986e5e5141c96ec32303b8552ded255e4404d0aff996936a846b48cff"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": "the candidate",
+     "validated_chain": "fixture-12: headers 957289-957300 of Lemonnier's file (12), declared validated for the test, not validated by this run"
+    }
+   ],
+   "8": {
+    "states": [
+     "verified"
+    ],
+    "selected_H": 957289
+   },
+   "9": {
+    "k": 12,
+    "MIN_CONFIRMATIONS": 6
+   },
+   "10": {
+    "block_height_H": 957289,
+    "block_time_RWCP": "2026-07-09T10:02:59Z",
+    "median_time_past": "not attempted: OPTIONAL, and the eleven headers before H are not held"
+   },
+   "11": "valid"
+  },
+  "note": "the header set was declared validated for the test and was not validated by this run"
+ },
+ {
+  "id": "P2-v3",
+  "group": "P2 positive, fixture-12 as validated_chain",
+  "vector": 3,
+  "validated_chain": "fixture-12: headers 957289-957300 of Lemonnier's file (12), declared validated for the test, not validated by this run",
+  "claimed_hash": "sha256:d82bf84f17057c0e3d7aa6f249dfc2e80a877b910ce4ce14dc40e653fd5be40b",
+  "expected": {
+   "verdict": "valid",
+   "step": "11",
+   "from": "D.3: valid for a verifier that has placed block 957289 on the validated most-work chain"
+  },
+  "verdict": "valid",
+  "return_step": "11",
+  "decided_by_step": "11",
+  "cause": "steps 1 to 10 passed",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "d82bf84f17057c0e3d7aa6f249dfc2e80a877b910ce4ce14dc40e653fd5be40b"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": "the candidate",
+     "validated_chain": "fixture-12: headers 957289-957300 of Lemonnier's file (12), declared validated for the test, not validated by this run"
+    }
+   ],
+   "8": {
+    "states": [
+     "verified"
+    ],
+    "selected_H": 957289
+   },
+   "9": {
+    "k": 12,
+    "MIN_CONFIRMATIONS": 6
+   },
+   "10": {
+    "block_height_H": 957289,
+    "block_time_RWCP": "2026-07-09T10:02:59Z",
+    "median_time_past": "not attempted: OPTIONAL, and the eleven headers before H are not held"
+   },
+   "11": "valid"
+  },
+  "note": "the header set was declared validated for the test and was not validated by this run"
+ },
+ {
+  "id": "P2-v4",
+  "group": "P2 positive, fixture-12 as validated_chain",
+  "vector": 4,
+  "validated_chain": "fixture-12: headers 957289-957300 of Lemonnier's file (12), declared validated for the test, not validated by this run",
+  "claimed_hash": "sha256:94a86d117047f2af9a2f5635d0c530cc85fc23d20f5d4b42926b94abee7a06ec",
+  "expected": {
+   "verdict": "valid",
+   "step": "11",
+   "from": "D.3: valid for a verifier that has placed block 957289 on the validated most-work chain"
+  },
+  "verdict": "valid",
+  "return_step": "11",
+  "decided_by_step": "11",
+  "cause": "steps 1 to 10 passed",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "94a86d117047f2af9a2f5635d0c530cc85fc23d20f5d4b42926b94abee7a06ec"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": "the candidate",
+     "validated_chain": "fixture-12: headers 957289-957300 of Lemonnier's file (12), declared validated for the test, not validated by this run"
+    }
+   ],
+   "8": {
+    "states": [
+     "verified"
+    ],
+    "selected_H": 957289
+   },
+   "9": {
+    "k": 12,
+    "MIN_CONFIRMATIONS": 6
+   },
+   "10": {
+    "block_height_H": 957289,
+    "block_time_RWCP": "2026-07-09T10:02:59Z",
+    "median_time_past": "not attempted: OPTIONAL, and the eleven headers before H are not held"
+   },
+   "11": "valid"
+  },
+  "note": "the header set was declared validated for the test and was not validated by this run"
+ },
+ {
+  "id": "N2-v1",
+  "group": "N2 D.6 second vector, unmodified pair, no validated_chain",
+  "vector": 1,
+  "validated_chain": "none",
+  "claimed_hash": "sha256:a183f624efbbda7d6208b9b5a6f9b0c2c95d90382eb209c44a1131954071f30b",
+  "expected": {
+   "verdict": "unverifiable",
+   "step": "7b",
+   "from": "D.6 second vector"
+  },
+  "verdict": "unverifiable",
+  "return_step": "8",
+  "decided_by_step": "7b",
+  "cause": "no branch verified; unevaluated: unavailable (step 7b)",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "a183f624efbbda7d6208b9b5a6f9b0c2c95d90382eb209c44a1131954071f30b"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": null,
+     "validated_chain": "none"
+    }
+   ],
+   "8": {
+    "states": [
+     "unavailable"
+    ]
+   },
+   "9": "not reached",
+   "10": "not reached",
+   "11": "not reached"
+  }
+ },
+ {
+  "id": "N2-v2",
+  "group": "N2 D.6 second vector, unmodified pair, no validated_chain",
+  "vector": 2,
+  "validated_chain": "none",
+  "claimed_hash": "sha256:0df073a986e5e5141c96ec32303b8552ded255e4404d0aff996936a846b48cff",
+  "expected": {
+   "verdict": "unverifiable",
+   "step": "7b",
+   "from": "D.6 second vector"
+  },
+  "verdict": "unverifiable",
+  "return_step": "8",
+  "decided_by_step": "7b",
+  "cause": "no branch verified; unevaluated: unavailable (step 7b)",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "0df073a986e5e5141c96ec32303b8552ded255e4404d0aff996936a846b48cff"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": null,
+     "validated_chain": "none"
+    }
+   ],
+   "8": {
+    "states": [
+     "unavailable"
+    ]
+   },
+   "9": "not reached",
+   "10": "not reached",
+   "11": "not reached"
+  }
+ },
+ {
+  "id": "N2-v3",
+  "group": "N2 D.6 second vector, unmodified pair, no validated_chain",
+  "vector": 3,
+  "validated_chain": "none",
+  "claimed_hash": "sha256:d82bf84f17057c0e3d7aa6f249dfc2e80a877b910ce4ce14dc40e653fd5be40b",
+  "expected": {
+   "verdict": "unverifiable",
+   "step": "7b",
+   "from": "D.6 second vector"
+  },
+  "verdict": "unverifiable",
+  "return_step": "8",
+  "decided_by_step": "7b",
+  "cause": "no branch verified; unevaluated: unavailable (step 7b)",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "d82bf84f17057c0e3d7aa6f249dfc2e80a877b910ce4ce14dc40e653fd5be40b"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": null,
+     "validated_chain": "none"
+    }
+   ],
+   "8": {
+    "states": [
+     "unavailable"
+    ]
+   },
+   "9": "not reached",
+   "10": "not reached",
+   "11": "not reached"
+  }
+ },
+ {
+  "id": "N2-v4",
+  "group": "N2 D.6 second vector, unmodified pair, no validated_chain",
+  "vector": 4,
+  "validated_chain": "none",
+  "claimed_hash": "sha256:94a86d117047f2af9a2f5635d0c530cc85fc23d20f5d4b42926b94abee7a06ec",
+  "expected": {
+   "verdict": "unverifiable",
+   "step": "7b",
+   "from": "D.6 second vector"
+  },
+  "verdict": "unverifiable",
+  "return_step": "8",
+  "decided_by_step": "7b",
+  "cause": "no branch verified; unevaluated: unavailable (step 7b)",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "94a86d117047f2af9a2f5635d0c530cc85fc23d20f5d4b42926b94abee7a06ec"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": null,
+     "validated_chain": "none"
+    }
+   ],
+   "8": {
+    "states": [
+     "unavailable"
+    ]
+   },
+   "9": "not reached",
+   "10": "not reached",
+   "11": "not reached"
+  }
+ },
+ {
+  "id": "N2b-v1",
+  "group": "N2b D.6 second vector, unmodified pair, fixture-11 (957290-957300)",
+  "vector": 1,
+  "validated_chain": "fixture-11: headers 957290-957300 of Lemonnier's file (11), declared validated for the test, not validated by this run",
+  "claimed_hash": "sha256:a183f624efbbda7d6208b9b5a6f9b0c2c95d90382eb209c44a1131954071f30b",
+  "expected": {
+   "verdict": "unverifiable",
+   "step": "7b",
+   "from": "D.6 second vector, if 'does not reach the attested height' covers this set (B07)"
+  },
+  "verdict": "unverifiable",
+  "return_step": "8",
+  "decided_by_step": "7b",
+  "cause": "no branch verified; unevaluated: unavailable (step 7b)",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "a183f624efbbda7d6208b9b5a6f9b0c2c95d90382eb209c44a1131954071f30b"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": null,
+     "validated_chain": "fixture-11: headers 957290-957300 of Lemonnier's file (11), declared validated for the test, not validated by this run"
+    }
+   ],
+   "8": {
+    "states": [
+     "unavailable"
+    ]
+   },
+   "9": "not reached",
+   "10": "not reached",
+   "11": "not reached"
+  },
+  "note": "the header set was declared validated for the test and was not validated by this run"
+ },
+ {
+  "id": "N2b-v2",
+  "group": "N2b D.6 second vector, unmodified pair, fixture-11 (957290-957300)",
+  "vector": 2,
+  "validated_chain": "fixture-11: headers 957290-957300 of Lemonnier's file (11), declared validated for the test, not validated by this run",
+  "claimed_hash": "sha256:0df073a986e5e5141c96ec32303b8552ded255e4404d0aff996936a846b48cff",
+  "expected": {
+   "verdict": "unverifiable",
+   "step": "7b",
+   "from": "D.6 second vector, if 'does not reach the attested height' covers this set (B07)"
+  },
+  "verdict": "unverifiable",
+  "return_step": "8",
+  "decided_by_step": "7b",
+  "cause": "no branch verified; unevaluated: unavailable (step 7b)",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "0df073a986e5e5141c96ec32303b8552ded255e4404d0aff996936a846b48cff"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": null,
+     "validated_chain": "fixture-11: headers 957290-957300 of Lemonnier's file (11), declared validated for the test, not validated by this run"
+    }
+   ],
+   "8": {
+    "states": [
+     "unavailable"
+    ]
+   },
+   "9": "not reached",
+   "10": "not reached",
+   "11": "not reached"
+  },
+  "note": "the header set was declared validated for the test and was not validated by this run"
+ },
+ {
+  "id": "N2b-v3",
+  "group": "N2b D.6 second vector, unmodified pair, fixture-11 (957290-957300)",
+  "vector": 3,
+  "validated_chain": "fixture-11: headers 957290-957300 of Lemonnier's file (11), declared validated for the test, not validated by this run",
+  "claimed_hash": "sha256:d82bf84f17057c0e3d7aa6f249dfc2e80a877b910ce4ce14dc40e653fd5be40b",
+  "expected": {
+   "verdict": "unverifiable",
+   "step": "7b",
+   "from": "D.6 second vector, if 'does not reach the attested height' covers this set (B07)"
+  },
+  "verdict": "unverifiable",
+  "return_step": "8",
+  "decided_by_step": "7b",
+  "cause": "no branch verified; unevaluated: unavailable (step 7b)",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "d82bf84f17057c0e3d7aa6f249dfc2e80a877b910ce4ce14dc40e653fd5be40b"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": null,
+     "validated_chain": "fixture-11: headers 957290-957300 of Lemonnier's file (11), declared validated for the test, not validated by this run"
+    }
+   ],
+   "8": {
+    "states": [
+     "unavailable"
+    ]
+   },
+   "9": "not reached",
+   "10": "not reached",
+   "11": "not reached"
+  },
+  "note": "the header set was declared validated for the test and was not validated by this run"
+ },
+ {
+  "id": "N2b-v4",
+  "group": "N2b D.6 second vector, unmodified pair, fixture-11 (957290-957300)",
+  "vector": 4,
+  "validated_chain": "fixture-11: headers 957290-957300 of Lemonnier's file (11), declared validated for the test, not validated by this run",
+  "claimed_hash": "sha256:94a86d117047f2af9a2f5635d0c530cc85fc23d20f5d4b42926b94abee7a06ec",
+  "expected": {
+   "verdict": "unverifiable",
+   "step": "7b",
+   "from": "D.6 second vector, if 'does not reach the attested height' covers this set (B07)"
+  },
+  "verdict": "unverifiable",
+  "return_step": "8",
+  "decided_by_step": "7b",
+  "cause": "no branch verified; unevaluated: unavailable (step 7b)",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "94a86d117047f2af9a2f5635d0c530cc85fc23d20f5d4b42926b94abee7a06ec"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": null,
+     "validated_chain": "fixture-11: headers 957290-957300 of Lemonnier's file (11), declared validated for the test, not validated by this run"
+    }
+   ],
+   "8": {
+    "states": [
+     "unavailable"
+    ]
+   },
+   "9": "not reached",
+   "10": "not reached",
+   "11": "not reached"
+  },
+  "note": "the header set was declared validated for the test and was not validated by this run"
+ },
+ {
+  "id": "A1-v1",
+  "group": "A1 additional: fixture-11 under reading B07(b) (header at H established through 957290's previous-block hash)",
+  "vector": 1,
+  "validated_chain": "fixture-11 under reading B07(b): headers 957290-957300 of Lemonnier's file (11), declared validated for the test, not validated by this run",
+  "claimed_hash": "sha256:a183f624efbbda7d6208b9b5a6f9b0c2c95d90382eb209c44a1131954071f30b",
+  "expected": {
+   "verdict": "unverifiable",
+   "step": "7b",
+   "from": "D.6 second vector, as N2b"
+  },
+  "verdict": "valid",
+  "return_step": "11",
+  "decided_by_step": "11",
+  "cause": "steps 1 to 10 passed",
+  "agrees": false,
+  "trace": {
+   "1": {
+    "computed_hash": "a183f624efbbda7d6208b9b5a6f9b0c2c95d90382eb209c44a1131954071f30b"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": "the candidate",
+     "validated_chain": "fixture-11 under reading B07(b): headers 957290-957300 of Lemonnier's file (11), declared validated for the test, not validated by this run"
+    }
+   ],
+   "8": {
+    "states": [
+     "verified"
+    ],
+    "selected_H": 957289
+   },
+   "9": {
+    "k": 12,
+    "MIN_CONFIRMATIONS": 6
+   },
+   "10": {
+    "block_height_H": 957289,
+    "block_time_RWCP": "2026-07-09T10:02:59Z",
+    "median_time_past": "not attempted: OPTIONAL, and the eleven headers before H are not held"
+   },
+   "11": "valid"
+  },
+  "note": "computed only to report the other reading of B07; the header set was declared validated for the test and was not validated by this run"
+ },
+ {
+  "id": "A1-v2",
+  "group": "A1 additional: fixture-11 under reading B07(b) (header at H established through 957290's previous-block hash)",
+  "vector": 2,
+  "validated_chain": "fixture-11 under reading B07(b): headers 957290-957300 of Lemonnier's file (11), declared validated for the test, not validated by this run",
+  "claimed_hash": "sha256:0df073a986e5e5141c96ec32303b8552ded255e4404d0aff996936a846b48cff",
+  "expected": {
+   "verdict": "unverifiable",
+   "step": "7b",
+   "from": "D.6 second vector, as N2b"
+  },
+  "verdict": "valid",
+  "return_step": "11",
+  "decided_by_step": "11",
+  "cause": "steps 1 to 10 passed",
+  "agrees": false,
+  "trace": {
+   "1": {
+    "computed_hash": "0df073a986e5e5141c96ec32303b8552ded255e4404d0aff996936a846b48cff"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": "the candidate",
+     "validated_chain": "fixture-11 under reading B07(b): headers 957290-957300 of Lemonnier's file (11), declared validated for the test, not validated by this run"
+    }
+   ],
+   "8": {
+    "states": [
+     "verified"
+    ],
+    "selected_H": 957289
+   },
+   "9": {
+    "k": 12,
+    "MIN_CONFIRMATIONS": 6
+   },
+   "10": {
+    "block_height_H": 957289,
+    "block_time_RWCP": "2026-07-09T10:02:59Z",
+    "median_time_past": "not attempted: OPTIONAL, and the eleven headers before H are not held"
+   },
+   "11": "valid"
+  },
+  "note": "computed only to report the other reading of B07; the header set was declared validated for the test and was not validated by this run"
+ },
+ {
+  "id": "A1-v3",
+  "group": "A1 additional: fixture-11 under reading B07(b) (header at H established through 957290's previous-block hash)",
+  "vector": 3,
+  "validated_chain": "fixture-11 under reading B07(b): headers 957290-957300 of Lemonnier's file (11), declared validated for the test, not validated by this run",
+  "claimed_hash": "sha256:d82bf84f17057c0e3d7aa6f249dfc2e80a877b910ce4ce14dc40e653fd5be40b",
+  "expected": {
+   "verdict": "unverifiable",
+   "step": "7b",
+   "from": "D.6 second vector, as N2b"
+  },
+  "verdict": "valid",
+  "return_step": "11",
+  "decided_by_step": "11",
+  "cause": "steps 1 to 10 passed",
+  "agrees": false,
+  "trace": {
+   "1": {
+    "computed_hash": "d82bf84f17057c0e3d7aa6f249dfc2e80a877b910ce4ce14dc40e653fd5be40b"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": "the candidate",
+     "validated_chain": "fixture-11 under reading B07(b): headers 957290-957300 of Lemonnier's file (11), declared validated for the test, not validated by this run"
+    }
+   ],
+   "8": {
+    "states": [
+     "verified"
+    ],
+    "selected_H": 957289
+   },
+   "9": {
+    "k": 12,
+    "MIN_CONFIRMATIONS": 6
+   },
+   "10": {
+    "block_height_H": 957289,
+    "block_time_RWCP": "2026-07-09T10:02:59Z",
+    "median_time_past": "not attempted: OPTIONAL, and the eleven headers before H are not held"
+   },
+   "11": "valid"
+  },
+  "note": "computed only to report the other reading of B07; the header set was declared validated for the test and was not validated by this run"
+ },
+ {
+  "id": "A1-v4",
+  "group": "A1 additional: fixture-11 under reading B07(b) (header at H established through 957290's previous-block hash)",
+  "vector": 4,
+  "validated_chain": "fixture-11 under reading B07(b): headers 957290-957300 of Lemonnier's file (11), declared validated for the test, not validated by this run",
+  "claimed_hash": "sha256:94a86d117047f2af9a2f5635d0c530cc85fc23d20f5d4b42926b94abee7a06ec",
+  "expected": {
+   "verdict": "unverifiable",
+   "step": "7b",
+   "from": "D.6 second vector, as N2b"
+  },
+  "verdict": "valid",
+  "return_step": "11",
+  "decided_by_step": "11",
+  "cause": "steps 1 to 10 passed",
+  "agrees": false,
+  "trace": {
+   "1": {
+    "computed_hash": "94a86d117047f2af9a2f5635d0c530cc85fc23d20f5d4b42926b94abee7a06ec"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": "the candidate",
+     "validated_chain": "fixture-11 under reading B07(b): headers 957290-957300 of Lemonnier's file (11), declared validated for the test, not validated by this run"
+    }
+   ],
+   "8": {
+    "states": [
+     "verified"
+    ],
+    "selected_H": 957289
+   },
+   "9": {
+    "k": 12,
+    "MIN_CONFIRMATIONS": 6
+   },
+   "10": {
+    "block_height_H": 957289,
+    "block_time_RWCP": "2026-07-09T10:02:59Z",
+    "median_time_past": "not attempted: OPTIONAL, and the eleven headers before H are not held"
+   },
+   "11": "valid"
+  },
+  "note": "computed only to report the other reading of B07; the header set was declared validated for the test and was not validated by this run"
+ },
+ {
+  "id": "A2-v1",
+  "group": "A2 additional: claimed_hash without the sha256: prefix, no validated_chain",
+  "vector": 1,
+  "validated_chain": "none",
+  "claimed_hash": "a183f624efbbda7d6208b9b5a6f9b0c2c95d90382eb209c44a1131954071f30b",
+  "expected": {
+   "verdict": "unverifiable",
+   "step": "7b",
+   "from": "as P1"
+  },
+  "verdict": "unverifiable",
+  "return_step": "8",
+  "decided_by_step": "7b",
+  "cause": "no branch verified; unevaluated: unavailable (step 7b)",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "a183f624efbbda7d6208b9b5a6f9b0c2c95d90382eb209c44a1131954071f30b"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": null,
+     "validated_chain": "none"
+    }
+   ],
+   "8": {
+    "states": [
+     "unavailable"
+    ]
+   },
+   "9": "not reached",
+   "10": "not reached",
+   "11": "not reached"
+  }
+ },
+ {
+  "id": "A2-v2",
+  "group": "A2 additional: claimed_hash without the sha256: prefix, no validated_chain",
+  "vector": 2,
+  "validated_chain": "none",
+  "claimed_hash": "0df073a986e5e5141c96ec32303b8552ded255e4404d0aff996936a846b48cff",
+  "expected": {
+   "verdict": "unverifiable",
+   "step": "7b",
+   "from": "as P1"
+  },
+  "verdict": "unverifiable",
+  "return_step": "8",
+  "decided_by_step": "7b",
+  "cause": "no branch verified; unevaluated: unavailable (step 7b)",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "0df073a986e5e5141c96ec32303b8552ded255e4404d0aff996936a846b48cff"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": null,
+     "validated_chain": "none"
+    }
+   ],
+   "8": {
+    "states": [
+     "unavailable"
+    ]
+   },
+   "9": "not reached",
+   "10": "not reached",
+   "11": "not reached"
+  }
+ },
+ {
+  "id": "A2-v3",
+  "group": "A2 additional: claimed_hash without the sha256: prefix, no validated_chain",
+  "vector": 3,
+  "validated_chain": "none",
+  "claimed_hash": "d82bf84f17057c0e3d7aa6f249dfc2e80a877b910ce4ce14dc40e653fd5be40b",
+  "expected": {
+   "verdict": "unverifiable",
+   "step": "7b",
+   "from": "as P1"
+  },
+  "verdict": "unverifiable",
+  "return_step": "8",
+  "decided_by_step": "7b",
+  "cause": "no branch verified; unevaluated: unavailable (step 7b)",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "d82bf84f17057c0e3d7aa6f249dfc2e80a877b910ce4ce14dc40e653fd5be40b"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": null,
+     "validated_chain": "none"
+    }
+   ],
+   "8": {
+    "states": [
+     "unavailable"
+    ]
+   },
+   "9": "not reached",
+   "10": "not reached",
+   "11": "not reached"
+  }
+ },
+ {
+  "id": "A2-v4",
+  "group": "A2 additional: claimed_hash without the sha256: prefix, no validated_chain",
+  "vector": 4,
+  "validated_chain": "none",
+  "claimed_hash": "94a86d117047f2af9a2f5635d0c530cc85fc23d20f5d4b42926b94abee7a06ec",
+  "expected": {
+   "verdict": "unverifiable",
+   "step": "7b",
+   "from": "as P1"
+  },
+  "verdict": "unverifiable",
+  "return_step": "8",
+  "decided_by_step": "7b",
+  "cause": "no branch verified; unevaluated: unavailable (step 7b)",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "94a86d117047f2af9a2f5635d0c530cc85fc23d20f5d4b42926b94abee7a06ec"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": null,
+     "validated_chain": "none"
+    }
+   ],
+   "8": {
+    "states": [
+     "unavailable"
+    ]
+   },
+   "9": "not reached",
+   "10": "not reached",
+   "11": "not reached"
+  }
+ },
+ {
+  "id": "A3-v1",
+  "group": "A3 additional: claimed_hash without the sha256: prefix, fixture-12",
+  "vector": 1,
+  "validated_chain": "fixture-12: headers 957289-957300 of Lemonnier's file (12), declared validated for the test, not validated by this run",
+  "claimed_hash": "a183f624efbbda7d6208b9b5a6f9b0c2c95d90382eb209c44a1131954071f30b",
+  "expected": {
+   "verdict": "valid",
+   "step": "11",
+   "from": "as P2"
+  },
+  "verdict": "valid",
+  "return_step": "11",
+  "decided_by_step": "11",
+  "cause": "steps 1 to 10 passed",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "a183f624efbbda7d6208b9b5a6f9b0c2c95d90382eb209c44a1131954071f30b"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": "the candidate",
+     "validated_chain": "fixture-12: headers 957289-957300 of Lemonnier's file (12), declared validated for the test, not validated by this run"
+    }
+   ],
+   "8": {
+    "states": [
+     "verified"
+    ],
+    "selected_H": 957289
+   },
+   "9": {
+    "k": 12,
+    "MIN_CONFIRMATIONS": 6
+   },
+   "10": {
+    "block_height_H": 957289,
+    "block_time_RWCP": "2026-07-09T10:02:59Z",
+    "median_time_past": "not attempted: OPTIONAL, and the eleven headers before H are not held"
+   },
+   "11": "valid"
+  },
+  "note": "the header set was declared validated for the test and was not validated by this run"
+ },
+ {
+  "id": "A3-v2",
+  "group": "A3 additional: claimed_hash without the sha256: prefix, fixture-12",
+  "vector": 2,
+  "validated_chain": "fixture-12: headers 957289-957300 of Lemonnier's file (12), declared validated for the test, not validated by this run",
+  "claimed_hash": "0df073a986e5e5141c96ec32303b8552ded255e4404d0aff996936a846b48cff",
+  "expected": {
+   "verdict": "valid",
+   "step": "11",
+   "from": "as P2"
+  },
+  "verdict": "valid",
+  "return_step": "11",
+  "decided_by_step": "11",
+  "cause": "steps 1 to 10 passed",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "0df073a986e5e5141c96ec32303b8552ded255e4404d0aff996936a846b48cff"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": "the candidate",
+     "validated_chain": "fixture-12: headers 957289-957300 of Lemonnier's file (12), declared validated for the test, not validated by this run"
+    }
+   ],
+   "8": {
+    "states": [
+     "verified"
+    ],
+    "selected_H": 957289
+   },
+   "9": {
+    "k": 12,
+    "MIN_CONFIRMATIONS": 6
+   },
+   "10": {
+    "block_height_H": 957289,
+    "block_time_RWCP": "2026-07-09T10:02:59Z",
+    "median_time_past": "not attempted: OPTIONAL, and the eleven headers before H are not held"
+   },
+   "11": "valid"
+  },
+  "note": "the header set was declared validated for the test and was not validated by this run"
+ },
+ {
+  "id": "A3-v3",
+  "group": "A3 additional: claimed_hash without the sha256: prefix, fixture-12",
+  "vector": 3,
+  "validated_chain": "fixture-12: headers 957289-957300 of Lemonnier's file (12), declared validated for the test, not validated by this run",
+  "claimed_hash": "d82bf84f17057c0e3d7aa6f249dfc2e80a877b910ce4ce14dc40e653fd5be40b",
+  "expected": {
+   "verdict": "valid",
+   "step": "11",
+   "from": "as P2"
+  },
+  "verdict": "valid",
+  "return_step": "11",
+  "decided_by_step": "11",
+  "cause": "steps 1 to 10 passed",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "d82bf84f17057c0e3d7aa6f249dfc2e80a877b910ce4ce14dc40e653fd5be40b"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": "the candidate",
+     "validated_chain": "fixture-12: headers 957289-957300 of Lemonnier's file (12), declared validated for the test, not validated by this run"
+    }
+   ],
+   "8": {
+    "states": [
+     "verified"
+    ],
+    "selected_H": 957289
+   },
+   "9": {
+    "k": 12,
+    "MIN_CONFIRMATIONS": 6
+   },
+   "10": {
+    "block_height_H": 957289,
+    "block_time_RWCP": "2026-07-09T10:02:59Z",
+    "median_time_past": "not attempted: OPTIONAL, and the eleven headers before H are not held"
+   },
+   "11": "valid"
+  },
+  "note": "the header set was declared validated for the test and was not validated by this run"
+ },
+ {
+  "id": "A3-v4",
+  "group": "A3 additional: claimed_hash without the sha256: prefix, fixture-12",
+  "vector": 4,
+  "validated_chain": "fixture-12: headers 957289-957300 of Lemonnier's file (12), declared validated for the test, not validated by this run",
+  "claimed_hash": "94a86d117047f2af9a2f5635d0c530cc85fc23d20f5d4b42926b94abee7a06ec",
+  "expected": {
+   "verdict": "valid",
+   "step": "11",
+   "from": "as P2"
+  },
+  "verdict": "valid",
+  "return_step": "11",
+  "decided_by_step": "11",
+  "cause": "steps 1 to 10 passed",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "94a86d117047f2af9a2f5635d0c530cc85fc23d20f5d4b42926b94abee7a06ec"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": "the candidate",
+     "validated_chain": "fixture-12: headers 957289-957300 of Lemonnier's file (12), declared validated for the test, not validated by this run"
+    }
+   ],
+   "8": {
+    "states": [
+     "verified"
+    ],
+    "selected_H": 957289
+   },
+   "9": {
+    "k": 12,
+    "MIN_CONFIRMATIONS": 6
+   },
+   "10": {
+    "block_height_H": 957289,
+    "block_time_RWCP": "2026-07-09T10:02:59Z",
+    "median_time_past": "not attempted: OPTIONAL, and the eleven headers before H are not held"
+   },
+   "11": "valid"
+  },
+  "note": "the header set was declared validated for the test and was not validated by this run"
+ },
+ {
+  "id": "A4-v1",
+  "group": "A4 additional: an empty validated header set (a view, holding nothing)",
+  "vector": 1,
+  "validated_chain": "fixture-0: an empty header set, declared validated for the test, not validated by this run",
+  "claimed_hash": "sha256:a183f624efbbda7d6208b9b5a6f9b0c2c95d90382eb209c44a1131954071f30b",
+  "expected": {
+   "verdict": "unverifiable",
+   "step": "7b",
+   "from": "D.6 second vector, 'a validated header set that does not reach the attested height'"
+  },
+  "verdict": "unverifiable",
+  "return_step": "8",
+  "decided_by_step": "7b",
+  "cause": "no branch verified; unevaluated: unavailable (step 7b)",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "a183f624efbbda7d6208b9b5a6f9b0c2c95d90382eb209c44a1131954071f30b"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": null,
+     "validated_chain": "fixture-0: an empty header set, declared validated for the test, not validated by this run"
+    }
+   ],
+   "8": {
+    "states": [
+     "unavailable"
+    ]
+   },
+   "9": "not reached",
+   "10": "not reached",
+   "11": "not reached"
+  },
+  "note": "the (empty) set was declared validated for the test"
+ },
+ {
+  "id": "A4-v2",
+  "group": "A4 additional: an empty validated header set (a view, holding nothing)",
+  "vector": 2,
+  "validated_chain": "fixture-0: an empty header set, declared validated for the test, not validated by this run",
+  "claimed_hash": "sha256:0df073a986e5e5141c96ec32303b8552ded255e4404d0aff996936a846b48cff",
+  "expected": {
+   "verdict": "unverifiable",
+   "step": "7b",
+   "from": "D.6 second vector, 'a validated header set that does not reach the attested height'"
+  },
+  "verdict": "unverifiable",
+  "return_step": "8",
+  "decided_by_step": "7b",
+  "cause": "no branch verified; unevaluated: unavailable (step 7b)",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "0df073a986e5e5141c96ec32303b8552ded255e4404d0aff996936a846b48cff"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": null,
+     "validated_chain": "fixture-0: an empty header set, declared validated for the test, not validated by this run"
+    }
+   ],
+   "8": {
+    "states": [
+     "unavailable"
+    ]
+   },
+   "9": "not reached",
+   "10": "not reached",
+   "11": "not reached"
+  },
+  "note": "the (empty) set was declared validated for the test"
+ },
+ {
+  "id": "A4-v3",
+  "group": "A4 additional: an empty validated header set (a view, holding nothing)",
+  "vector": 3,
+  "validated_chain": "fixture-0: an empty header set, declared validated for the test, not validated by this run",
+  "claimed_hash": "sha256:d82bf84f17057c0e3d7aa6f249dfc2e80a877b910ce4ce14dc40e653fd5be40b",
+  "expected": {
+   "verdict": "unverifiable",
+   "step": "7b",
+   "from": "D.6 second vector, 'a validated header set that does not reach the attested height'"
+  },
+  "verdict": "unverifiable",
+  "return_step": "8",
+  "decided_by_step": "7b",
+  "cause": "no branch verified; unevaluated: unavailable (step 7b)",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "d82bf84f17057c0e3d7aa6f249dfc2e80a877b910ce4ce14dc40e653fd5be40b"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": null,
+     "validated_chain": "fixture-0: an empty header set, declared validated for the test, not validated by this run"
+    }
+   ],
+   "8": {
+    "states": [
+     "unavailable"
+    ]
+   },
+   "9": "not reached",
+   "10": "not reached",
+   "11": "not reached"
+  },
+  "note": "the (empty) set was declared validated for the test"
+ },
+ {
+  "id": "A4-v4",
+  "group": "A4 additional: an empty validated header set (a view, holding nothing)",
+  "vector": 4,
+  "validated_chain": "fixture-0: an empty header set, declared validated for the test, not validated by this run",
+  "claimed_hash": "sha256:94a86d117047f2af9a2f5635d0c530cc85fc23d20f5d4b42926b94abee7a06ec",
+  "expected": {
+   "verdict": "unverifiable",
+   "step": "7b",
+   "from": "D.6 second vector, 'a validated header set that does not reach the attested height'"
+  },
+  "verdict": "unverifiable",
+  "return_step": "8",
+  "decided_by_step": "7b",
+  "cause": "no branch verified; unevaluated: unavailable (step 7b)",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "94a86d117047f2af9a2f5635d0c530cc85fc23d20f5d4b42926b94abee7a06ec"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": null,
+     "validated_chain": "fixture-0: an empty header set, declared validated for the test, not validated by this run"
+    }
+   ],
+   "8": {
+    "states": [
+     "unavailable"
+    ]
+   },
+   "9": "not reached",
+   "10": "not reached",
+   "11": "not reached"
+  },
+  "note": "the (empty) set was declared validated for the test"
+ },
+ {
+  "id": "A5-v1",
+  "group": "A5 additional: fixture-5 (957289-957293), five blocks at H and above",
+  "vector": 1,
+  "validated_chain": "fixture-5: headers 957289-957293 of Lemonnier's file (5), declared validated for the test, not validated by this run",
+  "claimed_hash": "sha256:a183f624efbbda7d6208b9b5a6f9b0c2c95d90382eb209c44a1131954071f30b",
+  "expected": {
+   "verdict": "unverifiable",
+   "step": "9",
+   "from": "Section 4.1 step 9 (k = 5 < MIN_CONFIRMATIONS 6)"
+  },
+  "verdict": "unverifiable",
+  "return_step": "9",
+  "decided_by_step": "9",
+  "cause": "confirmations 5 < 6",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "a183f624efbbda7d6208b9b5a6f9b0c2c95d90382eb209c44a1131954071f30b"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": "the candidate",
+     "validated_chain": "fixture-5: headers 957289-957293 of Lemonnier's file (5), declared validated for the test, not validated by this run"
+    }
+   ],
+   "8": {
+    "states": [
+     "verified"
+    ],
+    "selected_H": 957289
+   },
+   "9": {
+    "k": 5,
+    "MIN_CONFIRMATIONS": 6
+   },
+   "10": "not reached",
+   "11": "not reached"
+  },
+  "note": "the header set was declared validated for the test and was not validated by this run"
+ },
+ {
+  "id": "A5-v2",
+  "group": "A5 additional: fixture-5 (957289-957293), five blocks at H and above",
+  "vector": 2,
+  "validated_chain": "fixture-5: headers 957289-957293 of Lemonnier's file (5), declared validated for the test, not validated by this run",
+  "claimed_hash": "sha256:0df073a986e5e5141c96ec32303b8552ded255e4404d0aff996936a846b48cff",
+  "expected": {
+   "verdict": "unverifiable",
+   "step": "9",
+   "from": "Section 4.1 step 9 (k = 5 < MIN_CONFIRMATIONS 6)"
+  },
+  "verdict": "unverifiable",
+  "return_step": "9",
+  "decided_by_step": "9",
+  "cause": "confirmations 5 < 6",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "0df073a986e5e5141c96ec32303b8552ded255e4404d0aff996936a846b48cff"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": "the candidate",
+     "validated_chain": "fixture-5: headers 957289-957293 of Lemonnier's file (5), declared validated for the test, not validated by this run"
+    }
+   ],
+   "8": {
+    "states": [
+     "verified"
+    ],
+    "selected_H": 957289
+   },
+   "9": {
+    "k": 5,
+    "MIN_CONFIRMATIONS": 6
+   },
+   "10": "not reached",
+   "11": "not reached"
+  },
+  "note": "the header set was declared validated for the test and was not validated by this run"
+ },
+ {
+  "id": "A5-v3",
+  "group": "A5 additional: fixture-5 (957289-957293), five blocks at H and above",
+  "vector": 3,
+  "validated_chain": "fixture-5: headers 957289-957293 of Lemonnier's file (5), declared validated for the test, not validated by this run",
+  "claimed_hash": "sha256:d82bf84f17057c0e3d7aa6f249dfc2e80a877b910ce4ce14dc40e653fd5be40b",
+  "expected": {
+   "verdict": "unverifiable",
+   "step": "9",
+   "from": "Section 4.1 step 9 (k = 5 < MIN_CONFIRMATIONS 6)"
+  },
+  "verdict": "unverifiable",
+  "return_step": "9",
+  "decided_by_step": "9",
+  "cause": "confirmations 5 < 6",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "d82bf84f17057c0e3d7aa6f249dfc2e80a877b910ce4ce14dc40e653fd5be40b"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": "the candidate",
+     "validated_chain": "fixture-5: headers 957289-957293 of Lemonnier's file (5), declared validated for the test, not validated by this run"
+    }
+   ],
+   "8": {
+    "states": [
+     "verified"
+    ],
+    "selected_H": 957289
+   },
+   "9": {
+    "k": 5,
+    "MIN_CONFIRMATIONS": 6
+   },
+   "10": "not reached",
+   "11": "not reached"
+  },
+  "note": "the header set was declared validated for the test and was not validated by this run"
+ },
+ {
+  "id": "A5-v4",
+  "group": "A5 additional: fixture-5 (957289-957293), five blocks at H and above",
+  "vector": 4,
+  "validated_chain": "fixture-5: headers 957289-957293 of Lemonnier's file (5), declared validated for the test, not validated by this run",
+  "claimed_hash": "sha256:94a86d117047f2af9a2f5635d0c530cc85fc23d20f5d4b42926b94abee7a06ec",
+  "expected": {
+   "verdict": "unverifiable",
+   "step": "9",
+   "from": "Section 4.1 step 9 (k = 5 < MIN_CONFIRMATIONS 6)"
+  },
+  "verdict": "unverifiable",
+  "return_step": "9",
+  "decided_by_step": "9",
+  "cause": "confirmations 5 < 6",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "94a86d117047f2af9a2f5635d0c530cc85fc23d20f5d4b42926b94abee7a06ec"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": "the candidate",
+     "validated_chain": "fixture-5: headers 957289-957293 of Lemonnier's file (5), declared validated for the test, not validated by this run"
+    }
+   ],
+   "8": {
+    "states": [
+     "verified"
+    ],
+    "selected_H": 957289
+   },
+   "9": {
+    "k": 5,
+    "MIN_CONFIRMATIONS": 6
+   },
+   "10": "not reached",
+   "11": "not reached"
+  },
+  "note": "the header set was declared validated for the test and was not validated by this run"
+ },
+ {
+  "id": "A6-v1",
+  "group": "A6 additional: fixture-6 (957289-957294), six blocks at H and above",
+  "vector": 1,
+  "validated_chain": "fixture-6: headers 957289-957294 of Lemonnier's file (6), declared validated for the test, not validated by this run",
+  "claimed_hash": "sha256:a183f624efbbda7d6208b9b5a6f9b0c2c95d90382eb209c44a1131954071f30b",
+  "expected": {
+   "verdict": "valid",
+   "step": "11",
+   "from": "Section 4.1 step 9 (k = 6)"
+  },
+  "verdict": "valid",
+  "return_step": "11",
+  "decided_by_step": "11",
+  "cause": "steps 1 to 10 passed",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "a183f624efbbda7d6208b9b5a6f9b0c2c95d90382eb209c44a1131954071f30b"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": "the candidate",
+     "validated_chain": "fixture-6: headers 957289-957294 of Lemonnier's file (6), declared validated for the test, not validated by this run"
+    }
+   ],
+   "8": {
+    "states": [
+     "verified"
+    ],
+    "selected_H": 957289
+   },
+   "9": {
+    "k": 6,
+    "MIN_CONFIRMATIONS": 6
+   },
+   "10": {
+    "block_height_H": 957289,
+    "block_time_RWCP": "2026-07-09T10:02:59Z",
+    "median_time_past": "not attempted: OPTIONAL, and the eleven headers before H are not held"
+   },
+   "11": "valid"
+  },
+  "note": "the header set was declared validated for the test and was not validated by this run"
+ },
+ {
+  "id": "A6-v2",
+  "group": "A6 additional: fixture-6 (957289-957294), six blocks at H and above",
+  "vector": 2,
+  "validated_chain": "fixture-6: headers 957289-957294 of Lemonnier's file (6), declared validated for the test, not validated by this run",
+  "claimed_hash": "sha256:0df073a986e5e5141c96ec32303b8552ded255e4404d0aff996936a846b48cff",
+  "expected": {
+   "verdict": "valid",
+   "step": "11",
+   "from": "Section 4.1 step 9 (k = 6)"
+  },
+  "verdict": "valid",
+  "return_step": "11",
+  "decided_by_step": "11",
+  "cause": "steps 1 to 10 passed",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "0df073a986e5e5141c96ec32303b8552ded255e4404d0aff996936a846b48cff"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": "the candidate",
+     "validated_chain": "fixture-6: headers 957289-957294 of Lemonnier's file (6), declared validated for the test, not validated by this run"
+    }
+   ],
+   "8": {
+    "states": [
+     "verified"
+    ],
+    "selected_H": 957289
+   },
+   "9": {
+    "k": 6,
+    "MIN_CONFIRMATIONS": 6
+   },
+   "10": {
+    "block_height_H": 957289,
+    "block_time_RWCP": "2026-07-09T10:02:59Z",
+    "median_time_past": "not attempted: OPTIONAL, and the eleven headers before H are not held"
+   },
+   "11": "valid"
+  },
+  "note": "the header set was declared validated for the test and was not validated by this run"
+ },
+ {
+  "id": "A6-v3",
+  "group": "A6 additional: fixture-6 (957289-957294), six blocks at H and above",
+  "vector": 3,
+  "validated_chain": "fixture-6: headers 957289-957294 of Lemonnier's file (6), declared validated for the test, not validated by this run",
+  "claimed_hash": "sha256:d82bf84f17057c0e3d7aa6f249dfc2e80a877b910ce4ce14dc40e653fd5be40b",
+  "expected": {
+   "verdict": "valid",
+   "step": "11",
+   "from": "Section 4.1 step 9 (k = 6)"
+  },
+  "verdict": "valid",
+  "return_step": "11",
+  "decided_by_step": "11",
+  "cause": "steps 1 to 10 passed",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "d82bf84f17057c0e3d7aa6f249dfc2e80a877b910ce4ce14dc40e653fd5be40b"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": "the candidate",
+     "validated_chain": "fixture-6: headers 957289-957294 of Lemonnier's file (6), declared validated for the test, not validated by this run"
+    }
+   ],
+   "8": {
+    "states": [
+     "verified"
+    ],
+    "selected_H": 957289
+   },
+   "9": {
+    "k": 6,
+    "MIN_CONFIRMATIONS": 6
+   },
+   "10": {
+    "block_height_H": 957289,
+    "block_time_RWCP": "2026-07-09T10:02:59Z",
+    "median_time_past": "not attempted: OPTIONAL, and the eleven headers before H are not held"
+   },
+   "11": "valid"
+  },
+  "note": "the header set was declared validated for the test and was not validated by this run"
+ },
+ {
+  "id": "A6-v4",
+  "group": "A6 additional: fixture-6 (957289-957294), six blocks at H and above",
+  "vector": 4,
+  "validated_chain": "fixture-6: headers 957289-957294 of Lemonnier's file (6), declared validated for the test, not validated by this run",
+  "claimed_hash": "sha256:94a86d117047f2af9a2f5635d0c530cc85fc23d20f5d4b42926b94abee7a06ec",
+  "expected": {
+   "verdict": "valid",
+   "step": "11",
+   "from": "Section 4.1 step 9 (k = 6)"
+  },
+  "verdict": "valid",
+  "return_step": "11",
+  "decided_by_step": "11",
+  "cause": "steps 1 to 10 passed",
+  "agrees": true,
+  "trace": {
+   "1": {
+    "computed_hash": "94a86d117047f2af9a2f5635d0c530cc85fc23d20f5d4b42926b94abee7a06ec"
+   },
+   "2": {
+    "equal": true
+   },
+   "3": {
+    "parsed": true,
+    "file_hash_op": "sha256",
+    "msg_equals_computed_hash": true
+   },
+   "4": {
+    "bitcoin_attestation": true,
+    "bitcoin_branches": 1,
+    "other_attestations": 4
+   },
+   "5": [
+    {
+     "operations": 82,
+     "digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "unsupported": []
+    }
+   ],
+   "6": [
+    957289
+   ],
+   "7a": [
+    {
+     "H": 957289,
+     "candidate": "00000020c3552212ab063a72df6a06a5909dc9cfbfb9af384ef90000000000000000000081383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43efd3714f6a421a0217b143d57c",
+     "source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)"
+    }
+   ],
+   "7b": [
+    {
+     "H": 957289,
+     "header": "the candidate",
+     "validated_chain": "fixture-6: headers 957289-957294 of Lemonnier's file (6), declared validated for the test, not validated by this run"
+    }
+   ],
+   "8": {
+    "states": [
+     "verified"
+    ],
+    "selected_H": 957289
+   },
+   "9": {
+    "k": 6,
+    "MIN_CONFIRMATIONS": 6
+   },
+   "10": {
+    "block_height_H": 957289,
+    "block_time_RWCP": "2026-07-09T10:02:59Z",
+    "median_time_past": "not attempted: OPTIONAL, and the eleven headers before H are not held"
+   },
+   "11": "valid"
+  },
+  "note": "the header set was declared validated for the test and was not validated by this run"
+ }
+]

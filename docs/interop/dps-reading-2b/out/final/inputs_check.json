@@ -1,0 +1,31 @@
+{
+ "constants_not_found_in_draft": [],
+ "vector1": {
+  "txt_equals_d1_string": true,
+  "txt_sha256_equals_d1_hash": true,
+  "ots_equals_d5_base64": true,
+  "txt_bytes": 46,
+  "ots_bytes": 1877
+ },
+ "vector2": {
+  "txt_equals_d1_string": true,
+  "txt_sha256_equals_d1_hash": true,
+  "ots_equals_d5_base64": true,
+  "txt_bytes": 46,
+  "ots_bytes": 1877
+ },
+ "vector3": {
+  "txt_equals_d1_string": true,
+  "txt_sha256_equals_d1_hash": true,
+  "ots_equals_d5_base64": true,
+  "txt_bytes": 46,
+  "ots_bytes": 1877
+ },
+ "vector4": {
+  "txt_equals_d1_string": true,
+  "txt_sha256_equals_d1_hash": true,
+  "ots_equals_d5_base64": true,
+  "txt_bytes": 46,
+  "ots_bytes": 1877
+ }
+}
