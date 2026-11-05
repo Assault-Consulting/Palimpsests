@@ -1,0 +1,2191 @@
+[
+ {
+  "id": "T01",
+  "agree": false,
+  "detail": [
+   "status failed, expected verified",
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified",
+   "issuer_time not_checked, expected verified",
+   "consistency None, expected consistent",
+   "existed_no_later_than None, expected 2026-09-25T11:05:00Z"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T02",
+  "agree": false,
+  "detail": [
+   "status failed, expected verified",
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified",
+   "issuer_time not_checked, expected verified",
+   "existed_no_later_than None, expected 2026-09-27T10:30:00Z"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T03",
+  "agree": false,
+  "detail": [
+   "status failed, expected verified",
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified",
+   "issuer_time not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T04",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected failed",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T05",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "failed",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T06",
+  "agree": false,
+  "detail": [
+   "status failed, expected verified",
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified",
+   "issuer_time not_checked, expected failed",
+   "consistency None, expected inconsistent",
+   "existed_no_later_than None, expected 2026-09-25T10:30:00Z"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T07",
+  "agree": false,
+  "detail": [
+   "status failed, expected verified",
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified",
+   "issuer_time not_checked, expected verified",
+   "consistency None, expected consistent",
+   "existed_no_later_than None, expected 2026-09-25T11:00:30Z",
+   "gen_time None, expected 2026-09-25T10:59:30Z"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T08",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected failed"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T09",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected failed",
+   "signer_certificate not_checked, expected failed",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T10",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected failed",
+   "signer_certificate not_checked, expected failed",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T11",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected failed",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T12",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected failed",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T13",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected failed",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T14",
+  "agree": false,
+  "detail": [
+   "status failed, expected verified",
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "tsa_state not_checked, expected verified",
+   "issuer_time not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T15",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected failed",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T16",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T17",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T18",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected failed",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T19",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected failed"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T20",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected failed"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T21",
+  "agree": false,
+  "detail": [
+   "status failed, expected verified",
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified",
+   "issuer_time not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T22",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected failed"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T23",
+  "agree": false,
+  "detail": [
+   "status failed, expected not_checked",
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "not_checked",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T24",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "failed",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T25",
+  "agree": false,
+  "detail": [
+   "status failed, expected not_checked",
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "not_checked",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T26",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "failed",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T27",
+  "agree": false,
+  "detail": [
+   "status failed, expected verified",
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified",
+   "issuer_time not_checked, expected failed",
+   "consistency None, expected inconsistent"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T28",
+  "agree": false,
+  "detail": [
+   "status failed, expected verified",
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T29",
+  "agree": false,
+  "detail": [
+   "status failed, expected verified",
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T30",
+  "agree": false,
+  "detail": [
+   "status failed, expected not_checked",
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "not_checked",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T31",
+  "agree": false,
+  "detail": [
+   "status failed, expected not_checked",
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "not_checked",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T32",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected failed"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T33",
+  "agree": false,
+  "detail": [
+   "status failed, expected verified",
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified",
+   "issuer_time not_checked, expected verified",
+   "consistency None, expected consistent",
+   "existed_no_later_than None, expected 2026-09-25T11:00:00Z"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T34",
+  "agree": false,
+  "detail": [
+   "status failed, expected verified",
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified",
+   "issuer_time not_checked, expected failed",
+   "consistency None, expected inconsistent"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T35",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T36",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected failed",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T37",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected failed",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T38",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected failed",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T39",
+  "agree": false,
+  "detail": [
+   "status failed, expected verified",
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "tsa_state not_checked, expected verified",
+   "issuer_time not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T40",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected failed",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T41",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T42",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T43",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T44",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T45",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "failed",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T46",
+  "agree": false,
+  "detail": [
+   "status failed, expected verified",
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T47",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected failed"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T48",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected failed",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T49",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected failed",
+   "tsa_state not_checked, expected failed"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T50",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected failed",
+   "tsa_state not_checked, expected failed"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T51",
+  "agree": false,
+  "detail": [
+   "status failed, expected not_checked",
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "not_checked",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T51b",
+  "agree": false,
+  "detail": [
+   "status failed, expected not_checked",
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "not_checked",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T52",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected failed"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T53",
+  "agree": false,
+  "detail": [
+   "status failed, expected verified",
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified",
+   "issuer_time not_checked, expected verified",
+   "consistency None, expected consistent",
+   "existed_no_later_than None, expected 2026-09-25T11:05:00Z"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T54",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected failed",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T55",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected failed",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T56",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected failed"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T57",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected failed",
+   "signer_certificate not_checked, expected failed",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T58",
+  "agree": false,
+  "detail": [
+   "status failed, expected not_supported",
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected not_supported",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T59",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected failed",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T60",
+  "agree": false,
+  "detail": [
+   "status failed, expected not_supported",
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected not_supported",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T61",
+  "agree": false,
+  "detail": [
+   "status failed, expected verified",
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "tsa_state not_checked, expected verified",
+   "issuer_time not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T62",
+  "agree": false,
+  "detail": [
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected failed"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T63",
+  "agree": false,
+  "detail": [
+   "status failed, expected verified",
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified",
+   "issuer_time not_checked, expected verified",
+   "consistency None, expected consistent"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T64",
+  "agree": false,
+  "detail": [
+   "status failed, expected not_checked",
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "not_checked",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T65",
+  "agree": false,
+  "detail": [
+   "status failed, expected verified",
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified",
+   "issuer_time not_checked, expected verified",
+   "consistency None, expected consistent"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T66",
+  "agree": false,
+  "detail": [
+   "status failed, expected verified",
+   "token failed, expected verified",
+   "message_imprint not_checked, expected verified",
+   "message_digest not_checked, expected verified",
+   "tsa_signature not_checked, expected verified",
+   "signer_certificate not_checked, expected verified",
+   "tsa_state not_checked, expected verified",
+   "issuer_time not_checked, expected verified",
+   "consistency None, expected consistent"
+  ],
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T67",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "checks": {
+    "proof": "verified",
+    "subject_bytes": "verified",
+    "operations": "verified",
+    "attestation": "verified",
+    "header": "verified"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T68",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "checks": {
+    "proof": "verified",
+    "subject_bytes": "verified",
+    "operations": "verified",
+    "attestation": "verified",
+    "header": "verified"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T69",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "checks": {
+    "proof": "verified",
+    "subject_bytes": "verified",
+    "operations": "verified",
+    "attestation": "verified",
+    "header": "verified"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T70",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "checks": {
+    "proof": "verified",
+    "subject_bytes": "verified",
+    "operations": "verified",
+    "attestation": "verified",
+    "header": "verified"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T71",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "checks": {
+    "proof": "verified",
+    "subject_bytes": "verified",
+    "operations": "verified",
+    "attestation": "verified",
+    "header": "verified"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T72",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "checks": {
+    "proof": "verified",
+    "subject_bytes": "verified",
+    "operations": "verified",
+    "attestation": "verified",
+    "header": "verified"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T73",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "checks": {
+    "proof": "verified",
+    "subject_bytes": "verified",
+    "operations": "verified",
+    "attestation": "verified",
+    "header": "verified"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T74",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "checks": {
+    "proof": "verified",
+    "subject_bytes": "verified",
+    "operations": "verified",
+    "attestation": "verified",
+    "header": "verified"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T75",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "unavailable",
+   "checks": {
+    "proof": "verified",
+    "subject_bytes": "verified",
+    "operations": "verified",
+    "attestation": "unavailable",
+    "header": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T76",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "not_supported",
+   "checks": {
+    "proof": "verified",
+    "subject_bytes": "verified",
+    "operations": "not_supported",
+    "attestation": "not_checked",
+    "header": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T77",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "checks": {
+    "proof": "failed",
+    "subject_bytes": "verified",
+    "operations": "not_checked",
+    "attestation": "not_checked",
+    "header": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T78",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "checks": {
+    "proof": "failed",
+    "subject_bytes": "verified",
+    "operations": "not_checked",
+    "attestation": "not_checked",
+    "header": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T79",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "checks": {
+    "proof": "failed",
+    "subject_bytes": "verified",
+    "operations": "not_checked",
+    "attestation": "not_checked",
+    "header": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T80",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "checks": {
+    "proof": "failed",
+    "subject_bytes": "verified",
+    "operations": "not_checked",
+    "attestation": "not_checked",
+    "header": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T81",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "checks": {
+    "proof": "failed",
+    "subject_bytes": "verified",
+    "operations": "not_checked",
+    "attestation": "not_checked",
+    "header": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T82",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "checks": {
+    "proof": "verified",
+    "subject_bytes": "verified",
+    "operations": "verified",
+    "attestation": "failed",
+    "header": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T83",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "checks": {
+    "proof": "verified",
+    "subject_bytes": "verified",
+    "operations": "verified",
+    "attestation": "failed",
+    "header": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T84",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "checks": {
+    "proof": "failed",
+    "subject_bytes": "verified",
+    "operations": "not_checked",
+    "attestation": "not_checked",
+    "header": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T85",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "checks": {
+    "proof": "failed",
+    "subject_bytes": "verified",
+    "operations": "not_checked",
+    "attestation": "not_checked",
+    "header": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T86",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "checks": {
+    "proof": "verified",
+    "subject_bytes": "failed",
+    "operations": "verified",
+    "attestation": "verified",
+    "header": "verified"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T87",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "checks": {
+    "proof": "failed",
+    "subject_bytes": "verified",
+    "operations": "not_checked",
+    "attestation": "not_checked",
+    "header": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T88",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "checks": {
+    "proof": "verified",
+    "subject_bytes": "verified",
+    "operations": "verified",
+    "attestation": "verified",
+    "header": "failed"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T89",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "unavailable",
+   "checks": {
+    "proof": "verified",
+    "subject_bytes": "verified",
+    "operations": "verified",
+    "attestation": "verified",
+    "header": "unavailable"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T90",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "not_checked",
+   "checks": {
+    "proof": "verified",
+    "subject_bytes": "verified",
+    "operations": "verified",
+    "attestation": "verified",
+    "header": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T91",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "unavailable",
+   "checks": {
+    "proof": "verified",
+    "subject_bytes": "verified",
+    "operations": "verified",
+    "attestation": "verified",
+    "header": "unavailable"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T92",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "checks": {
+    "token": "failed",
+    "message_imprint": "not_checked",
+    "subject_bytes": "verified",
+    "message_digest": "not_checked",
+    "tsa_signature": "not_checked",
+    "signer_certificate": "not_checked",
+    "tsa_state": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T93",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "checks": {
+    "proof": "verified",
+    "subject_bytes": "failed",
+    "operations": "verified",
+    "attestation": "verified",
+    "header": "verified"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T94",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "checks": {
+    "proof": "failed",
+    "subject_bytes": "verified",
+    "operations": "not_checked",
+    "attestation": "not_checked",
+    "header": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T95",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "checks": {
+    "proof": "verified",
+    "subject_bytes": "verified",
+    "operations": "verified",
+    "attestation": "verified",
+    "header": "verified"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T96",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "checks": {
+    "proof": "failed",
+    "subject_bytes": "verified",
+    "operations": "not_checked",
+    "attestation": "not_checked",
+    "header": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T97",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "checks": {
+    "proof": "failed",
+    "subject_bytes": "verified",
+    "operations": "not_checked",
+    "attestation": "not_checked",
+    "header": "not_checked"
+   },
+   "issuer_time": "not_checked"
+  }
+ },
+ {
+  "id": "T98",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "checks": {
+    "proof": "verified",
+    "subject_bytes": "verified",
+    "operations": "verified",
+    "attestation": "verified",
+    "header": "verified"
+   },
+   "issuer_time": "not_checked"
+  }
+ }
+]

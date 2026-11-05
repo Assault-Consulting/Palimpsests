@@ -1,0 +1,1143 @@
+[
+ {
+  "id": "A01",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "A02",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'0.2.0' was expected"
+ },
+ {
+  "id": "A03",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'dps-anchoring' was expected"
+ },
+ {
+  "id": "A04",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'assertion': 'timestamp', 'subject': {'kind': 'seal', 'decision_id': 'DR-2099-001', 'value_hex': '4671e381366fcdad7f6e2951619fa16622d826a4bbe0dd8b505692bd17cf5327'}, 'hash_algorithm': 'SHA-256', 'tok"
+ },
+ {
+  "id": "A05",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'assertion': 'timestamp', 'subject': {'kind': 'seal', 'decision_id': 'DR-2099-001', 'value_hex': '4671e381366fcdad7f6e2951619fa16622d826a4bbe0dd8b505692bd17cf5327'}, 'hash_algorithm': 'SHA-1', 'tsa_r"
+ },
+ {
+  "id": "A06",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'assertion': 'timestamp', 'subject': {'kind': 'seal', 'decision_id': 'DR-2099-001', 'value_hex': '4671e381366fcdad7f6e2951619fa16622d826a4bbe0dd8b505692bd17cf5327'}, 'hash_algorithm': 'SHA-256', 'tsa"
+ },
+ {
+  "id": "A07",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'assertion': 'timestamp', 'subject': {'kind': 'record', 'decision_id': 'DR-2099-001', 'value_hex': '4671e381366fcdad7f6e2951619fa16622d826a4bbe0dd8b505692bd17cf5327'}, 'hash_algorithm': 'SHA-256', 't"
+ },
+ {
+  "id": "A08",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'assertion': 'timestamp', 'subject': {'kind': 'seal', 'value_hex': '4671e381366fcdad7f6e2951619fa16622d826a4bbe0dd8b505692bd17cf5327'}, 'hash_algorithm': 'SHA-256', 'tsa_ref': 'tsa-example-1', 'token"
+ },
+ {
+  "id": "A09",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'assertion': 'timestamp', 'subject': {'kind': 'chain_link', 'chain_id': 'urn:example:chain:issuer-1', 'value_hex': '461cf1cad5fe45a896737bb01ae396639da7ef5c424352ab0d029565e0228552'}, 'hash_algorithm"
+ },
+ {
+  "id": "A10",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'assertion': 'timestamp', 'subject': {'kind': 'chain_link', 'sequence': 2, 'value_hex': '461cf1cad5fe45a896737bb01ae396639da7ef5c424352ab0d029565e0228552'}, 'hash_algorithm': 'SHA-256', 'tsa_ref': 't"
+ },
+ {
+  "id": "A11",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'assertion': 'timestamp', 'subject': {'kind': 'seal', 'decision_id': 'DR-2099-001', 'value_hex': '4671E381366FCDAD7F6E2951619FA16622D826A4BBE0DD8B505692BD17CF5327'}, 'hash_algorithm': 'SHA-256', 'tsa"
+ },
+ {
+  "id": "A12",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'assertion': 'timestamp', 'subject': {'kind': 'signature', 'of': {'assertion': 'checkpoint', 'key_ref': 'witness-c-1', 'chain_id': 'urn:example:chain:issuer-1', 'count': 3}, 'value_hex': '4671e381366"
+ },
+ {
+  "id": "A13",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'assertion': 'timestamp', 'subject': {'kind': 'signature', 'of': {'assertion': 'seal', 'key_ref': 'witness-c-1', 'chain_id': 'urn:example:chain:issuer-1', 'count': 3}, 'value_b64': 'AIISxNDRoRTcNax8y"
+ },
+ {
+  "id": "A14",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'assertion': 'timestamp', 'subject': {'kind': 'seal', 'decision_id': 'DR-2099-001', 'value_hex': '4671e381366fcdad7f6e2951619fa16622d826a4bbe0dd8b505692bd17cf5327'}, 'hash_algorithm': 'SHA-256', 'tsa"
+ },
+ {
+  "id": "A15",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "Additional properties are not allowed ('public_key_hex' was unexpected)"
+ },
+ {
+  "id": "A16",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "Additional properties are not allowed ('checkpoint' was unexpected)"
+ },
+ {
+  "id": "A17",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'assertion': 'timestamp', 'subject': {'kind': 'seal', 'decision_id': 'DR-2099-001', 'value_hex': '4671e381366fcdad7f6e2951619fa16622d826a4bbe0dd8b505692bd17cf5327'}, 'hash_algorithm': 'SHA-256', 'tsa"
+ },
+ {
+  "id": "A18",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "Additional properties are not allowed ('verified' was unexpected)"
+ },
+ {
+  "id": "A19",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'profile': 'dps-anchoring', 'profile_version': '0.2.0', 'chain_id': 'urn:example:chain:issuer-1'} is not valid under any of the given schemas"
+ },
+ {
+  "id": "A20",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "A21",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "A22",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'assertion': 'checkpoint', 'subject': {'kind': 'seal', 'decision_id': 'DR-2099-001', 'value_hex': '4671e381366fcdad7f6e2951619fa16622d826a4bbe0dd8b505692bd17cf5327'}, 'hash_algorithm': 'SHA-256', 'ts"
+ },
+ {
+  "id": "A23",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "[] should be non-empty"
+ },
+ {
+  "id": "A24",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'assertion': 'timestamp', 'subject': {'kind': 'signature', 'of': {'assertion': 'checkpoint', 'key_ref': 'witness-c-1', 'chain_id': 'urn:example:chain:issuer-1', 'count': 9007199254740992}, 'value_b64"
+ },
+ {
+  "id": "A25",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "A26",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "A26b",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "A27",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "A28",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'assertion': 'timestamp', 'subject': {'kind': 'signature', 'of': {'assertion': 'person_affirmation', 'key_ref': 'person-a-1', 'decision_id': 'DR-2099-001', 'stage_id': 'o1'}, 'value_b64': 'AIISxNDRoR"
+ },
+ {
+  "id": "A29",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'assertion': 'timestamp', 'subject': {'kind': 'signature', 'of': {'assertion': 'organisation_seal', 'key_ref': 'issuer-seal-1', 'sealed_kind': 'record'}, 'value_b64': 'AIISxNDRoRTcNax8y69uphVlDDLjoq4"
+ },
+ {
+  "id": "A30",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'assertion': 'timestamp', 'subject': {'kind': 'signature', 'of': {'profile': 'dps-anchoring', 'assertion': 'person_approval', 'key_ref': 'person-a-1', 'decision_id': 'DR-2099-101'}, 'value_b64': 'AII"
+ },
+ {
+  "id": "A31",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'assertion': 'timestamp', 'subject': {'kind': 'signature', 'of': {'assertion': 'checkpoint', 'key_ref': 'witness-c-1', 'chain_id': 'urn:example:chain:issuer-1', 'count': 3, 'decision_id': 'DR-2099-00"
+ },
+ {
+  "id": "A32",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "A33",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'profile': 'dps-anchoring', 'profile_version': '0.2.0', 'assertion': 'checkpoint', 'chain_id': 'urn:example:chain:issuer-1', 'count': 3, 'head_link': '461cf1cad5fe45a896737bb01ae396639da7ef5c424352ab"
+ },
+ {
+  "id": "A34",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'profile': 'dps-anchoring', 'profile_version': '0.2.0', 'assertion': 'checkpoint', 'chain_id': 'urn:example:chain:issuer-1', 'count': 3, 'head_link': '461cf1cad5fe45a896737bb01ae396639da7ef5c424352ab"
+ },
+ {
+  "id": "A35",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "[] should be non-empty"
+ },
+ {
+  "id": "C01",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "C02",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'signature' is a required property"
+ },
+ {
+  "id": "C03",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "0 is less than the minimum of 1"
+ },
+ {
+  "id": "C04",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'3' is not of type 'integer'"
+ },
+ {
+  "id": "C05",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'461CF1CAD5FE45A896737BB01AE396639DA7EF5C424352AB0D029565E0228552' does not match '^[0-9a-f]{64}$'"
+ },
+ {
+  "id": "C06",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'2026-09-27T14:00:00+02:00' does not match '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$'"
+ },
+ {
+  "id": "C07",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'2026-09-27T12:00:00.000Z' does not match '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$'"
+ },
+ {
+  "id": "C08",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'checkpoint' was expected"
+ },
+ {
+  "id": "C09",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'key_ref' is a required property"
+ },
+ {
+  "id": "C10",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "Additional properties are not allowed ('public_key_hex' was unexpected)"
+ },
+ {
+  "id": "C11",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "Additional properties are not allowed ('independent' was unexpected)"
+ },
+ {
+  "id": "C12",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'0.2.0' was expected"
+ },
+ {
+  "id": "C13",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'chain_id' is a required property"
+ },
+ {
+  "id": "C14",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "C15",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "9007199254740992 is greater than the maximum of 9007199254740991"
+ },
+ {
+  "id": "C16",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "18446744073709551616 is greater than the maximum of 9007199254740991"
+ },
+ {
+  "id": "C17",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "C18",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "C19",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "C20",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "Y01",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "Y02",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'revocation_reason' is a dependency of 'revoked_at'"
+ },
+ {
+  "id": "Y03",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'expired' is not one of ['superseded', 'compromised']"
+ },
+ {
+  "id": "Y04",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'revoked_at' is a dependency of 'revocation_reason'"
+ },
+ {
+  "id": "Y05",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'role' is a required property"
+ },
+ {
+  "id": "Y06",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'tsa' is not one of ['witness', 'organisation', 'person', 'transparency_service']"
+ },
+ {
+  "id": "Y07",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'holder' is a required property"
+ },
+ {
+  "id": "Y08",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'not_before' is a required property"
+ },
+ {
+  "id": "Y09",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'000000000000000000000000000000000000000000000000000000000000000000' does not match '^[0-9a-f]{64}$'"
+ },
+ {
+  "id": "Y10",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'certificate_b64' is a required property"
+ },
+ {
+  "id": "Y11",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "Y12",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'key_refs' is a required property"
+ },
+ {
+  "id": "Y13",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "[] should be non-empty"
+ },
+ {
+  "id": "Y14",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'2026-09-01T02:00:00+02:00' does not match '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$'"
+ },
+ {
+  "id": "Y15",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'website' is not one of ['witness', 'transparency_log', 'third_party']"
+ },
+ {
+  "id": "Y16",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "Y17",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "Y18",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'0.2.0' was expected"
+ },
+ {
+  "id": "Y19",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "Y20",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "Y21",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'origins' is a required property"
+ },
+ {
+  "id": "Y22",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "Additional properties are not allowed ('email' was unexpected)"
+ },
+ {
+  "id": "Y23",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "Y24",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "P01",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "P02",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "Additional properties are not allowed ('overall' was unexpected)"
+ },
+ {
+  "id": "P03",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "Additional properties are not allowed ('compliance' was unexpected)"
+ },
+ {
+  "id": "P04",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'timestamp_index': 0, 'subject': {'kind': 'seal', 'decision_id': 'DR-2099-001'}, 'status': 'verified', 'tsa_ref': 'tsa-example-1', 'reference_source': 'same_token', 'gen_time': '2026-09-25T11:05:00Z'"
+ },
+ {
+  "id": "P05",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'timestamp_index': 0, 'subject': {'kind': 'seal', 'decision_id': 'DR-2099-001'}, 'status': 'verified', 'tsa_ref': 'tsa-example-1', 'reference_source': 'trust_policy', 'gen_time': '2026-09-25T11:05:00"
+ },
+ {
+  "id": "P06",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'timestamp_index': 0, 'subject': {'kind': 'seal', 'decision_id': 'DR-2099-001'}, 'status': 'failed', 'tsa_ref': 'tsa-example-1', 'reference_source': 'trust_policy', 'gen_time': '2026-09-25T11:05:00Z'"
+ },
+ {
+  "id": "P07",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "P08",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'timestamp_index': 0, 'subject': {'kind': 'seal', 'decision_id': 'DR-2099-001'}, 'status': 'verified', 'tsa_ref': 'tsa-example-1', 'reference_source': 'trust_policy', 'gen_time': '2026-09-25T11:05:00"
+ },
+ {
+  "id": "P09",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "P10",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'timestamp_index': 0, 'subject': {'kind': 'seal', 'decision_id': 'DR-2099-001'}, 'status': 'verified', 'tsa_ref': 'tsa-example-1', 'reference_source': 'trust_policy', 'gen_time': '2026-09-25T11:05:00"
+ },
+ {
+  "id": "P11",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "P12",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'timestamp_index': 0, 'subject': {'kind': 'seal', 'decision_id': 'DR-2099-001'}, 'status': 'verified', 'tsa_ref': 'tsa-example-1', 'reference_source': 'trust_policy', 'gen_time': '2026-09-25T11:05:00"
+ },
+ {
+  "id": "P13",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'failed' was expected"
+ },
+ {
+  "id": "P14",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "P15",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'verified' was expected"
+ },
+ {
+  "id": "P16",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'not_checked' was expected"
+ },
+ {
+  "id": "P17",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'independent_timestamp' was expected"
+ },
+ {
+  "id": "P18",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'timestamp_index' is a required property"
+ },
+ {
+  "id": "P19",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'status': 'verified', 'key_ref': 'witness-a-1', 'time_basis': 'stated_time', 'time': '2026-09-27T12:00:00Z', 'timestamp_index': 0} should not be valid under {'required': ['timestamp_index']}"
+ },
+ {
+  "id": "P20",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'time_basis' is a required property"
+ },
+ {
+  "id": "P21",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'not_covered_indexes' is a required property"
+ },
+ {
+  "id": "P22",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'complete' is not one of ['verified', 'failed', 'not_checked', 'unavailable', 'not_supported']"
+ },
+ {
+  "id": "P23",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'status': 'not_checked', 'covered_count': 3, 'not_covered_indexes': []} should not be valid under {'anyOf': [{'required': ['covered_count']}, {'required': ['not_covered_indexes']}]}"
+ },
+ {
+  "id": "P24",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "['legal_requirements', 'conformance_level', 'truth_of_record_content', 'earliest_existence', 'events_never_recorded', 'content_reviewed_by_witness'] is too short"
+ },
+ {
+  "id": "P25",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'attachment_digest' is a required property"
+ },
+ {
+  "id": "P26",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'source_ref' is a required property"
+ },
+ {
+  "id": "P27",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'trust_policy' was expected"
+ },
+ {
+  "id": "P28",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "P29",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'checkpoint' is a required property"
+ },
+ {
+  "id": "P30",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'timestamp_index': 0, 'subject': {'kind': 'seal', 'decision_id': 'DR-2099-001'}, 'status': 'verified', 'tsa_ref': 'tsa-example-1', 'reference_source': 'trust_policy', 'gen_time': '2026-09-25T11:05:00"
+ },
+ {
+  "id": "P31",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "P32",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "9007199254740992 is greater than the maximum of 9007199254740991"
+ },
+ {
+  "id": "P33",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'0.2.0' was expected"
+ },
+ {
+  "id": "P34",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'trust_policy' is a required property"
+ },
+ {
+  "id": "P35",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'failed' was expected"
+ },
+ {
+  "id": "P36",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "P37",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'not_checked' is not one of ['verified', 'failed']"
+ },
+ {
+  "id": "P38",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'failed' was expected"
+ },
+ {
+  "id": "P39",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "P40",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'failed' was expected"
+ },
+ {
+  "id": "P41",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'failed' was expected"
+ },
+ {
+  "id": "P42",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'not_checked' was expected"
+ },
+ {
+  "id": "P43",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'prefix' is a required property"
+ },
+ {
+  "id": "P44",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'not_established' was expected"
+ },
+ {
+  "id": "P45",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'checkpoint_index': 0, 'obtained_from': 'configured_source', 'source_ref': 'witness-a', 'status': 'verified', 'checkpoint': {'chain_id': 'urn:example:chain:issuer-1', 'count': 3, 'head_link': '461cf1"
+ },
+ {
+  "id": "P46",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'time_basis' is a required property"
+ },
+ {
+  "id": "P47",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'timestamp_index' is a required property"
+ },
+ {
+  "id": "P48",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'status': 'failed', 'covered_count': 3, 'not_covered_indexes': [], 'time_basis': 'stated_time', 'time': '2026-09-27T12:00:00Z'} should not be valid under {'anyOf': [{'required': ['covered_count']}, {"
+ },
+ {
+  "id": "P49",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'not_checked' was expected"
+ },
+ {
+  "id": "P50",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'checkpoint_index': 0, 'obtained_from': 'configured_source', 'source_ref': 'witness-a', 'status': 'verified', 'checkpoint': {'chain_id': 'urn:example:chain:issuer-1', 'count': 3, 'head_link': '461cf1"
+ },
+ {
+  "id": "P51",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "P52",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'service_key_refs' is a required property"
+ },
+ {
+  "id": "P53",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'transparency_log' was expected"
+ },
+ {
+  "id": "P54",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'source_ref': 'log-e', 'kind': 'transparency_log', 'holder': 'Example log E (test only)', 'chain_ids': ['urn:example:chain:issuer-1'], 'service_key_refs': ['service-s-1']} should not be valid under {"
+ },
+ {
+  "id": "P55",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "P56",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'format': 'scitt', 'receipt_b64': '0oRUowEyBEtzZXJ2aWNlLXMtMRkBiwGhGQGMoSCBWGqDBQGDWCCi980LvQ6VjDonaAfGt90W9P9avKgiaVQtZUowkxZE/1gg9ufoLKC+14H6SuRub1fl5A9814alRFHz+ZlZ9uCrc7RYIL1X3lJPlfVkHQ3yAT5NpVZL"
+ },
+ {
+  "id": "P57",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'format': 'scitt', 'statement_b64': '0oRYVaMBMgRRd2l0bmVzcy1hLXNjaXR0LTEPogF4HUV4YW1wbGUgd2l0bmVzcyBBICh0ZXN0IG9ubHkpAngadXJuOmV4YW1wbGU6Y2hhaW46aXNzdWVyLTGgWKtEUFMtU0lHAAAAAA1kcHMtYW5jaG9yaW5nAAAABT"
+ },
+ {
+  "id": "P58",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'receipt' is a required property"
+ },
+ {
+  "id": "P59",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'checkpoint_index': 0, 'obtained_from': 'configured_source', 'source_ref': 'witness-a', 'status': 'verified', 'checkpoint': {'chain_id': 'urn:example:chain:issuer-1', 'count': 3, 'head_link': '461cf1"
+ },
+ {
+  "id": "P60",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'not_checked' was expected"
+ },
+ {
+  "id": "P61",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'verified' was expected"
+ },
+ {
+  "id": "P62",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'tree_size' is a required property"
+ },
+ {
+  "id": "P63",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "P64",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "P65",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'assertion': 'timestamp', 'subject': {'kind': 'seal', 'decision_id': 'DR-2099-001', 'value_hex': '4671e381366fcdad7f6e2951619fa16622d826a4bbe0dd8b505692bd17cf5327'}, 'hash_algorithm': 'SHA-256', 'for"
+ },
+ {
+  "id": "P66",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'assertion': 'timestamp', 'subject': {'kind': 'seal', 'decision_id': 'DR-2099-001', 'value_hex': '4671e381366fcdad7f6e2951619fa16622d826a4bbe0dd8b505692bd17cf5327'}, 'hash_algorithm': 'SHA-256', 'for"
+ },
+ {
+  "id": "P67",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'assertion': 'timestamp', 'subject': {'kind': 'seal', 'decision_id': 'DR-2099-001', 'value_hex': '4671e381366fcdad7f6e2951619fa16622d826a4bbe0dd8b505692bd17cf5327'}, 'hash_algorithm': 'SHA-256', 'tsa"
+ },
+ {
+  "id": "P68",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "P69",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'mainnet' was expected"
+ },
+ {
+  "id": "P70",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "'explorer' is not one of ['node', 'header_file']"
+ },
+ {
+  "id": "P71",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "P72",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'timestamp_index': 3, 'subject': {'kind': 'seal', 'decision_id': 'DR-2099-001'}, 'format': 'opentimestamps', 'status': 'verified', 'checks': {'proof': 'verified', 'subject_bytes': 'verified', 'operat"
+ },
+ {
+  "id": "P73",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'timestamp_index': 3, 'subject': {'kind': 'seal', 'decision_id': 'DR-2099-001'}, 'format': 'opentimestamps', 'status': 'verified', 'checks': {'proof': 'verified', 'subject_bytes': 'verified', 'operat"
+ },
+ {
+  "id": "P74",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'timestamp_index': 3, 'subject': {'kind': 'seal', 'decision_id': 'DR-2099-001'}, 'format': 'opentimestamps', 'status': 'unavailable', 'checks': {'proof': 'verified', 'subject_bytes': 'verified', 'ope"
+ },
+ {
+  "id": "P75",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'timestamp_index': 3, 'subject': {'kind': 'seal', 'decision_id': 'DR-2099-001'}, 'format': 'opentimestamps', 'status': 'verified', 'checks': {'proof': 'verified', 'subject_bytes': 'verified', 'operat"
+ },
+ {
+  "id": "P76",
+  "expected": "fail",
+  "got": "fail",
+  "agree": true,
+  "detail": "{'timestamp_index': 3, 'subject': {'kind': 'seal', 'decision_id': 'DR-2099-001'}, 'format': 'opentimestamps', 'status': 'verified', 'checks': {'proof': 'verified', 'subject_bytes': 'verified', 'operat"
+ },
+ {
+  "id": "X01",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "X02",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "X03",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "X04",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "X05",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "X06",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "X07",
+  "expected": "pass",
+  "got": "pass",
+  "agree": true,
+  "detail": null
+ }
+]

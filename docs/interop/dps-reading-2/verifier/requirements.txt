@@ -1,0 +1,7 @@
+# Python 3.12.3. Besides the standard library:
+cryptography==50.0.2
+asn1crypto==1.5.1
+cbor2==6.1.5
+jsonschema==4.26.0
+referencing==0.37.0
+# pulled in by jsonschema/referencing: attrs 26.1.0, rpds-py 2026.9.1, jsonschema-specifications 2025.9.1
