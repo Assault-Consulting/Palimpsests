@@ -2,7 +2,7 @@
 
 An outside reading of two extensions of the Decision Provenance Standard, **action binding 0.3.0**
 and **signatures 0.2.0**, at the Standard's main commit
-`c9043722384f784ae578ae0a64400be8a3864259` (`007f8c9`), requested by Laurent Lemonnier, the
+`c9043722384f784ae578ae0a64400be8a3864259`, requested by Laurent Lemonnier, the
 extensions' author. The question under test: is the text alone enough to implement the checks.
 
 Carried out by an AI assistant under the direction of Andrii Sparysh. The assistant wrote the
@@ -187,3 +187,5 @@ N7's other policy digest are invented values, stated in the verdicts file.
 That the reference check is correct; that this verifier is correct beyond the cases run; anything
 about anchoring 0.2.0's own text; the legal effect of anything; that the second input's claims are
 true.
+
+**Erratum, 5 November 2026.** An earlier version of this record gave `007f8c9` as the short form of the commit read. It is another commit of the Standard, whose text of both extensions is the same; the commit read is `c904372`.
