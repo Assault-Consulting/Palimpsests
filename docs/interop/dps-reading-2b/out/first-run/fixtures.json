@@ -1,0 +1,96 @@
+{
+ "fixture-12": {
+  "label": "fixture-12: headers 957289-957300 of Lemonnier's file (12), declared validated for the test, not validated by this run",
+  "mode": "held",
+  "heights": [
+   957289,
+   957300
+  ],
+  "count": 12,
+  "declared_validated_for_the_test": true,
+  "validated_by_this_run": false,
+  "internal_checks_not_validation": {
+   "all_80_bytes": true,
+   "all_proof_of_work_hold_against_own_bits": true,
+   "each_links_to_the_one_before": true
+  }
+ },
+ "fixture-11": {
+  "label": "fixture-11: headers 957290-957300 of Lemonnier's file (11), declared validated for the test, not validated by this run",
+  "mode": "held",
+  "heights": [
+   957290,
+   957300
+  ],
+  "count": 11,
+  "declared_validated_for_the_test": true,
+  "validated_by_this_run": false,
+  "internal_checks_not_validation": {
+   "all_80_bytes": true,
+   "all_proof_of_work_hold_against_own_bits": true,
+   "each_links_to_the_one_before": true
+  }
+ },
+ "fixture-11-alt": {
+  "label": "fixture-11 under reading B07(b): headers 957290-957300 of Lemonnier's file (11), declared validated for the test, not validated by this run",
+  "mode": "held-or-committed",
+  "heights": [
+   957290,
+   957300
+  ],
+  "count": 11,
+  "declared_validated_for_the_test": true,
+  "validated_by_this_run": false,
+  "internal_checks_not_validation": {
+   "all_80_bytes": true,
+   "all_proof_of_work_hold_against_own_bits": true,
+   "each_links_to_the_one_before": true
+  }
+ },
+ "fixture-5": {
+  "label": "fixture-5: headers 957289-957293 of Lemonnier's file (5), declared validated for the test, not validated by this run",
+  "mode": "held",
+  "heights": [
+   957289,
+   957293
+  ],
+  "count": 5,
+  "declared_validated_for_the_test": true,
+  "validated_by_this_run": false,
+  "internal_checks_not_validation": {
+   "all_80_bytes": true,
+   "all_proof_of_work_hold_against_own_bits": true,
+   "each_links_to_the_one_before": true
+  }
+ },
+ "fixture-6": {
+  "label": "fixture-6: headers 957289-957294 of Lemonnier's file (6), declared validated for the test, not validated by this run",
+  "mode": "held",
+  "heights": [
+   957289,
+   957294
+  ],
+  "count": 6,
+  "declared_validated_for_the_test": true,
+  "validated_by_this_run": false,
+  "internal_checks_not_validation": {
+   "all_80_bytes": true,
+   "all_proof_of_work_hold_against_own_bits": true,
+   "each_links_to_the_one_before": true
+  }
+ },
+ "fixture-0": {
+  "label": "fixture-0: an empty header set, declared validated for the test, not validated by this run",
+  "mode": "held",
+  "heights": [],
+  "count": 0,
+  "declared_validated_for_the_test": true,
+  "validated_by_this_run": false,
+  "internal_checks_not_validation": {
+   "all_80_bytes": true,
+   "all_proof_of_work_hold_against_own_bits": true,
+   "each_links_to_the_one_before": true
+  }
+ },
+ "none": "none: the verifier holds no validated view"
+}

@@ -1,0 +1,24 @@
+{
+ "inputs_from_the_human": {
+  "dps-reading-2.zip": {"sha256": "e608c833a7d525296054e261e07667fdecc9a848ffc23039698bb7db6f68b1a2", "expected": "e608c833a7d525296054e261e07667fdecc9a848ffc23039698bb7db6f68b1a2", "matches": true},
+  "draft-fassbender-scitt-time-anchor-08.txt": {"sha256": "687000b938fcea6b15871f9ea20dc4694f89b7a78f719bacc72ef0ecf1da3394", "expected": "687000b938fcea6b15871f9ea20dc4694f89b7a78f719bacc72ef0ecf1da3394", "matches": true},
+  "dps-reading-2b-PROMPT.md": {"sha256": "b50b1a9a0d30a60ed6682a8df2ac0f3514dab3570669b1200d891c19487f26be", "expected": "recorded, not checked (the prompt asks for its digest to be recorded)"}
+ },
+ "checked_at": "2026-11-05T13:19:40Z",
+ "reading_2_fetch_script": {
+  "run": "sh dps-reading-2/inputs/dps-reading-2-fetch-inputs.sh <inputs-dir>",
+  "standard": "14 files, SHA-256 checked by the script: ok",
+  "lemonnier": "10 files, SHA-256 checked by the script: ok",
+  "ietf": "not fetched (www.ietf.org not reachable from the sandbox); the uploaded -08 file was placed at <inputs-dir>/ietf/draft-fassbender-scitt-time-anchor-08.txt",
+  "rfc": "none fetched (www.rfc-editor.org not reachable from the sandbox)"
+ },
+ "reading_2_replay_rerun": {
+  "command": "python3 dps-reading-2/verifier/ots_replay.py <inputs-dir> <file>",
+  "output_sha256": "4d530f93d2417d412fd0bc45eb9d9f7747328b4c28189d32d5b49cb5e01e6927",
+  "published_out_ots_replay_json_sha256": "4d530f93d2417d412fd0bc45eb9d9f7747328b4c28189d32d5b49cb5e01e6927",
+  "byte_identical": true,
+  "checked_with": "cmp"
+ },
+ "python": "3.12.3",
+ "packages": {"cryptography": "50.0.2", "asn1crypto": "1.5.1", "cbor2": "6.1.5", "jsonschema": "4.26.0", "referencing": "0.37.0", "attrs": "26.1.0", "rpds-py": "2026.9.1", "jsonschema-specifications": "2025.9.1"}
+}

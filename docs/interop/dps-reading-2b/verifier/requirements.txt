@@ -1,0 +1,9 @@
+# Python 3.12.3. The packages of dps-reading-2/verifier/requirements.txt, and nothing else, were installed:
+cryptography==50.0.2
+asn1crypto==1.5.1
+cbor2==6.1.5
+jsonschema==4.26.0
+referencing==0.37.0
+# pulled in by jsonschema/referencing: attrs 26.1.0, rpds-py 2026.9.1, jsonschema-specifications 2025.9.1
+# This run's code imports cbor2 (to encode and decode the ProofBundle) and the standard library; reading 2's
+# dpsr/ots.py and ots_replay.py, which it imports by path, use the standard library only.

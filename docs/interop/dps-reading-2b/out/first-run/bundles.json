@@ -1,0 +1,50 @@
+{
+ "vector1": {
+  "prefixed": {
+   "claimed_hash": "sha256:a183f624efbbda7d6208b9b5a6f9b0c2c95d90382eb209c44a1131954071f30b",
+   "cbor_sha256": "9902ed50edf2f07d4db6ee0cae2e89119332a4bd8c7d30400aa4a3f4be94f2cc",
+   "cbor_bytes": 1977
+  },
+  "bare": {
+   "claimed_hash": "a183f624efbbda7d6208b9b5a6f9b0c2c95d90382eb209c44a1131954071f30b",
+   "cbor_sha256": "cb54dc7eaa70380a30fbbb0d9aad89df97a5ef7110bb0b2a7a662c421511961b",
+   "cbor_bytes": 1970
+  }
+ },
+ "vector2": {
+  "prefixed": {
+   "claimed_hash": "sha256:0df073a986e5e5141c96ec32303b8552ded255e4404d0aff996936a846b48cff",
+   "cbor_sha256": "4ad9e4d81fae0705af8bfb133ab9c77d42451a68903eea610776767302e2fbac",
+   "cbor_bytes": 1977
+  },
+  "bare": {
+   "claimed_hash": "0df073a986e5e5141c96ec32303b8552ded255e4404d0aff996936a846b48cff",
+   "cbor_sha256": "07210ad4a34ccfcd4544856638c687ebf1254ed7bf9ce437c61be846779afd85",
+   "cbor_bytes": 1970
+  }
+ },
+ "vector3": {
+  "prefixed": {
+   "claimed_hash": "sha256:d82bf84f17057c0e3d7aa6f249dfc2e80a877b910ce4ce14dc40e653fd5be40b",
+   "cbor_sha256": "9fd6fee29632c1eccec314b600e3bd3292bf492b8af6c5dfa5582da06e7b91b0",
+   "cbor_bytes": 1977
+  },
+  "bare": {
+   "claimed_hash": "d82bf84f17057c0e3d7aa6f249dfc2e80a877b910ce4ce14dc40e653fd5be40b",
+   "cbor_sha256": "f1b3b764de73e9d4d939f839bb04128e24a79d0789c48eeccd8e77f385f5c083",
+   "cbor_bytes": 1970
+  }
+ },
+ "vector4": {
+  "prefixed": {
+   "claimed_hash": "sha256:94a86d117047f2af9a2f5635d0c530cc85fc23d20f5d4b42926b94abee7a06ec",
+   "cbor_sha256": "31b3cc37e07d0c9bf1311605d9b7c9caf3b08fa26f84025115d087396d7a7ef8",
+   "cbor_bytes": 1977
+  },
+  "bare": {
+   "claimed_hash": "94a86d117047f2af9a2f5635d0c530cc85fc23d20f5d4b42926b94abee7a06ec",
+   "cbor_sha256": "847523bd33daefe279386e71a3181f9c8a4d319e9eb02bd67f4e6c814fa14eb4",
+   "cbor_bytes": 1970
+  }
+ }
+}
