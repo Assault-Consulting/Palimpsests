@@ -1,0 +1,26 @@
+{
+ "changed": "/beside_results/st_a/signature/key_ref and /key_state/key_ref: ('witness-a-1', 'witness-a-1') -> witness-a-scitt-1",
+ "results": [
+  {
+   "id": "J45",
+   "expected": "consistent",
+   "got": "consistent",
+   "agree": true,
+   "detail": null
+  },
+  {
+   "id": "J46",
+   "expected": "inconsistent",
+   "got": "inconsistent",
+   "agree": true,
+   "detail": "/checkpoints/3/receipt/tree_size"
+  },
+  {
+   "id": "J47",
+   "expected": "inconsistent",
+   "got": "inconsistent",
+   "agree": true,
+   "detail": "/checkpoints/3/receipt/status"
+  }
+ ]
+}

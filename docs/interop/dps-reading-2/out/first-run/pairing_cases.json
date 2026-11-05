@@ -1,0 +1,382 @@
+[
+ {
+  "id": "J01",
+  "expected": "consistent",
+  "got": "inconsistent",
+  "agree": false,
+  "detail": "/checkpoints/2/status"
+ },
+ {
+  "id": "J02",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/2/status"
+ },
+ {
+  "id": "J03",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/2/status"
+ },
+ {
+  "id": "J04",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/timestamp_count"
+ },
+ {
+  "id": "J05",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/2/status"
+ },
+ {
+  "id": "J06",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/2/status"
+ },
+ {
+  "id": "J07",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/2/status"
+ },
+ {
+  "id": "J08",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/0/checkpoint/count"
+ },
+ {
+  "id": "J09",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/0/comparison/status"
+ },
+ {
+  "id": "J10",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/0/comparison/not_covered_indexes (length)"
+ },
+ {
+  "id": "J11",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/1/key_state/timestamp_index"
+ },
+ {
+  "id": "J12",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/2/status"
+ },
+ {
+  "id": "J13",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/0/source_ref"
+ },
+ {
+  "id": "J14",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints (length)"
+ },
+ {
+  "id": "J15",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/trust_policy_ref"
+ },
+ {
+  "id": "J16",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/export_digest"
+ },
+ {
+  "id": "J17",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/2/status"
+ },
+ {
+  "id": "J18",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/2/status"
+ },
+ {
+  "id": "J19",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/2/status"
+ },
+ {
+  "id": "J20",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/0/checkpoint/head_link"
+ },
+ {
+  "id": "J22",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/export_digest"
+ },
+ {
+  "id": "J23",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/attachment_digest"
+ },
+ {
+  "id": "J24",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/2/status"
+ },
+ {
+  "id": "J25",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/0/status"
+ },
+ {
+  "id": "J26",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/2/status"
+ },
+ {
+  "id": "J27",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/2/status"
+ },
+ {
+  "id": "J21",
+  "expected": "consistent",
+  "got": "inconsistent",
+  "agree": false,
+  "detail": "/checkpoints/2/status"
+ },
+ {
+  "id": "J28",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/0/status"
+ },
+ {
+  "id": "J29",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/2/status"
+ },
+ {
+  "id": "J30",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/1/checkpoint_index"
+ },
+ {
+  "id": "J31",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/timestamp_count"
+ },
+ {
+  "id": "J32",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/timestamp_count"
+ },
+ {
+  "id": "J33",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/trust_policy/status"
+ },
+ {
+  "id": "J34",
+  "expected": "consistent",
+  "got": "consistent",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "J35",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/trust_policy/status"
+ },
+ {
+  "id": "J36",
+  "expected": "consistent",
+  "got": "inconsistent",
+  "agree": false,
+  "detail": "/checkpoints/2/status"
+ },
+ {
+  "id": "J37",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/2/status"
+ },
+ {
+  "id": "J38",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/2/status"
+ },
+ {
+  "id": "J39",
+  "expected": "consistent",
+  "got": "inconsistent",
+  "agree": false,
+  "detail": "/checkpoints/2/status"
+ },
+ {
+  "id": "J40",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/2/status"
+ },
+ {
+  "id": "J41",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/2/status"
+ },
+ {
+  "id": "J42",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints (length)"
+ },
+ {
+  "id": "J43",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints (length)"
+ },
+ {
+  "id": "J44",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/2/status"
+ },
+ {
+  "id": "J45",
+  "expected": "consistent",
+  "got": "inconsistent",
+  "agree": false,
+  "detail": "/checkpoints/2/status"
+ },
+ {
+  "id": "J46",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/2/status",
+  "after_review": "counted as not agreeing after review: the verdict matches, but the first difference is /checkpoints/3/signature/key_ref (finding F01), not what the case describes (change C09)"
+ },
+ {
+  "id": "J47",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/2/status",
+  "after_review": "counted as not agreeing after review: the verdict matches, but the first difference is /checkpoints/3/signature/key_ref (finding F01), not what the case describes (change C09)"
+ },
+ {
+  "id": "J48",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/2/status"
+ },
+ {
+  "id": "J49",
+  "expected": "consistent",
+  "got": "inconsistent",
+  "agree": false,
+  "detail": "/checkpoints/2/status"
+ },
+ {
+  "id": "J50",
+  "expected": "consistent",
+  "got": "inconsistent",
+  "agree": false,
+  "detail": "/checkpoints/2/status"
+ },
+ {
+  "id": "J51",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/2/status"
+ },
+ {
+  "id": "J52",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/2/status"
+ },
+ {
+  "id": "J53",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/2/status"
+ },
+ {
+  "id": "J54",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/2/status"
+ }
+]

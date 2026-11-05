@@ -1,0 +1,32 @@
+{
+ "schema_cases": {
+  "cases": 163,
+  "agree": 163,
+  "disagree": 0,
+  "not_attempted": 0
+ },
+ "vector_cases": {
+  "cases": 25,
+  "agree": 23,
+  "disagree": 1,
+  "not_attempted": 1
+ },
+ "timestamp_cases": {
+  "cases": 99,
+  "agree": 99,
+  "disagree": 0,
+  "not_attempted": 0
+ },
+ "checkpoint_cases": {
+  "cases": 141,
+  "agree": 134,
+  "disagree": 7,
+  "not_attempted": 0
+ },
+ "pairing_cases": {
+  "cases": 54,
+  "agree": 53,
+  "disagree": 1,
+  "not_attempted": 0
+ }
+}

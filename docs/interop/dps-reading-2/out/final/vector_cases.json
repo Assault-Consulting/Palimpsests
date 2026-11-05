@@ -1,0 +1,127 @@
+[
+ {
+  "id": "V01",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V02",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V03",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V04",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V05",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V06",
+  "agree": true,
+  "detail": "the RSA key: 2048 bits and exponent 65537 checked; that it is RFC 9500's was not compared with the RFC's text (not fetched)"
+ },
+ {
+  "id": "V07",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V08",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V09",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V10",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V11",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V12",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V13",
+  "agree": "not attempted",
+  "detail": "needs tests/generate_vectors.py, which the boundary forbids reading or running"
+ },
+ {
+  "id": "V14",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V15",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V16",
+  "agree": true,
+  "detail": "checked against the values the case states; RFC 9500 itself was not fetched, so the case's values were not compared with the RFC's text"
+ },
+ {
+  "id": "V17",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V18",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V19",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V20",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V21",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V22",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V23",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V24",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V25",
+  "agree": true,
+  "detail": null
+ }
+]

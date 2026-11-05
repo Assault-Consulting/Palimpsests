@@ -1,0 +1,452 @@
+{
+ "constants_not_found_in_draft": [],
+ "proofs": {
+  "vector1": {
+   "file_size": {
+    "value": 1877,
+    "d4_states": 1877,
+    "holds": true
+   },
+   "file_sha256_equals_d5_printed": true,
+   "file_bytes_equal_d5_base64": true,
+   "step1_artifact_sha256": "a183f624efbbda7d6208b9b5a6f9b0c2c95d90382eb209c44a1131954071f30b",
+   "artifact_sha256_equals_d1": true,
+   "step3_parse": true,
+   "step3_file_hash_op_sha256": true,
+   "step3_msg_equals_artifact_sha256": true,
+   "attestations": [
+    {
+     "kind": "pending",
+     "payload": "+https://bob.btc.calendar.opentimestamps.org",
+     "operations_on_the_way": 16
+    },
+    {
+     "kind": "pending",
+     "payload": "-https://alice.btc.calendar.opentimestamps.org",
+     "operations_on_the_way": 18
+    },
+    {
+     "kind": "bitcoin",
+     "payload": "e9b63a",
+     "operations_on_the_way": 82
+    },
+    {
+     "kind": "pending",
+     "payload": "\"https://btc.calendar.catallaxy.com",
+     "operations_on_the_way": 16
+    },
+    {
+     "kind": "pending",
+     "payload": "(https://finney.calendar.eternitywall.com",
+     "operations_on_the_way": 18
+    }
+   ],
+   "step4_bitcoin_attestation_present": true,
+   "branches": [
+    {
+     "step5_operations_only_sha256_append_prepend": true,
+     "step5_operations_count": 82,
+     "operations_count_equals_d4": true,
+     "step5_digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "op1_append_nonce_equals_d1": true,
+     "leaf_after_op2_equals_d1": true,
+     "passes_node_12_or_34": true,
+     "passes_root_d2": true,
+     "op40_prepend_89_bytes_ending_6a20": true,
+     "op41_append_689b0e00": true,
+     "value_after_op43_internal_order": "3cad384ebc23db76ebec1a8619ca7c83dcc81cee2c5d5b3c5ffcf938bba70c88",
+     "value_after_op43_begins_3cad384e_as_d4_prints": true,
+     "value_after_op43_reversed_begins_3cad384e": false,
+     "value_after_op82_begins_81383c9c_as_d4_prints": true,
+     "step6_height": 957289,
+     "height_equals_d3": true,
+     "step7a_candidate_header_80_bytes": true,
+     "step7a_source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)",
+     "step7b_on_validated_chain": "not established: the header set is not validated from the genesis block or from a checkpoint this reader holds (draft -08, 4.1, validated_chain and step 7b)",
+     "step8_merkle_root_equals_digest_header_order": true,
+     "merkle_root_equals_d3_committed": true,
+     "d3_displayed_is_reverse_of_committed": true,
+     "header_double_sha256_block_hash": "000000000000000000018e5b8c68a63c45b3eeac3a05ecf621a3b3f7890e3534",
+     "block_hash_equals_d3": true,
+     "block_hash_equals_headers_sources": {
+      "blockstream": true,
+      "mempool": true
+     },
+     "header_bytes_equal_headers_sources": {
+      "blockstream": true,
+      "mempool": true
+     },
+     "bits_hex": "17021a42",
+     "proof_of_work_hash_le_target": true,
+     "block_time_ntime": "2026-07-09T10:02:59Z",
+     "block_time_equals_d3": true
+    }
+   ]
+  },
+  "vector2": {
+   "file_size": {
+    "value": 1877,
+    "d4_states": 1877,
+    "holds": true
+   },
+   "file_sha256_equals_d5_printed": true,
+   "file_bytes_equal_d5_base64": true,
+   "step1_artifact_sha256": "0df073a986e5e5141c96ec32303b8552ded255e4404d0aff996936a846b48cff",
+   "artifact_sha256_equals_d1": true,
+   "step3_parse": true,
+   "step3_file_hash_op_sha256": true,
+   "step3_msg_equals_artifact_sha256": true,
+   "attestations": [
+    {
+     "kind": "pending",
+     "payload": "+https://bob.btc.calendar.opentimestamps.org",
+     "operations_on_the_way": 16
+    },
+    {
+     "kind": "pending",
+     "payload": "-https://alice.btc.calendar.opentimestamps.org",
+     "operations_on_the_way": 18
+    },
+    {
+     "kind": "bitcoin",
+     "payload": "e9b63a",
+     "operations_on_the_way": 82
+    },
+    {
+     "kind": "pending",
+     "payload": "\"https://btc.calendar.catallaxy.com",
+     "operations_on_the_way": 16
+    },
+    {
+     "kind": "pending",
+     "payload": "(https://finney.calendar.eternitywall.com",
+     "operations_on_the_way": 18
+    }
+   ],
+   "step4_bitcoin_attestation_present": true,
+   "branches": [
+    {
+     "step5_operations_only_sha256_append_prepend": true,
+     "step5_operations_count": 82,
+     "operations_count_equals_d4": true,
+     "step5_digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "op1_append_nonce_equals_d1": true,
+     "leaf_after_op2_equals_d1": true,
+     "passes_node_12_or_34": true,
+     "passes_root_d2": true,
+     "op40_prepend_89_bytes_ending_6a20": true,
+     "op41_append_689b0e00": true,
+     "value_after_op43_internal_order": "3cad384ebc23db76ebec1a8619ca7c83dcc81cee2c5d5b3c5ffcf938bba70c88",
+     "value_after_op43_begins_3cad384e_as_d4_prints": true,
+     "value_after_op43_reversed_begins_3cad384e": false,
+     "value_after_op82_begins_81383c9c_as_d4_prints": true,
+     "step6_height": 957289,
+     "height_equals_d3": true,
+     "step7a_candidate_header_80_bytes": true,
+     "step7a_source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)",
+     "step7b_on_validated_chain": "not established: the header set is not validated from the genesis block or from a checkpoint this reader holds (draft -08, 4.1, validated_chain and step 7b)",
+     "step8_merkle_root_equals_digest_header_order": true,
+     "merkle_root_equals_d3_committed": true,
+     "d3_displayed_is_reverse_of_committed": true,
+     "header_double_sha256_block_hash": "000000000000000000018e5b8c68a63c45b3eeac3a05ecf621a3b3f7890e3534",
+     "block_hash_equals_d3": true,
+     "block_hash_equals_headers_sources": {
+      "blockstream": true,
+      "mempool": true
+     },
+     "header_bytes_equal_headers_sources": {
+      "blockstream": true,
+      "mempool": true
+     },
+     "bits_hex": "17021a42",
+     "proof_of_work_hash_le_target": true,
+     "block_time_ntime": "2026-07-09T10:02:59Z",
+     "block_time_equals_d3": true
+    }
+   ]
+  },
+  "vector3": {
+   "file_size": {
+    "value": 1877,
+    "d4_states": 1877,
+    "holds": true
+   },
+   "file_sha256_equals_d5_printed": true,
+   "file_bytes_equal_d5_base64": true,
+   "step1_artifact_sha256": "d82bf84f17057c0e3d7aa6f249dfc2e80a877b910ce4ce14dc40e653fd5be40b",
+   "artifact_sha256_equals_d1": true,
+   "step3_parse": true,
+   "step3_file_hash_op_sha256": true,
+   "step3_msg_equals_artifact_sha256": true,
+   "attestations": [
+    {
+     "kind": "pending",
+     "payload": "+https://bob.btc.calendar.opentimestamps.org",
+     "operations_on_the_way": 16
+    },
+    {
+     "kind": "pending",
+     "payload": "-https://alice.btc.calendar.opentimestamps.org",
+     "operations_on_the_way": 18
+    },
+    {
+     "kind": "bitcoin",
+     "payload": "e9b63a",
+     "operations_on_the_way": 82
+    },
+    {
+     "kind": "pending",
+     "payload": "\"https://btc.calendar.catallaxy.com",
+     "operations_on_the_way": 16
+    },
+    {
+     "kind": "pending",
+     "payload": "(https://finney.calendar.eternitywall.com",
+     "operations_on_the_way": 18
+    }
+   ],
+   "step4_bitcoin_attestation_present": true,
+   "branches": [
+    {
+     "step5_operations_only_sha256_append_prepend": true,
+     "step5_operations_count": 82,
+     "operations_count_equals_d4": true,
+     "step5_digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "op1_append_nonce_equals_d1": true,
+     "leaf_after_op2_equals_d1": true,
+     "passes_node_12_or_34": true,
+     "passes_root_d2": true,
+     "op40_prepend_89_bytes_ending_6a20": true,
+     "op41_append_689b0e00": true,
+     "value_after_op43_internal_order": "3cad384ebc23db76ebec1a8619ca7c83dcc81cee2c5d5b3c5ffcf938bba70c88",
+     "value_after_op43_begins_3cad384e_as_d4_prints": true,
+     "value_after_op43_reversed_begins_3cad384e": false,
+     "value_after_op82_begins_81383c9c_as_d4_prints": true,
+     "step6_height": 957289,
+     "height_equals_d3": true,
+     "step7a_candidate_header_80_bytes": true,
+     "step7a_source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)",
+     "step7b_on_validated_chain": "not established: the header set is not validated from the genesis block or from a checkpoint this reader holds (draft -08, 4.1, validated_chain and step 7b)",
+     "step8_merkle_root_equals_digest_header_order": true,
+     "merkle_root_equals_d3_committed": true,
+     "d3_displayed_is_reverse_of_committed": true,
+     "header_double_sha256_block_hash": "000000000000000000018e5b8c68a63c45b3eeac3a05ecf621a3b3f7890e3534",
+     "block_hash_equals_d3": true,
+     "block_hash_equals_headers_sources": {
+      "blockstream": true,
+      "mempool": true
+     },
+     "header_bytes_equal_headers_sources": {
+      "blockstream": true,
+      "mempool": true
+     },
+     "bits_hex": "17021a42",
+     "proof_of_work_hash_le_target": true,
+     "block_time_ntime": "2026-07-09T10:02:59Z",
+     "block_time_equals_d3": true
+    }
+   ]
+  },
+  "vector4": {
+   "file_size": {
+    "value": 1877,
+    "d4_states": 1877,
+    "holds": true
+   },
+   "file_sha256_equals_d5_printed": true,
+   "file_bytes_equal_d5_base64": true,
+   "step1_artifact_sha256": "94a86d117047f2af9a2f5635d0c530cc85fc23d20f5d4b42926b94abee7a06ec",
+   "artifact_sha256_equals_d1": true,
+   "step3_parse": true,
+   "step3_file_hash_op_sha256": true,
+   "step3_msg_equals_artifact_sha256": true,
+   "attestations": [
+    {
+     "kind": "pending",
+     "payload": "+https://bob.btc.calendar.opentimestamps.org",
+     "operations_on_the_way": 16
+    },
+    {
+     "kind": "pending",
+     "payload": "-https://alice.btc.calendar.opentimestamps.org",
+     "operations_on_the_way": 18
+    },
+    {
+     "kind": "bitcoin",
+     "payload": "e9b63a",
+     "operations_on_the_way": 82
+    },
+    {
+     "kind": "pending",
+     "payload": "\"https://btc.calendar.catallaxy.com",
+     "operations_on_the_way": 16
+    },
+    {
+     "kind": "pending",
+     "payload": "(https://finney.calendar.eternitywall.com",
+     "operations_on_the_way": 18
+    }
+   ],
+   "step4_bitcoin_attestation_present": true,
+   "branches": [
+    {
+     "step5_operations_only_sha256_append_prepend": true,
+     "step5_operations_count": 82,
+     "operations_count_equals_d4": true,
+     "step5_digest": "81383c9ce0d3174bcc6c352a0a821f9e5151e0bc608322ace6aeecccff3c43ef",
+     "op1_append_nonce_equals_d1": true,
+     "leaf_after_op2_equals_d1": true,
+     "passes_node_12_or_34": true,
+     "passes_root_d2": true,
+     "op40_prepend_89_bytes_ending_6a20": true,
+     "op41_append_689b0e00": true,
+     "value_after_op43_internal_order": "3cad384ebc23db76ebec1a8619ca7c83dcc81cee2c5d5b3c5ffcf938bba70c88",
+     "value_after_op43_begins_3cad384e_as_d4_prints": true,
+     "value_after_op43_reversed_begins_3cad384e": false,
+     "value_after_op82_begins_81383c9c_as_d4_prints": true,
+     "step6_height": 957289,
+     "height_equals_d3": true,
+     "step7a_candidate_header_80_bytes": true,
+     "step7a_source": "Lemonnier's headers-957289-957300.json (data supplied with the proofs)",
+     "step7b_on_validated_chain": "not established: the header set is not validated from the genesis block or from a checkpoint this reader holds (draft -08, 4.1, validated_chain and step 7b)",
+     "step8_merkle_root_equals_digest_header_order": true,
+     "merkle_root_equals_d3_committed": true,
+     "d3_displayed_is_reverse_of_committed": true,
+     "header_double_sha256_block_hash": "000000000000000000018e5b8c68a63c45b3eeac3a05ecf621a3b3f7890e3534",
+     "block_hash_equals_d3": true,
+     "block_hash_equals_headers_sources": {
+      "blockstream": true,
+      "mempool": true
+     },
+     "header_bytes_equal_headers_sources": {
+      "blockstream": true,
+      "mempool": true
+     },
+     "bits_hex": "17021a42",
+     "proof_of_work_hash_le_target": true,
+     "block_time_ntime": "2026-07-09T10:02:59Z",
+     "block_time_equals_d3": true
+    }
+   ]
+  }
+ },
+ "header_chain_from_957289": [
+  {
+   "height": 957289,
+   "length_80": true,
+   "hash": "000000000000000000018e5b8c68a63c45b3eeac3a05ecf621a3b3f7890e3534",
+   "bits_hex": "17021a42",
+   "proof_of_work_hash_le_target": true,
+   "links_to_previous": null,
+   "time": "2026-07-09T10:02:59Z"
+  },
+  {
+   "height": 957290,
+   "length_80": true,
+   "hash": "0000000000000000000132b9ec5e3ad6f075772fab6e55946cf08185374397bb",
+   "bits_hex": "17021a42",
+   "proof_of_work_hash_le_target": true,
+   "links_to_previous": true,
+   "time": "2026-07-09T10:33:10Z"
+  },
+  {
+   "height": 957291,
+   "length_80": true,
+   "hash": "00000000000000000001daba40abf09785eeb0c27df6ea026efd976b9a9893a8",
+   "bits_hex": "17021a42",
+   "proof_of_work_hash_le_target": true,
+   "links_to_previous": true,
+   "time": "2026-07-09T10:35:06Z"
+  },
+  {
+   "height": 957292,
+   "length_80": true,
+   "hash": "000000000000000000018c9178860123d6a0807d259caca21fd7608c1e272034",
+   "bits_hex": "17021a42",
+   "proof_of_work_hash_le_target": true,
+   "links_to_previous": true,
+   "time": "2026-07-09T10:46:21Z"
+  },
+  {
+   "height": 957293,
+   "length_80": true,
+   "hash": "00000000000000000000dd7a5d1ca0d7656463b16a5086e2a712368bf31c8b2e",
+   "bits_hex": "17021a42",
+   "proof_of_work_hash_le_target": true,
+   "links_to_previous": true,
+   "time": "2026-07-09T10:47:27Z"
+  },
+  {
+   "height": 957294,
+   "length_80": true,
+   "hash": "00000000000000000001cc9bf2b51636c106a3174a39518447c0d0cfa87437f2",
+   "bits_hex": "17021a42",
+   "proof_of_work_hash_le_target": true,
+   "links_to_previous": true,
+   "time": "2026-07-09T10:48:13Z"
+  },
+  {
+   "height": 957295,
+   "length_80": true,
+   "hash": "00000000000000000001ef542f675ff62148f6afc6619699d18e52cf679ba8fb",
+   "bits_hex": "17021a42",
+   "proof_of_work_hash_le_target": true,
+   "links_to_previous": true,
+   "time": "2026-07-09T11:03:53Z"
+  },
+  {
+   "height": 957296,
+   "length_80": true,
+   "hash": "00000000000000000000af4b7d18f97a9dc342569e38cb72290e9f9ecede2b33",
+   "bits_hex": "17021a42",
+   "proof_of_work_hash_le_target": true,
+   "links_to_previous": true,
+   "time": "2026-07-09T11:07:30Z"
+  },
+  {
+   "height": 957297,
+   "length_80": true,
+   "hash": "00000000000000000000fe7d8a0a227178febb999bde0983269a4856292597b0",
+   "bits_hex": "17021a42",
+   "proof_of_work_hash_le_target": true,
+   "links_to_previous": true,
+   "time": "2026-07-09T11:18:39Z"
+  },
+  {
+   "height": 957298,
+   "length_80": true,
+   "hash": "0000000000000000000054717819ca45f53fe220349c66f4de375ce412e3e0c9",
+   "bits_hex": "17021a42",
+   "proof_of_work_hash_le_target": true,
+   "links_to_previous": true,
+   "time": "2026-07-09T11:20:13Z"
+  },
+  {
+   "height": 957299,
+   "length_80": true,
+   "hash": "00000000000000000000a4e356da32fa562086fff0bb8602a2c92c0eb4cfa121",
+   "bits_hex": "17021a42",
+   "proof_of_work_hash_le_target": true,
+   "links_to_previous": true,
+   "time": "2026-07-09T11:21:35Z"
+  },
+  {
+   "height": 957300,
+   "length_80": true,
+   "hash": "00000000000000000000dd0e9ef3acf5530665e884f37d5a10cf7ab7bd8adb79",
+   "bits_hex": "17021a42",
+   "proof_of_work_hash_le_target": true,
+   "links_to_previous": true,
+   "time": "2026-07-09T11:33:31Z"
+  }
+ ],
+ "header_chain_summary": {
+  "headers": 12,
+  "all_80_bytes": true,
+  "all_proof_of_work_hold": true,
+  "all_link_to_previous": true,
+  "same_bits_throughout": true,
+  "blocks_at_or_above_957289_in_the_set": 12,
+  "step9_confirmations_on_validated_chain": "not established: the set is not a validated chain (see step 7b); read only as a count of the supplied headers, it is 12"
+ }
+}
