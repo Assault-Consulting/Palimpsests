@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Protecting an audit log from being rewritten from scratch — Palimpsests notes</title>
+<meta name="description" content="A hash chain catches an edited record but not a log rebuilt from the first record. What closes that gap, from which record on, and what stays open." />
+<link rel="canonical" href="https://palimpsests.dev/notes/protecting-an-audit-log-from-being-rewritten/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Andrii Sparysh" />
+<meta name="theme-color" content="#15151f" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Palimpsests" />
+<meta property="og:title" content="Protecting an audit log from being rewritten from scratch — Palimpsests notes" />
+<meta property="og:description" content="A hash chain catches an edited record but not a log rebuilt from the first record. What closes that gap, from which record on, and what stays open." />
+<meta property="og:url" content="https://palimpsests.dev/notes/protecting-an-audit-log-from-being-rewritten/" />
+<meta property="og:locale" content="en" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Protecting an audit log from being rewritten from scratch — Palimpsests notes" />
+<meta name="twitter:description" content="A hash chain catches an edited record but not a log rebuilt from the first record. What closes that gap, from which record on, and what stays open." />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BlogPosting",
+      "@id": "https://palimpsests.dev/notes/protecting-an-audit-log-from-being-rewritten/#post",
+      "headline": "Protecting an audit log from being rewritten from scratch",
+      "description": "A hash chain catches an edited record but not a log rebuilt from the first record. What closes that gap, from which record on, and what stays open.",
+      "url": "https://palimpsests.dev/notes/protecting-an-audit-log-from-being-rewritten/",
+      "mainEntityOfPage": "https://palimpsests.dev/notes/protecting-an-audit-log-from-being-rewritten/",
+      "datePublished": "2026-11-05",
+      "dateModified": "2026-11-05",
+      "inLanguage": "en",
+      "keywords": [
+        "audit-log",
+        "tamper-evident",
+        "security",
+        "anchors"
+      ],
+      "author": {
+        "@type": "Person",
+        "name": "Andrii Sparysh"
+      },
+      "publisher": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "isPartOf": {
+        "@id": "https://palimpsests.dev/notes/#blog"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Palimpsests",
+          "item": "https://palimpsests.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Notes",
+          "item": "https://palimpsests.dev/notes/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Protecting an audit log from being rewritten from scratch",
+          "item": "https://palimpsests.dev/notes/protecting-an-audit-log-from-being-rewritten/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Palimpsests home">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="nav__links">
+      <a class="hide-sm" href="/#caps">Capabilities</a>
+      <a class="hide-sm" href="/pala-1/">PALA-1</a>
+      <a class="hide-sm" href="/verify-without-reading/">Verify</a>
+      <a class="hide-sm" href="/eu-ai-act-article-12/">EU AI Act</a>
+      <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
+      <a class="hide-sm" href="/integrations/">Integrations</a>
+      <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<main class="doc">
+  <div class="wrap">
+    <div class="doc__in">
+<p class="crumbs"><a href="/">Palimpsests</a> / <a href="/notes/">Notes</a></p>
+<span class="eyebrow">Note · 5 November 2026 · Andrii Sparysh</span>
+<h1 class="display">Protecting an audit log from being rewritten from scratch</h1>
+<p>A hash-chained audit log catches the obvious attack. Change one record and every record after it stops matching, and the check points at the first broken link. That makes it easy to forget the attack the chain can't see on its own: throwing the log away and writing a new one.</p>
+<p>This note is about that attack. It explains why the chain alone doesn't catch it, what does, from which record on, and what remains possible however the log is set up.</p>
+<h2 id="why-the-chain-alone-can-t-see-it">Why the chain alone can't see it</h2>
+<p>Each record holds the hash of the one before it. That proves the records are in order and unchanged <i>relative to each other</i>. It doesn't prove they are the records that were written.</p>
+<p>Rebuilding a chain needs no secret. Whoever can write the file can start from the first record, change whatever they like, and recompute every hash. The new chain is internally perfect. Every link verifies, because every link was made for it. A verifier that only reads the file has nothing to compare it with, so it reports the chain as consistent. That is true, and it isn't enough.</p>
+<p>The same goes for two quieter versions of the attack: cutting records off the end, and restoring an old copy of the file over a newer one. Both leave a chain whose links all hold.</p>
+<h2 id="what-closes-it-a-head-kept-somewhere-else">What closes it: a head kept somewhere else</h2>
+<p>The hash of the latest record, the head, is 32 bytes. Copy it to a place the writer of the log can't change, and every later check can compare the chain's end with that copy. In PALA-1 that copy is called the anchor, and comparing with it is the completeness check.</p>
+<pre><code>palimpsests pala verify audit.pala --anchor-file head.txt</code></pre>
+<p>A rebuilt chain ends in a head the anchor has never seen. The verifier says so in words, not only in its exit code:</p>
+<pre><code>completeness: FAILED — the anchored head names no record in this chain —
+the log was replaced, rolled back, or truncated</code></pre>
+<p>A chain that simply grew past the anchor gets a different sentence, because the anchored head is still in it:</p>
+<pre><code>completeness: FAILED — chain extends 2 record(s) beyond the anchored head —
+an unanchored tail, not a replacement</code></pre>
+<p>Both exit with code 1. The difference matters to whoever investigates. The first means the history you hold isn't the history that was anchored. The second usually means the writer stopped between writing records and copying out the head, for example after a crash.</p>
+<p>Without an anchor the check can't answer the question at all. It exits with code 2 and says that completeness wasn't checked. A scheduled check that treats code 2 as a pass doesn't detect a rewrite.</p>
+<h2 id="the-window-that-stays-open">The window that stays open</h2>
+<p>An anchor protects the records up to the head it holds. Records written after the last copy are protected by nothing yet, and someone who can write the file can still change them. To the check, that looks like an unanchored tail, the same as after a crash.</p>
+<p>So how often the head is copied out sets the size of that window. Copying it after every record shrinks the window to the record being written, and costs a write elsewhere each time. Copying it hourly leaves up to an hour of records exposed. Either choice is fine if it is stated. It isn't fine to leave it unstated.</p>
+<h2 id="where-the-copy-lives-decides-who-it-stops">Where the copy lives decides who it stops</h2>
+<p>An anchor stops anyone who can rewrite the log but can't also rewrite the anchor. That is the whole question when choosing where to keep it.</p>
+<ul>
+  <li><b>A file or the operating system's keychain on the same machine</b> stops a careless process and a user without full rights. It doesn't stop someone with administrator access, who can change both.</li>
+  <li><b>A hardware token</b> (PKCS#11) puts the head where reading it needs a PIN, and where a second object planted under the same name makes the read fail instead of being picked. To get past it, the attacker has to defeat the token too.</li>
+  <li><b>A transparency service</b> (SCITT) takes the head outside your organisation. It countersigns a statement over the head with its own key and clock. After that, nobody on your side, administrators included, can make the old head go away. The service's record says it existed, and when.</li>
+</ul>
+<p>The <a href="https://palimpsests.dev/notes/anatomy-of-a-tamper-evident-audit-log/">anatomy note</a> walks through these three layers together.</p>
+<h2 id="old-records-you-delete-on-purpose">Old records you delete on purpose</h2>
+<p>Logs aren't kept forever. Deleting expired segments under a retention policy removes the start of the chain, and without more information that looks exactly like a rewrite: the first remaining record isn't the first record ever written.</p>
+<p>PALA-1 handles this with a record that declares the cut. When a writer starts a new segment, the segment's first record states which head it continues from, under what retention period, and the root of everything before it. A verifier then reports a declared continuation and checks it against the segments manifest, instead of reporting an unexplained missing start. A whole set of segments can be checked at once. The result keeps two answers apart: whether everything present is consistent, and whether anything is missing. Retention makes a set incomplete. It never makes it inconsistent.</p>
+<h2 id="showing-the-history-only-grew">Showing the history only grew</h2>
+<p>An anchor answers "is this the chain I anchored?". A second question comes up as soon as you publish heads regularly: does today's chain extend last quarter's?</p>
+<p>Since construction v3 a published statement carries the root of the whole chain up to its head. Two such statements and a short consistency proof show that the later chain contains the earlier one unchanged, without handing anyone the records. Someone who kept last quarter's statement can check this quarter's in seconds.</p>
+<h2 id="what-none-of-this-proves">What none of this proves</h2>
+<ul>
+  <li>That the records were true when they were written. The chain proves what was recorded, not that it was right.</li>
+  <li>Anything about records written after the last head left the machine.</li>
+  <li>Anything against an attacker who controls both the log and every copy of its head. The point of a token or a transparency service is to make that set of copies impossible for one party to hold.</li>
+</ul>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+  <li><a href="https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/">Tamper-evident audit logs: how they work and how to build one</a></li>
+  <li><a href="https://palimpsests.dev/notes/anatomy-of-a-tamper-evident-audit-log/">Anatomy of a tamper-evident audit log</a></li>
+  <li><a href="https://palimpsests.dev/pala-1/">The PALA-1 format</a></li>
+  <li><a href="https://palimpsests.dev/verify-without-reading/">Verifying a log without reading it</a></li>
+</ul>
+<div class="related">
+  <a class="btn" href="/notes/">All notes →</a>
+  <a class="btn" href="/">Palimpsests →</a>
+</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/" aria-label="Palimpsests">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="/notes/">Notes</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
