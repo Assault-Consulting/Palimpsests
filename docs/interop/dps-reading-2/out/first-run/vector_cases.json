@@ -1,0 +1,180 @@
+[
+ {
+  "id": "V01",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V02",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V03",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V04",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V05",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V06",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V07",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V08",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V09",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V10",
+  "agree": true,
+  "detail": null,
+  "after_review": "the first run reproduced the checkpoints' signatures only, less than V10 describes; extended to the SCITT statements and receipts in change C10, after which V10 still agrees"
+ },
+ {
+  "id": "V11",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V12",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V13",
+  "agree": "not attempted",
+  "detail": "needs tests/generate_vectors.py, which the boundary forbids reading or running"
+ },
+ {
+  "id": "V14",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V15",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V16",
+  "agree": true,
+  "detail": "checked against the values the case states; RFC 9500 itself was not fetched, so the case's values were not compared with the RFC's text"
+ },
+ {
+  "id": "V17",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V18",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V19",
+  "agree": false,
+  "detail": [
+   "st_a/statement_b64 differs from cbor2",
+   "st_a/receipt_b64 differs from cbor2",
+   "st_b2/statement_b64 differs from cbor2",
+   "st_b2/receipt_b64 differs from cbor2",
+   "st_a_count_4/statement_b64 differs from cbor2",
+   "st_a_count_4/receipt_b64 differs from cbor2",
+   "st_a_count_2/statement_b64 differs from cbor2",
+   "st_a_count_2/receipt_b64 differs from cbor2",
+   "st_a_chain_2/statement_b64 differs from cbor2",
+   "st_a_chain_2/receipt_b64 differs from cbor2",
+   "st_by_service/statement_b64 differs from cbor2",
+   "st_a_sub_other/statement_b64 differs from cbor2",
+   "st_a_no_iss/statement_b64 differs from cbor2",
+   "st_a_iss_other/statement_b64 differs from cbor2",
+   "st_a_alg_8/statement_b64 differs from cbor2",
+   "st_a_crit/statement_b64 differs from cbor2",
+   "st_a_kid_unknown/statement_b64 differs from cbor2",
+   "st_a_map_payload/statement_b64 differs from cbor2",
+   "st_a_dup_label/statement_b64 read, expected refused",
+   "st_a_long_int/statement_b64 read, expected refused",
+   "st_a_untagged/statement_b64 read, expected refused",
+   "st_a_dps_value/statement_b64 differs from cbor2",
+   "st_a_shared_key/statement_b64 differs from cbor2",
+   "st_a_no_receipt/statement_b64 differs from cbor2",
+   "st_a_receipt_other/statement_b64 differs from cbor2",
+   "st_a_receipt_other/receipt_b64 differs from cbor2",
+   "st_a_path_broken/statement_b64 differs from cbor2",
+   "st_a_path_broken/receipt_b64 differs from cbor2",
+   "st_a_receipt_s2/statement_b64 differs from cbor2",
+   "st_a_receipt_s2/receipt_b64 differs from cbor2",
+   "st_a_receipt_by_witness/statement_b64 differs from cbor2",
+   "st_a_receipt_by_witness/receipt_b64 differs from cbor2",
+   "st_a_receipt_unknown_key/statement_b64 differs from cbor2",
+   "st_a_receipt_unknown_key/receipt_b64 differs from cbor2",
+   "st_a_receipt_small_tree/statement_b64 differs from cbor2",
+   "st_a_receipt_small_tree/receipt_b64 differs from cbor2",
+   "st_a_receipt_no_proof/statement_b64 differs from cbor2",
+   "st_a_receipt_no_proof/receipt_b64 differs from cbor2",
+   "st_a_receipt_other_vds/statement_b64 differs from cbor2",
+   "st_a_receipt_other_vds/receipt_b64 differs from cbor2",
+   "st_a_receipt_alg_8/statement_b64 differs from cbor2",
+   "st_a_receipt_alg_8/receipt_b64 differs from cbor2",
+   "st_a_receipt_one_leaf/statement_b64 differs from cbor2",
+   "st_a_receipt_one_leaf/receipt_b64 differs from cbor2",
+   "st_a_time_offset/statement_b64 differs from cbor2",
+   "st_a_time_fraction/statement_b64 differs from cbor2",
+   "st_a_time_basic/statement_b64 differs from cbor2",
+   "st_a_chain_empty/statement_b64 differs from cbor2",
+   "st_a_kid_empty/statement_b64 differs from cbor2",
+   "st_a_kid_long/statement_b64 differs from cbor2",
+   "cbor2 reads 2 of the refused, expected 4"
+  ]
+ },
+ {
+  "id": "V20",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V21",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V22",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V23",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V24",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "V25",
+  "agree": true,
+  "detail": null
+ }
+]

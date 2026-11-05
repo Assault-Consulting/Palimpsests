@@ -1,0 +1,380 @@
+[
+ {
+  "id": "J01",
+  "expected": "consistent",
+  "got": "consistent",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "J02",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/timestamps (length)"
+ },
+ {
+  "id": "J03",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/timestamps (length)"
+ },
+ {
+  "id": "J04",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/timestamps (length)"
+ },
+ {
+  "id": "J05",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/timestamps/0/gen_time"
+ },
+ {
+  "id": "J06",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/timestamps/0/existed_no_later_than"
+ },
+ {
+  "id": "J07",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/timestamps/0/issuer_time/consistency"
+ },
+ {
+  "id": "J08",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/0/checkpoint/count"
+ },
+ {
+  "id": "J09",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/0/comparison/not_covered_indexes"
+ },
+ {
+  "id": "J10",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/0/comparison/not_covered_indexes (length)"
+ },
+ {
+  "id": "J11",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/1/key_state/time_basis"
+ },
+ {
+  "id": "J12",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/2/status"
+ },
+ {
+  "id": "J13",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/0/source_ref"
+ },
+ {
+  "id": "J14",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints (length)"
+ },
+ {
+  "id": "J15",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/trust_policy_ref"
+ },
+ {
+  "id": "J16",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/export_digest"
+ },
+ {
+  "id": "J17",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/timestamps/0/tsa_ref"
+ },
+ {
+  "id": "J18",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/timestamps/0/gen_time"
+ },
+ {
+  "id": "J19",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/timestamps/0/issuer_time/stated"
+ },
+ {
+  "id": "J20",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/0/checkpoint/head_link"
+ },
+ {
+  "id": "J22",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/export_digest"
+ },
+ {
+  "id": "J23",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/attachment_digest"
+ },
+ {
+  "id": "J24",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/chain_id"
+ },
+ {
+  "id": "J25",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/0/status"
+ },
+ {
+  "id": "J26",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/timestamps/0/checks/signer_certificate"
+ },
+ {
+  "id": "J27",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/timestamps/0/issuer_time/stated"
+ },
+ {
+  "id": "J21",
+  "expected": "consistent",
+  "got": "consistent",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "J28",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/timestamps/0/gen_time"
+ },
+ {
+  "id": "J29",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/timestamps/0/timestamp_index"
+ },
+ {
+  "id": "J30",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/1/checkpoint_index"
+ },
+ {
+  "id": "J31",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/timestamp_count"
+ },
+ {
+  "id": "J32",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/timestamp_count"
+ },
+ {
+  "id": "J33",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/trust_policy/status"
+ },
+ {
+  "id": "J34",
+  "expected": "consistent",
+  "got": "consistent",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "J35",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/trust_policy/status"
+ },
+ {
+  "id": "J36",
+  "expected": "consistent",
+  "got": "consistent",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "J37",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/timestamps/0/tsa_ref"
+ },
+ {
+  "id": "J38",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/timestamps/0/gen_time"
+ },
+ {
+  "id": "J39",
+  "expected": "consistent",
+  "got": "consistent",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "J40",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/3/obtained_from"
+ },
+ {
+  "id": "J41",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/3/prefix/not_covered_indexes"
+ },
+ {
+  "id": "J42",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints (length)"
+ },
+ {
+  "id": "J43",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints (length)"
+ },
+ {
+  "id": "J44",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/3/attachment_index"
+ },
+ {
+  "id": "J45",
+  "expected": "consistent",
+  "got": "inconsistent",
+  "agree": false,
+  "detail": "/checkpoints/3/signature/key_ref"
+ },
+ {
+  "id": "J46",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/3/receipt/tree_size"
+ },
+ {
+  "id": "J47",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/3/receipt/leaf_index"
+ },
+ {
+  "id": "J48",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/checkpoints/3/format"
+ },
+ {
+  "id": "J49",
+  "expected": "consistent",
+  "got": "consistent",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "J50",
+  "expected": "consistent",
+  "got": "consistent",
+  "agree": true,
+  "detail": null
+ },
+ {
+  "id": "J51",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/timestamps/3/block"
+ },
+ {
+  "id": "J52",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/timestamps/3/block/height"
+ },
+ {
+  "id": "J53",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/timestamps/3/miner_stated_time"
+ },
+ {
+  "id": "J54",
+  "expected": "inconsistent",
+  "got": "inconsistent",
+  "agree": true,
+  "detail": "/timestamps/3/gen_time"
+ }
+]

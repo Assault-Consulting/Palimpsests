@@ -1,0 +1,7 @@
+{
+ "about": "Cases whose verdict matches but which, on review, did not test what they describe with the published vectors. Applied after a run, so that every results file says the same (change C09 in out/changes.md).",
+ "pairing_cases": {
+  "J46": "verdict matches (inconsistent), but the first difference is /checkpoints/3/signature/key_ref, the value of finding F01, not the receipt's tree size the case describes; with that one vector value corrected (out/counterfactual-J45-J47.json) the first difference is /checkpoints/3/receipt/tree_size",
+  "J47": "verdict matches (inconsistent), but the first difference is /checkpoints/3/signature/key_ref, the value of finding F01, not the broken path the case describes; with that one vector value corrected (out/counterfactual-J45-J47.json) the first difference is /checkpoints/3/receipt/status"
+ }
+}

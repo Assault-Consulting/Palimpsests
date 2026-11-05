@@ -1,0 +1,1782 @@
+[
+ {
+  "id": "K01",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "verified"
+  }
+ },
+ {
+  "id": "K02",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "verified"
+  }
+ },
+ {
+  "id": "K03",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "verified"
+  }
+ },
+ {
+  "id": "K04",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "verified"
+  }
+ },
+ {
+  "id": "K05",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "failed"
+  }
+ },
+ {
+  "id": "K06",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "failed"
+  }
+ },
+ {
+  "id": "K07",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "failed"
+  }
+ },
+ {
+  "id": "K08",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "failed"
+  }
+ },
+ {
+  "id": "K09",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "not_checked",
+   "key_state": "not_checked",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K10",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K11",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K12",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K13",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K14",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K15",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K16",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K17",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K18",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K19",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K20",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K21",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K22",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K23",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K24",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "not_supported",
+   "independence": "verified",
+   "signature": "not_supported",
+   "key_state": "not_checked",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K25",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "unavailable",
+   "independence": "verified",
+   "signature": "not_checked",
+   "key_state": "not_checked",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K26",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "not_supported",
+   "independence": "verified",
+   "signature": "not_supported",
+   "key_state": "not_checked",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K27",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "failed",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K28",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "failed",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K29",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "verified"
+  }
+ },
+ {
+  "id": "K30",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "verified"
+  }
+ },
+ {
+  "id": "K31",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "failed",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K32",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "verified"
+  }
+ },
+ {
+  "id": "K33",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "unavailable",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "unavailable",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K34",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "verified"
+  }
+ },
+ {
+  "id": "K35",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "failed",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K36",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "failed",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K37",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "unavailable",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "unavailable",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K38",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "unavailable",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "unavailable",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K39",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "verified"
+  }
+ },
+ {
+  "id": "K40",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "verified"
+  }
+ },
+ {
+  "id": "K41",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K42",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "failed",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K43",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "failed",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K44",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K45",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K46",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K47",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "failed",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K48",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "failed",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K49",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K50",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "verified"
+  }
+ },
+ {
+  "id": "K51",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K52",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K53",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "failed",
+   "key_state": "failed",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K54",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "verified"
+  }
+ },
+ {
+  "id": "K55",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "failed",
+   "key_state": "failed",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K56",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "failed",
+   "key_state": "failed",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K57",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "failed",
+   "key_state": "failed",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K58",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "failed",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K59",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "failed",
+   "key_state": "failed",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K60",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "verified"
+  }
+ },
+ {
+  "id": "K61",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "not_checked",
+   "key_state": "not_checked",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K62",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "failed",
+   "key_state": "failed",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K63",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "failed",
+   "key_state": "failed",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K64",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "verified"
+  }
+ },
+ {
+  "id": "K65",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "failed",
+   "key_state": "failed",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K66",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "failed",
+   "key_state": "failed",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K67",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K68",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "failed",
+   "key_state": "failed",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K69",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked",
+   "prefix": "verified"
+  }
+ },
+ {
+  "id": "K70",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked",
+   "prefix": "verified"
+  }
+ },
+ {
+  "id": "K71",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked",
+   "prefix": "failed"
+  }
+ },
+ {
+  "id": "K72",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked",
+   "prefix": "failed"
+  }
+ },
+ {
+  "id": "K73",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked",
+   "prefix": "failed"
+  }
+ },
+ {
+  "id": "K74",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "prefix": "not_checked"
+  }
+ },
+ {
+  "id": "K75",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "prefix": "not_checked"
+  }
+ },
+ {
+  "id": "K76",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "prefix": "not_checked"
+  }
+ },
+ {
+  "id": "K77",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "verified",
+   "key_state": "failed",
+   "comparison": "not_checked",
+   "prefix": "not_checked"
+  }
+ },
+ {
+  "id": "K78",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked",
+   "prefix": "not_checked"
+  }
+ },
+ {
+  "id": "K79",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked",
+   "prefix": "verified"
+  }
+ },
+ {
+  "id": "K80",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked",
+   "prefix": "verified"
+  }
+ },
+ {
+  "id": "K81",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked",
+   "prefix": "verified"
+  }
+ },
+ {
+  "id": "K82",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked",
+   "prefix": "verified"
+  }
+ },
+ {
+  "id": "K83",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "failed"
+  }
+ },
+ {
+  "id": "K84",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "prefix": "not_checked"
+  }
+ },
+ {
+  "id": "K85",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "verified",
+   "receipt": "verified"
+  }
+ },
+ {
+  "id": "K86",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "verified",
+   "receipt": "verified"
+  }
+ },
+ {
+  "id": "K87",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "failed",
+   "receipt": "verified"
+  }
+ },
+ {
+  "id": "K88",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked",
+   "receipt": "failed"
+  }
+ },
+ {
+  "id": "K89",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked",
+   "receipt": "failed"
+  }
+ },
+ {
+  "id": "K90",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "verified",
+   "receipt": "verified"
+  }
+ },
+ {
+  "id": "K91",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked",
+   "receipt": "failed"
+  }
+ },
+ {
+  "id": "K92",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked",
+   "receipt": "failed"
+  }
+ },
+ {
+  "id": "K93",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked",
+   "receipt": "failed"
+  }
+ },
+ {
+  "id": "K94",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked",
+   "receipt": "failed"
+  }
+ },
+ {
+  "id": "K95",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "not_supported",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked",
+   "receipt": "not_supported"
+  }
+ },
+ {
+  "id": "K96",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "verified",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "verified",
+   "receipt": "verified"
+  }
+ },
+ {
+  "id": "K97",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "unavailable",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked",
+   "receipt": "unavailable"
+  }
+ },
+ {
+  "id": "K98",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "unavailable",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked",
+   "receipt": "unavailable"
+  }
+ },
+ {
+  "id": "K99",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "unavailable",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked",
+   "receipt": "unavailable"
+  }
+ },
+ {
+  "id": "K100",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked",
+   "receipt": "failed"
+  }
+ },
+ {
+  "id": "K101",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "receipt": "unavailable"
+  }
+ },
+ {
+  "id": "K102",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked",
+   "receipt": "verified"
+  }
+ },
+ {
+  "id": "K103",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "receipt": "unavailable"
+  }
+ },
+ {
+  "id": "K104",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "receipt": "unavailable"
+  }
+ },
+ {
+  "id": "K105",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "receipt": "unavailable"
+  }
+ },
+ {
+  "id": "K106",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "unavailable",
+   "independence": "verified",
+   "signature": "not_supported",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "receipt": "unavailable"
+  }
+ },
+ {
+  "id": "K107",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "receipt": "unavailable"
+  }
+ },
+ {
+  "id": "K108",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "receipt": "unavailable"
+  }
+ },
+ {
+  "id": "K109",
+  "agree": false,
+  "detail": [
+   "independence failed, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "receipt": "not_checked"
+  }
+ },
+ {
+  "id": "K110",
+  "agree": false,
+  "detail": [
+   "independence failed, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "receipt": "not_checked"
+  }
+ },
+ {
+  "id": "K111",
+  "agree": false,
+  "detail": [
+   "independence failed, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "receipt": "not_checked"
+  }
+ },
+ {
+  "id": "K112",
+  "agree": false,
+  "detail": [
+   "independence failed, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "receipt": "not_checked"
+  }
+ },
+ {
+  "id": "K113",
+  "agree": false,
+  "detail": [
+   "independence failed, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "receipt": "not_checked"
+  }
+ },
+ {
+  "id": "K114",
+  "agree": false,
+  "detail": [
+   "independence failed, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "receipt": "not_checked"
+  }
+ },
+ {
+  "id": "K115",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "receipt": "unavailable"
+  }
+ },
+ {
+  "id": "K116",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "not_supported",
+   "independence": "verified",
+   "signature": "not_supported",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "receipt": "not_checked"
+  }
+ },
+ {
+  "id": "K117",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "receipt": "not_checked"
+  }
+ },
+ {
+  "id": "K118",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked",
+   "prefix": "verified",
+   "receipt": "verified"
+  }
+ },
+ {
+  "id": "K119",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked",
+   "prefix": "failed",
+   "receipt": "verified"
+  }
+ },
+ {
+  "id": "K120",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked",
+   "prefix": "verified",
+   "receipt": "verified"
+  }
+ },
+ {
+  "id": "K121",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked",
+   "prefix": "verified",
+   "receipt": "unavailable"
+  }
+ },
+ {
+  "id": "K122",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K123",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K124",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked",
+   "receipt": "failed"
+  }
+ },
+ {
+  "id": "K125",
+  "agree": false,
+  "detail": [
+   "independence failed, expected verified"
+  ],
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "receipt": "not_checked"
+  }
+ },
+ {
+  "id": "K126",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "prefix": "not_checked",
+   "receipt": "not_checked"
+  }
+ },
+ {
+  "id": "K127",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "receipt": "unavailable"
+  }
+ },
+ {
+  "id": "K128",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "receipt": "unavailable"
+  }
+ },
+ {
+  "id": "K129",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "receipt": "unavailable"
+  }
+ },
+ {
+  "id": "K130",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "receipt": "unavailable"
+  }
+ },
+ {
+  "id": "K131",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked",
+   "receipt": "failed"
+  }
+ },
+ {
+  "id": "K132",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "receipt": "unavailable"
+  }
+ },
+ {
+  "id": "K133",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "receipt": "unavailable"
+  }
+ },
+ {
+  "id": "K134",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K135",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "receipt": "unavailable"
+  }
+ },
+ {
+  "id": "K136",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "verified",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "receipt": "unavailable"
+  }
+ },
+ {
+  "id": "K137",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "prefix": "not_checked",
+   "receipt": "unavailable"
+  }
+ },
+ {
+  "id": "K138",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "unavailable",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "unavailable",
+   "comparison": "not_checked"
+  }
+ },
+ {
+  "id": "K139",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "failed",
+   "independence": "failed",
+   "signature": "failed",
+   "key_state": "not_checked",
+   "comparison": "not_checked",
+   "prefix": "not_checked"
+  }
+ },
+ {
+  "id": "K140",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "not_supported",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked",
+   "receipt": "not_supported"
+  }
+ },
+ {
+  "id": "K141",
+  "agree": true,
+  "detail": null,
+  "got": {
+   "status": "unavailable",
+   "independence": "verified",
+   "signature": "verified",
+   "key_state": "verified",
+   "comparison": "not_checked",
+   "receipt": "unavailable"
+  }
+ }
+]
