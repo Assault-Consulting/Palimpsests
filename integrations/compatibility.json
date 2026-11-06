@@ -1,0 +1,39 @@
+{
+  "_comment": "Facts that dated sources state but a surface report cannot carry. Every entry names its source; scripts/build_compatibility.py renders integrations/COMPATIBILITY.md from this file and results/surfaces-*.md. Do not write a row here that no report or run record states.",
+  "reports": {
+    "surfaces-2026-11-02.md": {
+      "machine": "Windows 11 Pro 10.0.26200, Python 3.12.10",
+      "machine_source": "results/surfaces-2026-11-02-notes.md",
+      "notes": {
+        "opencode": "checker defect, not the surface: on Windows the probe's temporary home was ignored (USERPROFILE), and the verdict demanded that every record carry source 1, which this probe cannot meet. Fixed in #332. Source: results/surfaces-2026-11-02-notes.md",
+        "claude-code": "checker defect, not the surface: on Windows the probe ran against the user's real settings, not its own. Fixed in #332, where this probe is SKIP on Windows. Source: results/surfaces-2026-11-02-notes.md"
+      }
+    }
+  },
+  "runs": [
+    {"integration": "claude-code", "client": "Claude Code 2.1.310", "machine": "Windows 11 Pro 10.0.26200", "date": "2026-10-26", "palimpsests": "0.13.0",
+     "result": "11 reported pairs, ok and error; 4 of 26 hook posts refused for an empty bearer, cause not established",
+     "record": "docs/specs/pala-1/independent-runs/traffic-0.14-r1-claude-code/RUN-RECORD.md"},
+    {"integration": "codex", "client": "codex-cli 0.164.0", "machine": "Windows 11 Pro 10.0.26200", "date": "2026-10-26", "palimpsests": "0.13.0",
+     "result": "13 reported pairs, all unobserved; none before the hooks were trusted",
+     "record": "docs/specs/pala-1/independent-runs/traffic-0.14-r2-codex/RUN-RECORD.md"},
+    {"integration": "otel", "client": "pydantic-ai-slim 2.61.0, OTLP/HTTP exporter 1.45.1", "machine": "Windows 11 Pro 10.0.26200", "date": "2026-10-26", "palimpsests": "0.13.0",
+     "result": "3 pairs per run, ok and error, on a local model",
+     "record": "docs/specs/pala-1/independent-runs/traffic-0.14-r3-opentelemetry/RUN-RECORD.md"},
+    {"integration": "litellm", "client": "litellm 1.106.4 (with mcp 2.3.0)", "machine": "Windows 11 Pro 10.0.26200", "date": "2026-10-26", "palimpsests": "0.13.0",
+     "result": "10 reported pairs, all unobserved, on a local model",
+     "record": "docs/specs/pala-1/independent-runs/traffic-0.14-r4-litellm/RUN-RECORD.md"},
+    {"integration": "mcp", "client": "Claude Code 2.1.310 through the stdio proxy", "machine": "Windows 11 Pro 10.0.26200", "date": "2026-10-26", "palimpsests": "0.13.0",
+     "result": "11 reported pairs with the real tool names; the server's isError recorded as error",
+     "record": "docs/specs/pala-1/independent-runs/traffic-0.14-r5-mcp/RUN-RECORD.md"},
+    {"integration": "opencode", "client": "OpenCode 1.18.31", "machine": "Windows 11 Pro 10.0.26200", "date": "2026-11-02", "palimpsests": "0.13.1",
+     "result": "6 and 6 pairs in two ten-prompt sessions, none left without a result, 3 ok in the second; without the serve key, 401 and nothing recorded",
+     "record": "docs/specs/pala-1/independent-runs/traffic-0.14-opencode-3/RUN-RECORD.md"},
+    {"integration": "opencode", "client": "OpenCode 1.18.31", "machine": "Windows 11 Pro 10.0.26200", "date": "recorded 2026-09-22", "palimpsests": "0.11.0 (unreleased main)",
+     "result": "1 reported pair, a failed read, through the message.part.updated fallback",
+     "record": "docs/specs/pala-1/independent-runs/opencode-traffic-2/RUN-RECORD.md"},
+    {"integration": "opencode", "client": "OpenCode 1.18.25 to 1.18.31", "machine": "Windows 11 Pro 10.0.26200", "date": "recorded 2026-09-17", "palimpsests": "0.11.0 (unreleased main)",
+     "result": "no reported pair reached the chain",
+     "record": "docs/specs/pala-1/independent-runs/opencode-traffic-1/RUN-RECORD.md"}
+  ]
+}

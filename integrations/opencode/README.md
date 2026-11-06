@@ -40,38 +40,44 @@ both without caring about source.
 
 ## Status on OpenCode 1.18.x — read this before installing
 
-Two maintainer traffic runs, recorded in
-`docs/specs/pala-1/independent-runs/`:
+Three maintainer traffic runs, recorded in
+`docs/specs/pala-1/independent-runs/`; every run and every surface check
+is also listed in [`../COMPATIBILITY.md`](../COMPATIBILITY.md):
 
-| | run 1 (`opencode-traffic-1`) | run 2 (`opencode-traffic-2`) |
-|---|---|---|
-| versions | 1.18.25 → 1.18.31 | 1.18.31 |
-| reported pairs on the chain | 0 | **1** — `read`, outcome `error`, bound by seq and hash |
-| `tool.execute.before` | no report arrived | **fired** (probe) |
-| `tool.execute.after` | — | **did not fire** |
-| path the result took | — | the `message.part.updated` fallback |
+| | run 1 (`opencode-traffic-1`) | run 2 (`opencode-traffic-2`) | run 3 (`traffic-0.14-opencode-3`) |
+|---|---|---|---|
+| versions | 1.18.25 → 1.18.31 | 1.18.31 | 1.18.31, `palimpsests` 0.13.1 |
+| reported pairs on the chain | 0 | **1** — `read`, outcome `error`, bound by seq and hash | **6 and 6** in two ten-prompt sessions, none left without a result; **3 `ok`** in the second |
+| `tool.execute.before` | no report arrived | **fired** (probe) | — |
+| `tool.execute.after` | — | **did not fire** | — |
+| path the result took | — | the `message.part.updated` fallback | — |
 
 So on 1.18.31 **the plugin works, but not through its primary path**:
 the call arrives from `tool.execute.before`, the result through the
 fallback, and the pair lands correctly bound. Keep the fallback — it is
-the only reason the result arrived.
+the only reason the result arrived. Run 3 shows the same path delivering
+**successful** results as well as failed ones, with the real tool names
+(`read`, `task`, `write`, `webfetch`).
 
 Three limits, stated rather than generalised:
 
-- **One pair, and it was an error.** The fallback is proven here for a
-  failed call only — the case upstream #27900 describes. Whether it also
-  delivers *successful* results when `after` stays silent has not been
-  observed yet.
-- **Run 1 is not yet explained.** There the model did execute tools and
-  the plugin sent nothing at all, on a version where `before` has since
-  been seen to fire. The most likely difference is that the plugin's
-  environment variables did not reach the OpenCode process; that is a
-  hypothesis, not a finding.
-- **Few tool calls happen at all** on a machine where OpenCode injects
-  an external skills catalogue into its system prompt: in run 2 the
-  prompt grew from ~9.6k to ~16.6k characters and small local models
-  declined to use OpenCode's own tools. That is upstream behaviour, not
-  this plugin — but it is why a session may produce no pairs.
+- **Without `PALIMPSESTS_SERVE_API_KEY` in the window OpenCode starts
+  from, nothing is recorded, and nothing says so.** The plugin's posts are
+  refused `401`, it logs the failure and lets the tool run, so the turn
+  looks normal from the client's side. Measured in run 3; it is
+  sufficient to produce run 1's zero, but whether it is what happened in
+  run 1 cannot be established from run 1's record.
+- **Small local models rarely call a tool.** In run 3 most prompts were
+  answered with tool-call JSON as plain text, so no tool ran at all. That
+  is a model floor, not a recording loss: in both ten-prompt sessions the
+  chain carried one more tool than the client's own transcript showed (a
+  sub-agent call inside `task`).
+- **An external skills catalogue makes it worse.** OpenCode 1.18.31 loads
+  skills from the user's home directory into its system prompt; in run 2
+  the prompt grew from ~9.6k to ~16.6k characters and small models
+  declined OpenCode's own tools. Run 3's second session, with the
+  catalogue moved aside, produced 6 pairs, 3 of them `ok`. Upstream
+  behaviour, not this plugin.
 
 What works regardless of the client is the serve's own boundary record:
 a `TOOLS_OFFERED_NO_CALL` event for every turn where tools were offered
