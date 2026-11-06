@@ -523,6 +523,8 @@ def render(results: list[Result], when: str) -> str:
         "",
         f"# Surface check — {when}",
         "",
+        f"Machine: {_machine()}",
+        "",
         "Produced by `scripts/check_surfaces.py`. SKIP is not a pass: it "
         "means the client was not available on the machine that ran the check. "
         "ERROR means the checker itself failed and the surface is unchecked.",
@@ -534,6 +536,22 @@ def render(results: list[Result], when: str) -> str:
         lines.append(f"| {r.name} | {mark[r.state]} {r.state} | {r.version} | {r.detail} |")
     lines.append("")
     return "\n".join(lines)
+
+
+def _machine() -> str:
+    """The machine a report describes — integrations/COMPATIBILITY.md reads it."""
+    import platform
+
+    try:
+        import importlib.metadata as md
+
+        ours = md.version("palimpsests")
+    except Exception:
+        ours = "?"
+    system = f"{platform.system()} {platform.release()}"
+    if platform.system() == "Windows":
+        system += f" {platform.version()}"
+    return f"{system}, Python {platform.python_version()}, palimpsests {ours}"
 
 
 def main(argv: list[str]) -> int:
