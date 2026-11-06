@@ -190,6 +190,12 @@ editing an adapter because of a SKIP — stop: the problem is the machine.
   run that client's probe out of cycle.
 - Before **a release**, a run is mandatory and the report is cited in
   the release notes.
+- **Then rebuild the compatibility table** in the same branch:
+  `python scripts/build_compatibility.py`, and commit
+  `integrations/COMPATIBILITY.md` with the report. A test fails if the two
+  disagree. A checker defect found in a run goes, with its source, into
+  `integrations/compatibility.json` as a note beside the row it affected;
+  the report itself stays as the checker wrote it.
 
 ```bash
 git checkout -b results/surfaces-$(date +%F)
