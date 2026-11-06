@@ -27,7 +27,7 @@
      "result": "11 reported pairs with the real tool names; the server's isError recorded as error",
      "record": "docs/specs/pala-1/independent-runs/traffic-0.14-r5-mcp/RUN-RECORD.md"},
     {"integration": "opencode", "client": "OpenCode 1.18.31", "machine": "Windows 11 Pro 10.0.26200", "date": "2026-11-02", "palimpsests": "0.13.1",
-     "result": "6 and 6 pairs in two ten-prompt sessions, none left without a result, 3 ok; without the serve key, 401 and nothing recorded",
+     "result": "6 and 6 pairs in two ten-prompt sessions, none left without a result, 3 ok in the second; without the serve key, 401 and nothing recorded",
      "record": "docs/specs/pala-1/independent-runs/traffic-0.14-opencode-3/RUN-RECORD.md"},
     {"integration": "opencode", "client": "OpenCode 1.18.31", "machine": "Windows 11 Pro 10.0.26200", "date": "recorded 2026-09-22", "palimpsests": "0.11.0 (unreleased main)",
      "result": "1 reported pair, a failed read, through the message.part.updated fallback",
