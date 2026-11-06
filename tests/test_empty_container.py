@@ -47,3 +47,23 @@ def test_the_report_carries_it_and_still_validates_as_v1(tmp_path):
     schema_path = (Path(__file__).resolve().parent.parent / "docs" / "specs" / "report"
                    / "pala-verification-report-1.schema.json")
     jsonschema.validate(data, json.loads(schema_path.read_text(encoding="utf-8")))
+
+
+def test_an_anchored_empty_file_is_a_missing_log_not_a_vacuous_pass(tmp_path):
+    """An anchor proves a log existed. An empty file in its place is that log
+    gone: the verdict is a violation, and the diagnosis must not say the
+    check passed because there was nothing to check."""
+    from palimpsests.audit.anchors import ManualAnchor
+    from palimpsests.audit.report import build_report
+
+    p = tmp_path / "audit.pala"
+    p.write_bytes(b"")
+    with AuditReader.open(p, anchor=ManualAnchor("11" * 32)) as r:
+        ver = r.verify()
+        assert ver.complete_to_anchor is False
+        assert ver.diagnosis.pattern == "replaced_or_rolled_back"
+        assert "deleted or replaced" in ver.diagnosis.narrative
+        assert "nothing to check" not in ver.diagnosis.narrative
+        report = build_report(str(p), reader=r).data
+    assert report["verdict"] == "violation"
+    assert report["diagnosis"]["pattern"] == "replaced_or_rolled_back"
