@@ -1303,6 +1303,19 @@ class AuditReader:
         return items
 
     def _derive_diagnosis(self, chain: VerifyResult) -> Diagnosis | None:
+        if not self._truncated and not len(self._headers) and chain.complete_to_anchor is False:
+            # Empty, and an anchor says a log existed: the check is not vacuous
+            # here — the anchored head is nowhere, which is a contradiction.
+            # Same pattern as any chain the anchor names no record of; the
+            # sentence says what is specific to an empty file.
+            return Diagnosis(
+                "replaced_or_rolled_back",
+                None,
+                "the anchored head present somewhere in the chain",
+                "The container holds no records, but the anchor names a head: a "
+                "log was written and is not here. The evidence is consistent with "
+                "the log having been deleted or replaced.",
+            )
         if not self._truncated and not len(self._headers):
             # Zero bytes, zero records (U26). §7.1 holds vacuously — there is
             # nothing to contradict — so the chain check passes; but there is
