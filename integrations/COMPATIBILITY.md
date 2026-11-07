@@ -20,6 +20,11 @@ still deliver a call and its result with the expected mark.
 
 | Integration | Client version | Machine | Date | State | Checker's detail | Report |
 |---|---|---|---|---|---|---|
+| litellm | 1.106.6 | Windows 11 10.0.26200, Python 3.12.10, palimpsests 0.13.1 | 2026-11-07 | 🟢 GREEN | 1 call(s), 1 result(s), sources [1] | [surfaces-2026-11-07.md](../results/surfaces-2026-11-07.md) |
+| mcp | stdio / JSON-RPC 2.0 | Windows 11 10.0.26200, Python 3.12.10, palimpsests 0.13.1 | 2026-11-07 | 🟢 GREEN | 1 call(s), 1 result(s), sources [1] | [surfaces-2026-11-07.md](../results/surfaces-2026-11-07.md) |
+| opencode | 1.18.31 | Windows 11 10.0.26200, Python 3.12.10, palimpsests 0.13.1 | 2026-11-07 | 🟢 GREEN | 1 call(s), 1 result(s), sources [0, 1]; not judged: 1 record(s) with source 0 | [surfaces-2026-11-07.md](../results/surfaces-2026-11-07.md) |
+| claude-code | 2.1.310 (Claude Code) | Windows 11 10.0.26200, Python 3.12.10, palimpsests 0.13.1 | 2026-11-07 | ⚪ SKIP | not isolable on Windows yet — the client cannot be pointed at a temporary home without failing to start a turn; not evidence about the surface (see run R1 for a manual check) | [surfaces-2026-11-07.md](../results/surfaces-2026-11-07.md) |
+| otel | pydantic-ai 2.64.0, otlp-http 1.45.2 | Windows 11 10.0.26200, Python 3.12.10, palimpsests 0.13.1 | 2026-11-07 | 🟢 GREEN | 1 call(s), 1 result(s), sources [1] | [surfaces-2026-11-07.md](../results/surfaces-2026-11-07.md) |
 | litellm | 1.106.6 | Windows 11 Pro 10.0.26200, Python 3.12.10 | 2026-11-02 | 🟢 GREEN | 1 call(s), 1 result(s), sources [1] | [surfaces-2026-11-02.md](../results/surfaces-2026-11-02.md) |
 | mcp | stdio / JSON-RPC 2.0 | Windows 11 Pro 10.0.26200, Python 3.12.10 | 2026-11-02 | 🟢 GREEN | 1 call(s), 1 result(s), sources [1] | [surfaces-2026-11-02.md](../results/surfaces-2026-11-02.md) |
 | opencode | 1.18.31 | Windows 11 Pro 10.0.26200, Python 3.12.10 | 2026-11-02 | ⚪ SKIP [1] | the client never reached the serve (0 completions) — an environment problem on this machine, not evidence about the surface | [surfaces-2026-11-02.md](../results/surfaces-2026-11-02.md) |
