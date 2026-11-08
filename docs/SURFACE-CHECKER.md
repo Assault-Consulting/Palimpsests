@@ -185,7 +185,11 @@ editing an adapter because of a SKIP — stop: the problem is the machine.
 - **Every week or two**, on the same day as
   `scripts/distribution_metrics.py` — both reports go to `results/`.
 - **Always commit the report, green ones too.** A dated green is
-  evidence the surface was checked rather than assumed.
+  evidence the surface was checked rather than assumed. A report is never
+  overwritten: a second run on the same day, by probe or by machine, is
+  written as `surfaces-DATE-2.md`, `-3`, and so on. The report's
+  `Machine:` line names the commit that was run, so an unreleased `main`
+  is not mistaken for the version its metadata still carries.
 - After **every client update you notice** (OpenCode updates itself),
   run that client's probe out of cycle.
 - Before **a release**, a run is mandatory and the report is cited in
