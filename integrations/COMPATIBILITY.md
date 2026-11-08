@@ -20,6 +20,7 @@ still deliver a call and its result with the expected mark.
 
 | Integration | Client version | Machine | Date | State | Checker's detail | Report |
 |---|---|---|---|---|---|---|
+| claude-code | 2.1.319 (Claude Code) | Linux 6.18.44-fc-v310, Python 3.12.3, palimpsests 0.13.1 (git 79d07c1) | 2026-11-08 | 🟢 GREEN [1] | 1 call(s), 1 result(s), sources [1] | [surfaces-2026-11-08.md](../results/surfaces-2026-11-08.md) |
 | litellm | 1.106.6 | Windows 11 10.0.26200, Python 3.12.10, palimpsests 0.13.1 | 2026-11-07 | 🟢 GREEN | 1 call(s), 1 result(s), sources [1] | [surfaces-2026-11-07.md](../results/surfaces-2026-11-07.md) |
 | mcp | stdio / JSON-RPC 2.0 | Windows 11 10.0.26200, Python 3.12.10, palimpsests 0.13.1 | 2026-11-07 | 🟢 GREEN | 1 call(s), 1 result(s), sources [1] | [surfaces-2026-11-07.md](../results/surfaces-2026-11-07.md) |
 | opencode | 1.18.31 | Windows 11 10.0.26200, Python 3.12.10, palimpsests 0.13.1 | 2026-11-07 | 🟢 GREEN | 1 call(s), 1 result(s), sources [0, 1]; not judged: 1 record(s) with source 0 | [surfaces-2026-11-07.md](../results/surfaces-2026-11-07.md) |
@@ -27,14 +28,15 @@ still deliver a call and its result with the expected mark.
 | otel | pydantic-ai 2.64.0, otlp-http 1.45.2 | Windows 11 10.0.26200, Python 3.12.10, palimpsests 0.13.1 | 2026-11-07 | 🟢 GREEN | 1 call(s), 1 result(s), sources [1] | [surfaces-2026-11-07.md](../results/surfaces-2026-11-07.md) |
 | litellm | 1.106.6 | Windows 11 Pro 10.0.26200, Python 3.12.10 | 2026-11-02 | 🟢 GREEN | 1 call(s), 1 result(s), sources [1] | [surfaces-2026-11-02.md](../results/surfaces-2026-11-02.md) |
 | mcp | stdio / JSON-RPC 2.0 | Windows 11 Pro 10.0.26200, Python 3.12.10 | 2026-11-02 | 🟢 GREEN | 1 call(s), 1 result(s), sources [1] | [surfaces-2026-11-02.md](../results/surfaces-2026-11-02.md) |
-| opencode | 1.18.31 | Windows 11 Pro 10.0.26200, Python 3.12.10 | 2026-11-02 | ⚪ SKIP [1] | the client never reached the serve (0 completions) — an environment problem on this machine, not evidence about the surface | [surfaces-2026-11-02.md](../results/surfaces-2026-11-02.md) |
-| claude-code | 2.1.310 (Claude Code) | Windows 11 Pro 10.0.26200, Python 3.12.10 | 2026-11-02 | 🔴 RED [2] | 0 call(s), 0 result(s), sources [] | [surfaces-2026-11-02.md](../results/surfaces-2026-11-02.md) |
+| opencode | 1.18.31 | Windows 11 Pro 10.0.26200, Python 3.12.10 | 2026-11-02 | ⚪ SKIP [2] | the client never reached the serve (0 completions) — an environment problem on this machine, not evidence about the surface | [surfaces-2026-11-02.md](../results/surfaces-2026-11-02.md) |
+| claude-code | 2.1.310 (Claude Code) | Windows 11 Pro 10.0.26200, Python 3.12.10 | 2026-11-02 | 🔴 RED [3] | 0 call(s), 0 result(s), sources [] | [surfaces-2026-11-02.md](../results/surfaces-2026-11-02.md) |
 | otel | pydantic-ai 2.64.0, otlp-http 1.45.2 | Windows 11 Pro 10.0.26200, Python 3.12.10 | 2026-11-02 | 🟢 GREEN | 1 call(s), 1 result(s), sources [1] | [surfaces-2026-11-02.md](../results/surfaces-2026-11-02.md) |
 
 Notes on rows above, from the run's own notes file:
 
-1. checker defect, not the surface: on Windows the probe's temporary home was ignored (USERPROFILE), and the verdict demanded that every record carry source 1, which this probe cannot meet. Fixed in #332. Source: results/surfaces-2026-11-02-notes.md
-2. checker defect, not the surface: on Windows the probe ran against the user's real settings, not its own. Fixed in #332, where this probe is SKIP on Windows. Source: results/surfaces-2026-11-02-notes.md
+1. run by the AI assistant in its own Linux sandbox VM, not on a machine of the team; one probe only. Source: results/surfaces-2026-11-08-notes.md
+2. checker defect, not the surface: on Windows the probe's temporary home was ignored (USERPROFILE), and the verdict demanded that every record carry source 1, which this probe cannot meet. Fixed in #332. Source: results/surfaces-2026-11-02-notes.md
+3. checker defect, not the surface: on Windows the probe ran against the user's real settings, not its own. Fixed in #332, where this probe is SKIP on Windows. Source: results/surfaces-2026-11-02-notes.md
 
 ## Real traffic
 
