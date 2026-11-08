@@ -217,3 +217,27 @@ def test_claude_code_on_windows_is_skip_and_touches_nothing(cs, monkeypatch, tmp
     r = cs.probe_claude_code(tmp_path)
     assert r.state == "SKIP" and "not isolable on Windows" in r.detail
     assert not any(tmp_path.iterdir())  # nothing written, nothing started
+
+
+# ── 2026-11-07: a report is never overwritten; the machine names its commit ──
+
+
+def test_a_second_run_the_same_day_does_not_overwrite(cs, monkeypatch, tmp_path):
+    monkeypatch.setattr(cs, "_preflight", lambda: None)
+    _probes(cs, monkeypatch, a=lambda w: cs.Result("a", "GREEN", detail="first"))
+    assert cs.main(["x", "--report", str(tmp_path)]) == 0
+    _probes(cs, monkeypatch, a=lambda w: cs.Result("a", "GREEN", detail="second"))
+    assert cs.main(["x", "--report", str(tmp_path)]) == 0
+    _probes(cs, monkeypatch, a=lambda w: cs.Result("a", "GREEN", detail="third"))
+    assert cs.main(["x", "--report", str(tmp_path)]) == 0
+    files = sorted(p.name for p in tmp_path.glob("surfaces-*.md"))
+    assert len(files) == 3
+    first = [f for f in files if f.count("-") == 3][0]  # surfaces-YYYY-MM-DD.md
+    assert "first" in (tmp_path / first).read_text(encoding="utf-8")
+    assert any(f.endswith("-2.md") for f in files) and any(f.endswith("-3.md") for f in files)
+
+
+def test_the_machine_line_names_the_commit_in_a_checkout(cs):
+    if not (REPO / ".git").exists():
+        pytest.skip("not a git checkout")
+    assert "(git " in cs._machine()
