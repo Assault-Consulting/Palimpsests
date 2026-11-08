@@ -1,6 +1,11 @@
 {
   "_comment": "Facts that dated sources state but a surface report cannot carry. Every entry names its source; scripts/build_compatibility.py renders integrations/COMPATIBILITY.md from this file and results/surfaces-*.md. Do not write a row here that no report or run record states.",
   "reports": {
+    "surfaces-2026-11-08.md": {
+      "notes": {
+        "claude-code": "run by the AI assistant in its own Linux sandbox VM, not on a machine of the team; one probe only. Source: results/surfaces-2026-11-08-notes.md"
+      }
+    },
     "surfaces-2026-11-02.md": {
       "machine": "Windows 11 Pro 10.0.26200, Python 3.12.10",
       "machine_source": "results/surfaces-2026-11-02-notes.md",
