@@ -82,3 +82,19 @@ def test_the_checker_writes_the_machine_line():
     text = cs.render([cs.Result("mcp", "GREEN", "x", "y")], "2026-12-01")
     line = next(ln for ln in text.splitlines() if ln.startswith("Machine: "))
     assert "Python" in line and "palimpsests" in line
+
+
+def test_a_second_report_the_same_day_is_read_and_comes_first(tmp_path):
+    b = _builder()
+    (tmp_path / "results").mkdir()
+    (tmp_path / "integrations").mkdir()
+    (tmp_path / "integrations" / "compatibility.json").write_text('{"reports": {}, "runs": []}')
+    head = "| Surface | State | Version | Detail |\n|---|---|---|---|\n"
+    for name, machine, surface in (("surfaces-2026-12-01.md", "Windows 11", "opencode"),
+                                   ("surfaces-2026-12-01-2.md", "Linux 6.8", "claude-code")):
+        (tmp_path / "results" / name).write_text(
+            f"Machine: {machine}\n\n{head}| {surface} | 🟢 GREEN | v | d |\n", encoding="utf-8")
+    names = [r[0] for r in b.reports(tmp_path / "results")]
+    assert names == ["surfaces-2026-12-01-2.md", "surfaces-2026-12-01.md"]
+    out = b.render(tmp_path)
+    assert "| claude-code | v | Linux 6.8 | 2026-12-01 |" in out

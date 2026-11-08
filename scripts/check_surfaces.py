@@ -551,7 +551,29 @@ def _machine() -> str:
     system = f"{platform.system()} {platform.release()}"
     if platform.system() == "Windows":
         system += f" {platform.version()}"
+    # An editable install of unreleased main reports the last released
+    # version; the commit says what was actually run (2026-11-07 report).
+    try:
+        sha = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--short", "HEAD"],
+                             capture_output=True, text=True, timeout=10).stdout.strip()
+    except (OSError, subprocess.TimeoutExpired):
+        sha = ""
+    if sha:
+        ours += f" (git {sha})"
     return f"{system}, Python {platform.python_version()}, palimpsests {ours}"
+
+
+def _report_path(directory: Path, when: str) -> Path:
+    """``surfaces-DATE.md``, or ``surfaces-DATE-N.md`` if that is taken.
+
+    A report is a dated fact and is never overwritten: a second run the same
+    day — another probe, another machine — gets the next free suffix."""
+    path = directory / f"surfaces-{when}.md"
+    n = 2
+    while path.exists():
+        path = directory / f"surfaces-{when}-{n}.md"
+        n += 1
+    return path
 
 
 def main(argv: list[str]) -> int:
@@ -576,7 +598,7 @@ def main(argv: list[str]) -> int:
     text = render(results, when)
     if args.report:  # first: a console that cannot print must not cost the report
         args.report.mkdir(parents=True, exist_ok=True)
-        (args.report / f"surfaces-{when}.md").write_text(text, encoding="utf-8")
+        _report_path(args.report, when).write_text(text, encoding="utf-8")
     _print(text)
     return 1 if any(r.state in ("RED", "ERROR") for r in results) else 0
 

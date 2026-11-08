@@ -25,7 +25,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "integrations" / "COMPATIBILITY.md"
 DATA = ROOT / "integrations" / "compatibility.json"
-REPORT = re.compile(r"^surfaces-(\d{4}-\d{2}-\d{2})\.md$")
+REPORT = re.compile(r"^surfaces-(\d{4}-\d{2}-\d{2})(?:-(\d+))?\.md$")
 ROW = re.compile(r"^\| ([a-z0-9-]+) \| \S+ (GREEN|RED|SKIP|ERROR) \| (.*?) \| (.*) \|$")
 MACHINE = re.compile(r"^Machine: (.+)$")
 MARK = {"GREEN": "🟢", "RED": "🔴", "SKIP": "⚪", "ERROR": "🟠"}
@@ -50,8 +50,10 @@ def reports(results: Path) -> list[tuple[str, str, str | None, list[tuple[str, .
             r = ROW.match(line)
             if r:
                 rows.append(r.groups())
-        out.append((path.name, m.group(1), machine, rows))
-    return sorted(out, key=lambda r: (r[1], r[0]), reverse=True)
+        out.append((path.name, m.group(1), machine, rows, int(m.group(2) or 1)))
+    # newest first: by date, then by the day's run number (surfaces-DATE-2 after DATE)
+    out.sort(key=lambda r: (r[1], r[4]), reverse=True)
+    return [r[:4] for r in out]
 
 
 def render(root: Path = ROOT) -> str:
