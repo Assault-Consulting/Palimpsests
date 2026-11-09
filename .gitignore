@@ -7,6 +7,10 @@ build/
 dist/
 .venv/
 venv/
+# any other venv name: hatchling builds the sdist from these rules, so an
+# unignored .venv-something/ ends up inside it (81 MB, seen 2026-11-09)
+.venv*/
+venv*/
 
 # Test / tooling
 .pytest_cache/
