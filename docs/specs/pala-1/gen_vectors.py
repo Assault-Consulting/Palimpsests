@@ -425,7 +425,7 @@ out = {
     },
 }
 
-with open("test-vectors.json", "w") as f:
+with open("test-vectors.json", "w", encoding="utf-8", newline="\n") as f:
     f.write(json.dumps(out, indent=2))
     f.write("\n")
 
