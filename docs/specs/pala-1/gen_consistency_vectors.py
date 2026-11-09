@@ -120,5 +120,5 @@ out = {
         "swapped_sizes": {**proofs[3], "first": proofs[3]["second"], "second": proofs[3]["first"]},
     },
 }
-OUT.write_text(json.dumps(out, indent=2) + "\n")
+OUT.write_text(json.dumps(out, indent=2) + "\n", encoding="utf-8", newline="\n")
 print(f"wrote {OUT.name}: {n} records, {len(proofs)} proofs, head {hashes[-1].hex()[:16]}…")
