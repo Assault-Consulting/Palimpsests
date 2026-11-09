@@ -16,11 +16,19 @@ and never re-derived; everything except the checked-at line is
 deterministic for the same report data, and the checked-at timestamp
 sits alone on its own output line so two renderings of the same file
 diff to one line — exactly like the JSON.
+
+Public since 0.14 (channel 2, beside ``build_report``): ``render_html``
+takes the ``.data`` of a report built by the same version of this package.
+The page is a rendering, not a format — its markup is not parsed by
+anyone, carries no contract, and may change in any release; the report's
+JSON is the machine-readable form.
 """
 from __future__ import annotations
 
 from datetime import UTC, datetime
 from html import escape as _e
+
+__all__ = ["render_html"]
 
 _VERDICT_MEANING = {
     "sound": "everything checked, held",
