@@ -51,3 +51,38 @@ def test_every_text_write_names_its_newline(path):
         assert "newline" in kws, f"{path}:{call.lineno} writes text with the platform newline"
         assert isinstance(kws["newline"], ast.Constant) and kws["newline"].value == "\n", (
             f"{path}:{call.lineno}")
+
+
+# What a generator writes is only half: a checkout that converts line endings
+# (Windows runners default to autocrlf=true) turns the committed LF file into
+# CRLF, and the comparison fails the other way. Each generated, byte-compared
+# artifact must be exempt from conversion or pinned to LF.
+ARTIFACTS = [
+    "docs/specs/pala-1/test-vectors.json",
+    "docs/specs/pala-1/profiles/inference-vectors.json",
+    "docs/specs/pala-1/consistency-vectors.json",
+    "docs/interop/scitt-statement-vector.json",
+    "docs/interop/scitt-statement-vector-v3.json",
+    "site/index.html",
+    "site/notes/index.html",
+    "site/notes/feed.xml",
+    "site/sitemap.xml",
+    "site/llms.txt",
+    "integrations/COMPATIBILITY.md",
+]
+
+
+@pytest.mark.parametrize("path", ARTIFACTS)
+def test_no_checkout_converts_a_generated_artifact(path):
+    import shutil
+    import subprocess
+
+    if shutil.which("git") is None or not (REPO / ".git").exists():
+        pytest.skip("not a git checkout")
+    out = subprocess.run(["git", "-C", str(REPO), "check-attr", "text", "eol", "--", path],
+                         capture_output=True, text=True, check=True).stdout
+    attrs = {}
+    for line in out.splitlines():
+        _, name, value = line.split(": ")
+        attrs[name] = value
+    assert attrs.get("text") == "unset" or attrs.get("eol") == "lf", (path, attrs)
