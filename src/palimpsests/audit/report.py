@@ -278,7 +278,11 @@ def build_report(
             "note": (
                 "witness records present; receipts are not verified by this tool"
                 if witness_pins
-                else "tier A: none available"
+                # What was checked, not what a tier allows: external_pins are
+                # the WITNESS records in this chain, and the tier is never read
+                # here — a tier-A head can be registered and receipted.
+                else "no WITNESS record in this chain; receipts held outside the "
+                "chain (for example SCITT) are not consulted by this report"
             ),
         },
         "diagnosis": (

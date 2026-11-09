@@ -326,6 +326,7 @@ def test_kind_and_kind_name_tell_their_two_nones_apart(tmp_path):
 
 CHANNELS = {
     "palimpsests.audit.report": ["build_report", "derive_verdict"],
+    "palimpsests.audit.report_html": ["render_html"],
     "palimpsests.audit.pala.proofs": ["inclusion_proof", "range_proofs", "chain_root",
                                       "consistency_proof", "ConsistencyProof"],
     "palimpsests.audit.pala.bundle": ["assemble_bundle"],
