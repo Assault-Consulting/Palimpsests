@@ -11,3 +11,15 @@ docs/specs/pala-1/test-vectors.json -text
 docs/specs/pala-1/profiles/inference-vectors.json -text
 # POSIX shell must stay LF to execute at all.
 docs/specs/pala-1/verification-kit/fetch-inputs.sh -text
+# Generated alongside the core vectors and compared byte-for-byte by the
+# regeneration gates; the SCITT statement vectors' digests are pinned in the
+# bridge runs (B3 recorded a CRLF checkout's digest beside the real one).
+docs/specs/pala-1/consistency-vectors.json -text
+docs/interop/scitt-statement-vector.json -text
+docs/interop/scitt-statement-vector-v3.json -text
+# Generated files the tests compare byte-for-byte with a fresh build: LF in
+# every checkout, so a Windows runner's autocrlf cannot make them stale.
+site/**/*.html eol=lf
+site/**/*.xml eol=lf
+site/**/*.txt eol=lf
+integrations/COMPATIBILITY.md eol=lf
