@@ -18,12 +18,30 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 GENERATORS = [
+    "docs/interop/gen_scitt_statement_vector_v3.py",
     "docs/specs/pala-1/gen_vectors.py",
     "docs/specs/pala-1/profiles/gen_inference_vectors.py",
     "docs/specs/pala-1/gen_consistency_vectors.py",
     "scripts/build_notes.py",
     "scripts/build_compatibility.py",
 ]
+#: Directories of recorded runs: their scripts are records, not generators,
+#: and are never edited after the fact.
+_RECORDS = ("independent-runs", "dps-reading", "aac-verification")
+
+
+def test_every_generator_is_on_the_list():
+    """The first version of this list missed a generator in docs/interop, and
+    the Windows runner found it. Every gen_*.py / build_*.py outside recorded
+    runs must be listed, so the next one cannot be missed the same way."""
+    found = {
+        p.relative_to(REPO).as_posix()
+        for pattern in ("gen_*.py", "build_*.py")
+        for top in ("docs", "scripts")
+        for p in (REPO / top).rglob(pattern)
+        if not any(part.startswith(_RECORDS) for part in p.parts)
+    }
+    assert found == set(GENERATORS)
 
 
 def _text_writes(tree: ast.AST):
