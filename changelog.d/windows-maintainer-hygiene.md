@@ -8,6 +8,16 @@
   recorded verification runs, a commit of it would have changed published
   digests. Each write now names `newline="\n"`, and a test checks the source.
   Regenerating on Linux changes no byte. Found during the 0.14.0 release.
+- **Every generated, byte-compared artifact checks out unconverted.** The
+  other half of the same defect: `.gitattributes` exempted the core and
+  inference vectors from line-ending conversion, but not the consistency
+  vectors, the SCITT statement vectors (bridge run B3 had recorded a CRLF
+  checkout's digest beside the real one), the generated site or
+  `COMPATIBILITY.md` — so a Windows runner (autocrlf on) checked them out as
+  CRLF and the comparison failed against LF output. They are now `-text` or
+  `eol=lf`, and a test checks the attributes. Reproduced with an autocrlf
+  checkout on Linux: the two Windows CI failures before, the full suite green
+  after.
 - **Two lock tests named the wrong process on Windows.** They expected the
   `Popen` pid in the lock's message; a venv's `python.exe` on Windows is a
   launcher whose child takes the lock. The holder now reports its own pid and
