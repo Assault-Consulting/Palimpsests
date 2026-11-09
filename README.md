@@ -12,7 +12,7 @@
 
 **Website: [palimpsests.dev](https://palimpsests.dev)** · **The PALA-1 format: [palimpsests.dev/pala-1](https://palimpsests.dev/pala-1/)**
 
-> **Status: v0.13 — the audit format is the deliverable. A chain now says
+> **Status: v0.14 — the audit format is the deliverable. A chain now says
 > why its prefix is gone, a tool result says what its recorder could
 > actually see, and coding agents (Claude Code, Codex) and
 > OpenTelemetry-instrumented frameworks report their tool loops onto it
@@ -523,6 +523,12 @@ the novelty is in this composition and its seams, not in a new inference kernel.
       SCITT statements carry the derived root; and the rules a consumer
       relies on are written down in
       [CONSUMER-SURFACE](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/CONSUMER-SURFACE.md).
+- [x] **v0.14 — the surface its first consumer needed** — an agent's log
+      verified without decoding it; a record's fields, stored bytes and TLV
+      maps read in place; a segmented chain verified as one set; violation
+      codes a consumer can branch on; the SCITT verifier stricter after an
+      outside reading of construction v3; and a compatibility table
+      generated from dated surface checks.
 - [ ] **Later** — assurance tiers B/C (hardware root of trust, external
       witness); a discrete-GPU run (the integrated GPU flatters every
       prefill-saving mechanism, so these ratios compress on fast prefill); a
