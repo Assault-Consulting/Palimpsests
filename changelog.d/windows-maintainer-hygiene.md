@@ -1,12 +1,14 @@
 ### Fixed
 
-- **Generators write LF on every platform.** The five generators of
+- **Generators write LF on every platform.** The six generators of
   committed, byte-compared artifacts — the core, inference and consistency
-  vectors, the site's notes and the compatibility table — wrote text with the
+  vectors, the SCITT statement v3 vector, the site's notes and the
+  compatibility table — wrote text with the
   platform's newline, so on Windows a regenerated file was CRLF and no longer
   equal to the committed one; for the vectors, whose digests are pinned in
   recorded verification runs, a commit of it would have changed published
-  digests. Each write now names `newline="\n"`, and a test checks the source.
+  digests. Each write now names `newline="\n"`; a test checks the source, and
+  finds every `gen_*.py` / `build_*.py` itself so none is left off the list.
   Regenerating on Linux changes no byte. Found during the 0.14.0 release.
 - **Every generated, byte-compared artifact checks out unconverted.** The
   other half of the same defect: `.gitattributes` exempted the core and
