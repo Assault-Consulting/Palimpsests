@@ -146,16 +146,20 @@ def test_another_process_is_refused_and_named(tmp_path):
     p = tmp_path / "c.pala"
     holder = subprocess.Popen(
         [sys.executable, "-c", textwrap.dedent(f"""
-            import sys, time
+            import os, sys, time
             from palimpsests.audit.pala_writer import PalaWriter
             w = PalaWriter({str(p)!r}); w.genesis()
-            print("held", flush=True); time.sleep(30)
+            print("held", os.getpid(), flush=True); time.sleep(30)
         """)],
         stdout=subprocess.PIPE, text=True,
     )
     try:
-        assert holder.stdout.readline().strip() == "held"
-        with pytest.raises(ChainLocked, match=rf"pid {holder.pid}"):
+        # The pid that holds the lock is the one the holder reports: on Windows
+        # a venv's python.exe is a launcher, and the lock is taken by its child,
+        # so Popen.pid is not it.
+        word, real_pid = holder.stdout.readline().split()
+        assert word == "held"
+        with pytest.raises(ChainLocked, match=rf"pid {real_pid}\b"):
             PalaWriter.open_existing(p)
     finally:
         holder.kill()
@@ -326,10 +330,10 @@ def test_a_keychain_entry_of_the_wrong_size_is_refused(stored):
 # ── 7. a blocking acquire waits for the holder, and says so ────────────────
 
 _HOLD_SCRIPT = """
-import sys, time
+import os, sys, time
 from palimpsests.audit._oslock import ExclusiveLock
 lock = ExclusiveLock(sys.argv[1]); lock.acquire()
-print("held", flush=True); time.sleep(float(sys.argv[2])); lock.release()
+print("held", os.getpid(), flush=True); time.sleep(float(sys.argv[2])); lock.release()
 """
 
 
@@ -338,7 +342,11 @@ def _holder(store, seconds):
         [sys.executable, "-c", _HOLD_SCRIPT, str(store), str(seconds)],
         stdout=subprocess.PIPE, text=True,
     )
-    assert proc.stdout.readline().strip() == "held"
+    # Keep the pid the holder reports: on Windows a venv's python.exe is a
+    # launcher whose child takes the lock, so Popen.pid is not the holder.
+    word, real_pid = proc.stdout.readline().split()
+    assert word == "held"
+    proc.real_pid = int(real_pid)
     return proc
 
 
@@ -361,7 +369,7 @@ def test_a_blocking_acquire_has_no_deadline_and_warns_with_the_holder(
         lock.release()
     finally:
         holder.wait(timeout=10)
-    assert "still waiting" in caplog.text and f"pid {holder.pid}" in caplog.text
+    assert "still waiting" in caplog.text and f"pid {holder.real_pid}" in caplog.text
 
 
 def test_an_explicit_timeout_still_bounds_the_wait(tmp_path):

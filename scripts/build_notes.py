@@ -442,7 +442,8 @@ def replace_block(path: Path, start_marker: str, end_marker: str, block: str) ->
     start, end = text.find(start_marker), text.find(end_marker)
     if start < 0 or end < start:
         raise ValueError(f"{path} needs the {start_marker} / {end_marker} markers")
-    path.write_text(text[:start] + block + text[end + len(end_marker):], encoding="utf-8")
+    path.write_text(text[:start] + block + text[end + len(end_marker):], encoding="utf-8",
+                    newline="\n")
 
 
 def llms_block(notes: list[Note]) -> str:
@@ -458,10 +459,10 @@ def build(notes_dir: Path, site_dir: Path) -> None:
     out.mkdir(parents=True, exist_ok=True)
     for n in notes:
         (out / n.slug).mkdir(exist_ok=True)
-        (out / n.slug / "index.html").write_text(note_page(n), encoding="utf-8")
-    (out / "index.html").write_text(index_page(notes), encoding="utf-8")
-    (out / "feed.xml").write_text(feed(notes), encoding="utf-8")
-    (site_dir / "sitemap.xml").write_text(sitemap(notes), encoding="utf-8")
+        (out / n.slug / "index.html").write_text(note_page(n), encoding="utf-8", newline="\n")
+    (out / "index.html").write_text(index_page(notes), encoding="utf-8", newline="\n")
+    (out / "feed.xml").write_text(feed(notes), encoding="utf-8", newline="\n")
+    (site_dir / "sitemap.xml").write_text(sitemap(notes), encoding="utf-8", newline="\n")
 
     replace_block(site_dir / "llms.txt", LLMS_START, LLMS_END, llms_block(notes))
     replace_block(site_dir / "index.html", HOME_START, HOME_END, home_block(notes))

@@ -679,5 +679,5 @@ out = {
     },
 }
 
-OUT.write_text(json.dumps(out, indent=2) + "\n")
+OUT.write_text(json.dumps(out, indent=2) + "\n", encoding="utf-8", newline="\n")
 print(f"wrote {OUT.name}: {len(records)} records, head {h(chain_head)[:16]}…")

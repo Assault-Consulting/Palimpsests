@@ -145,6 +145,6 @@ doc = {
         "never as verified",
     ],
 }
-OUT.write_text(json.dumps(doc, indent=2) + "\n", encoding="utf-8")
+OUT.write_text(json.dumps(doc, indent=2) + "\n", encoding="utf-8", newline="\n")
 print(f"wrote {OUT.name}: earlier {earlier['expected']['statement_length_bytes']} B, "
       f"later {later['expected']['statement_length_bytes']} B, path {len(path)} nodes")

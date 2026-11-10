@@ -122,4 +122,4 @@ def render(root: Path = ROOT) -> str:
 
 
 if __name__ == "__main__":
-    OUT.write_text(render(), encoding="utf-8")
+    OUT.write_text(render(), encoding="utf-8", newline="\n")
