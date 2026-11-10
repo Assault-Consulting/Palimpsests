@@ -204,6 +204,51 @@ def create_app(
                     },
                 )
             return await call_next(request)
+
+    # R1 — what reached this serve, per ingestion route. A client whose
+    # reports are refused, or never sent, looks normal from its own side:
+    # a hook never blocks the agent, and a plugin logs the failure and
+    # lets the tool run. These counters make that visible to the operator
+    # (GET /v1/pala/status) without writing anything to the chain.
+    # Registered after the bearer check, so it is the outer middleware and
+    # sees that check's refusals too. Counts requests, not records.
+    import threading
+
+    ingest_routes = (
+        "/v1/pala/hooks/claude", "/v1/pala/hooks/codex", "/v1/pala/events", "/v1/traces",
+    )
+    ingest_stats = {
+        route: {
+            "accepted": 0,
+            "refused": {"empty_bearer": 0, "wrong_bearer": 0},
+            "rejected": 0,
+            "last_accepted_ns": None,
+            "last_refused_ns": None,
+        }
+        for route in ingest_routes
+    }
+    stats_lock = threading.Lock()
+
+    @app.middleware("http")
+    async def _count_ingest(request, call_next):
+        response = await call_next(request)
+        entry = ingest_stats.get(request.url.path)
+        if entry is None or request.method != "POST":
+            return response
+        now = time.time_ns()
+        with stats_lock:
+            if response.status_code == 401:
+                supplied = request.headers.get("authorization", "").strip()
+                reason = "empty_bearer" if supplied in ("", "Bearer") else "wrong_bearer"
+                entry["refused"][reason] += 1
+                entry["last_refused_ns"] = now
+            elif 200 <= response.status_code < 300:
+                entry["accepted"] += 1
+                entry["last_accepted_ns"] = now
+            else:
+                entry["rejected"] += 1
+        return response
+
     # Dispatched tool calls awaiting results: id -> the TOOL_CALL's
     # (seq, hash, source), so a later request's results bind to their
     # calls — and so a result carries the same evidence-quality mark the
@@ -384,6 +429,35 @@ def create_app(
         codex_hooks = HookIngest(audit, pending, client="codex")
     else:
         hooks = codex_hooks = None
+
+    @app.get("/v1/pala/status")
+    def pala_status():
+        """What reached this serve, and the chain it writes (R1).
+
+        Per ingestion route: requests accepted, refused by the bearer check
+        (an empty bearer apart from a wrong one) and rejected otherwise, with
+        the time of the last of each. With the pending calls and the chain's
+        length and head, an operator can tell "nothing was sent" from "it
+        was sent and refused" from "it arrived" — the three cases a client
+        shows identically. Behind the same bearer as every route; reads
+        state, writes nothing. The shape is experimental until the HTTP
+        surface is given a stability class (0.15 plan, A3).
+        """
+        with stats_lock:
+            ingest = {
+                route: {**e, "refused": dict(e["refused"])}
+                for route, e in ingest_stats.items()
+            }
+        chain = None
+        if audit is not None:
+            chain = {"records": audit.writer.seq, "head": audit.writer.head_hex}
+        return {
+            "format": "pala-serve-status/1",
+            "auth_required": api_key is not None,
+            "ingest": ingest,
+            "pending_calls": len(pending),
+            "chain": chain,
+        }
 
     @app.post("/v1/pala/hooks/claude")
     def claude_hook(body: dict):
