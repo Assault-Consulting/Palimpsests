@@ -43,6 +43,15 @@ _VERDICT_MEANING = {
     ),
 }
 
+#: Beside the verdict of an empty container, in place of the gloss for
+#: ``partial``: "sound as far as checked" is the wrong sentence for a file
+#: with nothing in it. The verdict word is the report's and stays (format
+#: ``/1`` has no ``empty``; ``/2`` adds it). Raised by Auditor.
+_EMPTY_MEANING = (
+    "the container holds no records — nothing was checked, and nothing was "
+    "found intact"
+)
+
 _CSS = """
 body{font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;color:#1a1a1a;
 max-width:52rem;margin:2rem auto;padding:0 1rem}
@@ -123,9 +132,15 @@ def render_html(data: dict) -> str:
         f'<p class="muted">Format <code>{_e(data["format"])}</code> &middot; '
         f'spec <code>{_e(data["verifier"]["spec"])}</code></p>'
     )
+    diagnosis = data.get("diagnosis") or {}
+    meaning = (
+        _EMPTY_MEANING
+        if diagnosis.get("pattern") == "empty_container"
+        else _VERDICT_MEANING.get(verdict, "")
+    )
     parts.append(
         f'<p><span class="verdict v-{_e(verdict)}">{_e(verdict.upper())}'
-        f"</span> &mdash; {_e(_VERDICT_MEANING.get(verdict, ''))}</p>"
+        f"</span> &mdash; {_e(meaning)}</p>"
     )
     parts.append(
         f"<p>This tool verified <code>{_e(subject['filename'])}</code> "

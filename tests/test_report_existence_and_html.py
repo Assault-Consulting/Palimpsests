@@ -42,3 +42,25 @@ def test_render_html_is_declared_and_renders_a_report(tmp_path):
     assert isinstance(page, str) and page.lstrip().lower().startswith("<!doctype html")
     assert "no WITNESS record in this chain" in page  # the note travels into the page
     assert data["verdict"] in page
+
+
+def test_an_empty_container_is_not_called_sound_as_far_as_checked(tmp_path):
+    """The verdict word is the report's (``partial`` in format /1); the
+    sentence beside it must not say an empty file is sound as far as checked."""
+    import palimpsests.audit.report_html as rh
+
+    p = tmp_path / "empty.pala"
+    p.write_bytes(b"")
+    data = build_report(p).data
+    assert data["verdict"] == "partial" and data["diagnosis"]["pattern"] == "empty_container"
+    page = rh.render_html(data)
+    assert "PARTIAL" in page
+    assert "sound as far as checked" not in page
+    assert "holds no records" in page and "nothing was found intact" in page
+
+
+def test_an_ordinary_partial_keeps_its_gloss(tmp_path):
+    import palimpsests.audit.report_html as rh
+
+    page = rh.render_html(build_report(_chain(tmp_path)).data)
+    assert "sound as far as checked" in page
