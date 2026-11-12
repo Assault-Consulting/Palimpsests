@@ -21,7 +21,7 @@ Three properties are load-bearing:
   ``body_digest``. A body that no longer matches that digest is exported
   all the same — inspecting broken evidence is half the point — but its
   line carries ``body_digest_mismatch`` and the summary lists its seq.
-  Before 0.15 such a body was printed without a word under a summary
+  Before 0.14.1 such a body was printed without a word under a summary
   that said ``chain_ok``.
 - **Deterministic for one version of the tool.** Same container bytes →
   same export bytes: key order is fixed by construction, no timestamp of
