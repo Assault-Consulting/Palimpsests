@@ -34,6 +34,7 @@ READER_ALL = {
     "SpanView", "BootView", "OriginView", "OriginState", "ContinuationView",
     "decode_continuation",
     "boot_statistics", "BootStats", "AnchorCadence", "SpanStats", "step_catalog", "TimeStep",
+    "HEADER_FIELDS", "HeaderField", "FIXED_HEADER_LEN",
     "NO_SPAN", "NO_PREDECESSOR",
     "FORMAT_VERSION",
     "RT_GENESIS", "RT_BOOT", "RT_SPAN_START", "RT_SPAN_END", "RT_EVENT", "RT_MERKLE",
@@ -97,6 +98,8 @@ def test_re_exports_are_the_same_objects_on_both_paths():
             assert getattr(r, name) == getattr(inf, name), name
         if name.startswith(("RT_", "TIER_", "TIME_")) or name == "FORMAT_VERSION":
             assert getattr(r, name) == getattr(c, name), name
+    assert r.HEADER_FIELDS is c.HEADER_FIELDS and r.HeaderField is c.HeaderField
+    assert r.FIXED_HEADER_LEN == c.FIXED_HEADER_LEN == 156
     assert r.NO_SPAN == c.ZERO16 == b"\x00" * 16
     assert r.NO_PREDECESSOR == c.ZERO32 == b"\x00" * 32
 
@@ -320,6 +323,39 @@ def test_kind_and_kind_name_tell_their_two_nones_apart(tmp_path):
     unknown = recs[-1]
     assert boot.kind is None and boot.kind_name is None
     assert unknown.kind == 4242 and unknown.kind_name is None
+
+
+# ── the byte view: the fixed header's map agrees with the decoder ──────────
+
+
+def test_the_header_field_map_covers_the_fixed_header_and_agrees_with_the_decoder():
+    """Auditor R8: with ``record_bytes_at`` and the two TLV maps, a consumer
+    can name every byte of a record — the fixed fields from HEADER_FIELDS, the
+    rest from the spans. The map is contiguous over the fixed 156 bytes, and
+    unpacking each field from the stored bytes gives what ``header_at`` gives."""
+    import struct
+    from palimpsests.audit.pala.vectors import load as load_vectors
+    from palimpsests.audit.reader import FIXED_HEADER_LEN, HEADER_FIELDS, AuditReader
+
+    pos = 0
+    for f in HEADER_FIELDS:
+        assert f.offset == pos and f.length == struct.calcsize("<" + f.format), f
+        pos += f.length
+    assert pos == FIXED_HEADER_LEN
+    chain = b"".join(
+        bytes.fromhex(r["header_hex"]) + bytes.fromhex(r.get("body_hex", ""))
+        for r in load_vectors("inference")["records"]
+    )
+    with AuditReader.from_bytes(chain) as reader:
+        for i in range(reader.record_count):
+            stored, header = reader.record_bytes_at(i).header, reader.header_at(i)
+            for f in HEADER_FIELDS:
+                if not hasattr(header, f.name):
+                    continue  # magic, format_version, header_len: not Header attributes
+                (value,) = struct.unpack_from("<" + f.format, stored, f.offset)
+                assert value == getattr(header, f.name), (i, f.name)
+            spans = reader.header_tlv_spans_at(i)
+            assert all(off - 4 >= FIXED_HEADER_LEN for _, off, _ in spans)
 
 
 # ── the other channels stay where INTEGRATION-SURFACE.md says ──────────────
