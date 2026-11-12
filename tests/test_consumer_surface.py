@@ -363,6 +363,7 @@ def test_the_header_field_map_covers_the_fixed_header_and_agrees_with_the_decode
 CHANNELS = {
     "palimpsests.audit.report": ["build_report", "derive_verdict"],
     "palimpsests.audit.report_html": ["render_html"],
+    "palimpsests.audit.export": ["export_jsonl", "FORMAT"],
     "palimpsests.audit.pala.proofs": ["inclusion_proof", "range_proofs", "chain_root",
                                       "consistency_proof", "ConsistencyProof"],
     "palimpsests.audit.pala.bundle": ["assemble_bundle"],
