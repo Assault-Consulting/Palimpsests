@@ -43,7 +43,7 @@ palimpsests doctor otel
 It asks the serve what arrived on this integration's route and what it
 refused, and runs a dry run of that route — the real key check and parsing,
 with nothing written to the audit chain. Each finding has a code and, where
-there is one, a fix; the exit code is 1 if anything failed. Since 0.15.
+there is one, a fix; the exit code is 1 if anything failed. Since 0.14.1.
 
 For OpenTelemetry it also reads this shell's exporter variables: whether
 `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` points at this serve's `/v1/traces`, and
