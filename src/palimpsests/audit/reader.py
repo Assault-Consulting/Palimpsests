@@ -65,6 +65,7 @@ from palimpsests.audit.anchors import (
 from palimpsests.audit.pala.codec import (  # re-exported: the consumer surface
     FIXED_HEADER_LEN,
     FORMAT_VERSION,
+    HEADER_FIELDS,
     MAGIC,
     RT_AGGREGATE,
     RT_ANCHOR,
@@ -92,6 +93,7 @@ from palimpsests.audit.pala.codec import (  # re-exported: the consumer surface
     ZERO16,
     ZERO32,
     Header,
+    HeaderField,
     MalformedRecord,
     body_digest_of,
     decode_tlvs,
@@ -185,6 +187,10 @@ __all__ = [
     "SpanStats",
     "step_catalog",
     "TimeStep",
+    # the fixed header's layout, for a byte view (with the TLV maps above it)
+    "HEADER_FIELDS",
+    "HeaderField",
+    "FIXED_HEADER_LEN",
     # sentinels
     "NO_SPAN",
     "NO_PREDECESSOR",
