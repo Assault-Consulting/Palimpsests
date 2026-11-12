@@ -213,6 +213,8 @@ def create_app(
     # Registered after the bearer check, so it is the outer middleware and
     # sees that check's refusals too. Counts requests, not records.
     import threading
+    from fastapi import Request
+    from palimpsests.server.dry_run import DryAudit, is_dry_run
 
     ingest_routes = (
         "/v1/pala/hooks/claude", "/v1/pala/hooks/codex", "/v1/pala/events", "/v1/traces",
@@ -222,6 +224,7 @@ def create_app(
             "accepted": 0,
             "refused": {"empty_bearer": 0, "wrong_bearer": 0},
             "rejected": 0,
+            "dry_run": 0,
             "last_accepted_ns": None,
             "last_refused_ns": None,
         }
@@ -243,8 +246,11 @@ def create_app(
                 entry["refused"][reason] += 1
                 entry["last_refused_ns"] = now
             elif 200 <= response.status_code < 300:
-                entry["accepted"] += 1
-                entry["last_accepted_ns"] = now
+                if is_dry_run(request):
+                    entry["dry_run"] += 1  # a check, not a report: nothing was recorded
+                else:
+                    entry["accepted"] += 1
+                    entry["last_accepted_ns"] = now
             else:
                 entry["rejected"] += 1
         return response
@@ -459,8 +465,18 @@ def create_app(
             "chain": chain,
         }
 
-    @app.post("/v1/pala/hooks/claude")
-    def claude_hook(body: dict):
+    def _dry_hook(body: dict, client: str):
+        """The hook route's real handling, against nothing: see dry_run."""
+        from palimpsests.server.agent_hooks import HookIngest
+
+        dry = DryAudit()
+        status, reply = HookIngest(dry, dict(pending), client=client).handle(body)
+        return JSONResponse(
+            status_code=status,
+            content={"dry_run": True, "would_record": dry.would_record, "reply": reply},
+        )
+
+    def claude_hook(request, body: dict):
         """Agent tool hooks in the Claude schema (Claude Code HTTP hooks).
 
         See ``palimpsests.server.agent_hooks``. Every reply the agent sees
@@ -476,11 +492,12 @@ def create_app(
                     }
                 },
             )
+        if is_dry_run(request):
+            return _dry_hook(body, "claude")
         status, reply = hooks.handle(body)
         return JSONResponse(status_code=status, content=reply)
 
-    @app.post("/v1/pala/hooks/codex")
-    def codex_hook(body: dict):
+    def codex_hook(request, body: dict):
         """Agent tool hooks from Codex, forwarded by its command hook.
 
         Same schema as Claude Code; different outcome rule — Codex has no
@@ -498,8 +515,18 @@ def create_app(
                     }
                 },
             )
+        if is_dry_run(request):
+            return _dry_hook(body, "codex")
         status, reply = codex_hooks.handle(body)
         return JSONResponse(status_code=status, content=reply)
+
+    # The handlers take the Request to read the dry-run header; its
+    # annotation is set as the class itself, for the reason given at the
+    # traces route below.
+    for _handler, _path in ((claude_hook, "/v1/pala/hooks/claude"),
+                            (codex_hook, "/v1/pala/hooks/codex")):
+        _handler.__annotations__["request"] = Request
+        app.post(_path)(_handler)
 
     if audit is not None:
         from palimpsests.server.otel_traces import TraceIngest
@@ -508,7 +535,6 @@ def create_app(
     else:
         traces_ingest = None
 
-    from fastapi import Request
     from fastapi.responses import Response
 
     async def otlp_traces(request):
@@ -540,6 +566,13 @@ def create_app(
         except ValueError as e:
             status = 415 if "Content-Type" in str(e) else 400
             return JSONResponse(status_code=status, content={"error": {"message": str(e)}})
+        if is_dry_run(request):
+            from palimpsests.server.otel_traces import TraceIngest
+
+            dry = DryAudit()
+            TraceIngest(dry).record(batch)
+            return {"dry_run": True, "would_record": dry.would_record,
+                    "dropped_spans": batch.dropped, "dropped_reason": batch.dropped_reason}
         traces_ingest.record(batch)
         if ctype.split(";")[0].strip().lower() == "application/x-protobuf":
             from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
@@ -564,8 +597,7 @@ def create_app(
     otlp_traces.__annotations__["request"] = Request
     app.post("/v1/traces")(otlp_traces)
 
-    @app.post("/v1/pala/events")
-    def ingest_events(body: dict):
+    def ingest_events(request, body: dict):
         """Client-reported tool events, onto the same chain (r5).
 
         The constructive half of the visibility limit: each reported
@@ -617,6 +649,10 @@ def create_app(
             "cancelled": OUTCOME_CANCELLED,
             "unobserved": OUTCOME_UNOBSERVED,
         }
+        dry = DryAudit() if is_dry_run(request) else None
+        # On a dry run the same loop runs against a recorder that writes
+        # nothing and a copy of the pending calls.
+        audit_, pending_ = (dry, dict(pending)) if dry is not None else (audit, pending)
         results: list[dict] = []
         for ev in events:
             if not isinstance(ev, dict):
@@ -633,16 +669,16 @@ def create_app(
                         digest = _args_digest(ev["arguments"])
                     else:
                         digest = None
-                    seq, rh = audit.tool_called(
+                    seq, rh = audit_.tool_called(
                         name, digest, None, source=SOURCE_REPORTED_BY_CLIENT
                     )
-                    pending[call_id] = (seq, rh, SOURCE_REPORTED_BY_CLIENT)
+                    pending_[call_id] = (seq, rh, SOURCE_REPORTED_BY_CLIENT)
                     results.append(
                         {"id": call_id, "seq": seq, "record_hash": rh.hex()}
                     )
                 elif etype == "tool_result":
                     call_id = str(ev["call_id"])
-                    ref = pending.pop(call_id, None)
+                    ref = pending_.pop(call_id, None)
                     if ref is None:
                         results.append({"id": call_id, "error": "unknown call_id"})
                         continue
@@ -651,7 +687,7 @@ def create_app(
                     # not "ok".
                     outcome = outcomes.get(str(ev.get("outcome", "unobserved")))
                     if outcome is None:
-                        pending[call_id] = ref  # not consumed
+                        pending_[call_id] = ref  # not consumed
                         results.append({"id": call_id, "error": "unknown outcome"})
                         continue
                     if "result_digest" in ev:
@@ -660,7 +696,7 @@ def create_app(
                         digest = sha256(str(ev["content"]).encode("utf-8")).digest()
                     else:
                         digest = None
-                    rh = audit.tool_result(
+                    rh = audit_.tool_result(
                         ref[0], ref[1], outcome, digest, None, source=ref[2],
                     )
                     results.append({"id": call_id, "record_hash": rh.hex()})
@@ -668,7 +704,15 @@ def create_app(
                     results.append({"error": f"unknown event type: {etype!r}"})
             except (KeyError, ValueError, TypeError) as exc:
                 results.append({"error": f"invalid event: {exc}"})
+        if dry is not None:
+            # No seq and no record hash: nothing was written to refer to.
+            shown = [{k: v for k, v in r.items() if k not in ("seq", "record_hash")}
+                     for r in results]
+            return {"dry_run": True, "would_record": dry.would_record, "results": shown}
         return {"results": results}
+
+    ingest_events.__annotations__["request"] = Request
+    app.post("/v1/pala/events")(ingest_events)
 
     return app
 
