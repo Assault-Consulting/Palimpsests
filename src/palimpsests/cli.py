@@ -178,6 +178,52 @@ def serve_cmd(
     run_serve(host, port, api_key)
 
 
+@app.command("doctor")
+def doctor_cmd(
+    integration: str = typer.Argument(
+        ..., help="claude-code, codex, opencode, litellm, mcp or otel."
+    ),
+    url: str = typer.Option("http://127.0.0.1:11435", "--url", help="The serve's base URL."),
+    api_key: str | None = typer.Option(
+        None,
+        "--api-key",
+        envvar="PALIMPSESTS_SERVE_API_KEY",
+        help="The serve's bearer key (default: $PALIMPSESTS_SERVE_API_KEY if set).",
+    ),
+    as_json: bool = typer.Option(False, "--json", help="Print the findings as JSON."),
+) -> None:
+    """Check that an integration's reports reach the serve.
+
+    A client whose reports are refused, or never sent, looks normal from its
+    own side. This asks the serve what arrived and what it refused, runs a
+    dry run of the integration's route — the real key check and parsing,
+    nothing written to the chain — and reads the client's configuration
+    where it can. Exit code 1 if anything failed; warnings do not fail.
+    """
+    from palimpsests import doctor
+
+    if integration not in doctor.ROUTES:
+        typer.secho(
+            f"error: unknown integration {integration!r}; one of "
+            f"{', '.join(doctor.ROUTES)}",
+            fg=typer.colors.RED, err=True,
+        )
+        raise typer.Exit(code=2)
+    findings = doctor.diagnose(integration, url=url, api_key=api_key)
+    if as_json:
+        typer.echo(json.dumps(doctor.to_json(integration, findings), indent=2))
+    else:
+        marks = {doctor.OK: ("ok  ", typer.colors.GREEN),
+                 doctor.WARN: ("warn", typer.colors.YELLOW),
+                 doctor.FAIL: ("FAIL", typer.colors.RED)}
+        for f in findings:
+            mark, colour = marks[f.level]
+            typer.secho(f"{mark}  {f.message}  [{f.code}]", fg=colour)
+            if f.fix:
+                typer.echo(f"      -> {f.fix}")
+    raise typer.Exit(code=doctor.exit_code(findings))
+
+
 def _ctx() -> AppContext:
     """Build the app context, turning engine errors into clean exits."""
     return init_app()
