@@ -67,7 +67,7 @@ palimpsests doctor mcp
 It asks the serve what arrived on this integration's route and what it
 refused, and runs a dry run of that route — the real key check and parsing,
 with nothing written to the audit chain. Each finding has a code and, where
-there is one, a fix; the exit code is 1 if anything failed. Since 0.15.
+there is one, a fix; the exit code is 1 if anything failed. Since 0.14.1.
 
 The proxy is wired in your MCP client's configuration, so there is no file
 here for it to read: it checks the serve and the route. If it says nothing
