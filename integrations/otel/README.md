@@ -34,6 +34,23 @@ those spans land on the chain as `TOOL_CALL` / `TOOL_RESULT` pairs, marked
    digested by the profile's canonical rule; the content itself never
    reaches the chain.
 
+## Check that reports arrive
+
+```bash
+palimpsests doctor otel
+```
+
+It asks the serve what arrived on this integration's route and what it
+refused, and runs a dry run of that route — the real key check and parsing,
+with nothing written to the audit chain. Each finding has a code and, where
+there is one, a fix; the exit code is 1 if anything failed. Since 0.14.1.
+
+For OpenTelemetry it also reads this shell's exporter variables: whether
+`OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` points at this serve's `/v1/traces`, and
+— when the serve requires a key — whether the exporter's headers carry an
+`Authorization`. It reads the shell it runs in, which may not be the one your
+application was started from.
+
 ## What lands, and what it means
 
 | On the span | On the chain |

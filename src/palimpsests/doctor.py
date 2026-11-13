@@ -87,7 +87,7 @@ def _status(http, api_key: str | None, env: dict) -> tuple[dict | None, list[Fin
     if r.status_code == 404:
         return None, [Finding(
             FAIL, "serve_status_missing",
-            "the serve has no status route — it is older than 0.15",
+            "the serve has no status route — it is older than 0.14.1",
             "upgrade the serve: pip install -U 'palimpsests[serve]'",
         )]
     if r.status_code != 200:
@@ -233,7 +233,7 @@ def _dry_run(http, api_key: str | None, integration: str) -> list[Finding]:
         return [Finding(
             FAIL, "dry_run_unsupported",
             "the serve does not know the dry run and may have recorded the check — "
-            "it is older than 0.15",
+            "it is older than 0.14.1",
             "upgrade the serve: pip install -U 'palimpsests[serve]'",
         )]
     would = reply.get("would_record") or []
