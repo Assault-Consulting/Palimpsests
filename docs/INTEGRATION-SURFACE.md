@@ -14,8 +14,8 @@ it is not promised.
 
 | # | Channel | Surface | Stability |
 |---|---------|---------|-----------|
-| 1 | Reading | `palimpsests.audit.reader.AuditReader` (`open`, `verify`, `records`, `spans`, `boots`, `origin_at`, `unloaded_at`, `acknowledged_candidates`, `shredded_targets`; sparse access `record_count`, `record_at`, `record_by_seq`, `header_at` since 0.13; `Verification.manifest` since 0.13; `container_check()`, `record_fields_at()` since 0.14; for a byte view `record_bytes_at()`, `header_tlv_spans_at()`, `body_tlv_spans_at()` since 0.14, and the fixed header's layout `HEADER_FIELDS` / `HeaderField` / `FIXED_HEADER_LEN` since 0.15); a segmented chain as one set: `palimpsests.audit.segment_set.verify_segment_set` (since 0.14) | public (since 0.8) |
-| 2 | Report | `palimpsests.audit.report.build_report`, `derive_verdict`, format `pala-verification-report/1`; the HTML page `palimpsests.audit.report_html.render_html` (since 0.14 — a rendering of the report's `.data`, its markup not a format) | public (since 0.10) |
+| 1 | Reading | `palimpsests.audit.reader.AuditReader` (`open`, `verify`, `records`, `spans`, `boots`, `origin_at`, `unloaded_at`, `acknowledged_candidates`, `shredded_targets`; sparse access `record_count`, `record_at`, `record_by_seq`, `header_at` since 0.13; `Verification.manifest` since 0.13; `container_check()`, `record_fields_at()` since 0.14; for a byte view `record_bytes_at()`, `header_tlv_spans_at()`, `body_tlv_spans_at()` since 0.14, and the fixed header's layout `HEADER_FIELDS` / `HeaderField` / `FIXED_HEADER_LEN` since 0.14.1); a segmented chain as one set: `palimpsests.audit.segment_set.verify_segment_set` (since 0.14) | public (since 0.8) |
+| 2 | Report and export | `palimpsests.audit.report.build_report`, `derive_verdict`, format `pala-verification-report/1`; the HTML page `palimpsests.audit.report_html.render_html` (since 0.14 — a rendering of the report's `.data`, its markup not a format); the record export `palimpsests.audit.export.export_jsonl`, format `pala-jsonl/1` (since 0.14.1) | public (since 0.10) |
 | 3 | Proofs | `palimpsests.audit.pala.proofs.inclusion_proof`, `range_proofs`; prefix consistency `chain_root`, `consistency_proof`, `ConsistencyProof`, format `pala-consistency-proof/1` (since 0.12) | public (since 0.10) |
 | 4 | Bundle | `palimpsests.audit.pala.bundle.assemble_bundle`, format `pala-bundle/1` | public (since 0.10) |
 | 5 | Health | `palimpsests.audit.timehealth`, `palimpsests.audit.bootstats` | public (since 0.10) |
@@ -26,7 +26,10 @@ it is not promised.
 bump and a CHANGELOG entry naming the break; additive changes (new
 fields, new functions) may land in any release. The three named formats
 (`pala-verification-report/1`, `pala-bundle/1`,
-`pala-consistency-proof/1`) change only by format-id bump.
+`pala-consistency-proof/1`) change only by format-id bump. The fourth,
+`pala-jsonl/1`, is open: a release may add a key to a line or to the
+summary, and none is removed, renamed or given another meaning without a
+format-id bump.
 
 **Since 0.13, what a value *means* is held to the 1.0 standard already**
 — the rules a consumer needs to rely on a verdict it renders:
@@ -109,6 +112,36 @@ CHANGELOG sentence saying what it means and whether it changes a verdict.
 - Wording discipline is part of the contract: a report is an attestation
   of a check, never "compliant", "certified", or "valid log".
 
+## The export contract
+
+`export_jsonl(data, out)` writes `pala-jsonl/1` — one line per record and a
+summary line; the format is described in
+[specs/export/pala-jsonl-1.md](specs/export/pala-jsonl-1.md).
+
+- **Derived, never authoritative.** Every line names its record by `seq` and
+  `record_hash`; what is concluded from a line is checked against that record.
+- **It never refuses a container.** A broken chain, a body that does not match
+  its digest, a container cut mid-record: what can be exported is, and the
+  summary says what was found. A body that does not match is marked on its
+  own line (`body_digest_mismatch`) as well as in the summary.
+- **`consistent` is `pala verify`'s consistency, by the same rule** — the
+  header chain, the container's form and every body's digest. The two cannot
+  answer differently about one file.
+- **Completeness is never claimed.** The export reads no anchor;
+  `completeness_checked` is `false`.
+- **A line carries what the reader decodes** — a tool's outcome, the evidence
+  mark, an operator's disposition, `detail` — so a consumer of the export
+  parses no TLV.
+- **Codes and numbers are contract; sentences are not**: `malformed`, `note`,
+  `detail` and the reasons in `violations` are carried verbatim.
+- **Normalization rule:** the summary's `tool` names the package version.
+  Everything else is deterministic for the same container.
+- **It streams.** Records are read, written and forgotten one at a time;
+  `data` is any bytes-like object, so pass a file's mapping, not a copy of
+  the file. Measured on 200,002 records of tool loops (42 MB): 448 MB peak
+  before 0.14.1, when every decoded record was kept; 77 MB after, 42 of them
+  the file itself held as bytes.
+
 ## Reading a live file
 
 A writer appends unbuffered, but a record write is not guaranteed
@@ -155,7 +188,7 @@ the same values `record_at(index)` would give, read in place, nothing
 decoded or kept. A consumer that shows bytes reads `record_bytes_at(index)` —
 the record as the file holds it — and `header_tlv_spans_at` /
 `body_tlv_spans_at` for where each TLV sits, as offsets from the record's
-start; `HEADER_FIELDS` (since 0.15) names the sixteen fields of the 156 fixed
+start; `HEADER_FIELDS` (since 0.14.1) names the sixteen fields of the 156 fixed
 bytes those spans sit after, each with its offset, length and `struct` code.
 `Header.decode` keeps every field and TLV, so an accepted header
 re-encodes to its own bytes; the stored bytes are what there is to show for
