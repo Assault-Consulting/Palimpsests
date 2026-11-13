@@ -1,6 +1,14 @@
 {
   "_comment": "Facts that dated sources state but a surface report cannot carry. Every entry names its source; scripts/build_compatibility.py renders integrations/COMPATIBILITY.md from this file and results/surfaces-*.md. Do not write a row here that no report or run record states.",
   "reports": {
+    "surfaces-2026-11-13.md": {
+      "notes": {
+        "litellm": "run by the AI assistant in its own Linux sandbox VM, not on a machine of the team; the check before 0.14.1, after the ingestion routes were refactored for the dry run. Source: results/surfaces-2026-11-13-notes.md",
+        "mcp": "run by the AI assistant in its own Linux sandbox VM, not on a machine of the team; the check before 0.14.1, after the ingestion routes were refactored for the dry run. Source: results/surfaces-2026-11-13-notes.md",
+        "claude-code": "run by the AI assistant in its own Linux sandbox VM, not on a machine of the team; the check before 0.14.1, after the ingestion routes were refactored for the dry run. Source: results/surfaces-2026-11-13-notes.md",
+        "otel": "run by the AI assistant in its own Linux sandbox VM, not on a machine of the team; the check before 0.14.1, after the ingestion routes were refactored for the dry run. Source: results/surfaces-2026-11-13-notes.md"
+      }
+    },
     "surfaces-2026-11-08.md": {
       "notes": {
         "claude-code": "run by the AI assistant in its own Linux sandbox VM, not on a machine of the team; one probe only. Source: results/surfaces-2026-11-08-notes.md"
