@@ -100,6 +100,23 @@ No `package.json`, no dependencies. Then run the serve and point
 OpenCode's provider at it as usual
 (`palimpsests-serve --print-opencode-config`).
 
+## Check that reports arrive
+
+```bash
+palimpsests doctor opencode
+```
+
+It asks the serve what arrived on this integration's route and what it
+refused, and runs a dry run of that route — the real key check and parsing,
+with nothing written to the audit chain. Each finding has a code and, where
+there is one, a fix; the exit code is 1 if anything failed. Since 0.14.1.
+
+For OpenCode it also checks that `palimpsests-audit.js` is in one of the two
+plugin directories, and it names the loss this integration is prone to: a
+plugin whose posts are refused `401` because `PALIMPSESTS_SERVE_API_KEY` is
+missing from the window OpenCode was started in — the tool runs and nothing
+on the client's side says the record was lost.
+
 ## For your coding agent — paste this
 
 If an agent (OpenCode itself, or any other) is setting this up for you,
