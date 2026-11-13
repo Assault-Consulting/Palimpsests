@@ -98,3 +98,26 @@ def test_a_second_report_the_same_day_is_read_and_comes_first(tmp_path):
     assert names == ["surfaces-2026-12-01-2.md", "surfaces-2026-12-01.md"]
     out = b.render(tmp_path)
     assert "| claude-code | v | Linux 6.8 | 2026-12-01 |" in out
+
+
+def test_rows_that_share_a_note_share_its_number(tmp_path):
+    """A run of several probes carries one note about the run; the table gives
+    it one number, not one per row (the 2026-11-13 report: four rows, one note)."""
+    b = _builder()
+    (tmp_path / "results").mkdir()
+    (tmp_path / "integrations").mkdir()
+    (tmp_path / "integrations" / "compatibility.json").write_text(json.dumps({
+        "reports": {"surfaces-2026-12-01.md": {"notes": {
+            "mcp": "about the run", "otel": "about the run", "litellm": "about this row"}}},
+        "runs": []}))
+    (tmp_path / "results" / "surfaces-2026-12-01.md").write_text(
+        "# Surface check — 2026-12-01\n\nMachine: Linux 6.8, Python 3.12.3, palimpsests 0.14.0\n\n"
+        "| Surface | State | Version | Detail |\n|---|---|---|---|\n"
+        "| mcp | 🟢 GREEN | stdio | ok |\n"
+        "| litellm | 🟢 GREEN | 1.0 | ok |\n"
+        "| otel | 🟢 GREEN | 1.0 | ok |\n",
+        encoding="utf-8")
+    out = b.render(tmp_path)
+    marks = re.findall(r"^\| (\w+) \|.*GREEN \[(\d)\]", out, re.M)
+    assert marks == [("mcp", "1"), ("litellm", "2"), ("otel", "1")]
+    assert out.count("about the run") == 1 and "\n2. about this row" in out
