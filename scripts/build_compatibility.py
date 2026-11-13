@@ -91,8 +91,9 @@ def render(root: Path = ROOT) -> str:
             note = meta.get("notes", {}).get(surface)
             mark = f"{MARK[state]} {state}"
             if note:
-                footnotes.append(note)
-                mark += f" [{len(footnotes)}]"
+                if note not in footnotes:  # one number per note, however many rows carry it
+                    footnotes.append(note)
+                mark += f" [{footnotes.index(note) + 1}]"
             lines.append(
                 f"| {surface} | {_cell(version)} | {_cell(where)} | {date} | {mark} "
                 f"| {_cell(detail)} | [{name}](../results/{name}) |"
