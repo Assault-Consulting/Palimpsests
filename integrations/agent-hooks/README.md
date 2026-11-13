@@ -215,3 +215,26 @@ above.
 Code route: a Codex probe there needs the trust step automated without
 the bypass flag. Until it is, the arrangement above is as measured on
 Codex 0.160.0, and a later Codex release may change it unseen.
+
+## Check that reports arrive
+
+```bash
+palimpsests doctor claude-code
+palimpsests doctor codex
+```
+
+It asks the serve what arrived on this integration's route and what it
+refused, and runs a dry run of that route — the real key check and parsing,
+with nothing written to the audit chain. Each finding has a code and, where
+there is one, a fix; the exit code is 1 if anything failed. Since 0.14.1.
+
+Both clients fail silently in a way of their own, and the check names each:
+
+- **Claude Code** — a hook whose header uses `$PALIMPSESTS_SERVE_API_KEY`
+  without listing it in `allowedEnvVars` sends an empty bearer, and every
+  report is refused while the agent carries on. `doctor` finds this in
+  `~/.claude/settings.json` before a single report is sent, and in the
+  serve's refusal count afterwards.
+- **Codex** — a hook it has not been told to trust is skipped without a
+  word, so nothing arrives at all. Whether a hook is trusted cannot be read
+  from outside Codex; `doctor` says so, and points at `/hooks`.
