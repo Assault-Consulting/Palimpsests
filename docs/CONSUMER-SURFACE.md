@@ -87,6 +87,7 @@ Two consumer modules for reading: `palimpsests.audit.reader` for everything abou
 | Resolutions | `acknowledged_candidates()`, `shredded_targets()`, `origin_state_at(seq) -> OriginState`, `OriginView` | Exists; bounded since 0.13 (U23, #295) |
 | Clock health | `step_catalog(reader)`, `TimeStep` | Exists — 0.14 (U19); channel 5 path kept |
 | Segments | `ContinuationView`, `decode_continuation` | Exists |
+| Erasure notes | `ShredView`, `decode_shred(record) -> ShredView \| None` — a KEY_SHRED's reason, declared targets and reference (profile §8); `DecodedRecord.detail` is not widened to carry it | Exists — 0.15 (asked for by Auditor) |
 | Constants | `RT_*`, `KIND_*`, `OUTCOME_*`, `SOURCE_*`, `DISP_*`, `TIER_*`, `TIME_*`, `FORMAT_VERSION`, `NO_SPAN`, `NO_PREDECESSOR` | Exists — 0.14 (U19); the profile's numbers live in `audit.profiles.inference`, the last two are aliases of `ZERO16`, `ZERO32` |
 | Names | `assurance_tier_name`, `time_trust_name` | Exists |
 | Anchors | `AnchorSource`, `AnchorReading`, `AnchorSourceError`, `AnchorAttempt`, `ManualAnchor`, `FileAnchor`, `ChainedAnchorSource` (incl. `last_attempts`), `Pkcs11Anchor`, `Pkcs11Unavailable`, `DEFAULT_OBJECT_LABEL` | Exists |
