@@ -61,10 +61,16 @@ Each entry of `segments`:
 | `root` | rotating writer only: the derived root (the §4.3 tree over the record hashes of every record from seq 0 through `last_seq`), hex — see `consistency-proof.md` |
 | `frontier` | rotating writer only: the writer's own state for continuing that root after earlier segments are gone, hex. Opaque to a reader |
 
-**Entry *i* is segment *i*, and entries are never removed.** Deleting a
-segment's file under retention leaves its entry in place: the manifest
-keeps every head. A continuation record's `SEG_INDEX` *k* is therefore
-checked against entry *k − 1*.
+**Entry *i* is segment *i*, and the entry of a closed segment is never
+removed.** Deleting a segment's file under retention leaves its entry in
+place: the manifest keeps every head. A continuation record's `SEG_INDEX`
+*k* is therefore checked against entry *k − 1*.
+
+One entry can be withdrawn, and only the last: a cut interrupted after the
+manifest was written and before the successor file existed. Nothing was
+written after it, so the cut did not happen; a writer that resumes folds
+it back — removes that entry and carries on in the same file — and logs
+that it did.
 
 ## 3. What a reader does with it
 
