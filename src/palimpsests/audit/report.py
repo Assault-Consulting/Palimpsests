@@ -39,6 +39,15 @@ from palimpsests.audit.pala.codec import RT_WITNESS
 from palimpsests.audit.reader import AuditReader
 from pathlib import Path
 
+__all__ = [
+    "REPORT_FORMAT",
+    "REPORT_FORMAT_1",
+    "VERDICTS",
+    "VerificationReport",
+    "build_report",
+    "derive_verdict",
+]
+
 REPORT_FORMAT = "pala-verification-report/2"
 #: The format written by 0.10 – 0.14. Not written any more; still read.
 REPORT_FORMAT_1 = "pala-verification-report/1"
@@ -225,8 +234,11 @@ def build_report(
     # the file a second time doubled the resident set for nothing (U14).
     # ``sha256`` and the container walk below take a buffer, so the
     # digest and every count are byte-identical either way.
-    raw = reader._data if reader is not None else path.read_bytes()
-
+    #
+    # Without a reader the same holds: one is opened here, and the digest is
+    # taken over the bytes it holds. The file used to be read whole into
+    # memory first and then mapped as well — a second copy of the file for
+    # every report made with an anchor.
     # The container walk (K2/K5): §2.4 well-formedness and the body↔header
     # digest binding are attested, not assumed — reader.verify() covers
     # headers, and a body swap is invisible to a header-only chain check.
@@ -235,12 +247,16 @@ def build_report(
     if reader is not None:
         ver, boots, spans, safety, witness_pins, first_seq, last_seq = _structure(reader)
         container = reader.container_check()
+        subject_sha256 = sha256(reader._data).hexdigest()
+        subject_bytes = len(reader._data)
     else:
         with AuditReader.open(path, anchor=anchor_source) as opened:
             ver, boots, spans, safety, witness_pins, first_seq, last_seq = _structure(
                 opened
             )
             container = opened.container_check()
+            subject_sha256 = sha256(opened._data).hexdigest()
+            subject_bytes = len(opened._data)
 
     chain = ver.chain
     version = palimpsests.__version__
@@ -249,8 +265,8 @@ def build_report(
         "format": REPORT_FORMAT,
         "subject": {
             "filename": path.name,
-            "sha256": sha256(raw).hexdigest(),
-            "bytes": len(raw),
+            "sha256": subject_sha256,
+            "bytes": subject_bytes,
             "records": chain.count,
             "boots": len(boots),
             "spans": len(spans),
@@ -326,6 +342,10 @@ def build_report(
                 "expected": ver.diagnosis.expected,
                 "narrative": ver.diagnosis.narrative,
                 "code": ver.diagnosis.code,
+                # Which question the diagnosis is about: a finding about the
+                # anchor is not a finding about the chain (reader's
+                # DIAGNOSIS_QUESTIONS).
+                "question": ver.diagnosis.question,
             }
             if ver.diagnosis is not None
             else None
