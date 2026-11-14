@@ -33,7 +33,7 @@ from pathlib import Path
 
 SCHEMA = (
     Path(__file__).resolve().parent.parent
-    / "docs/specs/report/pala-verification-report-1.schema.json"
+    / "docs/specs/report/pala-verification-report-2.schema.json"
 )
 
 

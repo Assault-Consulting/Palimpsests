@@ -444,8 +444,12 @@ def pala_verify_cmd(
                       malformed container, or an anchor mismatch
       2  PARTIAL    — chain intact, but no --anchor was supplied, so
                       truncation or replacement would not have been
-                      detected
+                      detected; or the container holds no records, so
+                      nothing was checked (verdict "empty" in --json)
       3  UNREADABLE — the file could not be read, or --anchor is invalid
+
+    An empty file where --anchor says a log should be is TAMPERED: the
+    anchor is missed.
     """
     # Build anchor sources in the order given; the first that answers wins.
     # --anchor keeps its exact validation and messages so its behaviour is
@@ -527,23 +531,21 @@ def pala_verify_cmd(
     advisory_items = adv.advisory().items
 
     consistent = result.chain_ok and not body_mismatches and malformed is None
-    if not consistent:
-        code = EXIT_TAMPERED
-    elif expected is not None and not result.complete_to_anchor:
-        code = EXIT_TAMPERED
+    # The same rule, in the same order, as the report's ``derive_verdict``
+    # (pinned against it by tests/test_report_v2.py): a contradiction first;
+    # then a container with no records, which is neither verified nor
+    # "intact so far" — nothing was checked (clarification C-8). It exits
+    # as PARTIAL does: not a failure, and not a pass to gate on.
+    if not consistent or (expected is not None and not result.complete_to_anchor):
+        verdict, code = "violation", EXIT_TAMPERED
+    elif result.count == 0:
+        verdict, code = "empty", EXIT_PARTIAL
     elif expected is None:
-        code = EXIT_PARTIAL
+        verdict, code = "partial", EXIT_PARTIAL
     else:
-        code = EXIT_VERIFIED
+        verdict, code = "sound", EXIT_VERIFIED
 
     if json_out:
-        # Compute verdict: "sound", "violation", or "partial"
-        if not consistent or (expected is not None and not result.complete_to_anchor):
-            verdict = "violation"
-        elif expected is None:
-            verdict = "partial"
-        else:
-            verdict = "sound"
 
         # Compute counts
         violation_seqs = [v[0] for v in result.violations]
@@ -610,7 +612,14 @@ def pala_verify_cmd(
         typer.echo(json.dumps(payload, indent=2))
         raise typer.Exit(code=code)
 
-    if consistent:
+    if verdict == "empty":
+        typer.secho(
+            "consistency: the container holds no records — nothing was "
+            "checked, and nothing was found intact",
+            fg=typer.colors.YELLOW,
+            err=True,
+        )
+    elif consistent:
         extra = (
             f", {len(result.uninterpretable)} uninterpretable record(s) "
             "(chain-checked, not rejected)"
@@ -822,8 +831,8 @@ def pala_report_cmd(
 ) -> None:
     """The verification report — an attestation document, not a gate.
 
-    Emits ``pala-verification-report/1``: JSON by default, ``--html`` for
-    a dependency-free static page. The verdict (sound / partial /
+    Emits ``pala-verification-report/2``: JSON by default, ``--html`` for
+    a dependency-free static page. The verdict (sound / partial / empty /
     violation) lives INSIDE the document, produced by the model's one
     verdict rule; anchor failures are *reported* in it, never fatal.
 

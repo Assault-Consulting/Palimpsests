@@ -83,7 +83,7 @@ The criteria, agreed in October 2026:
   take effect at 1.0. The writer gets a contract of its own before then
   (U27), for runtime integrators.
 - **Stable formats beside the frozen core.** The report
-  (`pala-verification-report/1`), the bundle (`pala-bundle/1`), the
+  (`pala-verification-report/2`, open to added keys), the bundle (`pala-bundle/1`), the
   consistency proof (`pala-consistency-proof/1`) and the segments manifest
   (`pala-segments/1`, which still needs a specification document of its
   own) change only by format-id bump. SCITT statement construction v3

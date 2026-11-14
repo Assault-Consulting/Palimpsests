@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Assault Consulting
 # SPDX-License-Identifier: Apache-2.0
 
-"""The package's HTML rendering of ``pala-verification-report/1``.
+"""The package's HTML rendering of the verification report.
 
 One of the two renderings the U6 contract names (the other is
 Auditor's PDF/JSON): this module turns the report *model* into a
@@ -18,7 +18,10 @@ sits alone on its own output line so two renderings of the same file
 diff to one line — exactly like the JSON.
 
 Public since 0.14 (channel 2, beside ``build_report``): ``render_html``
-takes the ``.data`` of a report built by the same version of this package.
+takes the ``.data`` of a report built by this package — the current
+``pala-verification-report/2``, or a ``/1`` report written by 0.10 – 0.14
+and kept since (it has no codes and no manifest section to show, and its
+verdict is rendered as it stands).
 The page is a rendering, not a format — its markup is not parsed by
 anyone, carries no contract, and may change in any release; the report's
 JSON is the machine-readable form.
@@ -37,20 +40,21 @@ _VERDICT_MEANING = {
         "anchor), so truncation or wholesale replacement would not have "
         "been detected"
     ),
+    "empty": (
+        "the container holds no records — nothing was checked, and nothing "
+        "was found intact"
+    ),
     "violation": (
         "the chain broke, the container is malformed, a body does not "
         "match its header digest, or the head missed the supplied anchor"
     ),
 }
 
-#: Beside the verdict of an empty container, in place of the gloss for
-#: ``partial``: "sound as far as checked" is the wrong sentence for a file
-#: with nothing in it. The verdict word is the report's and stays (format
-#: ``/1`` has no ``empty``; ``/2`` adds it). Raised by Auditor.
-_EMPTY_MEANING = (
-    "the container holds no records — nothing was checked, and nothing was "
-    "found intact"
-)
+#: A ``/1`` report of an empty container carries the verdict ``partial``
+#: (that format has no ``empty``). Beside it, this sentence replaces the
+#: gloss for ``partial``: "sound as far as checked" is wrong for a file
+#: with nothing in it. The verdict word is the report's and stays.
+_EMPTY_MEANING = _VERDICT_MEANING["empty"]
 
 _CSS = """
 body{font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;color:#1a1a1a;
@@ -68,6 +72,7 @@ th{background:#f6f6f6;font-weight:600}
 .verdict{display:inline-block;padding:.25rem .7rem;border-radius:.3rem;
 color:#fff;font-weight:700;letter-spacing:.03em}
 .v-sound{background:#2e7d32}.v-partial{background:#b26a00}
+.v-empty{background:#546e7a}
 .v-violation{background:#b71c1c}
 .muted{color:#666;font-size:13px}
 footer{margin-top:2rem;padding-top:.6rem;border-top:1px solid #ddd;
@@ -93,6 +98,19 @@ def _table(headers: list[str], rows: list[list[str]]) -> str:
 
 def _seqs(values: list) -> str:
     return _e(", ".join(str(v) for v in values)) if values else "&mdash;"
+
+
+def _violations(chain: dict) -> str:
+    """Each violation as ``seq N: code — reason``; without the code for ``/1``."""
+    rows = chain["violations"]
+    if not rows:
+        return "&mdash;"
+    codes = chain.get("violation_codes") or []
+    out = []
+    for i, (seq, reason) in enumerate(rows):
+        code = f"<code>{_e(str(codes[i][1]))}</code> &mdash; " if i < len(codes) else ""
+        out.append(f"seq {_e(str(seq))}: {code}{_e(str(reason))}")
+    return "<br>".join(out)
 
 
 def render_html(data: dict) -> str:
@@ -180,8 +198,7 @@ def render_html(data: dict) -> str:
         ("head", f"<code>{_e(chain['head'])}</code>"),
         ("breaks", _seqs(chain["breaks"])),
         ("gaps", _seqs(chain["gaps"])),
-        ("violations",
-         _seqs([tuple(v) for v in chain["violations"]])),
+        ("violations", _violations(chain)),
         ("uninterpretable", _seqs(chain["uninterpretable"])),
     ]))
 
@@ -223,9 +240,28 @@ def render_html(data: dict) -> str:
         parts.append("<h2>Diagnosis</h2>")
         parts.append(_kv([
             ("pattern", _e(str(d["pattern"]))),
+            *([("code", f"<code>{_e(str(d['code']))}</code>")] if d.get("code") else []),
             ("at seq", str(d["at_seq"])),
             ("expected", f"<code>{_e(str(d['expected']))}</code>"),
             ("narrative", _e(str(d["narrative"]))),
+        ]))
+
+    manifest = data.get("manifest")
+    if manifest is not None:
+        parts.append("<h2>Segments manifest</h2>")
+        parts.append(
+            '<p class="muted">The diagnosis above was decided against this '
+            "second file, beside the subject.</p>"
+        )
+        parts.append(_kv([
+            ("filename",
+             f"<code>{_e(manifest['filename'])}</code>"
+             if manifest["filename"] is not None else "&mdash;"),
+            ("status", f"<code>{_e(str(manifest['status']))}</code>"),
+            ("sha256",
+             f"<code>{_e(manifest['sha256'])}</code>"
+             if manifest["sha256"] is not None else "no file was read"),
+            *([("detail", _e(manifest["detail"]))] if manifest["detail"] else []),
         ]))
 
     adv = data["advisory"]
@@ -264,7 +300,7 @@ def render_html(data: dict) -> str:
     parts.append(
         "<footer>This document attests a check performed at the stated "
         "time; it does not certify anything. Derived rendering of "
-        "<code>pala-verification-report/1</code> &mdash; the chain itself "
+        f"<code>{_e(data['format'])}</code> &mdash; the chain itself "
         "is authoritative and re-verifiable without this page.</footer>"
     )
     parts.append("</body></html>")

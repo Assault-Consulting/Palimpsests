@@ -3,12 +3,22 @@
 
 """U6 — the verification-report model: one owner for the schema.
 
-Format id ``pala-verification-report/1``. The shape is the contract
-drafted in Auditor's FUNCTIONALITY.md §15, built here so the JSON
+Format id ``pala-verification-report/2`` (since 0.15). The shape is the
+contract drafted in Auditor's FUNCTIONALITY.md §15, built here so the JSON
 schema has exactly one owner: the package's HTML/CLI report and
 Auditor's PDF/JSON are two renderings of this one model and cannot
 drift apart. The machine truth of the shape ships in the wheel:
-``palimpsests/audit/_schemas/pala-verification-report-1.schema.json``.
+``palimpsests/audit/_schemas/pala-verification-report-2.schema.json``.
+
+``/2`` differs from ``/1`` in five ways, all decided together so the id
+moves once (``docs/specs/report/MIGRATING-1-TO-2.md``): a chain violation
+carries its code (``chain.violation_codes``, ``diagnosis.code``); the
+segments manifest a diagnosis rested on is named and hashed (``manifest``);
+a container with no records has its own verdict, ``empty``; and the format
+is open — a release may add a key, and none is removed, renamed or given
+another meaning without a new id. ``/1`` is no longer written. A ``/1``
+report already on disk stays readable: its schema still ships beside the
+new one, and :func:`derive_verdict` and the HTML rendering take either.
 
 Wording discipline, inherited from the contract: the report is an
 attestation of a check — *this tool verified file X against an anchor
@@ -29,7 +39,12 @@ from palimpsests.audit.pala.codec import RT_WITNESS
 from palimpsests.audit.reader import AuditReader
 from pathlib import Path
 
-REPORT_FORMAT = "pala-verification-report/1"
+REPORT_FORMAT = "pala-verification-report/2"
+#: The format written by 0.10 – 0.14. Not written any more; still read.
+REPORT_FORMAT_1 = "pala-verification-report/1"
+#: The verdicts of ``/2``, in the order a reader should think of them. The
+#: set is closed: a fifth verdict would be a new format id.
+VERDICTS = ("sound", "partial", "empty", "violation")
 SPEC_ID = "PALA-1 v1.0"
 _ADVISORY_NOTE = "advisory items do not affect the verdict"
 
@@ -39,9 +54,23 @@ def derive_verdict(data: dict) -> str:
 
     "violation" — the chain broke, the container is malformed, a body
     does not match its header digest, or the head missed a supplied
-    anchor. "partial" — sound as far as checked, but completeness was
-    NOT checked (no anchor), so truncation or wholesale replacement
-    would not have been detected. "sound" — everything checked, held.
+    anchor. "empty" — nothing contradicts anything, because the container
+    holds no records: nothing was checked, and nothing was found intact
+    (clarification C-8). "partial" — sound as far as checked, but
+    completeness was NOT checked (no anchor), so truncation or wholesale
+    replacement would not have been detected. "sound" — everything
+    checked, held.
+
+    The order matters. An empty file where an anchor says a log should be
+    is a violation — the anchor is missed — and is decided first; "empty"
+    is what is left when nothing was supplied to contradict, or when the
+    anchor supplied is itself the head of a chain with no records. In
+    neither case is "sound" or "partial" true of a file with nothing in it.
+
+    A ``/1`` report has no "empty": handed one, this function answers by
+    the rule that report was written under, so a stored ``/1`` report
+    re-derives to the verdict it carries.
+
     A renderer MUST NOT re-derive this rule; it calls this function or
     reads the report's ``verdict`` field, which was produced by it.
     """
@@ -56,6 +85,8 @@ def derive_verdict(data: dict) -> str:
     )
     if broken:
         return "violation"
+    if data.get("format") != REPORT_FORMAT_1 and data["subject"]["records"] == 0:
+        return "empty"
     if completeness["complete_to_anchor"] is None:
         return "partial"
     return "sound"
@@ -248,6 +279,9 @@ def build_report(
             "breaks": list(chain.breaks),
             "gaps": list(chain.gaps),
             "violations": [list(v) for v in chain.violations],
+            # Parallel to ``violations``, one entry each, same order: the
+            # code is what a consumer branches on, the reason a sentence.
+            "violation_codes": [list(v) for v in chain.violation_codes],
             "uninterpretable": list(chain.uninterpretable),
         },
         "anchor": (
@@ -291,8 +325,28 @@ def build_report(
                 "at_seq": ver.diagnosis.at_seq,
                 "expected": ver.diagnosis.expected,
                 "narrative": ver.diagnosis.narrative,
+                "code": ver.diagnosis.code,
             }
             if ver.diagnosis is not None
+            else None
+        ),
+        # The second file a diagnosis rested on (U17): named, with the status
+        # it decided and the digest of the bytes that were read. ``None``
+        # means the verdict read no second file. The name alone, like the
+        # subject's: the manifest sits beside the container, and a path
+        # would put the auditing machine's directories into the report.
+        "manifest": (
+            {
+                "filename": (
+                    Path(ver.manifest.path).name if ver.manifest.path is not None else None
+                ),
+                "status": ver.manifest.status,
+                "sha256": (
+                    ver.manifest.sha256.hex() if ver.manifest.sha256 is not None else None
+                ),
+                "detail": ver.manifest.detail,
+            }
+            if ver.manifest is not None
             else None
         ),
         "advisory": {

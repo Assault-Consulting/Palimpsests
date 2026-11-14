@@ -3,8 +3,9 @@
 
 """A container with no records is diagnosed as such (U26, clarification C-8).
 
-The verdict is not changed — §7.1 holds vacuously on zero records, and the
-core is frozen — but the diagnosis says what the "pass" means.
+The verifier's answer is not changed — §7.1 holds vacuously on zero records,
+and the core is frozen — but the diagnosis says what the "pass" means, and
+since report format ``/2`` the report's verdict does too: ``empty``.
 """
 from __future__ import annotations
 
@@ -35,17 +36,17 @@ def test_a_cut_first_record_is_still_a_truncated_tail(tmp_path):
         assert r.verify().diagnosis.pattern == "truncated_tail"
 
 
-def test_the_report_carries_it_and_still_validates_as_v1(tmp_path):
+def test_the_report_carries_it_with_its_own_verdict(tmp_path):
     jsonschema = pytest.importorskip("jsonschema")
     from palimpsests.audit.report import build_report
 
     p = tmp_path / "empty.pala"
     p.write_bytes(b"")
     data = build_report(p).data
-    assert data["verdict"] == "partial"  # the report's verdict rule is unchanged
+    assert data["verdict"] == "empty"  # /2; a /1 report said "partial" here
     assert data["diagnosis"]["pattern"] == "empty_container"
     schema_path = (Path(__file__).resolve().parent.parent / "docs" / "specs" / "report"
-                   / "pala-verification-report-1.schema.json")
+                   / "pala-verification-report-2.schema.json")
     jsonschema.validate(data, json.loads(schema_path.read_text(encoding="utf-8")))
 
 

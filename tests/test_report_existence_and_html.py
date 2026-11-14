@@ -45,16 +45,18 @@ def test_render_html_is_declared_and_renders_a_report(tmp_path):
 
 
 def test_an_empty_container_is_not_called_sound_as_far_as_checked(tmp_path):
-    """The verdict word is the report's (``partial`` in format /1); the
-    sentence beside it must not say an empty file is sound as far as checked."""
+    """The verdict word is the report's — ``empty`` since format /2 — and the
+    sentence beside it must not say an empty file is sound as far as checked.
+    (The same page for a stored /1 report, whose word is ``partial``:
+    tests/test_report_v2.py.)"""
     import palimpsests.audit.report_html as rh
 
     p = tmp_path / "empty.pala"
     p.write_bytes(b"")
     data = build_report(p).data
-    assert data["verdict"] == "partial" and data["diagnosis"]["pattern"] == "empty_container"
+    assert data["verdict"] == "empty" and data["diagnosis"]["pattern"] == "empty_container"
     page = rh.render_html(data)
-    assert "PARTIAL" in page
+    assert "EMPTY" in page and "PARTIAL" not in page
     assert "sound as far as checked" not in page
     assert "holds no records" in page and "nothing was found intact" in page
 

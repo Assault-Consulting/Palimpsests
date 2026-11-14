@@ -194,7 +194,7 @@ Ordered by what each step unblocks. "PR" means one reviewable pull request.
 8. U18 — `verify_segment_set` (0.14). **Done (0.14)**, as its own module `audit.segment_set`.
 9. U28 + U29 — found by Auditor while moving onto the 0.13 surface (its `UPSTREAM-FINDINGS-0_13.md`): `verify()` on an agent's log, and filtering without decoding. **Done (0.14)**, one PR. U30 + U31 — Auditor's requests for 0.14 (its `UPSTREAM-REQUESTS-0_14.md`): `detail` in place, the stored bytes and the TLV maps. **Done (0.14)**, one PR.
 
-The U track to 1.0 is complete except U27, the writer's contract. Waiting for the report's `/2`: the violation codes (U24), and whether an empty container takes a stronger verdict (C-8).
+The U track to 1.0 is complete except U27, the writer's contract. The report's `/2` (0.15) closed what was waiting for it: the violation codes (U24), the manifest's identity (U17) and the empty container, which takes a verdict of its own, `empty` (C-8) — see `docs/specs/report/MIGRATING-1-TO-2.md`.
 
 **Before 1.0**
 
