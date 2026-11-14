@@ -8,6 +8,163 @@ API changes.
 
 ## [Unreleased]
 
+## [0.14.1] — 2026-11-14
+
+**A patch release: no format changes, nothing removed.** The wire, the
+report format and the vectors are those of 0.14.0.
+
+**It fixes the record export.** `pala export` printed a record's body
+without checking it against the digest in its header, so a body altered
+after writing was shown unremarked under a summary that said `chain_ok`;
+and a container cut in the middle of a record made the export fail and write
+nothing. `pala verify` was right throughout. **If you relied on an export
+made by 0.8 to 0.14.0, its `chain_ok` covered the headers only: run
+`pala verify` on the log itself.**
+
+It also ships what was ready and purely additive: `palimpsests doctor`, with
+the serve's status route and the dry run behind it — does an integration's
+reports reach the serve; the fixed header's field map and the record export
+(`pala-jsonl/1`) in the declared reading surface. Surface checks for this
+release: `results/surfaces-2026-11-14.md` (Windows) and
+`results/surfaces-2026-11-13.md` (Linux).
+
+### Added
+
+- **`palimpsests doctor <integration>`** (R1, part 3): does an integration's
+  reports reach the serve? For `claude-code`, `codex`, `opencode`, `litellm`,
+  `mcp` or `otel` it reads the serve's status route, runs a dry run of the
+  integration's route — the real key check and parsing, nothing written to
+  the chain — and reads the client's configuration where it can. Each finding
+  has a code, a level and a fix. It names the three silent losses measured in
+  this repository's runs: Claude Code's empty bearer (a hook header that uses
+  a variable not listed in `allowedEnvVars`), a client holding another key,
+  and a route nothing has reached — with, for Codex, the reminder that an
+  untrusted hook is skipped without a word. Exit code 1 if anything failed;
+  `--json` for machines (`pala-doctor/1`). It writes nothing: not to the
+  chain, not to any client's files.
+
+- **A dry run of the ingestion path** (R1, part 2). A request to
+  `/v1/pala/hooks/claude`, `/v1/pala/hooks/codex`, `/v1/pala/events` or
+  `/v1/traces` carrying `X-Palimpsests-Dry-Run: 1` passes the real bearer
+  check and the real ingestion code, and the reply says what would have been
+  recorded (`would_record`) — while the chain, the pending calls and the
+  accepted counters stay exactly as they were. A check of an integration can
+  therefore exercise the whole path without putting a call nobody made onto
+  an append-only audit chain. The status route counts dry runs apart from
+  accepted reports.
+
+- **`GET /v1/pala/status`: what reached the serve** (R1, part 1). Per
+  ingestion route (`/v1/pala/hooks/claude`, `/v1/pala/hooks/codex`,
+  `/v1/pala/events`, `/v1/traces`): requests accepted, refused by the bearer
+  check — an empty bearer counted apart from a wrong one — and rejected
+  otherwise, with the time of the last of each; the pending tool calls; the
+  chain's length and head. A client whose reports are refused or never sent
+  looks normal from its own side — measured in runs R1 (Claude Code, empty
+  bearer), R2 (Codex, untrusted hooks) and OpenCode run 3 (no key, 401) —
+  and these counters let an operator tell the three apart. Behind the same
+  bearer as every route; writes nothing to the chain. The shape
+  (`pala-serve-status/1`) is experimental until the HTTP surface gets a
+  stability class.
+
+- **The fixed header's field map is in the reading surface.**
+  `HEADER_FIELDS`, `HeaderField` and `FIXED_HEADER_LEN` are re-exported from
+  `palimpsests.audit.reader` and held by the contract test. 0.14 gave a
+  consumer a record's stored bytes and both TLV maps, but the map of the 156
+  fixed bytes those spans sit after stayed in `pala.codec`, outside the
+  surface — so a byte view could name every TLV and none of the sixteen
+  header fields. The map has existed since 0.9; this declares it. A test
+  holds it to the decoder on real records: each field unpacked from the
+  stored bytes equals what `header_at` gives. Requested by Auditor.
+
+- **The record export is in the declared surface.**
+  `palimpsests.audit.export.export_jsonl` and its format `pala-jsonl/1` join
+  channel 2 beside the report, with an `__all__`, a contract test and — for
+  the first time — a description of the format
+  (`docs/specs/export/pala-jsonl-1.md`). The format is open: keys may be
+  added, none removed or renamed. Requested by Auditor.
+- **A line carries what the reader decodes**: `outcome` / `outcome_name` on a
+  tool result, `disposition` / `disposition_name` and `operator_id` on an
+  oversight acknowledgement, and `detail` — each present only where the
+  record has it, as `source` already was. A consumer of the export no longer
+  reads a TLV's hex to learn whether a tool result was `ok`, `error` or
+  `unobserved`.
+- **The summary says more, and says what it did not check**:
+  `violation_codes` beside the sentences; `well_formed`, `malformed`,
+  `bytes_parsed`, `bytes_total`; `body_digest_mismatches`; `consistent` —
+  `pala verify`'s consistency, by the same rule; and
+  `completeness_checked: false`, since the export reads no anchor.
+  `export_jsonl` takes any bytes-like object, a file's mapping included.
+
+### Fixed
+
+- **The HTML report does not call an empty container "sound as far as
+  checked".** For an empty file read without an anchor the report's verdict
+  is `partial` (format `/1` has no other word for it), and the page printed
+  the general gloss for `partial` beside it. With the `empty_container`
+  diagnosis the page now says the container holds no records — nothing was
+  checked, and nothing was found intact. The verdict and the report's JSON
+  are unchanged; `/2` gives this case its own verdict. Raised by Auditor.
+
+- **The export marks a body that is not the one its record binds.** It
+  decoded and printed bodies without checking them against the digest in
+  their headers, so a body altered after writing was shown, unremarked, under
+  a summary that said `chain_ok` — while `pala verify` reported the mismatch
+  for the same file. Such a line now carries `body_digest_mismatch`, the
+  summary lists its seq, and `consistent` is `false`. `chain_ok` keeps its
+  meaning: the header chain.
+- **The export no longer fails on a container cut mid-record.**
+  `export_jsonl` raised `MalformedRecord` — and `pala export` printed a
+  traceback and wrote nothing — for a file whose last record was incomplete:
+  a writer caught mid-write, or a crash. It now exports every whole record
+  and says in the summary where the walk stopped, as its own description
+  always promised.
+- **The export's memory no longer grows with the chain.** It decoded every
+  record into a list before writing the first line: 448 MB for 200,002
+  records of tool loops (42 MB on disk). It now reads, writes and forgets one
+  record at a time — 77 MB on the same chain, 42 of them the file itself.
+
+- **Generators write LF on every platform.** The six generators of
+  committed, byte-compared artifacts — the core, inference and consistency
+  vectors, the SCITT statement v3 vector, the site's notes and the
+  compatibility table — wrote text with the
+  platform's newline, so on Windows a regenerated file was CRLF and no longer
+  equal to the committed one; for the vectors, whose digests are pinned in
+  recorded verification runs, a commit of it would have changed published
+  digests. Each write now names `newline="\n"`; a test checks the source, and
+  finds every `gen_*.py` / `build_*.py` itself so none is left off the list.
+  Regenerating on Linux changes no byte. Found during the 0.14.0 release.
+- **Every generated, byte-compared artifact checks out unconverted.** The
+  other half of the same defect: `.gitattributes` exempted the core and
+  inference vectors from line-ending conversion, but not the consistency
+  vectors, the SCITT statement vectors (bridge run B3 had recorded a CRLF
+  checkout's digest beside the real one), the generated site or
+  `COMPATIBILITY.md` — so a Windows runner (autocrlf on) checked them out as
+  CRLF and the comparison failed against LF output. They are now `-text` or
+  `eol=lf`, and a test checks the attributes. Reproduced with an autocrlf
+  checkout on Linux: the two Windows CI failures before, the full suite green
+  after.
+- **Two lock tests named the wrong process on Windows.** They expected the
+  `Popen` pid in the lock's message; a venv's `python.exe` on Windows is a
+  launcher whose child takes the lock. The holder now reports its own pid and
+  the tests compare with that, exactly as before on every platform.
+- **`.gitignore` covers any venv name** (`.venv*/`, `venv*/`). Hatchling builds
+  the sdist from these rules, and a local build in `.venv-something/` put it in
+  the archive (81 MB). Published artifacts are built by CI from a clean
+  checkout and were not affected.
+
+### Documentation
+
+- Every integration's README names its `palimpsests doctor` check after the
+  install steps, with what the check reads for that client and the silent
+  loss that client is prone to.
+
+- Surface check before the release, from `main` after the ingestion routes
+  were refactored for the dry run: LiteLLM 1.109.1, the MCP proxy, Claude
+  Code 2.1.319 and pydantic-ai 2.68.0 through the OTLP exporter, on Linux —
+  four probes, four green (`results/surfaces-2026-11-13.md`, with its notes).
+  In `integrations/COMPATIBILITY.md`, rows that share a note now share its
+  number.
+
 ## [0.14.0] — 2026-11-09
 
 **Additive for the wire — the PALA-1 core is unchanged (frozen at v1.0);
@@ -1645,7 +1802,8 @@ Initial release.
   from the OS keychain, falling back to an ephemeral key headless.
 - **CLI** — `chat`, `models`, `engine list` / `engine use`.
 
-[Unreleased]: https://github.com/Assault-Consulting/Palimpsests/compare/v0.14.0...HEAD
+[Unreleased]: https://github.com/Assault-Consulting/Palimpsests/compare/v0.14.1...HEAD
+[0.14.1]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.14.1
 [0.14.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.14.0
 [0.13.1]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.13.1
 [0.13.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.13.0
