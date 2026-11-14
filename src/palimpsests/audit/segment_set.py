@@ -38,7 +38,13 @@ import os
 import struct
 from dataclasses import dataclass, field
 from hashlib import sha256
-from palimpsests.audit.pala.codec import FIXED_HEADER_LEN, MAGIC, ZERO32, iter_records
+from palimpsests.audit.pala.codec import (
+    FIXED_HEADER_LEN,
+    MAGIC,
+    ZERO32,
+    MalformedRecord,
+    iter_records,
+)
 from palimpsests.audit.pala.segments import SEGMENTS_FORMAT
 from palimpsests.audit.pala.verify import verify_headers
 from palimpsests.audit.reader import AuditReader
@@ -99,6 +105,14 @@ def verify_segment_set(manifest_path: str | os.PathLike[str]) -> SegmentSetVerif
         name = str(entry.get("file", ""))
         seam_ok = prev_entry_head is None or entry.get("prev_head") == prev_entry_head
         prev_entry_head = entry.get("head")
+        if not _is_file_name(name):
+            # A manifest is a file someone handed over. An entry that names a
+            # path — a directory above, an absolute path — is not followed:
+            # the set is the files beside the manifest, and nothing else.
+            checks.append(SegmentCheck(
+                name, True, False, False, None, seam_ok,
+                "the manifest's entry does not name a file beside it; not read"))
+            continue
         path = folder / name
         if not path.is_file():
             absent.append(name)
@@ -120,7 +134,9 @@ def verify_segment_set(manifest_path: str | os.PathLike[str]) -> SegmentSetVerif
             last_head = head
 
     consistent = all(
-        c.seam_ok and (not c.present or (c.verified and c.head_matches is not False))
+        c.seam_ok
+        and c.verified is not False
+        and (not c.present or (c.verified and c.head_matches is not False))
         for c in checks
     )
     starts_at_genesis = bool(entries) and entries[0].get("prev_head") == ZERO32.hex() \
@@ -140,7 +156,15 @@ def _check_file(path: Path, name: str, entry: dict, seam_ok: bool,
                 *, listed: bool = True) -> tuple[SegmentCheck, bytes | None]:
     """Verify one segment from its declared start, and against its entry."""
     data = path.read_bytes()
-    headers = [hb for hb, _body in iter_records(data)] if data else []
+    # The whole records, up to a container defect: a segment cut mid-record
+    # is an answer about that segment, not a reason to fail the whole set.
+    # ``container_check`` below says what the defect is.
+    headers: list[bytes] = []
+    try:
+        for hb, _body in iter_records(data):
+            headers.append(hb)
+    except MalformedRecord:
+        pass
     prev_hex = entry.get("prev_head")
     first_is_chain_start = prev_hex == ZERO32.hex()
     try:
@@ -176,6 +200,11 @@ def _check_file(path: Path, name: str, entry: dict, seam_ok: bool,
     check = SegmentCheck(name, listed, True, verified, head_matches, seam_ok,
                          "; ".join(problems) or None)
     return check, (result.head if headers else None)
+
+
+def _is_file_name(name: str) -> bool:
+    return bool(name) and name not in (".", "..") and name == os.path.basename(name) \
+        and "\\" not in name and "/" not in name
 
 
 def _seq(headers: list[bytes], i: int) -> int | None:

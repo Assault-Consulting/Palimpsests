@@ -85,8 +85,8 @@ The criteria, agreed in October 2026:
 - **Stable formats beside the frozen core.** The report
   (`pala-verification-report/2`, open to added keys), the bundle (`pala-bundle/1`), the
   consistency proof (`pala-consistency-proof/1`) and the segments manifest
-  (`pala-segments/1`, which still needs a specification document of its
-  own) change only by format-id bump. SCITT statement construction v3
+  (`pala-segments/1`) each have a specification and change only by
+  format-id bump; all but the consistency proof are open to added keys. SCITT statement construction v3
   joins them after an independent reproduction.
 - **Verification from our side, written down.** What is checked before
   every release — the suites on three platforms, the vectors, the surface

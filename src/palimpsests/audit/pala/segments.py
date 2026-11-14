@@ -28,7 +28,7 @@ from __future__ import annotations
 import json
 import struct
 from dataclasses import dataclass
-from palimpsests.audit.pala import iter_records
+from palimpsests.audit.pala import MalformedRecord, iter_records
 from palimpsests.audit.pala.codec import ZERO32
 from palimpsests.audit.pala.codec import record_hash as _record_hash
 from pathlib import Path
@@ -64,13 +64,30 @@ def segment_chain(
     Cuts strictly at record boundaries; writes ``segment-*.pala`` files
     and ``segments.json`` into ``out_dir``. Deterministic: same source,
     same size, same tool version → identical files and manifest.
+
+    The source is walked to its end before anything is written. A source
+    that is not a well-formed container (§2.4) — cut in the middle of a
+    record, or not a container — is refused with ``ValueError`` and nothing
+    is written: the cut promises that the segments concatenate back to the
+    source, and bytes that are not whole records cannot be placed in one.
+
+    The cut is faithful, not a judgement: a chain with a broken link or an
+    altered body is segmented as it is, and the segments carry the same
+    damage. ``verify_segment_set`` on the manifest says whether the set
+    holds.
     """
     if records_per_segment < 1:
         raise ValueError("records_per_segment must be >= 1")
     src = Path(source)
     out = Path(out_dir)
-    out.mkdir(parents=True, exist_ok=True)
     data = src.read_bytes()
+    try:
+        records = list(iter_records(data))
+    except MalformedRecord as e:
+        raise ValueError(
+            f"{src} is not a well-formed container ({e}); nothing was written"
+        ) from e
+    out.mkdir(parents=True, exist_ok=True)
 
     infos: list[SegmentInfo] = []
     buf: list[bytes] = []
@@ -98,7 +115,7 @@ def segment_chain(
         prev_head = head
         buf, first_seq = [], None
 
-    for hb, body in iter_records(data):
+    for hb, body in records:
         (seq,) = struct.unpack_from("<Q", hb, 12)
         if first_seq is None:
             first_seq = seq

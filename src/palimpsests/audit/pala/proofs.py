@@ -176,14 +176,41 @@ class ConsistencyProof:
 
     @classmethod
     def from_json(cls, doc: dict) -> ConsistencyProof:
-        if doc.get("format") != CONSISTENCY_FORMAT:
+        """Read a document, or raise ``ValueError`` — and nothing else — when
+        it is not of this shape.
+
+        Shape is checked, not coerced: the counts are JSON integers (``2.7``
+        is not 2, ``true`` is not 1, ``"7"`` is not 7), the roots and the
+        path's elements are hex strings. A document of the right shape whose
+        path does not connect its roots is not an error: it reads, and
+        :meth:`verify` returns ``False``.
+        """
+        if not isinstance(doc, dict) or doc.get("format") != CONSISTENCY_FORMAT:
             raise ValueError(f"not a {CONSISTENCY_FORMAT} document")
+
+        def count(key: str) -> int:
+            v = doc.get(key)
+            if isinstance(v, bool) or not isinstance(v, int):
+                raise ValueError(f"'{key}' is not an integer")
+            return v
+
+        def hexbytes(v: object, what: str) -> bytes:
+            if not isinstance(v, str):
+                raise ValueError(f"{what} is not a hex string")
+            try:
+                return bytes.fromhex(v)
+            except ValueError as e:
+                raise ValueError(f"{what} is not a hex string") from e
+
+        path = doc.get("path")
+        if not isinstance(path, list):
+            raise ValueError("'path' is not a list")
         return cls(
-            first=int(doc["first"]),
-            second=int(doc["second"]),
-            first_root=bytes.fromhex(doc["first_root"]),
-            second_root=bytes.fromhex(doc["second_root"]),
-            path=[bytes.fromhex(h) for h in doc["path"]],
+            first=count("first"),
+            second=count("second"),
+            first_root=hexbytes(doc.get("first_root"), "'first_root'"),
+            second_root=hexbytes(doc.get("second_root"), "'second_root'"),
+            path=[hexbytes(h, "a path element") for h in path],
         )
 
     def verify(self) -> bool:
