@@ -20,6 +20,11 @@ still deliver a call and its result with the expected mark.
 
 | Integration | Client version | Machine | Date | State | Checker's detail | Report |
 |---|---|---|---|---|---|---|
+| litellm | 1.106.6 | Windows 11 10.0.26200, Python 3.12.10, palimpsests 0.14.0 (git 02537ba) | 2026-11-14 | 🟢 GREEN | 1 call(s), 1 result(s), sources [1] | [surfaces-2026-11-14.md](../results/surfaces-2026-11-14.md) |
+| mcp | stdio / JSON-RPC 2.0 | Windows 11 10.0.26200, Python 3.12.10, palimpsests 0.14.0 (git 02537ba) | 2026-11-14 | 🟢 GREEN | 1 call(s), 1 result(s), sources [1] | [surfaces-2026-11-14.md](../results/surfaces-2026-11-14.md) |
+| opencode | 1.18.31 | Windows 11 10.0.26200, Python 3.12.10, palimpsests 0.14.0 (git 02537ba) | 2026-11-14 | 🟢 GREEN | 1 call(s), 1 result(s), sources [0, 1]; not judged: 1 record(s) with source 0 | [surfaces-2026-11-14.md](../results/surfaces-2026-11-14.md) |
+| claude-code | 2.1.310 (Claude Code) | Windows 11 10.0.26200, Python 3.12.10, palimpsests 0.14.0 (git 02537ba) | 2026-11-14 | ⚪ SKIP | not isolable on Windows yet — the client cannot be pointed at a temporary home without failing to start a turn; not evidence about the surface (see run R1 for a manual check) | [surfaces-2026-11-14.md](../results/surfaces-2026-11-14.md) |
+| otel | pydantic-ai 2.64.0, otlp-http 1.45.2 | Windows 11 10.0.26200, Python 3.12.10, palimpsests 0.14.0 (git 02537ba) | 2026-11-14 | 🟢 GREEN | 1 call(s), 1 result(s), sources [1] | [surfaces-2026-11-14.md](../results/surfaces-2026-11-14.md) |
 | litellm | 1.109.1 | Linux 6.18.44-fc-v445, Python 3.12.3, palimpsests 0.14.0 (git 7b81e29) | 2026-11-13 | 🟢 GREEN [1] | 1 call(s), 1 result(s), sources [1] | [surfaces-2026-11-13.md](../results/surfaces-2026-11-13.md) |
 | mcp | stdio / JSON-RPC 2.0 | Linux 6.18.44-fc-v445, Python 3.12.3, palimpsests 0.14.0 (git 7b81e29) | 2026-11-13 | 🟢 GREEN [1] | 1 call(s), 1 result(s), sources [1] | [surfaces-2026-11-13.md](../results/surfaces-2026-11-13.md) |
 | claude-code | 2.1.319 (Claude Code) | Linux 6.18.44-fc-v445, Python 3.12.3, palimpsests 0.14.0 (git 7b81e29) | 2026-11-13 | 🟢 GREEN [1] | 1 call(s), 1 result(s), sources [1] | [surfaces-2026-11-13.md](../results/surfaces-2026-11-13.md) |
