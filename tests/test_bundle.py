@@ -105,3 +105,158 @@ def test_cli_bundle_command(tmp_path):
     assert result.exit_code == 0, result.output
     assert "6 record(s) (4 with inclusion proofs)" in result.output
     assert out.exists()
+
+
+# ── what the bundle says about a log that does not hold together ───────────
+#
+# Until 0.15 ``verification.json`` carried the header chain's answer and
+# nothing about bodies or the container: a body altered after writing was
+# bundled under ``chain_ok: true`` with no mark, and a file cut mid-record
+# made the assembler raise instead of bundling what was whole.
+
+
+def _members(path):
+    with tarfile.open(path) as tar:
+        return {m.name: tar.extractfile(m).read() for m in tar.getmembers()}
+
+
+def _verification(path):
+    return json.loads(_members(path)["verification.json"])
+
+
+def _altered(tmp_path):
+    """One byte inside a body flipped: headers untouched, chain still links."""
+    log = _chain(tmp_path)
+    raw = bytearray(log.read_bytes())
+    offset, target, seq = 0, None, None
+    for hb, body in iter_records(bytes(raw)):
+        if body and target is None:
+            target = offset + len(hb) + len(body) - 1
+            seq = int.from_bytes(hb[12:20], "little")
+        offset += len(hb) + len(body)
+    raw[target] ^= 0x01
+    out = tmp_path / "altered.pala"
+    out.write_bytes(bytes(raw))
+    return out, seq
+
+
+def test_a_body_altered_after_writing_is_bundled_and_marked(tmp_path):
+    log, seq = _altered(tmp_path)
+    res = assemble_bundle(log, tmp_path / "b.tar")
+    ver = _verification(tmp_path / "b.tar")
+    assert ver["chain_ok"] is True  # the headers still chain: that is the trap
+    assert ver["container"]["body_digest_mismatches"] == [seq]
+    assert ver["consistent"] is False and res.consistent is False
+    assert res.records == 6  # the evidence is all there, for inspection
+
+
+def test_a_container_cut_mid_record_bundles_what_is_whole(tmp_path):
+    log = _chain(tmp_path)
+    cut = tmp_path / "cut.pala"
+    cut.write_bytes(log.read_bytes()[:-11])
+    res = assemble_bundle(cut, tmp_path / "b.tar")
+    members = _members(tmp_path / "b.tar")
+    ver = json.loads(members["verification.json"])
+    assert res.records == 5 and len(list(iter_records(members["records.pala"]))) == 5
+    assert ver["container"]["well_formed"] is False
+    assert "cut short" in ver["container"]["malformed"]
+    assert ver["container"]["bytes_parsed"] == len(members["records.pala"])
+    assert ver["container"]["bytes_parsed"] < ver["container"]["bytes_total"]
+    assert ver["consistent"] is False and res.consistent is False
+
+
+def test_bytes_that_are_no_container_bundle_as_nothing_and_say_so(tmp_path):
+    junk = tmp_path / "junk.pala"
+    junk.write_bytes(b"not a container at all")
+    res = assemble_bundle(junk, tmp_path / "b.tar")
+    ver = _verification(tmp_path / "b.tar")
+    assert res.records == 0 and res.consistent is False
+    assert ver["container"]["well_formed"] is False and ver["container"]["bytes_parsed"] == 0
+
+
+def test_the_bundle_the_report_and_pala_verify_agree_on_consistency(tmp_path):
+    from palimpsests.audit.report import build_report
+    from palimpsests.cli import app
+    from typer.testing import CliRunner
+
+    altered, _seq = _altered(tmp_path)
+    cut = tmp_path / "cut.pala"
+    cut.write_bytes((tmp_path / "w.pala").read_bytes()[:-11])
+    for log in (tmp_path / "w.pala", altered, cut):
+        assemble_bundle(log, tmp_path / "b.tar")
+        ver = _verification(tmp_path / "b.tar")
+        report = build_report(log).data
+        assert ver["container"] == report["container"], log.name
+        cli = json.loads(
+            CliRunner().invoke(app, ["pala", "verify", str(log), "--json"]).output
+        )
+        assert ver["consistent"] == cli["consistency"]["ok"], log.name
+        assert ver["consistent"] == (report["verdict"] != "violation"), log.name
+
+
+def test_violations_carry_their_codes(tmp_path):
+    log = _chain(tmp_path)
+    raw = bytearray(log.read_bytes())
+    offset = 0
+    for hb, body in iter_records(bytes(raw)):
+        last = offset
+        offset += len(hb) + len(body)
+    raw[last + 11] = 9  # the last record's time-trust byte: an undefined value
+    bad = tmp_path / "v.pala"
+    bad.write_bytes(bytes(raw))
+    assemble_bundle(bad, tmp_path / "b.tar")
+    ver = _verification(tmp_path / "b.tar")
+    assert ver["violations"] and len(ver["violation_codes"]) == len(ver["violations"])
+    assert [c for _s, c in ver["violation_codes"]] == ["time_trust_undefined"]
+    assert ver["consistent"] is False
+
+
+def test_the_keys_of_pala_bundle_1_are_kept(tmp_path):
+    """The format is open: keys are added, never removed or renamed. These are
+    the keys a 0.10 – 0.14 bundle had; each must still be there."""
+    assemble_bundle(_chain(tmp_path), tmp_path / "b.tar")
+    members = _members(tmp_path / "b.tar")
+    assert list(members) == [
+        "records.pala", "proofs.json", "verification.json", "time-claims.json",
+        "MANIFEST.json",
+    ]
+    manifest = json.loads(members["MANIFEST.json"])
+    assert manifest["format"] == "pala-bundle/1"
+    assert {"format", "tool", "source_head", "range", "members"} <= manifest.keys()
+    assert {"from_seq", "to_seq", "records"} <= manifest["range"].keys()
+    ver = json.loads(members["verification.json"])
+    assert {
+        "chain_ok", "records", "head", "breaks", "gaps", "violations", "uninterpretable",
+        "completeness", "anchor", "anchor_attempts", "advisory",
+    } <= ver.keys()
+    assert {"checked", "ok", "anchor_lag"} <= ver["completeness"].keys()
+    claim = json.loads(members["time-claims.json"])["claims"][0]
+    assert {"seq", "monotonic_ns", "wall_clock_ns", "time_trust", "time_trust_name"} <= claim.keys()
+    proof = next(p for p in json.loads(members["proofs.json"])["proofs"].values() if p)
+    assert {"leaf", "path", "root", "root_seq"} <= proof.keys()
+
+
+def test_the_cli_does_not_call_an_altered_log_sound(tmp_path):
+    from palimpsests.cli import app
+    from typer.testing import CliRunner
+
+    altered, _seq = _altered(tmp_path)
+    res = CliRunner().invoke(app, ["pala", "bundle", str(altered), "-o", str(tmp_path / "b.tar")])
+    assert res.exit_code == 0  # assembling broken evidence is not a failure
+    assert "BROKEN" in res.output and "holds" not in res.output
+    ok = CliRunner().invoke(
+        app, ["pala", "bundle", str(tmp_path / "w.pala"), "-o", str(tmp_path / "c.tar")]
+    )
+    assert "consistency inside: holds" in ok.output and "sound" not in ok.output
+
+
+def test_the_cli_bundles_a_torn_file_without_a_traceback(tmp_path):
+    from palimpsests.cli import app
+    from typer.testing import CliRunner
+
+    log = _chain(tmp_path)
+    cut = tmp_path / "cut.pala"
+    cut.write_bytes(log.read_bytes()[:-11])
+    res = CliRunner().invoke(app, ["pala", "bundle", str(cut), "-o", str(tmp_path / "b.tar")])
+    assert res.exit_code == 0 and res.exception is None, res.output
+    assert "bundled 5 record(s)" in res.output and "BROKEN" in res.output

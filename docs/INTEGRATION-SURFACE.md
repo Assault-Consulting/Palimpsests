@@ -17,17 +17,17 @@ it is not promised.
 | 1 | Reading | `palimpsests.audit.reader.AuditReader` (`open`, `verify`, `records`, `spans`, `boots`, `origin_at`, `unloaded_at`, `acknowledged_candidates`, `shredded_targets`; sparse access `record_count`, `record_at`, `record_by_seq`, `header_at` since 0.13; `Verification.manifest` since 0.13; `container_check()`, `record_fields_at()` since 0.14; for a byte view `record_bytes_at()`, `header_tlv_spans_at()`, `body_tlv_spans_at()` since 0.14, and the fixed header's layout `HEADER_FIELDS` / `HeaderField` / `FIXED_HEADER_LEN` since 0.14.1; a KEY_SHRED's erasure note `decode_shred` / `ShredView` since 0.15); a segmented chain as one set: `palimpsests.audit.segment_set.verify_segment_set` (since 0.14) | public (since 0.8) |
 | 2 | Report and export | `palimpsests.audit.report.build_report`, `derive_verdict`, format `pala-verification-report/2` (since 0.15; `/1` in 0.10 – 0.14, still read); the HTML page `palimpsests.audit.report_html.render_html` (since 0.14 — a rendering of the report's `.data`, its markup not a format); the record export `palimpsests.audit.export.export_jsonl`, format `pala-jsonl/1` (since 0.14.1) | public (since 0.10) |
 | 3 | Proofs | `palimpsests.audit.pala.proofs.inclusion_proof`, `range_proofs`; prefix consistency `chain_root`, `consistency_proof`, `ConsistencyProof`, format `pala-consistency-proof/1` (since 0.12) | public (since 0.10) |
-| 4 | Bundle | `palimpsests.audit.pala.bundle.assemble_bundle`, format `pala-bundle/1` | public (since 0.10) |
+| 4 | Bundle | `palimpsests.audit.pala.bundle.assemble_bundle`, format `pala-bundle/1` (`docs/specs/bundle/pala-bundle-1.md`) | public (since 0.10) |
 | 5 | Health | `palimpsests.audit.timehealth`, `palimpsests.audit.bootstats` | public (since 0.10) |
 | 6 | Conformance | `palimpsests.audit.pala.vectors.load`, `palimpsests.audit.pala.selftest.run_selftest`, `pala selftest` | public (since 0.10) |
 | 7 | Distribution | PyPI wheel; vectors and the report schema ship inside it | — |
 
 **Stability class "public":** breaking changes only with a minor version
 bump and a CHANGELOG entry naming the break; additive changes (new
-fields, new functions) may land in any release. Two named formats
-(`pala-bundle/1`, `pala-consistency-proof/1`) change only by format-id
-bump. Two are open — `pala-verification-report/2` and `pala-jsonl/1`: a
-release may add a key, and none is removed, renamed or given another
+fields, new functions) may land in any release. One named format,
+`pala-consistency-proof/1`, changes only by format-id bump. Three are
+open — `pala-verification-report/2`, `pala-bundle/1` and `pala-jsonl/1`:
+a release may add a key, and none is removed, renamed or given another
 meaning without a format-id bump, so a consumer ignores a key it does not
 know. The report's verdict set is closed all the same: a new verdict is a
 new format id.
