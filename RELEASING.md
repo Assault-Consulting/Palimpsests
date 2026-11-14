@@ -130,9 +130,27 @@ the correctness of the code itself.
 
 ## Cutting a release (maintainer checklist)
 
-1. Land all release content on `main` via PR (CI green).
-2. Update the version in **both** places, plus `CHANGELOG.md` and any status
-   banners (README / docs) — via a `release/x.y.z` PR:
+Two people: whoever opens the release pull request does not merge it.
+
+### Before the release pull request
+
+1. **Everything for the release is on `main`, and CI on `main` is green —
+   including the Windows jobs.** CI runs on pull requests and on pushes to
+   `main` only, so a branch that is not a pull request has not been tested.
+2. **A surface check from `main`**, on each platform a maintainer has, when
+   anything that receives or records a client's reports has changed since the
+   last one (`docs/SURFACE-CHECKER.md`):
+   ```
+   python scripts/check_surfaces.py --report results/
+   python scripts/build_compatibility.py
+   ```
+   The report and the rebuilt `integrations/COMPATIBILITY.md` land in their
+   own pull request. A RED or ERROR row stops the release. A SKIP is not a
+   pass: the release notes say which surfaces were not checked.
+
+### The release pull request (`release/x.y.z`)
+
+3. **The version, in both places:**
    - `pyproject.toml` `version`
    - `src/palimpsests/__init__.py` `__version__`
 
@@ -142,14 +160,89 @@ the correctness of the code itself.
    `tests/test_smoke.py` now asserts they agree, so the drift fails CI — but
    the checklist names both files so the release path does not depend on a
    test catching a mistake that should not be made.
-3. After merge, tag from `main`:
+4. **The changelog.** Write the section's introduction — what the release is,
+   and anything a user must do — to a file outside the repository, then:
    ```
-   git tag vX.Y.Z -m "vX.Y.Z"
+   python scripts/assemble_changelog.py X.Y.Z YYYY-MM-DD ../intro.txt
+   ```
+   It gathers every fragment in `changelog.d/` under its heading, deletes the
+   fragments and moves the link references at the foot of `CHANGELOG.md`. It
+   refuses, and writes nothing, on a fragment it cannot place. Read the
+   result: `## [Unreleased]` is empty, the new section sits above the previous
+   one, and `git diff --stat` shows added lines only. **A change that carries
+   no fragment is absent from the notes** — compare the fragments with
+   `git log vPREVIOUS..main` before running it, and add what is missing.
+5. **Status banners** (README, docs) for a minor release. A patch release
+   leaves them alone.
+6. **Check locally:**
+   ```
+   python -m pytest -q
+   ruff check src tests scripts
+   python scripts/check_links.py
+   python -m pip install build twine
+   python -m build && python -m twine check dist/*
+   ```
+   Build from a clean tree. The sdist follows the ignore rules, so an
+   untracked directory they do not cover is swept into it: the sdist is a
+   few megabytes, and one of tens of megabytes holds something it should not.
+7. **Stage by path** — `git add pyproject.toml src/palimpsests/__init__.py
+   CHANGELOG.md changelog.d` — not `git add -A`. `dist/` is not committed.
+
+### After the merge
+
+8. **Tag the release commit, by its hash** — not whatever `main` points at
+   by then:
+   ```
+   git fetch origin
+   git log --oneline -1 origin/main        # release: X.Y.Z (#NNN)
+   git tag vX.Y.Z <that commit> -m "vX.Y.Z"
    git push origin vX.Y.Z
    ```
-4. The `release.yml` workflow builds, generates the SBOM, publishes to PyPI
+9. The `release.yml` workflow builds, generates the SBOM, publishes to PyPI
    via OIDC (Sigstore attestations generated automatically), and creates the
    GitHub Release with the wheel, sdist, and SBOM attached.
-5. Confirm on PyPI that the new files show a **Provenance** section, that the
-   GitHub Release was created with the `palimpsests.cdx.json` asset, and that
-   the CHANGELOG release link resolves.
+10. **Confirm what was published**, from outside the repository:
+    - on PyPI both files show a **Provenance** section naming `release.yml`;
+    - the GitHub Release exists with the `palimpsests.cdx.json` asset, and
+      the CHANGELOG release link resolves;
+    - a clean environment installs it and it checks itself:
+      ```
+      python -m venv /tmp/rel && /tmp/rel/bin/pip install "palimpsests[serve]==X.Y.Z"
+      /tmp/rel/bin/python -c "import palimpsests; print(palimpsests.__version__)"
+      /tmp/rel/bin/palimpsests pala selftest
+      ```
+      The last line of the self-test is
+      `sound: this build reproduces the published expectations`.
+
+### Patch releases
+
+A patch release (`X.Y.Z`, `Z > 0`) is cut **from `main`**, by the same
+steps, when everything on `main` since the last release is a fix or purely
+additive: no format change, nothing removed, vectors byte-identical. Its
+introduction says so in its first line.
+
+There is no maintained release branch. If `main` already carries a change
+that cannot ship in a patch, the choice is between releasing the next minor
+version early and a branch cut from the previous tag — and the second has a
+cost to know in advance: CI does not run on it until it is a pull request,
+and nothing here has exercised that path.
+
+### If something is wrong after the tag
+
+**Do not delete the tag and do not publish again.** PyPI accepts a version
+number once: a file removed from it cannot be replaced under the same
+number, and a tag moved after publication no longer names what the
+provenance was issued for. Stop, write down what happened, and decide
+together: a bad release is yanked on PyPI and followed by the next patch
+number.
+
+### One-time setup: the trusted publisher
+
+The `publish` job runs in the `pypi` environment, and the trusted publisher
+registered on PyPI for this project should name that environment too. A
+publisher registered without one accepts any job of `release.yml`, whether
+or not it runs under the environment's protection rules. The Provenance
+section of a published file shows which it is: beside the repository and the
+workflow it names the environment, or none. For 0.14.1 it names none;
+adding the environment on PyPI (*Manage project → Publishing*) is the
+remaining step, and needs no change in this repository.
