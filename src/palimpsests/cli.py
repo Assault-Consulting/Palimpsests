@@ -796,13 +796,21 @@ def pala_bundle_cmd(
         f"proofs) to {res.path}"
     )
     typer.echo(f"source head: {res.head}")
-    if res.chain_ok:
-        typer.secho("chain verdict inside: sound", fg=typer.colors.GREEN)
-    else:
+    # ``consistent``, not ``chain_ok``: the header chain alone does not see a
+    # body altered after writing. And not the word "sound" — in the report
+    # that means checked against an anchor, which a bundle may not have been.
+    if not res.consistent:
         typer.secho(
-            "chain verdict inside: BROKEN — bundled for inspection",
+            "consistency inside: BROKEN — bundled for inspection",
             fg=typer.colors.YELLOW, err=True,
         )
+    elif res.records == 0:
+        typer.secho(
+            "consistency inside: nothing to check — no records in the range",
+            fg=typer.colors.YELLOW, err=True,
+        )
+    else:
+        typer.secho("consistency inside: holds", fg=typer.colors.GREEN)
 
 
 @pala_app.command("report")
