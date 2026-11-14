@@ -31,7 +31,7 @@ def test_section15_shape_and_safety_accounting(tmp_path):
         [
             "format", "subject", "verifier", "checked_at", "chain",
             "container", "anchor", "completeness", "existence",
-            "diagnosis", "advisory", "safety", "time_basis", "verdict",
+            "diagnosis", "manifest", "advisory", "safety", "time_basis", "verdict",
         ]
     )
     assert report["chain"]["chain_ok"] is True
@@ -128,7 +128,7 @@ def test_report_validates_against_the_shipped_schema(tmp_path):
 
     schema_path = (
         Path(__file__).resolve().parents[1]
-        / "docs" / "specs" / "report" / "pala-verification-report-1.schema.json"
+        / "docs" / "specs" / "report" / "pala-verification-report-2.schema.json"
     )
     schema = json.loads(schema_path.read_text())
     report = build_report(_chain(tmp_path)).data

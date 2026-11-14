@@ -173,9 +173,12 @@ packages = ["src/palimpsests"]
 [tool.hatch.build.targets.wheel.force-include]
 "docs/specs/pala-1/test-vectors.json" = "palimpsests/audit/pala/_vectors/core.json"
 "docs/specs/pala-1/profiles/inference-vectors.json" = "palimpsests/audit/pala/_vectors/inference.json"
-# The report schema is the machine truth of pala-verification-report/1:
+# The report schema is the machine truth of pala-verification-report/2:
 # it ships beside the code so any consumer (Auditor's sidecar included)
-# validates against the exact schema of the installed version.
+# validates against the exact schema of the installed version. The /1
+# schema ships too: /1 is no longer written, but a report already on disk
+# is still one a consumer may need to validate.
+"docs/specs/report/pala-verification-report-2.schema.json" = "palimpsests/audit/_schemas/pala-verification-report-2.schema.json"
 "docs/specs/report/pala-verification-report-1.schema.json" = "palimpsests/audit/_schemas/pala-verification-report-1.schema.json"
 
 [tool.ruff]

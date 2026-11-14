@@ -28,7 +28,8 @@ def test_empty_log_verify_headers_returns_chain_ok():
 
 
 def test_empty_log_cli_exits_partial(tmp_path):
-    """CLI over an empty file: 0 records, PARTIAL (no anchor supplied)."""
+    """CLI over an empty file: exits as PARTIAL does, and says why — nothing
+    was checked. It must not print "chain intact" over a file with no chain."""
     from palimpsests.cli import app
     from typer.testing import CliRunner
 
@@ -37,8 +38,8 @@ def test_empty_log_cli_exits_partial(tmp_path):
     p.write_bytes(b"")
     result = runner.invoke(app, ["pala", "verify", str(p)])
     assert result.exit_code == 2  # PARTIAL
-    assert "0 records" in result.output
-    assert "chain intact" in result.output
+    assert "holds no records" in result.output
+    assert "chain intact" not in result.output
     assert "NOT CHECKED" in result.output
 
 
@@ -54,7 +55,7 @@ def test_empty_log_json_output(tmp_path):
     result = runner.invoke(app, ["pala", "verify", str(p), "--json"])
     assert result.exit_code == 2
     payload = _json.loads(result.output)
-    assert payload["verdict"] == "partial"
+    assert payload["verdict"] == "empty"
     assert payload["records"] == 0
     assert payload["first_violation"] is None
     assert payload["counts"]["records"] == 0

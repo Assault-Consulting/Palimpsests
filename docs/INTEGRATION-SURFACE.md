@@ -15,7 +15,7 @@ it is not promised.
 | # | Channel | Surface | Stability |
 |---|---------|---------|-----------|
 | 1 | Reading | `palimpsests.audit.reader.AuditReader` (`open`, `verify`, `records`, `spans`, `boots`, `origin_at`, `unloaded_at`, `acknowledged_candidates`, `shredded_targets`; sparse access `record_count`, `record_at`, `record_by_seq`, `header_at` since 0.13; `Verification.manifest` since 0.13; `container_check()`, `record_fields_at()` since 0.14; for a byte view `record_bytes_at()`, `header_tlv_spans_at()`, `body_tlv_spans_at()` since 0.14, and the fixed header's layout `HEADER_FIELDS` / `HeaderField` / `FIXED_HEADER_LEN` since 0.14.1); a segmented chain as one set: `palimpsests.audit.segment_set.verify_segment_set` (since 0.14) | public (since 0.8) |
-| 2 | Report and export | `palimpsests.audit.report.build_report`, `derive_verdict`, format `pala-verification-report/1`; the HTML page `palimpsests.audit.report_html.render_html` (since 0.14 — a rendering of the report's `.data`, its markup not a format); the record export `palimpsests.audit.export.export_jsonl`, format `pala-jsonl/1` (since 0.14.1) | public (since 0.10) |
+| 2 | Report and export | `palimpsests.audit.report.build_report`, `derive_verdict`, format `pala-verification-report/2` (since 0.15; `/1` in 0.10 – 0.14, still read); the HTML page `palimpsests.audit.report_html.render_html` (since 0.14 — a rendering of the report's `.data`, its markup not a format); the record export `palimpsests.audit.export.export_jsonl`, format `pala-jsonl/1` (since 0.14.1) | public (since 0.10) |
 | 3 | Proofs | `palimpsests.audit.pala.proofs.inclusion_proof`, `range_proofs`; prefix consistency `chain_root`, `consistency_proof`, `ConsistencyProof`, format `pala-consistency-proof/1` (since 0.12) | public (since 0.10) |
 | 4 | Bundle | `palimpsests.audit.pala.bundle.assemble_bundle`, format `pala-bundle/1` | public (since 0.10) |
 | 5 | Health | `palimpsests.audit.timehealth`, `palimpsests.audit.bootstats` | public (since 0.10) |
@@ -24,12 +24,13 @@ it is not promised.
 
 **Stability class "public":** breaking changes only with a minor version
 bump and a CHANGELOG entry naming the break; additive changes (new
-fields, new functions) may land in any release. The three named formats
-(`pala-verification-report/1`, `pala-bundle/1`,
-`pala-consistency-proof/1`) change only by format-id bump. The fourth,
-`pala-jsonl/1`, is open: a release may add a key to a line or to the
-summary, and none is removed, renamed or given another meaning without a
-format-id bump.
+fields, new functions) may land in any release. Two named formats
+(`pala-bundle/1`, `pala-consistency-proof/1`) change only by format-id
+bump. Two are open — `pala-verification-report/2` and `pala-jsonl/1`: a
+release may add a key, and none is removed, renamed or given another
+meaning without a format-id bump, so a consumer ignores a key it does not
+know. The report's verdict set is closed all the same: a new verdict is a
+new format id.
 
 **Since 0.13, what a value *means* is held to the 1.0 standard already**
 — the rules a consumer needs to rely on a verdict it renders:
@@ -57,10 +58,9 @@ format-id bump.
   parsed, free to improve in any release, always English. Since 0.14 a
   chain violation also carries a code — `VerifyResult.violation_codes`,
   parallel to `violations`, and `Diagnosis.code` for `record_violation` —
-  and the code is what to branch on. The verification report does not
-  carry the codes yet: its schema closes the `chain` object, so a code in a
-  `/1` report would fail a consumer's validation; they arrive with the
-  report's next format id.
+  and the code is what to branch on. The verification report carries both
+  since format `/2`: `chain.violation_codes`, parallel to
+  `chain.violations`, and `diagnosis.code`.
 
 The structural rules — one place to import from, no removal or rename
 within a major, deprecation over one minor — take effect at 1.0. Until
@@ -96,13 +96,26 @@ CHANGELOG sentence saying what it means and whether it changes a verdict.
 ## The report contract
 
 - The JSON shape's machine truth is the schema shipped in the wheel at
-  `palimpsests/audit/_schemas/pala-verification-report-1.schema.json`
+  `palimpsests/audit/_schemas/pala-verification-report-2.schema.json`
   (source: `docs/specs/report/`). A rendering validates against it; the
-  package's own CI does.
+  package's own CI does. The schema states what must be present and does
+  not forbid a key it does not name: the format is open to additions.
+- **`/1` is no longer written and is still read.** Its schema ships beside
+  the new one, `derive_verdict` answers a `/1` report by the rule it was
+  written under, and `render_html` renders one. What changed, and what a
+  consumer does about it: `docs/specs/report/MIGRATING-1-TO-2.md`.
 - **The verdict is produced only by `derive_verdict`.** A renderer reads
   the report's `verdict` field or calls the function; it never
   re-derives the rule. This is what keeps two renderings from disagreeing
-  in the one word that matters.
+  in the one word that matters. `pala verify --json` carries the same
+  word for the same file and anchor, and a test holds the two together.
+- **Four verdicts, a closed set:** `sound` — everything checked, held;
+  `partial` — sound as far as checked, completeness not checked; `empty` —
+  the container holds no records, so nothing was checked and nothing was
+  found intact; `violation` — something contradicts. An empty file that
+  misses a supplied anchor is a `violation`. A consumer that gates on a
+  verdict treats `empty` as it treats `partial`: not a failure, and not a
+  pass.
 - **Normalization rule for golden tests:** `checked_at` (by design) and
   the version-carrying fields `verifier.tool` / `verifier.package` are
   normalized away before comparing reports. Everything else is
@@ -168,9 +181,10 @@ diagnosis rests on. `None` means the verdict read no second file.
 
 A consumer that identifies what it verified by digest records both digests,
 and treats a change to either file as a change of subject. The report
-(`pala-verification-report/1`) does not carry the manifest's identity yet;
-adding it is a format question, and the format changes only by format-id
-bump.
+carries the manifest's identity since format `/2`, in its `manifest`
+block: the file's name (the manifest sits beside the subject; the report
+holds no path of the machine that ran the check), the status, the digest
+and the detail — `null` when the verdict read no second file.
 
 ## Size envelope
 

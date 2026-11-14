@@ -33,14 +33,14 @@ def test_json_report_produced_schema_valid_and_partial_without_anchor(tmp_path):
     res = runner.invoke(app, ["pala", "report", str(log)])
     assert res.exit_code == 0, res.output
     report = json.loads(res.output)
-    assert report["format"] == "pala-verification-report/1"
+    assert report["format"] == "pala-verification-report/2"
     assert report["verdict"] == "partial"  # no anchor -> honesty, not success
     jsonschema = pytest.importorskip("jsonschema")
     from pathlib import Path
 
     schema_path = (
         Path(__file__).resolve().parents[1]
-        / "docs" / "specs" / "report" / "pala-verification-report-1.schema.json"
+        / "docs" / "specs" / "report" / "pala-verification-report-2.schema.json"
     )
     jsonschema.validate(report, json.loads(schema_path.read_text()))
 
@@ -82,7 +82,7 @@ def test_html_page_is_selfcontained_and_keeps_the_wording_discipline(tmp_path):
     assert res.exit_code == 0
     page = res.output
     assert page.startswith("<!DOCTYPE html>")
-    assert "PARTIAL" in page and "pala-verification-report/1" in page
+    assert "PARTIAL" in page and "pala-verification-report/2" in page
     assert "<script" not in page and "http" not in page  # self-contained
     lowered = page.lower()
     for forbidden in ("compliant", "certified", "valid log"):
