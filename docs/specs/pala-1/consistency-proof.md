@@ -87,6 +87,16 @@ accept a document on the strength of its own embedded roots alone when
 it holds roots from elsewhere, and MUST return a structured result
 rather than throw on a malformed path (`verify()` returns `False`).
 
+Two kinds of bad document, kept apart. One that is **not of this shape**
+— not a JSON object, a key missing, a count that is not a JSON integer
+(`2.7`, `true` and `"7"` are not counts), a root or a path element that
+is not a hex string — is not a proof document at all: the package refuses
+to read it (`ConsistencyProof.from_json` raises `ValueError`;
+`pala consistency-verify` exits 3, UNREADABLE). One that **is** of this
+shape and does not hold — a path that does not connect the roots, a hash
+of the wrong length, counts out of order — reads, and verifies `False`
+(exit 1, INCONSISTENT).
+
 ## 4. Where it is used
 
 | Use | Roots' provenance | Where |

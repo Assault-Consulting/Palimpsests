@@ -179,6 +179,10 @@ names that file, the status it decided (`matches` / `contradicts` /
 parsed from the same buffer, so the digest describes the manifest the
 diagnosis rests on. `None` means the verdict read no second file.
 
+The manifest's format, `pala-segments/1`, is specified in
+`docs/specs/segments/pala-segments-1.md`: its two writers, the keys, what a
+reader checks, and what it does not follow. It is open to added keys.
+
 A consumer that identifies what it verified by digest records both digests,
 and treats a change to either file as a change of subject. The report
 carries the manifest's identity since format `/2`, in its `manifest`

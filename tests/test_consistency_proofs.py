@@ -178,3 +178,64 @@ def test_chain_level_api_and_json_round_trip(tmp_path):
             chain_consistency_proof(r, n + 1)
         with pytest.raises(ValueError):
             ConsistencyProof.from_json({**doc, "format": "something-else"})
+
+
+# ── the document's shape ────────────────────────────────────────────────────
+
+
+def _doc(tmp_path: Path) -> dict:
+    with AuditReader.open(_chain(tmp_path, 20)) as r:
+        return chain_consistency_proof(r, 7).to_json()
+
+
+def test_a_document_of_the_wrong_shape_is_one_error_whatever_is_wrong(tmp_path):
+    """``from_json`` raised KeyError, TypeError or AttributeError depending on
+    what was wrong, and coerced ``2.7`` to 2 and ``true`` to 1. A reader of
+    someone else's document needs one exception, and no guessing."""
+    import pytest
+
+    good = _doc(tmp_path)
+    assert ConsistencyProof.from_json(good).verify()
+    wrong = {
+        "not an object": [good],
+        "another format": dict(good, format="pala-consistency-proof/2"),
+        "no path": {k: v for k, v in good.items() if k != "path"},
+        "path not a list": dict(good, path="ab" * 32),
+        "path element not a string": dict(good, path=[7]),
+        "path element not hex": dict(good, path=["zz"]),
+        "root not hex": dict(good, first_root="xyz"),
+        "root not a string": dict(good, second_root=None),
+        "count a string": dict(good, first="7"),
+        "count a float": dict(good, first=7.0),
+        "count a boolean": dict(good, first=True),
+        "count missing": {k: v for k, v in good.items() if k != "second"},
+    }
+    for name, doc in wrong.items():
+        with pytest.raises(ValueError):
+            ConsistencyProof.from_json(doc)
+        assert name  # the label is the failure message when the raise is missing
+
+
+def test_a_well_shaped_document_that_does_not_hold_reads_and_verifies_false(tmp_path):
+    good = _doc(tmp_path)
+    for name, doc in {
+        "a root of the wrong length": dict(good, first_root="ab"),
+        "a path element of the wrong length": dict(good, path=["ab"] + good["path"][1:]),
+        "an empty path": dict(good, path=[]),
+        "first beyond second": dict(good, first=good["second"] + 1),
+        "first zero": dict(good, first=0),
+        "a negative count": dict(good, first=-1),
+        "another root": dict(good, second_root="00" * 32),
+    }.items():
+        assert ConsistencyProof.from_json(doc).verify() is False, name
+
+
+def test_the_cli_reads_any_json_without_a_traceback(tmp_path):
+    from palimpsests.cli import app
+    from typer.testing import CliRunner
+
+    f = tmp_path / "p.json"
+    for text in ("[1, 2]", '"a string"', "null", "{}", "not json"):
+        f.write_text(text)
+        res = CliRunner().invoke(app, ["pala", "consistency-verify", str(f)])
+        assert res.exit_code == 3 and "UNREADABLE" in res.output, text

@@ -909,10 +909,16 @@ def pala_segment_cmd(
     all segments reproduces the source byte-for-byte. The manifest is
     derived and unsigned — the segments stay authoritative.
 
+    The cut is faithful, not a judgement: a chain that does not verify
+    is segmented as it is, and the command then says so. A source that
+    is not a well-formed container — cut mid-record — is refused, and
+    nothing is written.
+
     \b
     Exit codes:
-      0  segmented
-      3  UNREADABLE — the file (or the output dir) could not be used
+      0  segmented (read the last line: it says whether the set verifies)
+      3  UNREADABLE — the file (or the output dir) could not be used, or
+         the source is not a well-formed container
     """
     from palimpsests.audit.pala.segments import segment_chain
 
@@ -921,7 +927,7 @@ def pala_segment_cmd(
         res = segment_chain(
             file, target, records_per_segment=records_per_segment
         )
-    except OSError as e:
+    except (OSError, ValueError) as e:
         typer.echo(f"UNREADABLE: {e}", err=True)
         raise typer.Exit(EXIT_UNREADABLE) from e
     typer.echo(
@@ -929,11 +935,27 @@ def pala_segment_cmd(
         f"(manifest: {res.manifest_path.name})"
     )
     typer.echo(f"source head: {res.source_head}")
-    typer.secho(
-        "every segment verifies alone, seeded from the manifest; "
-        "keep segments.json for as long as any segment lives",
-        fg=typer.colors.GREEN,
-    )
+    # Said only after it was checked: the set just written, verified as a
+    # set. The sentence used to be printed whatever the source was.
+    from palimpsests.audit.segment_set import verify_segment_set
+
+    if not res.segments:
+        typer.secho(
+            "the source holds no records — a manifest with no segments was written",
+            fg=typer.colors.YELLOW, err=True,
+        )
+    elif verify_segment_set(res.manifest_path).consistent:
+        typer.secho(
+            "every segment verifies alone, seeded from the manifest; "
+            "keep segments.json for as long as any segment lives",
+            fg=typer.colors.GREEN,
+        )
+    else:
+        typer.secho(
+            "the segments do NOT verify — the source does not, and the cut "
+            "keeps its damage; keep the source, and run `pala verify` on it",
+            fg=typer.colors.YELLOW, err=True,
+        )
 
 
 @pala_app.command("consistency")
