@@ -139,6 +139,12 @@ from palimpsests.audit.profiles.inference import (
     SEG_PREDECESSOR_HEAD,
     SEG_PRIOR_ROOT,
     SEG_RETENTION_S,
+    REASON_LEGAL_ERASURE,
+    REASON_POLICY,
+    REASON_RETENTION_EXPIRY,
+    REASON_UNSPECIFIED,
+    SHRED_DETAIL,
+    SHRED_REASON,
     SHRED_TARGET_SEQS,
     SOURCE_PARSED_FROM_WIRE,
     SOURCE_REPORTED_BY_CLIENT,
@@ -180,6 +186,8 @@ __all__ = [
     "OriginState",
     "ContinuationView",
     "decode_continuation",
+    "ShredView",
+    "decode_shred",
     # analytics (channel 5, re-exported)
     "boot_statistics",
     "BootStats",
@@ -333,6 +341,14 @@ _SOURCE_NAMES = {
     SOURCE_REPORTED_BY_CLIENT: "reported-by-client",
 }
 _SOURCE_BEARING_KINDS = frozenset({KIND_TOOL_CALL, KIND_TOOL_RESULT})
+
+# SHRED_REASON on a KEY_SHRED body (profile §8), in the profile's own words.
+_SHRED_REASON_NAMES = {
+    REASON_UNSPECIFIED: "unspecified",
+    REASON_LEGAL_ERASURE: "legal_erasure",
+    REASON_RETENTION_EXPIRY: "retention_expiry",
+    REASON_POLICY: "policy",
+}
 
 # EVT_OUTCOME on a TOOL_RESULT (r3, r6). "unobserved" (4) is a return whose
 # failure the recording vantage could not see; "ok" is a return, never a
@@ -2284,6 +2300,64 @@ def decode_continuation(dr: DecodedRecord) -> ContinuationView | None:
         retention_s=struct.unpack("<Q", tags[SEG_RETENTION_S])[0],
         prior_root=tags[SEG_PRIOR_ROOT],
         detail=dr.detail,
+    )
+
+
+@dataclass(frozen=True)
+class ShredView:
+    """A KEY_SHRED record's erasure note, decoded (inference profile §8).
+
+    What the writer *declared* when it noted a key's destruction — the
+    reason, the records it says the key protected, a reference. Whether
+    those records exist and carried that key is a separate question, which
+    :meth:`AuditReader.shredded_targets` and the ``shred_target_*``
+    advisories answer; this is the note as written.
+    """
+
+    seq: int  # the KEY_SHRED record's own seq
+    key_id: int | None  # the destroyed key, from the header; None: not declared
+    reason: int  # SHRED_REASON
+    reason_name: str | None  # None: a reason this build does not know
+    target_seqs: tuple[int, ...]  # SHRED_TARGET_SEQS, as written; () when absent
+    detail: str | None  # SHRED_DETAIL — a ticket or request reference
+
+
+def decode_shred(dr: DecodedRecord) -> ShredView | None:
+    """The erasure note ``dr`` carries, or None if it carries no usable one.
+
+    Usable means: a KEY_SHRED record with a cleartext TLV body holding
+    ``SHRED_REASON`` at its profile width (2 bytes) and, if present,
+    ``SHRED_TARGET_SEQS`` as a whole number of u64s. A KEY_SHRED with no
+    body is a core record without the profile's note, and gives None like
+    any record that is not a KEY_SHRED.
+
+    ``DecodedRecord.detail`` stays None on a KEY_SHRED: that field is
+    ``EVT_DETAIL`` on an EVENT or SAFETY body, and ``SHRED_DETAIL`` is a
+    different tag in a different namespace. It is read here.
+    """
+    if dr.record_type != RT_KEY_SHRED or dr.body_tlvs is None:
+        return None
+    tags: dict[int, bytes] = {}
+    for t, v in dr.body_tlvs:
+        tags.setdefault(t, v)
+    reason_raw = tags.get(SHRED_REASON)
+    targets_raw = tags.get(SHRED_TARGET_SEQS, b"")
+    if reason_raw is None or len(reason_raw) != 2 or len(targets_raw) % 8 != 0:
+        return None
+    (reason,) = struct.unpack("<H", reason_raw)
+    key_id: int | None = None
+    if dr.header is not None:
+        kid = _origin_tlv(dr.header, TLV_SHRED_KEY_ID)
+        if kid is not None and len(kid) == 4:
+            (key_id,) = struct.unpack("<I", kid)
+    detail_raw = tags.get(SHRED_DETAIL)
+    return ShredView(
+        seq=dr.seq,
+        key_id=key_id,
+        reason=reason,
+        reason_name=_SHRED_REASON_NAMES.get(reason),
+        target_seqs=struct.unpack(f"<{len(targets_raw) // 8}Q", targets_raw),
+        detail=detail_raw.decode("utf-8", "replace") if detail_raw is not None else None,
     )
 
 

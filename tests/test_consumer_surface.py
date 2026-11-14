@@ -32,7 +32,7 @@ READER_ALL = {
     "Advisory", "AdvisoryItem",
     "DecodedRecord", "Header", "decode_record",
     "SpanView", "BootView", "OriginView", "OriginState", "ContinuationView",
-    "decode_continuation",
+    "decode_continuation", "ShredView", "decode_shred",
     "boot_statistics", "BootStats", "AnchorCadence", "SpanStats", "step_catalog", "TimeStep",
     "HEADER_FIELDS", "HeaderField", "FIXED_HEADER_LEN",
     "NO_SPAN", "NO_PREDECESSOR",
@@ -218,6 +218,7 @@ FIELDS = {
     "OriginState": ["origin", "unloaded"],
     "ContinuationView": ["seq", "segment_index", "predecessor_head", "retention_s",
                          "prior_root", "detail"],
+    "ShredView": ["seq", "key_id", "reason", "reason_name", "target_seqs", "detail"],
     "VerifyResult": ["chain_ok", "count", "head", "breaks", "gaps", "violations",
                      "uninterpretable", "complete_to_anchor", "anchor_lag", "anchor_reason",
                      "violation_codes"],
@@ -298,6 +299,8 @@ def test_names_and_statuses_are_the_documented_ones(surface_doc):
 
     assert set(r._OUTCOME_NAMES.values()) == _table_row(surface_doc, "`outcome_name`")
     assert set(r._SOURCE_NAMES.values()) == _table_row(surface_doc, "`source_name`")
+    assert set(r._SHRED_REASON_NAMES.values()) == _table_row(
+        surface_doc, "`ShredView.reason_name`")
     statuses = _emitted(r'"(matches|contradicts|declared_only)"')
     assert statuses == _table_row(surface_doc, "`ManifestReading.status`")
 
