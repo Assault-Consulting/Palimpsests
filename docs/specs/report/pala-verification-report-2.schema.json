@@ -351,7 +351,8 @@
             "at_seq",
             "expected",
             "narrative",
-            "code"
+            "code",
+            "question"
           ],
           "properties": {
             "pattern": {
@@ -378,6 +379,13 @@
                 "null"
               ],
               "description": "For the pattern record_violation: the violation's code, the field to branch on (expected carries its reason, a sentence). null for every other pattern."
+            },
+            "question": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Which of the questions the diagnosis is about: consistency — the file does not hold together as a chain, or does not begin where a chain begins; completeness — the chain holds together and the supplied anchor does not name its head; null — neither (empty_container), or a pattern the builder did not classify. A diagnosis being present does not by itself mean the chain is inconsistent: read this field, or chain and container."
             }
           }
         }
