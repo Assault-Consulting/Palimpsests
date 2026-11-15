@@ -13,7 +13,7 @@ hash and the leaf count.
 
 Package-internal by design, like the proofs bridge: the leaves are read
 back from the file the writer keeps (unbuffered, so every emitted
-record is already durable), and the record is emitted through the
+record is already in the file), and the record is emitted through the
 writer's own serialized path — never by writing bytes beside it.
 
 Not safe against a concurrent emit between the read and the checkpoint

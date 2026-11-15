@@ -80,8 +80,9 @@ The criteria, agreed in October 2026:
   its rules on meaning (frozen `None` semantics, open vocabularies, machine
   fields versus sentences) already apply from 0.13; the structural rules
   (one import path, no removal within a major, deprecation over one minor)
-  take effect at 1.0. The writer gets a contract of its own before then
-  (U27), for runtime integrators.
+  take effect at 1.0. The writer has a contract of its own
+  (`docs/WRITER-SURFACE.md`, U27, since 0.15), for runtime integrators and
+  for the tests of whatever reads a chain.
 - **Stable formats beside the frozen core.** The report
   (`pala-verification-report/2`, open to added keys), the bundle (`pala-bundle/1`), the
   consistency proof (`pala-consistency-proof/1`) and the segments manifest

@@ -277,6 +277,18 @@ paid this cost no longer pays it again. This does not change the
 underlying decode's own cost or memory shape — that is the streaming
 reader work already named above as backlog.
 
+## Writing a chain, and chains for tests
+
+This document is for reading. Writing a chain with this package —
+`PalaWriter`, rotation, the lock, what is and is not guaranteed about
+durability — has its own contract: `docs/WRITER-SURFACE.md`.
+
+A consumer's tests need chains that do **not** verify, and the writer
+cannot produce one. `palimpsests.audit.testing` makes them from a
+well-formed chain, one named defect per function, and its `DAMAGE` table
+states what the reader says about each — so no test needs to rewrite
+bytes at offsets copied from the specification.
+
 ## Conformance for embedders
 
 - Run `pala selftest` (or `run_selftest()`) at sidecar startup and
