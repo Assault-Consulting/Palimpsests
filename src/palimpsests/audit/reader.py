@@ -54,7 +54,7 @@ import struct
 import threading
 from array import array
 from bisect import bisect_left, bisect_right
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from palimpsests.audit.anchors import (
     AnchorAttempt,
@@ -62,6 +62,7 @@ from palimpsests.audit.anchors import (
     AnchorSource,
     AnchorSourceError,
 )
+from palimpsests.audit.names import assurance_tier_name, time_trust_name
 from palimpsests.audit.pala.codec import (  # re-exported: the consumer surface
     FIXED_HEADER_LEN,
     FORMAT_VERSION,
@@ -100,7 +101,7 @@ from palimpsests.audit.pala.codec import (  # re-exported: the consumer surface
     iter_records,
 )
 from palimpsests.audit.pala.codec import record_hash as _record_hash
-from palimpsests.audit.pala.incremental import Advisory, AdvisoryItem
+from palimpsests.audit.pala.incremental import VIOLATION_CODES, Advisory, AdvisoryItem
 from palimpsests.audit.pala.verify import VerifyResult, verify_headers_with_advisory
 from palimpsests.audit.profiles.inference import (
     DISP_ACKNOWLEDGED,
@@ -149,6 +150,7 @@ from palimpsests.audit.profiles.inference import (
     SOURCE_PARSED_FROM_WIRE,
     SOURCE_REPORTED_BY_CLIENT,
 )
+from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 #: The 16 zero bytes that mean "no span" in ``span_id`` / ``parent_span_id``,
@@ -195,6 +197,16 @@ __all__ = [
     "SpanStats",
     "step_catalog",
     "TimeStep",
+    # the open vocabularies, as data: what this build can say, so a consumer
+    # can test that it has words for all of it
+    "DIAGNOSIS_PATTERNS",
+    "DIAGNOSIS_QUESTIONS",
+    "ADVISORY_CODES",
+    "VIOLATION_CODES",
+    "MANIFEST_STATUSES",
+    # names for the header's two enums (also importable from audit.names)
+    "assurance_tier_name",
+    "time_trust_name",
     # the fixed header's layout, for a byte view (with the TLV maps above it)
     "HEADER_FIELDS",
     "HeaderField",
@@ -646,6 +658,67 @@ class OriginState:
     unloaded: bool
 
 
+#: Every diagnosis pattern this build can give, with the question it is
+#: about. There is one diagnosis for three questions, and a pattern belongs
+#: to one of them:
+#:
+#: - ``"consistency"`` — the file does not hold together as a chain, or
+#:   does not begin where a chain begins. Question one is answered no.
+#: - ``"completeness"`` — the chain holds together, and the anchor supplied
+#:   does not name its head. Question one is unaffected; question two is
+#:   answered no.
+#: - ``None`` — about neither: ``empty_container``, where nothing was there
+#:   to check.
+#:
+#: So a diagnosis being present does **not** mean the chain is inconsistent,
+#: and a diagnosis being absent does not mean it is consistent — a body
+#: altered after writing leaves ``diagnosis`` None, because the diagnosis is
+#: made from the header pass. :meth:`AuditReader.is_consistent` is the
+#: answer to question one.
+#:
+#: Open vocabulary: a release may add a pattern, never rename one or move it
+#: to another question.
+DIAGNOSIS_QUESTIONS: Mapping[str, str | None] = MappingProxyType({
+    "not_a_container": "consistency",
+    "truncated_tail": "consistency",
+    "prefix_absent": "consistency",
+    "seq_gap": "consistency",
+    "chain_break": "consistency",
+    "record_violation": "consistency",
+    "declared_continuation": "consistency",
+    "continuation_contradicts_manifest": "consistency",
+    "unanchored_tail": "completeness",
+    "replaced_or_rolled_back": "completeness",
+    "empty_container": None,
+})
+DIAGNOSIS_PATTERNS = frozenset(DIAGNOSIS_QUESTIONS)
+
+#: Every advisory code this build can raise (``AdvisoryItem.code``). Signals,
+#: never a verdict. Open vocabulary: a release may add a code.
+ADVISORY_CODES = frozenset({
+    "mid_boot_time_trust_change",
+    "mono_regression_in_boot",
+    "wall_regression_in_boot",
+    "span_unclosed",
+    "span_unopened",
+    "anchor_never_written",
+    "continuation_malformed",
+    "continuation_predecessor_mismatch",
+    "continuation_index_not_increasing",
+    "continuation_index_gap",
+    "continuation_prior_root_mismatch",
+    "reference_unresolved",
+    "reference_hash_mismatch",
+    "ack_target_not_a_candidate",
+    "tool_target_not_a_call",
+    "shred_target_unresolved",
+    "shred_target_key_mismatch",
+})
+
+#: ``ManifestReading.status``. Open vocabulary.
+MANIFEST_STATUSES = frozenset({"matches", "contradicts", "declared_only"})
+
+
 @dataclass(frozen=True)
 class Diagnosis:
     """One primary diagnosis, derived from chain + anchor (first match wins).
@@ -662,6 +735,14 @@ class Diagnosis:
     #: branch on — ``expected`` carries its reason, a sentence. None for
     #: every other pattern.
     code: str | None = None
+
+    @property
+    def question(self) -> str | None:
+        """Which question this diagnosis is about: ``"consistency"``,
+        ``"completeness"``, or None — see :data:`DIAGNOSIS_QUESTIONS`.
+        Derived from ``pattern``, so the two cannot disagree. None also for
+        a pattern this build does not know."""
+        return DIAGNOSIS_QUESTIONS.get(self.pattern)
 
 
 @dataclass(frozen=True)
@@ -922,6 +1003,30 @@ class AuditReader:
 
     def head(self) -> bytes:
         return self.verify().chain.head
+
+    def is_consistent(self) -> bool:
+        """Question one, in one answer: does this file hold together?
+
+        The header chain verifies (§7.1), the container walks to its end
+        (§2.4), and every body matches the digest its header binds. The same
+        rule as ``consistency.ok`` in ``pala verify --json`` and
+        ``consistent`` in the export and the bundle.
+
+        Not derivable from :attr:`Verification.diagnosis`: an anchor that
+        does not name the head gives a diagnosis on a consistent chain, and
+        an altered body gives none on an inconsistent one. An empty file is
+        consistent — nothing contradicts anything — which is not a log found
+        intact (clarification C-8); the report's verdict says ``empty``.
+
+        Costs :meth:`verify` and :meth:`container_check`, each computed once
+        per reader and kept.
+        """
+        check = self.container_check()
+        return (
+            self.verify().chain.chain_ok
+            and check.well_formed
+            and not check.body_digest_mismatches
+        )
 
     def container_check(self) -> ContainerCheck:
         """Walk the bodies: §2.4 well-formedness and the body digests.

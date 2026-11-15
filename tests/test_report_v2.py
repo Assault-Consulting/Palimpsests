@@ -352,7 +352,9 @@ def test_a_v1_report_of_an_empty_container_keeps_its_word_and_the_right_gloss(tm
     v1 = {k: v for k, v in data.items() if k != "manifest"}
     v1["format"] = REPORT_FORMAT_1
     v1["chain"] = {k: v for k, v in data["chain"].items() if k != "violation_codes"}
-    v1["diagnosis"] = {k: v for k, v in data["diagnosis"].items() if k != "code"}
+    v1["diagnosis"] = {
+        k: v for k, v in data["diagnosis"].items() if k not in ("code", "question")
+    }
     v1["verdict"] = derive_verdict(v1)
     assert v1["verdict"] == "partial"
     _validate(v1, 1)
