@@ -418,6 +418,12 @@ CHANNELS = {
     "palimpsests.audit.pala.selftest": ["run_selftest"],
     "palimpsests.audit.segment_set": ["verify_segment_set", "SegmentSetVerification",
                                       "SegmentCheck"],
+    "palimpsests.audit.pala.scitt": ["build_signed_statement", "head_payload",
+                                     "verify_statement", "StatementCheck", "StatementRefused",
+                                     "ScittUnavailable", "STATEMENT_REFUSAL_CODES",
+                                     "ALG_ES256", "ALG_EDDSA", "CONTENT_TYPE",
+                                     "CONTENT_TYPE_V3", "FORMAT_ID",
+                                     "check_statement_against_head"],  # deprecated, until 1.0
 }
 
 
@@ -427,3 +433,31 @@ def test_channel_symbols_resolve(module):
 
     mod = importlib.import_module(module)
     assert [n for n in CHANNELS[module] if not hasattr(mod, n)] == []
+
+
+def test_the_scitt_channel_is_declared_and_its_vocabularies_are_the_documented_ones(surface_doc):
+    """Channel 8. The module imports without the extra — only calling it
+    needs ``cbor2`` and ``cryptography`` — so this runs on a bare install."""
+    import inspect
+    from palimpsests.audit.pala import scitt
+
+    assert set(scitt.__all__) == set(CHANNELS["palimpsests.audit.pala.scitt"])
+    assert [f.name for f in dataclasses.fields(scitt.StatementCheck)] == [
+        "version", "payload", "root", "root_status", "payload_encoding"]
+    assert issubclass(scitt.StatementRefused, ValueError)
+    assert list(inspect.signature(scitt.verify_statement).parameters) == [
+        "message", "public_key", "expected_head", "reader"]
+
+    source = inspect.getsource(scitt)
+    raised = set(re.findall(r'StatementRefused\(\s*"([a-z0-9_]+)"', source))
+    # three codes reach the raise through a helper's argument
+    passed = set(re.findall(r'_decode_one\([^)]*?"([a-z0-9_]+)"', source)) | set(
+        re.findall(r'_distinct_keys\([^)]*?"([a-z0-9_]+)"\)', source))
+    assert raised | passed == set(scitt.STATEMENT_REFUSAL_CODES)
+    assert set(scitt.STATEMENT_REFUSAL_CODES) == _table_row(
+        surface_doc, "`StatementRefused.code`")
+    statuses = set(re.findall(r'StatementCheck\(\s*"v[23]", decoded, (?:None|root), "([^"]+)"',
+                              source))
+    assert statuses == _table_row(surface_doc, "`StatementCheck.root_status`")
+    assert _table_row(surface_doc, "`StatementCheck.payload_encoding`") == {
+        "deterministic", "not deterministic"}

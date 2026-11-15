@@ -23,6 +23,11 @@ def ed_key():
     return ed25519.Ed25519PrivateKey.generate()
 
 
+def _verified_payload(message, public_key, expected_head):
+    """The payload of a statement the one verifier accepted."""
+    return scitt.verify_statement(message, public_key, expected_head).payload
+
+
 def _published_head(name: str) -> tuple[bytes, int]:
     v = vectors.load(name)
     return bytes.fromhex(v["chain_head"]), len(v["records"])
@@ -39,7 +44,7 @@ def test_statement_commits_to_the_published_head(vector_set, es_key):
         issuer="urn:example:issuer",
         subject=f"pala-1:chain:{head[:8].hex()}",
     )
-    decoded = scitt.check_statement_against_head(msg, es_key.public_key(), head)
+    decoded = _verified_payload(msg, es_key.public_key(), head)
     assert decoded[1] == head
     assert (decoded[2], decoded[3]) == (0, n - 1)
     assert decoded[4] == scitt.FORMAT_ID
@@ -56,7 +61,7 @@ def test_eddsa_round_trips(ed_key):
         subject="pala-1:chain:test",
         alg=scitt.ALG_EDDSA,
     )
-    assert scitt.check_statement_against_head(msg, ed_key.public_key(), head)[1] == head
+    assert _verified_payload(msg, ed_key.public_key(), head)[1] == head
 
 
 def test_a_different_head_is_rejected(es_key):
@@ -67,7 +72,7 @@ def test_a_different_head_is_rejected(es_key):
     other = bytearray(head)
     other[0] ^= 0x01
     with pytest.raises(ValueError, match="expected chain head"):
-        scitt.check_statement_against_head(msg, es_key.public_key(), bytes(other))
+        _verified_payload(msg, es_key.public_key(), bytes(other))
 
 
 def test_a_tampered_signature_is_rejected(es_key):
@@ -79,7 +84,7 @@ def test_a_tampered_signature_is_rejected(es_key):
     )
     msg[-1] ^= 0x01
     with pytest.raises(ValueError, match="verification failed"):
-        scitt.check_statement_against_head(bytes(msg), es_key.public_key(), head)
+        _verified_payload(bytes(msg), es_key.public_key(), head)
 
 
 def test_a_tampered_payload_is_rejected(es_key):
@@ -94,7 +99,7 @@ def test_a_tampered_payload_is_rejected(es_key):
     payload[-1] ^= 0x01
     forged = cbor2.dumps(cbor2.CBORTag(18, [protected, unprotected, bytes(payload), sig]))
     with pytest.raises(ValueError):
-        scitt.check_statement_against_head(forged, es_key.public_key(), head)
+        _verified_payload(forged, es_key.public_key(), head)
 
 
 def test_the_claims_ride_in_the_protected_header(es_key):
@@ -122,11 +127,11 @@ def test_bad_inputs_are_refused(es_key):
 def test_not_a_cose_sign1_is_refused(es_key):
     head, _ = _published_head("core")
     with pytest.raises(ValueError, match="not a COSE_Sign1"):
-        scitt.check_statement_against_head(cbor2.dumps({"x": 1}), es_key.public_key(), head)
+        _verified_payload(cbor2.dumps({"x": 1}), es_key.public_key(), head)
 
 
 def test_a_non_map_payload_is_refused(es_key):
     head, _ = _published_head("core")
     msg = scitt._cose_sign1(cbor2.dumps([1, 2]), es_key, alg=scitt.ALG_ES256)
     with pytest.raises(ValueError, match="not a CBOR map"):
-        scitt.check_statement_against_head(msg, es_key.public_key(), head)
+        _verified_payload(msg, es_key.public_key(), head)
