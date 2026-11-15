@@ -421,7 +421,7 @@ CHANNELS = {
     "palimpsests.audit.pala.scitt": ["build_signed_statement", "head_payload",
                                      "verify_statement", "StatementCheck", "StatementRefused",
                                      "ScittUnavailable", "STATEMENT_REFUSAL_CODES",
-                                     "ALG_ES256", "ALG_EDDSA", "CONTENT_TYPE",
+                                     "ALG_ES256", "ALG_EDDSA", "ALG_ED25519", "CONTENT_TYPE",
                                      "CONTENT_TYPE_V3", "FORMAT_ID",
                                      "check_statement_against_head"],  # deprecated, until 1.0
 }

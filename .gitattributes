@@ -17,6 +17,7 @@ docs/specs/pala-1/verification-kit/fetch-inputs.sh -text
 docs/specs/pala-1/consistency-vectors.json -text
 docs/interop/scitt-statement-vector.json -text
 docs/interop/scitt-statement-vector-v3.json -text
+docs/interop/scitt-statement-vector-alg19.json -text
 # Generated files the tests compare byte-for-byte with a fresh build: LF in
 # every checkout, so a Windows runner's autocrlf cannot make them stale.
 site/**/*.html eol=lf
