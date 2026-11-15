@@ -182,7 +182,8 @@ def test_audit_verify_detects_tampering(tmp_path):
 
     result = runner.invoke(app, ["audit", "verify"])
     assert result.exit_code == 1
-    assert "TAMPERED" in result.output
+    assert "VIOLATION" in result.output
+    assert "TAMPERED" not in result.output  # the output states a finding, not a cause
     assert "first bad row: 1" in result.output
 
 

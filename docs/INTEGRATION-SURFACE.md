@@ -265,3 +265,24 @@ reader work already named above as backlog.
 - The companion vector set's `semantics` block covers a subset of its
   records by design (the block grows additively); rendering-conformance
   tests should assert against the seqs present, not assume totality.
+
+## How a break is found before a release
+
+A consumer pins a released version, so by itself it meets a change made
+here only when it lifts the pin. Two things run earlier.
+
+- **The contract test** (`tests/test_consumer_surface.py`) holds the
+  declared names, the fields of the views, the vocabularies and their
+  documented members to the code on every change.
+- **The consumer canary** (`.github/workflows/consumer-canary.yml`) runs a
+  consumer's own test suite — Auditor's sidecar, on its `main` — against
+  every commit and pull request here, and once a week. Its failures are
+  compared with a ledger, `.github/consumer-canary/auditor-expected.txt`:
+  the breaks made on purpose, each with its reason. A failure the ledger
+  does not list fails the check. A line that passes again is reported, and
+  removed. The canary is a signal and not a required check: the
+  consumer's branch moves on its own, and must not be able to block a
+  merge here.
+
+A break of the surface is therefore either absent, or written down twice
+before it ships: in the changelog, and in the ledger.

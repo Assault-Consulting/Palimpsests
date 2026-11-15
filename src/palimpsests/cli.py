@@ -287,7 +287,13 @@ def engine_use_cmd(engine_id: str) -> None:
 # would not have been detected, and reporting that as success would be
 # the same silent over-claim the anchor exists to prevent.
 EXIT_VERIFIED = 0
-EXIT_TAMPERED = 1
+# The check was made and did not hold. The code says that and no more: a
+# file cut short by a crash, a text file that was never a log and a log
+# someone altered all exit 1, and nothing here can tell them apart — so the
+# name does not pick one. It was called TAMPERED until 0.15, which stated a
+# cause the tool cannot know; the number is unchanged.
+EXIT_VIOLATION = 1
+EXIT_TAMPERED = EXIT_VIOLATION  # the old name, kept for anything that imports it
 EXIT_PARTIAL = 2
 EXIT_UNREADABLE = 3
 
@@ -311,8 +317,10 @@ def audit_verify_cmd(
 
     \b
       0  verified   — chain intact and head matches the stored anchor
-      1  TAMPERED   — a row was altered, deleted, reordered, or the whole
-                      history was replaced
+      1  VIOLATION  — the chain does not verify, or its head does not
+                      match the stored anchor. Consistent with a row
+                      altered, deleted or reordered, or the history
+                      replaced; the check cannot say by what
       2  PARTIAL    — chain intact, but no head anchor was available, so
                       wholesale replacement would not have been detected
                       (use --require-anchor to treat this as failure)
@@ -336,9 +344,9 @@ def audit_verify_cmd(
         log.close()
 
     if not result.ok:
-        code = EXIT_TAMPERED
+        code = EXIT_VIOLATION
     elif not result.head_anchored:
-        code = EXIT_TAMPERED if require_anchor else EXIT_PARTIAL
+        code = EXIT_VIOLATION if require_anchor else EXIT_PARTIAL
     else:
         code = EXIT_VERIFIED
 
@@ -368,7 +376,7 @@ def audit_verify_cmd(
             else ""
         )
         typer.secho(
-            f"TAMPERED: {result.reason}{where}",
+            f"VIOLATION: {result.reason}{where}",
             fg=typer.colors.RED,
             err=True,
         )
@@ -440,16 +448,19 @@ def pala_verify_cmd(
 
     \b
       0  verified   — chain intact and head matches --anchor
-      1  TAMPERED   — a break, gap, violated MUST, body-digest mismatch,
-                      malformed container, or an anchor mismatch
+      1  VIOLATION  — a break, gap, violated MUST, body-digest mismatch,
+                      malformed container, or an anchor mismatch. The
+                      file was read and does not verify; that includes a
+                      file that is no chain at all. The code states the
+                      finding, never a cause
       2  PARTIAL    — chain intact, but no --anchor was supplied, so
                       truncation or replacement would not have been
                       detected; or the container holds no records, so
                       nothing was checked (verdict "empty" in --json)
       3  UNREADABLE — the file could not be read, or --anchor is invalid
 
-    An empty file where --anchor says a log should be is TAMPERED: the
-    anchor is missed.
+    An empty file where --anchor says a log should be is a VIOLATION:
+    the anchor is missed.
     """
     # Build anchor sources in the order given; the first that answers wins.
     # --anchor keeps its exact validation and messages so its behaviour is
@@ -537,7 +548,7 @@ def pala_verify_cmd(
     # "intact so far" — nothing was checked (clarification C-8). It exits
     # as PARTIAL does: not a failure, and not a pass to gate on.
     if not consistent or (expected is not None and not result.complete_to_anchor):
-        verdict, code = "violation", EXIT_TAMPERED
+        verdict, code = "violation", EXIT_VIOLATION
     elif result.count == 0:
         verdict, code = "empty", EXIT_PARTIAL
     elif expected is None:
@@ -1063,7 +1074,7 @@ def pala_consistency_verify_cmd(
                 f"INCONSISTENT: --{label}-root differs from the proof's {label}_root",
                 fg=typer.colors.RED, err=True,
             )
-            raise typer.Exit(EXIT_TAMPERED)
+            raise typer.Exit(EXIT_VIOLATION)
     if cp.verify():
         typer.secho(
             f"CONSISTENT: records 0..{cp.first - 1} are a prefix of 0..{cp.second - 1}",
@@ -1071,7 +1082,7 @@ def pala_consistency_verify_cmd(
         )
         raise typer.Exit(EXIT_VERIFIED)
     typer.secho("INCONSISTENT: the path does not connect the roots", fg=typer.colors.RED, err=True)
-    raise typer.Exit(EXIT_TAMPERED)
+    raise typer.Exit(EXIT_VIOLATION)
 
 
 @pala_app.command("export")
