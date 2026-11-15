@@ -158,6 +158,22 @@ _TOOL_NAME_MAX = 64
 _DETAIL_CLIP = 200  # profile §3: EVT_DETAIL clipped, exception text may hide tokens
 
 
+# The writer's declared surface (docs/WRITER-SURFACE.md), held by
+# tests/test_writer_surface.py. The profile's tag and kind constants above
+# are importable from here for history's sake; their declared home is
+# palimpsests.audit.profiles.inference and palimpsests.audit.reader.
+__all__ = [
+    "ChainLocked",
+    "FrontierUnavailable",
+    "PalaWriter",
+    "RotationPolicy",
+    "canonical_config_digest",
+    "canonical_tool_args_digest",
+    "canonical_tool_names_digest",
+    "session_span_id",
+]
+
+
 def _detail(text: str) -> bytes:
     """Encode EVT_DETAIL: credentials scrubbed, UTF-8, clipped to 200 bytes
     on a char boundary.
@@ -1011,7 +1027,8 @@ class PalaWriter:
         ref_hash: bytes | None = None,
         detail: str | None = None,
         role: str = ROLE_NATIVE,
-    ) -> bytes:
+        return_seq: bool = False,
+    ) -> bytes | tuple[int, bytes]:
         """Record that a pre-registered trigger fired (SAFETY kind 102)."""
         if (ref_seq is None) != (ref_hash is None):
             raise ValueError("ref_seq and ref_hash must be given together")
@@ -1029,7 +1046,12 @@ class PalaWriter:
             tlvs.append((EVT_REF_HASH, ref_hash))
         if detail is not None:
             tlvs.append((EVT_DETAIL, _detail(detail)))
-        return self._emit(RT_SAFETY, tlvs=self._origin(role), body=encode_tlvs(tlvs))
+        # ``return_seq``: an OVERSIGHT_ACK names its candidate by seq and hash,
+        # and the seq has to be the one read under the lock that wrote it.
+        return self._emit(
+            RT_SAFETY, tlvs=self._origin(role), body=encode_tlvs(tlvs),
+            return_seq=return_seq,
+        )
 
     def oversight_ack(
         self,

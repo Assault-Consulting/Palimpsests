@@ -70,7 +70,7 @@ def _cases(tmp_path):
     swapped[off + hlen + blen - 1] ^= 1
 
     broken = bytearray(raw)
-    broken[recs[2][0] + 24] ^= 1  # inside the third record's prev_hash
+    broken[recs[2][0] + 36] ^= 1  # the first byte of the third record's prev_hash
 
     violated = bytearray(raw)
     violated[recs[-1][0] + 11] = 9  # an undefined time-trust value

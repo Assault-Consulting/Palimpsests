@@ -159,7 +159,7 @@ These stay importable but carry no promise to consumers. Naming them explicitly 
 - **Wire internals:** `pala.codec`, `pala.incremental`, `pala.verify` as modules; byte offsets, TLV tag numbers, `_HeaderSeq`, `_LazyRecords`. A consumer reaches these facts through `reader` or not at all.
 - **Anything with a leading underscore,** including `_record_at`, `_decoded_records`, `_structure_pass`. The cache lock added in 0.12 is an implementation detail, not a thread-safety promise for every method.
 - **Parsing a rendered report.** `build_report` and `pala-verification-report/1` stay public as channel 2. What is outside is reading a verdict or a fact out of a rendered report instead of its fields or `derive_verdict`.
-- **The writer** — until its own contract exists (U27). `PalaWriter`, `AnchorStore`, `FileAnchorStore`, `Pkcs11AnchorStore`, segment cutting, locks.
+- **The writer** — has its own contract since 0.15 (U27): `docs/WRITER-SURFACE.md`. It is not part of *this* surface, which is for reading; a consumer's tests that build chains with `PalaWriter`, or damage them with `palimpsests.audit.testing`, rely on that one.
 - **The SCITT bridge's Python API (r2)** — `scitt.verify_statement`, `StatementCheck` and its `root_status` vocabulary stay **experimental** until they join a channel of their own. Statement construction v3 itself — the bytes — was reproduced independently in bridge run B3 and is no longer experimental (0.13.1).
 - **Sentence text:** `narrative`, `detail`, `expected`, `anchor_reason`, violation reasons, error messages. Carried verbatim by consumers, never parsed, free to improve.
 
@@ -195,7 +195,7 @@ Ordered by what each step unblocks. "PR" means one reviewable pull request.
 8. U18 — `verify_segment_set` (0.14). **Done (0.14)**, as its own module `audit.segment_set`.
 9. U28 + U29 — found by Auditor while moving onto the 0.13 surface (its `UPSTREAM-FINDINGS-0_13.md`): `verify()` on an agent's log, and filtering without decoding. **Done (0.14)**, one PR. U30 + U31 — Auditor's requests for 0.14 (its `UPSTREAM-REQUESTS-0_14.md`): `detail` in place, the stored bytes and the TLV maps. **Done (0.14)**, one PR.
 
-The U track to 1.0 is complete except U27, the writer's contract. The report's `/2` (0.15) closed what was waiting for it: the violation codes (U24), the manifest's identity (U17) and the empty container, which takes a verdict of its own, `empty` (C-8) — see `docs/specs/report/MIGRATING-1-TO-2.md`.
+The U track to 1.0 is complete: U27, the writer's contract, is `docs/WRITER-SURFACE.md` (0.15). The report's `/2` (0.15) closed what was waiting for it: the violation codes (U24), the manifest's identity (U17) and the empty container, which takes a verdict of its own, `empty` (C-8) — see `docs/specs/report/MIGRATING-1-TO-2.md`.
 
 **Before 1.0**
 
