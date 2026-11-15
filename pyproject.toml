@@ -219,6 +219,9 @@ testpaths = ["tests"]
 # Import mode importlib keeps src-layout test discovery clean without an
 # editable install rewriting sys.path in surprising ways.
 addopts = "--import-mode=importlib"
+markers = [
+    "real_sync: the test needs the writer's real disk sync (tests/conftest.py replaces it with a counter otherwise)",
+]
 
 [tool.coverage.run]
 source = ["src/palimpsests"]

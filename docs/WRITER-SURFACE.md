@@ -30,6 +30,7 @@ this one says how the Python object behaves.
 |---|---|
 | `PalaWriter` | the writer |
 | `RotationPolicy` | when the writer cuts a segment on its own |
+| `Durability` | when a record is on stable storage (§4) |
 | `ChainLocked` | raised when another process already writes the chain |
 | `FrontierUnavailable` | raised by `chain_root()` when the root cannot be stated |
 | `session_span_id(session_id)` | the span id the writer uses for a session id |
@@ -79,8 +80,9 @@ processes on one directory refuse instead of forking the chain.
 
 ## 3. Writing records
 
-Every method writes **one record**, and the record is in the file when
-the method returns. Each returns that record's **hash** (32 bytes) —
+Every method writes **one record**, and the record is in the file — and,
+under the default durability, on stable storage (§4) — when the method
+returns. Each returns that record's **hash** (32 bytes) —
 except `session_start`, which returns the session's **span id**
 (16 bytes), the value its records and `session_end` are scoped by.
 
@@ -128,7 +130,8 @@ except `session_start`, which returns the session's **span id**
   or reorder one, or change a default's meaning.
 
 Reading the writer: `head` / `head_hex` (the last record's hash), `seq`
-(the next seq), `path`, `boot_id`, `recovered_tail_bytes`, and
+(the next seq), `path`, `boot_id`, `recovered_tail_bytes`, `durability`
+(the policy in force), and
 `chain_root()` — the derived root over every record from seq 0, or
 `FrontierUnavailable` when the writer resumed on a later segment with no
 recorded frontier and so cannot state it.
@@ -150,16 +153,67 @@ recorded frontier and so cannot state it.
   finished — is truncated, `recovered_tail_bytes` says how many, and
   `recovery_truncated_tail()` records that it happened. Pass
   `recover_torn_tail=False` to refuse instead.
+- **A record that was returned survives a loss of power** — under the
+  default, `Durability.RECORD`. See below.
+
+### Durability: when a record is on stable storage
+
+A record handed to the operating system is in the file and not yet on
+the disk; the kernel writes it out when it chooses — on Linux, by
+default, within about half a minute. Until then a loss of power takes
+the record with it, and what is left is a shorter chain **that
+verifies**. Whoever can cut the power — by accident, or on purpose,
+right after an action they would rather not have recorded — removes the
+last records without a trace. `PalaWriter(path, durability=…)` decides
+how long that window is:
+
+| Policy | What a returned record has | A power loss can take |
+|---|---|---|
+| `Durability.RECORD` — **the default** | been synced to stable storage | nothing that was returned |
+| `Durability.group(max_delay_s)` | been written; synced within `max_delay_s`, also when nothing follows | the records of the last `max_delay_s` |
+| `Durability.OS` | been handed to the kernel | whatever the kernel had not written out — typically up to half a minute |
+
+- **The cost** is one sync per record under `RECORD`: hundreds of
+  microseconds to a few milliseconds, depending on the disk. Tool calls
+  and safety events arrive a few per second, not thousands. A writer on a
+  hot path chooses `group` or `OS` deliberately.
+- **`palimpsests serve`** uses `RECORD`, and takes another policy from
+  `PALIMPSESTS_AUDIT_DURABILITY` (`record`, `group`, `group:<seconds>`,
+  `os`). A value it cannot read stops it: a typo does not become the
+  weaker setting. A relaxed policy is announced at start-up, stated by
+  `GET /v1/pala/status` (`chain.durability`) and flagged by
+  `palimpsests doctor` (`serve_durability_relaxed`).
+- **On the serve's own path a tool call is synced before the client is
+  told of it**: the response that carries the call is built after the
+  record is written. A client's *report* (hooks, events) comes after the
+  fact; what is promised there is that a report answered 200 is on stable
+  storage.
+- **A sync that fails raises.** The record is in the file and the writer
+  has moved past it — it must, or the next record would fork the chain —
+  and the caller learns that durability was not confirmed.
+- A cut syncs the segment it leaves, the manifest and the names of both
+  before the writer moves on. `close()` syncs what is not yet synced.
+- On macOS the sync is `F_FULLFSYNC`, which asks the drive to flush its
+  own cache; plain `fsync` there does not.
 
 **It does not guarantee:**
 
-- **Durability against power loss.** A record is handed to the operating
-  system before the method returns (the file is unbuffered), and the
-  writer does **not** `fsync` each record. A crash of the process loses
-  nothing that was returned. A power loss or a kernel crash can lose the
-  last records, or leave the torn tail above. A deployment that needs
-  more keeps an anchor outside the host — which is what makes a lost tail
-  *detectable* — and chooses its filesystem accordingly.
+- **A disk that lies.** Some drives and virtual disks report a sync as
+  done while the data is still in a volatile cache of their own. No
+  software above them can tell. Know the storage the chain is on.
+- **Anything against whoever can write to the file.** They need no power
+  switch: they truncate it. What finds that is an anchor kept outside
+  the host — the head as it was, where the host cannot rewrite it. With
+  `RECORD` and an outside anchor, a cut of the power removes nothing, and
+  a truncation is found.
+- **That a stop was clean.** The chain does not say whether the previous
+  run ended in `close()` or in a loss of power: the next `BOOT` looks the
+  same. Under `RECORD` nothing returned is missing either way; under the
+  other policies a reader cannot tell that records may be.
+- **The record of something that was never written.** A process killed
+  between an action and its record leaves no record. On the serve's own
+  path the call is recorded before the client can act on it, and a call
+  with no result is reported (`tool_call_unanswered`).
 - **Truthful time.** `time_trust` defaults to *unsynced*: a wall-clock
   time is recorded and no claim is made for it. Pass a stronger value
   only where the deployment knows its clock is synchronized; an
