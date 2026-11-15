@@ -58,9 +58,16 @@ range alone.
 | `violation_codes` | `[[seq, code], …]`, parallel to `violations` — the code is what to branch on. Since 0.15. |
 | `container` | `{well_formed, malformed, bytes_parsed, bytes_total, body_digest_mismatches}` — the container walk (§2.4) and the check of every body against the digest its header binds. The same object as the verification report's `container` section. Since 0.15. |
 | `completeness` | `{checked, ok, anchor_lag}` — `checked` is `false` when no anchor was supplied; `ok` is then `null`, and never to be read as passed |
-| `anchor` | `null`, or `{head, source_kind, source_detail}` |
-| `anchor_attempts` | `[{source_kind, source_detail, outcome, error}, …]` |
+| `anchor` | `null`, or `{head, source_kind, source_detail}` — for a file source, `source_detail` is the anchor file's name |
+| `anchor_attempts` | `[{source_kind, source_detail, outcome, error}, …]` — the same rule, and an `error` that quoted the path names the file |
 | `advisory` | `[{code, at_seq, detail}, …]` — signals, never a verdict |
+
+**A bundle holds no path of the machine that made it** (since 0.15). It is
+made to be sent. An anchor read from a file is named by the file's name; a
+bundle written by 0.10 – 0.14 carried the full path there, and so two
+machines made two different archives of the same source and the same
+anchor answer. Every other kind of source keeps its detail as given: it is
+a label, not a location.
 
 **A bundle written by 0.10 – 0.14 has no `consistent`, `container` or
 `violation_codes`.** Its `chain_ok` covered the headers only. To know

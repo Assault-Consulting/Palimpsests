@@ -410,12 +410,17 @@ CHANNELS = {
     "palimpsests.audit.report_html": ["render_html"],
     "palimpsests.audit.export": ["export_jsonl", "FORMAT"],
     "palimpsests.audit.pala.proofs": ["inclusion_proof", "range_proofs", "chain_root",
-                                      "consistency_proof", "ConsistencyProof"],
-    "palimpsests.audit.pala.bundle": ["assemble_bundle"],
-    "palimpsests.audit.timehealth": ["step_catalog", "drift_series"],
-    "palimpsests.audit.bootstats": ["boot_statistics"],
-    "palimpsests.audit.pala.vectors": ["load"],
-    "palimpsests.audit.pala.selftest": ["run_selftest"],
+                                      "consistency_proof", "ConsistencyProof",
+                                      "InclusionProof", "CONSISTENCY_FORMAT"],
+    "palimpsests.audit.pala.bundle": ["assemble_bundle", "BundleResult", "BUNDLE_FORMAT"],
+    "palimpsests.audit.timehealth": ["step_catalog", "drift_series", "TimeStep", "BootDrift",
+                                     "DriftPoint", "STEP_THRESHOLD_NS"],
+    "palimpsests.audit.bootstats": ["boot_statistics", "BootStats", "SpanStats",
+                                    "AnchorCadence"],
+    "palimpsests.audit.pala.vectors": ["load", "available"],
+    "palimpsests.audit.pala.selftest": ["run_selftest", "SelftestResult",
+                                        "CHARACTERISTIC_RECORDS",
+                                        "HEAP_BYTES_PER_RECORD_MAX"],
     "palimpsests.audit.segment_set": ["verify_segment_set", "SegmentSetVerification",
                                       "SegmentCheck"],
     "palimpsests.audit.pala.scitt": ["build_signed_statement", "head_payload",
@@ -425,6 +430,20 @@ CHANNELS = {
                                      "CONTENT_TYPE_V3", "FORMAT_ID",
                                      "check_statement_against_head"],  # deprecated, until 1.0
 }
+
+
+@pytest.mark.parametrize("module", sorted(CHANNELS))
+def test_every_channel_module_declares_exactly_its_names(module):
+    """A consumer that imports only declared names, and checks each against
+    the installed module's ``__all__``, learns of a name the package stopped
+    declaring when it bumps the pin and not when it calls it. That works
+    only for a module that declares. Proofs, the bundle, health and
+    conformance were public channels since 0.10 with no ``__all__``."""
+    import importlib
+
+    declared = importlib.import_module(module).__all__
+    assert sorted(declared) == sorted(CHANNELS[module])
+    assert len(declared) == len(set(declared))
 
 
 @pytest.mark.parametrize("module", sorted(CHANNELS))

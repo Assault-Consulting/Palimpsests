@@ -21,12 +21,19 @@ validates against the schema it holds.
 | `chain.violation_codes` | absent | `[[seq, code], …]`, parallel to `chain.violations` |
 | `diagnosis.code` | absent | the violation's code for the pattern `record_violation`; `null` otherwise |
 | `manifest` | absent | `null`, or `{filename, status, sha256, detail}` |
+| `anchor.source_detail`, for an anchor read from a file | the file's full path | the file's name |
 | unknown keys | an error | allowed: the format is open to additions |
 
 Nothing was removed or renamed, and no key that `/1` had changed its
 meaning. Every other section — `subject`, `verifier`, `checked_at`,
-`container`, `anchor`, `completeness`, `existence`, `advisory`, `safety`,
-`time_basis` — is as it was.
+`container`, `completeness`, `existence`, `advisory`, `safety`,
+`time_basis` — is as it was, and so is `anchor` but for one value: a file
+source's `source_detail` is the anchor file's name and no longer its path,
+and an attempt's `error` that quoted the path names the file. The report
+holds no path of the machine that ran the check — the rule the `manifest`
+block follows. A consumer that showed `source_detail` shows a shorter
+string; one that opened the file from it was reading a path that is only
+valid on the machine that made the report.
 
 ### The verdict `empty`
 

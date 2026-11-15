@@ -251,6 +251,7 @@
               "type": "string"
             },
             "source_detail": {
+              "description": "A label for the source. For a file source: the anchor file's name, never its path — the report holds no path of the machine that ran the check.",
               "type": [
                 "string",
                 "null"

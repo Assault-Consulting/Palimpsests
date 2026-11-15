@@ -35,6 +35,7 @@ lines, and the return type keeps them apart end to end.
 from __future__ import annotations
 
 import os
+import re
 import time
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
@@ -54,6 +55,36 @@ __all__ = [
 ]
 
 _HEAD_LEN = 32
+
+
+def _file_name(path: str) -> str:
+    """The last component of a path of either convention — a document made
+    on one system is read on another."""
+    return re.split(r"[/\\]", path.rstrip("/\\"))[-1]
+
+
+def _portable_detail(source_kind: str, source_detail: str | None) -> str | None:
+    """``source_detail`` as a document that leaves the machine carries it.
+
+    A file source's detail is the anchor file's path: a directory layout,
+    often a user name. A report or a bundle is made to be sent, so it names
+    the file and not where it lay. Every other kind's detail is passed
+    through — it is a label, not a location.
+    """
+    if source_kind == "file" and source_detail:
+        return _file_name(source_detail)
+    return source_detail
+
+
+def _portable_error(source_kind: str, source_detail: str | None, error: str | None) -> str | None:
+    """An attempt's error with the same path reduced the same way — the
+    operating system's message quotes the path it could not read."""
+    if source_kind != "file" or not source_detail or not error:
+        return error
+    name = _file_name(source_detail)
+    for spelled in (source_detail, repr(source_detail)[1:-1]):
+        error = error.replace(spelled, name)
+    return error
 
 
 @dataclass(frozen=True)

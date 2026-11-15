@@ -38,6 +38,16 @@ from palimpsests.audit.pala.codec import (
 from palimpsests.audit.pala.merkle import consistency_proof as merkle_consistency_proof
 from palimpsests.audit.pala.merkle import merkle_proof, merkle_root, verify_consistency
 
+__all__ = [
+    "CONSISTENCY_FORMAT",
+    "ConsistencyProof",
+    "InclusionProof",
+    "chain_root",
+    "consistency_proof",
+    "inclusion_proof",
+    "range_proofs",
+]
+
 
 @dataclass(frozen=True)
 class InclusionProof:
