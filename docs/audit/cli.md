@@ -38,7 +38,7 @@ on differently:
 | Code | Name | Meaning |
 |---|---|---|
 | 0 | verified | chain intact **and** head matches the anchor |
-| 1 | TAMPERED | a break, gap, violated MUST, body-digest mismatch, malformed container, or an anchor mismatch |
+| 1 | VIOLATION | a break, gap, violated MUST, body-digest mismatch, malformed container, or an anchor mismatch — the file was read and does not verify, which includes a file that is no chain at all. The code states the finding, never a cause; it was named `TAMPERED` before 0.15, and the number is unchanged |
 | 2 | PARTIAL | chain intact, but no anchor was supplied — replacement would not have been detected |
 | 3 | UNREADABLE | the file could not be read, or `--anchor` is invalid |
 

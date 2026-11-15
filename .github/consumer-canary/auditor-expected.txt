@@ -1,0 +1,12 @@
+# Tests of Auditor's sidecar that are EXPECTED to fail against this branch:
+# breaks made on purpose, each waiting for the consumer to follow.
+#
+#   module.path::test_name  # reason, and where the change is described
+#
+# scripts/consumer_canary.py fails the check on any failure NOT listed here,
+# and warns when a line here passes again — then the line is removed.
+# Do not add a line to make a red check green: add it when the break is
+# intended, written in the changelog, and the consumer has been told.
+
+tests.test_report::test_the_report_is_the_packages_own  # the report is pala-verification-report/2 since 0.15; the test expects the /1 format string — docs/specs/report/MIGRATING-1-TO-2.md
+tests.test_sessions::test_an_empty_file_read_against_an_anchor_is_a_deleted_log  # an empty container without an anchor has the verdict "empty" since report /2; the test expects "partial" — docs/specs/report/MIGRATING-1-TO-2.md

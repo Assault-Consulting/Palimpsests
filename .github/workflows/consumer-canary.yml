@@ -1,0 +1,78 @@
+name: consumer canary
+
+# Runs a consumer's own test suite against this commit of the package.
+#
+# A consumer pins a released version, so a change here that breaks it is
+# otherwise found when it lifts the pin — a release too late. The consumer
+# is Auditor (https://github.com/Assault-Consulting/Auditor): its sidecar
+# reads chains through the declared surface and nothing else, which makes
+# its tests a second contract test, written by someone else.
+#
+# Failures are compared with a ledger of breaks made on purpose
+# (.github/consumer-canary/auditor-expected.txt). The job fails only on a
+# failure the ledger does not list — see scripts/consumer_canary.py.
+#
+# This check is a signal, not a gate: it is not a required status check,
+# because the consumer's main branch moves on its own and must not be able
+# to block a merge here. A red canary is read before merging, not obeyed.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Mondays 05:23 UTC: the consumer changes too, and a quiet week here
+    # must not hide a break that arrived from its side.
+    - cron: "23 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: consumer-canary-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  auditor:
+    name: Auditor sidecar against this commit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check out the consumer (its main branch)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          repository: Assault-Consulting/Auditor
+          ref: main
+          path: _consumer/auditor
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
+        with:
+          python-version: "3.12"
+
+      # The checkout first, then the consumer's other requirements around
+      # it, then the consumer itself without its dependencies — so its pin
+      # on a released version cannot replace the package under test.
+      - name: Install this checkout, then the consumer around it
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[pala]"
+          python scripts/consumer_canary.py deps _consumer/auditor/sidecar --extra dev > consumer-requirements.txt
+          cat consumer-requirements.txt
+          pip install -r consumer-requirements.txt
+          pip install --no-deps -e _consumer/auditor/sidecar
+
+      - name: Which consumer commit
+        run: git -C _consumer/auditor log -1 --format='Auditor %H %cI %s'
+
+      - name: Run the consumer's suite against this commit
+        run: >
+          python scripts/consumer_canary.py run _consumer/auditor/sidecar
+          --expected .github/consumer-canary/auditor-expected.txt

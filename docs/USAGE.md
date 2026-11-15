@@ -217,7 +217,7 @@ Without `--anchor` the command still checks internal consistency but exits
 `2` (`PARTIAL`) on purpose: tail truncation, or wholesale replacement by
 another internally consistent file, cannot be detected from the inside, and
 the tool reports that limit instead of passing over it. A break, a gap, a
-violated MUST or a body-digest mismatch exits `1` (`TAMPERED`) — flip a
+violated MUST or a body-digest mismatch exits `1` (`VIOLATION`) — flip a
 single bit to see it:
 
 ```bash

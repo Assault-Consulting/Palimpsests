@@ -148,6 +148,11 @@ Two people: whoever opens the release pull request does not merge it.
    own pull request. A RED or ERROR row stops the release. A SKIP is not a
    pass: the release notes say which surfaces were not checked.
 
+   Read the consumer canary's last run on `main` as well
+   (`docs/INTEGRATION-SURFACE.md`, "How a break is found before a
+   release"): every line of its ledger is a break a consumer will meet in
+   this release, and the release notes name each one.
+
 ### The release pull request (`release/x.y.z`)
 
 3. **The version, in both places:**
