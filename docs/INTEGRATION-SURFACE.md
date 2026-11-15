@@ -265,8 +265,16 @@ The reader holds all record headers in memory and `build_report` /
 `assemble_bundle` read the source file fully, through the reader's mapping
 and not a copy. Both take `reader=` (`assemble_bundle` since 0.15), so a
 consumer that holds the chain open hands it over and the file is not
-opened again. A bundle holds the records of its *selection* in memory
-while the archive is written. This is comfortable to the order of ~10^6 records / hundreds of MB;
+opened again. A bundle holds the records of its *selection*, and a proof
+for each, in memory while the archive is written — **a bundle is for a
+selection, not for a whole large chain.** Measured on a chain of 10^6
+records (183 MB, checkpointed every 50,000): a selection of 1,000 records
+takes 9 s and 0.4 GB, nearly all of it the verification of the whole file
+that every bundle carries; 100,000 records take 14 s and 1.3 GB and make
+a 239 MB archive; the whole chain does not fit in 8 GB. The archive
+outgrows its source because `proofs.json` carries a path per record. To
+hand over a whole chain, hand over the chain: `pala segment`, or the file
+itself with its report. This is comfortable to the order of ~10^6 records / hundreds of MB;
 multi-GB retention archives (see `docs/RETENTION.md` for the storage
 math) should be segmented before interactive use. A streaming reader
 is backlog, not promise.

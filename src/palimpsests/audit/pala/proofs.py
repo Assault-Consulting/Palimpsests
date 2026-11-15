@@ -24,6 +24,7 @@ bundle must be able to say which.
 from __future__ import annotations
 
 import struct
+from bisect import bisect_right
 from dataclasses import dataclass
 from palimpsests.audit.pala.codec import (
     FIXED_HEADER_LEN,
@@ -36,7 +37,12 @@ from palimpsests.audit.pala.codec import (
     record_hash as _record_hash,
 )
 from palimpsests.audit.pala.merkle import consistency_proof as merkle_consistency_proof
-from palimpsests.audit.pala.merkle import merkle_proof, merkle_root, verify_consistency
+from palimpsests.audit.pala.merkle import (
+    leaf_hash,
+    merkle_root,
+    node_hash,
+    verify_consistency,
+)
 
 __all__ = [
     "CONSISTENCY_FORMAT",
@@ -88,31 +94,95 @@ def _index(reader) -> tuple[dict[int, bytes], list[tuple[int, bytes, int]]]:
     return hashes, merkles
 
 
-def _proof_from_index(
-    hashes: dict[int, bytes],
-    merkles: list[tuple[int, bytes, int]],
-    seq: int,
-) -> InclusionProof | None:
-    if seq not in hashes:
-        return None
-    for mseq, root, count in merkles:
-        lo = mseq - count
-        if not (lo <= seq < mseq):
-            continue
-        window = [hashes.get(s) for s in range(lo, mseq)]
-        if any(h is None for h in window):
-            # The window is not fully present in what was walked; a proof
-            # built from a partial window would land on a different root.
-            continue
-        leaves = [h for h in window if h is not None]
-        return InclusionProof(
-            seq=seq,
-            leaf=hashes[seq],
-            path=merkle_proof(leaves, seq - lo),
-            root=root,
-            root_seq=mseq,
+def _layers(leaves: list[bytes]) -> list[list[bytes]]:
+    """Every layer of the §4.3 tree over ``leaves``, leaf hashes first.
+
+    The same tree ``merkle_proof`` builds — pairs hashed, an odd node
+    promoted and not duplicated — kept, so that many paths cost one tree.
+    """
+    layer = [leaf_hash(x) for x in leaves]
+    layers = [layer]
+    while len(layer) > 1:
+        nxt = [node_hash(layer[i], layer[i + 1]) for i in range(0, len(layer) - 1, 2)]
+        if len(layer) % 2:
+            nxt.append(layer[-1])
+        layer = nxt
+        layers.append(layer)
+    return layers
+
+
+def _path(layers: list[list[bytes]], index: int) -> list[tuple[str, bytes]]:
+    """``merkle_proof(leaves, index)``, read off the kept layers."""
+    path: list[tuple[str, bytes]] = []
+    for layer in layers[:-1]:
+        sibling = index ^ 1
+        if sibling < len(layer):  # a promoted node has none at this level
+            path.append(("L" if sibling < index else "R", layer[sibling]))
+        index //= 2
+    return path
+
+
+class _Windows:
+    """The chain-carried aggregations, each tree built at most once.
+
+    A proof used to rebuild its window's whole tree: a range of ``n``
+    records under a checkpoint of ``w`` leaves cost ``n × w`` hashes, and a
+    bundle of a chain checkpointed every 50,000 records took a minute per
+    thousand records. One tree per window makes it ``w + n·log w``. Only
+    the latest window's layers are held: a range is walked in seq order.
+    """
+
+    def __init__(self, hashes: dict[int, bytes], merkles: list[tuple[int, bytes, int]]):
+        self._hashes = hashes
+        self._merkles = merkles
+        self._starts = [mseq - count for mseq, _root, count in merkles]
+        # Windows written by ``merkle_checkpoint`` tile the chain: each
+        # starts where the one before ended. Then one window can hold a
+        # seq and it is found by bisection. Windows that overlap or are
+        # out of order are answered as before: the first, in file order,
+        # that holds the seq and is fully present.
+        self._tiled = all(
+            mseq <= start
+            for (mseq, _root, _count), start in zip(merkles, self._starts[1:], strict=False)
         )
-    return None
+        self._cached: tuple[int, list[list[bytes]] | None] | None = None
+
+    def _candidates(self, seq: int):
+        if not self._tiled:
+            return range(len(self._merkles))
+        i = bisect_right(self._starts, seq) - 1
+        return (i,) if i >= 0 else ()
+
+    def _layers_of(self, j: int) -> list[list[bytes]] | None:
+        if self._cached is not None and self._cached[0] == j:
+            return self._cached[1]
+        mseq, _root, count = self._merkles[j]
+        window = [self._hashes.get(s) for s in range(mseq - count, mseq)]
+        # A window not fully present in what was walked: a proof built
+        # from part of it would land on a different root.
+        layers = None if any(h is None for h in window) else _layers(window)
+        self._cached = (j, layers)
+        return layers
+
+    def proof(self, seq: int) -> InclusionProof | None:
+        if seq not in self._hashes:
+            return None
+        for j in self._candidates(seq):
+            mseq, root, count = self._merkles[j]
+            lo = mseq - count
+            if not (lo <= seq < mseq):
+                continue
+            layers = self._layers_of(j)
+            if layers is None:
+                continue
+            return InclusionProof(
+                seq=seq,
+                leaf=self._hashes[seq],
+                path=_path(layers, seq - lo),
+                root=root,
+                root_seq=mseq,
+            )
+        return None
 
 
 def inclusion_proof(reader, seq: int) -> InclusionProof | None:
@@ -124,16 +194,15 @@ def inclusion_proof(reader, seq: int) -> InclusionProof | None:
     ``verify_proof(p.leaf, p.path, p.root)`` — against the root as read
     from the chain, never one recomputed beside it.
     """
-    hashes, merkles = _index(reader)
-    return _proof_from_index(hashes, merkles, seq)
+    return _Windows(*_index(reader)).proof(seq)
 
 
 def range_proofs(reader, lo: int, hi: int) -> list[InclusionProof]:
     """Proofs for every provable seq in ``[lo, hi]`` — one walk, not many."""
-    hashes, merkles = _index(reader)
+    windows = _Windows(*_index(reader))
     out: list[InclusionProof] = []
     for seq in range(lo, hi + 1):
-        p = _proof_from_index(hashes, merkles, seq)
+        p = windows.proof(seq)
         if p is not None:
             out.append(p)
     return out
