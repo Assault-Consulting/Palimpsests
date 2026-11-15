@@ -14,7 +14,7 @@ it is not promised.
 
 | # | Channel | Surface | Stability |
 |---|---------|---------|-----------|
-| 1 | Reading | `palimpsests.audit.reader.AuditReader` (`open`, `verify`, `records`, `spans`, `boots`, `origin_at`, `unloaded_at`, `acknowledged_candidates`, `shredded_targets`; sparse access `record_count`, `record_at`, `record_by_seq`, `header_at` since 0.13; `Verification.manifest` since 0.13; `container_check()`, `record_fields_at()` since 0.14; for a byte view `record_bytes_at()`, `header_tlv_spans_at()`, `body_tlv_spans_at()` since 0.14, and the fixed header's layout `HEADER_FIELDS` / `HeaderField` / `FIXED_HEADER_LEN` since 0.14.1; a KEY_SHRED's erasure note `decode_shred` / `ShredView` since 0.15); a segmented chain as one set: `palimpsests.audit.segment_set.verify_segment_set` (since 0.14) | public (since 0.8) |
+| 1 | Reading | `palimpsests.audit.reader.AuditReader` (`open`, `verify`, `records`, `spans`, `boots`, `origin_at`, `unloaded_at`, `acknowledged_candidates`, `shredded_targets`; sparse access `record_count`, `record_at`, `record_by_seq`, `header_at` since 0.13; `Verification.manifest` since 0.13; `container_check()`, `record_fields_at()` since 0.14; for a byte view `record_bytes_at()`, `header_tlv_spans_at()`, `body_tlv_spans_at()` since 0.14, and the fixed header's layout `HEADER_FIELDS` / `HeaderField` / `FIXED_HEADER_LEN` since 0.14.1; a KEY_SHRED's erasure note `decode_shred` / `ShredView` since 0.15; question one as one answer `AuditReader.is_consistent()`, `Diagnosis.question`, the vocabularies as data, and the header-enum names `assurance_tier_name` / `time_trust_name` — the same objects as in `palimpsests.audit.names` — since 0.15); a segmented chain as one set: `palimpsests.audit.segment_set.verify_segment_set` (since 0.14) | public (since 0.8) |
 | 2 | Report and export | `palimpsests.audit.report.build_report`, `derive_verdict`, format `pala-verification-report/2` (since 0.15; `/1` in 0.10 – 0.14, still read); the HTML page `palimpsests.audit.report_html.render_html` (since 0.14 — a rendering of the report's `.data`, its markup not a format); the record export `palimpsests.audit.export.export_jsonl`, format `pala-jsonl/1` (since 0.14.1) | public (since 0.10) |
 | 3 | Proofs | `palimpsests.audit.pala.proofs.inclusion_proof`, `range_proofs`; prefix consistency `chain_root`, `consistency_proof`, `ConsistencyProof`, format `pala-consistency-proof/1` (since 0.12) | public (since 0.10) |
 | 4 | Bundle | `palimpsests.audit.pala.bundle.assemble_bundle`, format `pala-bundle/1` (`docs/specs/bundle/pala-bundle-1.md`) | public (since 0.10) |
@@ -62,6 +62,24 @@ new format id.
   since format `/2`: `chain.violation_codes`, parallel to
   `chain.violations`, and `diagnosis.code`.
 
+- **One diagnosis, three questions.** A diagnosis is about one of them,
+  and `Diagnosis.question` says which: `consistency`, `completeness`, or
+  `None` (`empty_container`). A finding about the anchor is not a finding
+  about the chain: a chain that holds together, read against an anchor
+  that does not name its head, has a diagnosis and is consistent. And a
+  body altered after writing leaves the diagnosis `None` — the diagnosis
+  is made from the header pass — on a file that is not consistent. So
+  **question one is never `diagnosis is None`**: it is
+  `AuditReader.is_consistent()`, the same rule as `consistency.ok` in
+  `pala verify --json` and `consistent` in the export and the bundle.
+- **The vocabularies are data too** (since 0.15): `DIAGNOSIS_PATTERNS`,
+  `DIAGNOSIS_QUESTIONS`, `ADVISORY_CODES`, `VIOLATION_CODES` and
+  `MANIFEST_STATUSES` in `palimpsests.audit.reader`, `VERDICTS` in
+  `palimpsests.audit.report` — what the installed build can say. A
+  consumer that keeps a table of its own (guidance per pattern, a
+  sentence per code) tests that the table covers these, and learns of a
+  new member from a failing test instead of from a user's screen.
+
 The structural rules — one place to import from, no removal or rename
 within a major, deprecation over one minor — take effect at 1.0. Until
 then the class above holds for symbols, with every break named in the
@@ -85,6 +103,8 @@ they belong to a channel; B3 verified the construction, not that API.
 | Diagnosis `pattern` | `empty_container`, `not_a_container`, `truncated_tail`, `prefix_absent`, `declared_continuation`, `continuation_contradicts_manifest`, `seq_gap`, `chain_break`, `record_violation`, `unanchored_tail`, `replaced_or_rolled_back` |
 | Advisory `code` | `anchor_never_written`, `mid_boot_time_trust_change`, `mono_regression_in_boot`, `wall_regression_in_boot`, `span_unclosed`, `span_unopened`, `reference_hash_mismatch`, `reference_unresolved`, `ack_target_not_a_candidate`, `tool_target_not_a_call`, `shred_target_key_mismatch`, `shred_target_unresolved`, `continuation_malformed`, `continuation_predecessor_mismatch`, `continuation_index_not_increasing`, `continuation_index_gap`, `continuation_prior_root_mismatch` |
 | Violation `code` | `prefix_absent`, `genesis_not_first`, `genesis_prev_hash_nonzero`, `header_len_mismatch`, `malformed_tlv`, `time_trust_undefined`, `time_unknown_with_wall_clock`, `empty_body_digest_nonzero`, `nonempty_body_digest_zero`, `encrypted_body_too_short` |
+| Diagnosis patterns about consistency | `not_a_container`, `truncated_tail`, `prefix_absent`, `declared_continuation`, `continuation_contradicts_manifest`, `seq_gap`, `chain_break`, `record_violation` |
+| Diagnosis patterns about completeness | `unanchored_tail`, `replaced_or_rolled_back` |
 | `ManifestReading.status` | `matches`, `contradicts`, `declared_only` |
 | `outcome_name` | `ok`, `error`, `timeout`, `cancelled`, `unobserved` |
 | `source_name` | `parsed-from-wire`, `reported-by-client` |
