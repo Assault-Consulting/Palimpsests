@@ -25,8 +25,16 @@ Two boundaries, stated up front:
   and completeness, and simply does not claim existence-in-time.
 - The overclaim rule applies: a verifier that has not checked a
   statement (or its receipt) against a key it trusts reports the range
-  as *reported, not verified*. ``check_statement_against_head`` is the
-  *verified* path.
+  as *reported, not verified*. :func:`verify_statement` is the *verified*
+  path — and the only one: it refuses with :class:`StatementRefused`,
+  whose ``code`` names the check that failed.
+
+What this module is, as an API (``docs/INTEGRATION-SURFACE.md``, channel
+8): it needs the ``[scitt]`` extra and raises :class:`ScittUnavailable`
+without it; a key is a ``cryptography`` public (or, to sign, private) key
+object, loaded by the caller; and it verifies **statements**, never
+receipts — whether a transparency service registered a statement is that
+service's protocol to check, not this module's.
 
 COSE is implemented minimally here (sign1/verify1 over an ES256 or
 Ed25519 key) rather than through a COSE library, for the same reason
@@ -92,8 +100,10 @@ __all__ = [
     "CONTENT_TYPE",
     "CONTENT_TYPE_V3",
     "FORMAT_ID",
+    "STATEMENT_REFUSAL_CODES",
     "ScittUnavailable",
     "StatementCheck",
+    "StatementRefused",
     "build_signed_statement",
     "check_statement_against_head",
     "head_payload",
@@ -138,6 +148,82 @@ _HEAD_LEN = 32
 
 class ScittUnavailable(RuntimeError):
     """Raised when the SCITT bridge is used without the [scitt] extra."""
+
+
+#: Every reason :func:`verify_statement` refuses a statement, as codes. The
+#: code is what a caller branches on; the message beside it is a sentence
+#: and may be reworded in any release. Open vocabulary: a release may add a
+#: code, never rename one or give it another meaning.
+STATEMENT_REFUSAL_CODES = frozenset({
+    # the bytes are not this kind of message
+    "not_cose_sign1",  # not one tagged COSE_Sign1 with four members
+    "trailing_bytes",  # a COSE_Sign1, followed by bytes that are not part of it
+    "protected_header_malformed",  # the protected bucket is not an encoded CBOR map
+    "detached_payload",  # payload nil: this construction is attached, always
+    "payload_malformed",  # the signed payload is not an encoded CBOR map
+    "repeated_key",  # a map that repeats a key reads two ways
+    "indefinite_length_map",  # its keys cannot be counted
+    # the signature
+    "unsupported_alg",  # not ES256 or EdDSA
+    "signature_invalid",  # does not verify under the key given
+    # what was signed is not what was expected
+    "head_mismatch",  # commits to another chain head
+    "format_id_mismatch",
+    "range_invalid",  # not 0 <= first_seq <= last_seq
+    "content_type_unknown",
+    "payload_keys_mismatch",  # the keys its own content type does not allow
+    "protected_labels_mismatch",  # other than alg, content type, kid, CWT claims
+    "root_malformed",  # a v3 root that is not 32 bytes
+    # against the chain at hand
+    "chain_too_short",  # fewer records than the statement's range
+    "root_mismatch",  # not the derived root of this chain
+})
+
+
+class StatementRefused(ValueError):
+    """:func:`verify_statement` did not accept the statement.
+
+    ``code`` is one of :data:`STATEMENT_REFUSAL_CODES` and is the contract;
+    ``str(exc)`` is a sentence for a person. A subclass of ``ValueError``,
+    which is what the verifier raised before 0.15 — ``except ValueError``
+    keeps working.
+
+    A refusal says the statement is not *this construction, verified under
+    this key, committing to this head*. It does not say why: a statement
+    for another chain, a corrupted download and a forgery are all refused,
+    and the code names the check that failed, not a cause.
+    """
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(message)
+        self.code = code
+
+
+def _decode_one(raw: Any, code: str, what: str) -> Any:
+    """Decode exactly one CBOR item from ``raw``, or refuse with ``code``.
+
+    cbor2 raises several exception types of its own on malformed input and
+    silently ignores bytes after the first item; a verifier fed someone
+    else's bytes needs one exception, and must not accept an artifact that
+    is a statement plus something else.
+    """
+    import io
+
+    cbor2 = _cbor2()
+    if not isinstance(raw, (bytes, bytearray, memoryview)):
+        raise StatementRefused(code, f"{what} is not bytes")
+    stream = io.BytesIO(bytes(raw))
+    try:
+        item = cbor2.CBORDecoder(stream).decode()
+    except Exception as e:  # cbor2's decode errors do not share one base with ValueError
+        raise StatementRefused(code, f"{what} is not well-formed CBOR") from e
+    rest = len(stream.getbuffer()) - stream.tell()
+    if rest:
+        raise StatementRefused(
+            "trailing_bytes" if code == "not_cose_sign1" else code,
+            f"{what} is followed by {rest} byte(s) that are not part of it",
+        )
+    return item
 
 
 def _cbor2():
@@ -237,35 +323,64 @@ def _cose_sign1(
     return cbor2.dumps(cbor2.CBORTag(18, [protected, {}, payload, sig]))
 
 
+def _cose_parts(message: Any) -> tuple[bytes, dict, bytes, Any]:
+    """(protected bytes, protected map, payload bytes, signature) of one
+    tagged COSE_Sign1 — or a refusal that says which part is not one."""
+    cbor2 = _cbor2()
+    tag = _decode_one(message, "not_cose_sign1", "the message")
+    if (
+        not isinstance(tag, cbor2.CBORTag)
+        or tag.tag != 18
+        or not isinstance(tag.value, (list, tuple))
+        or len(tag.value) != 4
+    ):
+        raise StatementRefused("not_cose_sign1", "not a COSE_Sign1 message")
+    protected, _unprotected, payload, sig = tag.value
+    if not isinstance(protected, bytes):
+        raise StatementRefused(
+            "protected_header_malformed", "the protected header is not a byte string")
+    phdr = _decode_one(protected, "protected_header_malformed", "the protected header")
+    if not isinstance(phdr, dict):
+        raise StatementRefused(
+            "protected_header_malformed", "the protected header is not a CBOR map")
+    _distinct_keys(protected, phdr, "the protected header", "protected_header_malformed")
+    if payload is None:
+        raise StatementRefused(
+            "detached_payload",
+            "the payload is detached (nil); this construction always carries it")
+    if not isinstance(payload, bytes):
+        raise StatementRefused("payload_malformed", "the payload is not a byte string")
+    return protected, phdr, payload, sig
+
+
 def _cose_verify1(message: bytes, public_key: Any) -> bytes:
-    """Verify a COSE_Sign1; return its payload, or raise ``ValueError``.
+    """Verify a COSE_Sign1; return its payload, or raise :class:`StatementRefused`.
 
     Ed25519 verification here rejects a non-canonical scalar (S >= L,
     RFC 8032 §5.1.7) through its backend — the S + L variant of a valid
     signature does not verify; a test pins that behaviour.
     """
-    cbor2 = _cbor2()
     hashes, ec, _, encode_dss = _crypto()
-    tag = cbor2.loads(message)
-    if not isinstance(tag, cbor2.CBORTag) or tag.tag != 18 or len(tag.value) != 4:
-        raise ValueError("not a COSE_Sign1 message")
-    protected, _unprotected, payload, sig = tag.value
-    alg = cbor2.loads(protected).get(_HDR_ALG)
+    protected, phdr, payload, sig = _cose_parts(message)
+    alg = phdr.get(_HDR_ALG)
+    if alg not in (ALG_ES256, ALG_EDDSA) or type(alg) is not int:
+        raise StatementRefused("unsupported_alg", f"unsupported COSE alg {alg!r}")
     tbs = _sig_structure(protected, payload)
     try:
         if alg == ALG_ES256:
-            if len(sig) != 64:
+            if not isinstance(sig, bytes) or len(sig) != 64:
                 raise ValueError("ES256 signature must be 64 bytes (P-1363)")
             der = encode_dss(int.from_bytes(sig[:32], "big"), int.from_bytes(sig[32:], "big"))
             public_key.verify(der, tbs, ec.ECDSA(hashes.SHA256()))
-        elif alg == ALG_EDDSA:
-            public_key.verify(sig, tbs)
         else:
-            raise ValueError(f"unsupported COSE alg {alg}")
-    except ValueError:
-        raise
+            public_key.verify(sig, tbs)
     except Exception as e:
-        raise ValueError("COSE_Sign1 signature verification failed") from e
+        # One code for every way a signature does not verify under the key
+        # given — a wrong key, a key of another type, an altered message, a
+        # malformed signature: the verifier cannot tell them apart, and does
+        # not pretend to.
+        raise StatementRefused(
+            "signature_invalid", "COSE_Sign1 signature verification failed") from e
     return payload
 
 
@@ -376,7 +491,7 @@ class StatementCheck:
     payload_encoding: str  # "deterministic" | "not deterministic"
 
 
-def _distinct_keys(raw: bytes, decoded: dict, what: str) -> None:
+def _distinct_keys(raw: bytes, decoded: dict, what: str, malformed: str) -> None:
     """Refuse a map that repeats a key. A decoder keeps one of the values —
     cbor2 the last — and another reader may keep the other, so the same
     signed bytes would read two ways (RFC 8949 §5.6: such a map is not
@@ -384,35 +499,46 @@ def _distinct_keys(raw: bytes, decoded: dict, what: str) -> None:
     cannot be counted and is not the deterministic encoding either."""
     major, ai = raw[0] >> 5, raw[0] & 0x1F
     if major != 5:
-        raise ValueError(f"{what} is not a CBOR map")
+        raise StatementRefused(malformed, f"{what} is not a CBOR map")
     if ai < 24:
         n = ai
     elif ai in (24, 25, 26, 27):
         width = 1 << (ai - 24)
         n = int.from_bytes(raw[1 : 1 + width], "big")
     else:
-        raise ValueError(f"{what} is an indefinite-length map; its keys cannot be counted")
+        raise StatementRefused(
+            "indefinite_length_map",
+            f"{what} is an indefinite-length map; its keys cannot be counted")
     if n != len(decoded):
-        raise ValueError(f"{what} repeats a key ({n} entries, {len(decoded)} distinct keys)")
-
-
-def _protected_header(message: bytes) -> dict:
-    tag = _cbor2().loads(message)
-    if not hasattr(tag, "value") or len(tag.value) != 4:
-        raise ValueError("not a COSE_Sign1 message")
-    phdr = _cbor2().loads(tag.value[0])
-    if not isinstance(phdr, dict):
-        raise ValueError("protected header is not a CBOR map")
-    _distinct_keys(tag.value[0], phdr, "the protected header")
-    return phdr
+        raise StatementRefused(
+            "repeated_key",
+            f"{what} repeats a key ({n} entries, {len(decoded)} distinct keys)")
 
 
 def _check_protected_labels(phdr: dict) -> None:
     if set(phdr) != _PROTECTED_LABELS:
-        raise ValueError(
+        raise StatementRefused(
+            "protected_labels_mismatch",
             "this construction's protected header carries exactly labels 1, 3, 4 "
-            f"and 15 (alg, content type, kid, CWT claims); this one carries {sorted(phdr)}"
+            f"and 15 (alg, content type, kid, CWT claims); this one carries {_keys(phdr)}"
         )
+
+
+def _keys(decoded: dict) -> list:
+    """A map's keys for a message — sorted where they can be, as they are
+    where they cannot (a signed map may mix integers and text)."""
+    try:
+        return sorted(decoded)
+    except TypeError:
+        return list(decoded)
+
+
+def _decode_payload(payload: bytes) -> dict:
+    decoded = _decode_one(payload, "payload_malformed", "the statement payload")
+    if not isinstance(decoded, dict):
+        raise StatementRefused("payload_malformed", "statement payload is not a CBOR map")
+    _distinct_keys(payload, decoded, "the statement payload", "payload_malformed")
+    return decoded
 
 
 def verify_statement(
@@ -434,17 +560,24 @@ def verify_statement(
     ``reader`` (an ``AuditReader`` over the chain) lets the v3 root be
     *recomputed* — the derived root over records ``0..last_seq`` — and
     compared; without it the root is reported as carried, not
-    recomputed. Raises ``ValueError`` on any mismatch.
+    recomputed.
+
+    Raises :class:`StatementRefused` — a ``ValueError`` — for every
+    statement it does not accept, malformed bytes included; ``.code`` is
+    one of :data:`STATEMENT_REFUSAL_CODES`. A message, a protected header
+    or a payload that is one CBOR item *followed by further bytes* is
+    refused: bytes outside the item are outside the signature's meaning,
+    and an artifact that is a statement plus something else is not the
+    statement.
     """
     payload = _cose_verify1(message, public_key)
-    decoded = _cbor2().loads(payload)
-    if not isinstance(decoded, dict):
-        raise ValueError("statement payload is not a CBOR map")
-    _distinct_keys(payload, decoded, "the statement payload")
+    decoded = _decode_payload(payload)
     if decoded.get(_PAYLOAD_HEAD) != expected_head:
-        raise ValueError("statement does not commit to the expected chain head")
+        raise StatementRefused(
+            "head_mismatch", "statement does not commit to the expected chain head")
     if decoded.get(_PAYLOAD_FORMAT) != FORMAT_ID:
-        raise ValueError(f"statement format id is not {FORMAT_ID!r}")
+        raise StatementRefused(
+            "format_id_mismatch", f"statement format id is not {FORMAT_ID!r}")
     first, last = decoded.get(_PAYLOAD_FIRST_SEQ), decoded.get(_PAYLOAD_LAST_SEQ)
     if not (
         type(first) is int and type(last) is int and 0 <= first <= last
@@ -452,8 +585,9 @@ def verify_statement(
         # The builder refuses an inverted range; a verifier must too. The root
         # depends only on last_seq, so an inverted statement would otherwise
         # verify with a root correct for its last_seq (bridge run B3, F4).
-        raise ValueError("a statement's range must satisfy 0 <= first_seq <= last_seq")
-    phdr = _protected_header(message)
+        raise StatementRefused(
+            "range_invalid", "a statement's range must satisfy 0 <= first_seq <= last_seq")
+    _protected, phdr, _payload, _sig = _cose_parts(message)
     ctype = phdr.get(_HDR_CONTENT_TYPE)
     encoding = (
         "deterministic"
@@ -463,21 +597,24 @@ def verify_statement(
     v2_keys = {_PAYLOAD_HEAD, _PAYLOAD_FIRST_SEQ, _PAYLOAD_LAST_SEQ, _PAYLOAD_FORMAT}
     if ctype == CONTENT_TYPE:
         if set(decoded) != v2_keys:
-            raise ValueError(
+            raise StatementRefused(
+                "payload_keys_mismatch",
                 "a v2 statement carries exactly payload keys 1-4; this one carries "
-                f"{sorted(decoded)} (a root under the v2 content type is not read)"
+                f"{_keys(decoded)} (a root under the v2 content type is not read)"
             )
         _check_protected_labels(phdr)
         return StatementCheck("v2", decoded, None, "absent", encoding)
     if ctype != CONTENT_TYPE_V3:
-        raise ValueError(f"unknown statement content type {ctype!r}")
+        raise StatementRefused(
+            "content_type_unknown", f"unknown statement content type {ctype!r}")
     if set(decoded) != v2_keys | {_PAYLOAD_ROOT}:
-        raise ValueError(
-            f"a v3 statement carries payload keys 1-5; this one carries {sorted(decoded)}"
+        raise StatementRefused(
+            "payload_keys_mismatch",
+            f"a v3 statement carries payload keys 1-5; this one carries {_keys(decoded)}",
         )
     root = decoded[_PAYLOAD_ROOT]
     if not isinstance(root, bytes) or len(root) != _HEAD_LEN:
-        raise ValueError(f"a v3 root is {_HEAD_LEN} bytes")
+        raise StatementRefused("root_malformed", f"a v3 root is {_HEAD_LEN} bytes")
     _check_protected_labels(phdr)
     if reader is None:
         return StatementCheck("v3", decoded, root, "carried, not recomputed", encoding)
@@ -487,12 +624,14 @@ def verify_statement(
     try:
         expected_root = chain_root(reader, last_seq + 1)
     except IndexError as e:
-        raise ValueError(
+        raise StatementRefused(
+            "chain_too_short",
             f"the chain at hand has fewer than {last_seq + 1} records; the root "
             "cannot be recomputed from it"
         ) from e
     if root != expected_root:
-        raise ValueError(
+        raise StatementRefused(
+            "root_mismatch",
             "the statement's root is not the derived root over records "
             f"0..{last_seq} of this chain"
         )
@@ -502,12 +641,19 @@ def verify_statement(
 def check_statement_against_head(
     message: bytes, public_key: Any, expected_head: bytes
 ) -> dict[int, Any]:
-    """Verify signature AND commitment; the *verified* side of overclaim.
+    """Deprecated since 0.15: use :func:`verify_statement`.
 
-    Returns the decoded payload map on success. Raises ``ValueError`` on
-    any mismatch. A caller that has not run this (with a key it trusts)
-    reports the statement as *reported, not verified* — never as
-    witnessed. Accepts v2 and v3 (see :func:`verify_statement`, which
-    also says what was established about a v3 root).
+    The same verification, returning only the payload map — and so unable
+    to say what was established about a v3 root, or how the payload was
+    encoded. There is one verifier; this name remains until 1.0 and emits
+    a ``DeprecationWarning``.
     """
+    import warnings
+
+    warnings.warn(
+        "check_statement_against_head is deprecated since 0.15 and will be removed "
+        "in 1.0; use verify_statement(...), whose result carries .payload",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     return verify_statement(message, public_key, expected_head).payload

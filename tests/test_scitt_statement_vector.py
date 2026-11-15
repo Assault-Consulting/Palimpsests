@@ -27,6 +27,11 @@ def doc() -> dict:
     return json.loads(VECTOR.read_text(encoding="utf-8"))
 
 
+def _verified_payload(message, public_key, expected_head):
+    """The payload of a statement the one verifier accepted."""
+    return scitt.verify_statement(message, public_key, expected_head).payload
+
+
 def test_the_statement_regenerates_byte_for_byte(doc):
     key = ed25519.Ed25519PrivateKey.from_private_bytes(
         bytes.fromhex(doc["key"]["private_seed_hex"])
@@ -58,7 +63,7 @@ def test_the_stated_public_key_matches_the_seed_and_verifies(doc):
         serialization.Encoding.Raw, serialization.PublicFormat.Raw
     )
     assert pub_raw.hex() == doc["key"]["public_key_hex"]
-    decoded = scitt.check_statement_against_head(
+    decoded = _verified_payload(
         bytes.fromhex(doc["expected"]["statement_hex"]),
         key.public_key(),
         bytes.fromhex(doc["subject_chain"]["chain_head_hex"]),
@@ -79,12 +84,12 @@ def test_the_tamper_expectations_hold(doc):
     other = bytearray(head)
     other[0] ^= 0x01
     with pytest.raises(ValueError):
-        scitt.check_statement_against_head(stmt, key.public_key(), bytes(other))
+        _verified_payload(stmt, key.public_key(), bytes(other))
 
     broken = bytearray(stmt)
     broken[-1] ^= 0x01
     with pytest.raises(ValueError):
-        scitt.check_statement_against_head(bytes(broken), key.public_key(), head)
+        _verified_payload(bytes(broken), key.public_key(), head)
 
 
 def test_s_plus_l_malleated_signature_is_rejected():
@@ -115,4 +120,4 @@ def test_s_plus_l_malleated_signature_is_rejected():
 
     stmt2 = cbor2.dumps(cbor2.CBORTag(18, [protected, unprotected, payload, malleated]))
     with pytest.raises(ValueError):
-        scitt.check_statement_against_head(stmt2, pub, head)
+        _verified_payload(stmt2, pub, head)

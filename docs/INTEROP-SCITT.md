@@ -72,7 +72,7 @@ from inside itself, and exactly why the bridge exists.
 
 The overclaim rule applies to every sentence a deployment writes:
 
-- A verifier that has run `check_statement_against_head` with a key it
+- A verifier that has run `verify_statement` with a key it
   trusts may say the range is **verified against a signed head**.
 - A verifier that has additionally verified the receipt per the
   service's protocol may say the head **existed by `T` per service `S`**.
@@ -157,4 +157,13 @@ payload or protected header — is refused: the same signed bytes would
 read two ways. A payload whose keys are distinct but not in deterministic
 encoding is reported, not refused: `verify_statement` says so in
 `payload_encoding`, and the verdict on the values is reached apart from
-it.
+it. A message, a protected header or a payload that is one CBOR item
+*followed by further bytes* is refused (since 0.15): an artifact that is a
+statement plus something else is not the statement, and a strict decoder
+— the independent verifier of bridge runs B2 and B3 is one — already
+rejects it.
+
+Every refusal is a `StatementRefused` whose `code` names the check that
+failed (`docs/INTEGRATION-SURFACE.md`, channel 8). The code is what to
+branch on; it names a check, never a cause — a statement for another
+chain, a corrupted download and a forgery are refused alike.

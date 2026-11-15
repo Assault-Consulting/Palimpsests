@@ -10,7 +10,7 @@ shell drives everything below through a Python sidecar. If a behaviour
 matters to a consumer and is not written here or in the linked specs,
 it is not promised.
 
-## The seven channels
+## The channels
 
 | # | Channel | Surface | Stability |
 |---|---------|---------|-----------|
@@ -21,6 +21,7 @@ it is not promised.
 | 5 | Health | `palimpsests.audit.timehealth`, `palimpsests.audit.bootstats` | public (since 0.10) |
 | 6 | Conformance | `palimpsests.audit.pala.vectors.load`, `palimpsests.audit.pala.selftest.run_selftest`, `pala selftest` | public (since 0.10) |
 | 7 | Distribution | PyPI wheel; vectors and the report schema ship inside it | — |
+| 8 | SCITT statements | `palimpsests.audit.pala.scitt` — `build_signed_statement`, `head_payload`, `verify_statement`, `StatementCheck`, `StatementRefused`; needs the `[scitt]` extra | public (since 0.15) |
 
 **Stability class "public":** breaking changes only with a minor version
 bump and a CHANGELOG entry naming the break; additive changes (new
@@ -92,9 +93,9 @@ they get a contract of their own before then. **SCITT statement
 construction v3** (the bytes of a signed statement) is independently
 reproduced — bridge run B3, `docs/specs/pala-1/INDEPENDENT-VERIFICATION.md`
 §7 — and changes only by content-type bump, as v2 does. The Python functions of the
-bridge (`palimpsests.audit.pala.scitt` — `verify_statement`,
-`StatementCheck` and its `root_status` values) stay **experimental** until
-they belong to a channel; B3 verified the construction, not that API.
+bridge are channel 8 since 0.15 ("The SCITT statement contract" below);
+B3 verified the construction, not that API, and the contract test is what
+holds the API.
 
 ## Vocabularies (open)
 
@@ -109,6 +110,9 @@ they belong to a channel; B3 verified the construction, not that API.
 | `outcome_name` | `ok`, `error`, `timeout`, `cancelled`, `unobserved` |
 | `source_name` | `parsed-from-wire`, `reported-by-client` |
 | `ShredView.reason_name` | `unspecified`, `legal_erasure`, `retention_expiry`, `policy` |
+| `StatementRefused.code` | `not_cose_sign1`, `trailing_bytes`, `protected_header_malformed`, `detached_payload`, `payload_malformed`, `repeated_key`, `indefinite_length_map`, `unsupported_alg`, `signature_invalid`, `head_mismatch`, `format_id_mismatch`, `range_invalid`, `content_type_unknown`, `payload_keys_mismatch`, `protected_labels_mismatch`, `root_malformed`, `chain_too_short`, `root_mismatch` |
+| `StatementCheck.root_status` | `absent`, `recomputed`, `carried, not recomputed` |
+| `StatementCheck.payload_encoding` | `deterministic`, `not deterministic` |
 | `disposition_name`, `kind_name`, `type_name`, tier and time-trust names | as the specification and the inference profile define them |
 
 An advisory never changes a verdict. Each new member ships with one
@@ -145,6 +149,45 @@ CHANGELOG sentence saying what it means and whether it changes a verdict.
   carry an observation time — today's file/manual sources do not.
 - Wording discipline is part of the contract: a report is an attestation
   of a check, never "compliant", "certified", or "valid log".
+
+## The SCITT statement contract
+
+Channel 8: a chain head as a COSE_Sign1 Signed Statement, built and
+verified (`docs/INTEROP-SCITT.md` for what the statement is and what a
+deployment may say on the strength of it).
+
+- **It needs the `[scitt]` extra** (`cbor2`, `cryptography`). Without it
+  every function raises `ScittUnavailable`; a bare install keeps full
+  verification of chains and loses only this channel.
+- **A key is a `cryptography` key object**, loaded by the caller: an
+  Ed25519 or P-256 private key to sign, the matching public key to
+  verify. The module reads no key files and holds no keys. Which key is
+  trusted is the caller's decision and the whole of the claim.
+- **One verifier: `verify_statement(message, public_key, expected_head,
+  reader=None)`.** It returns a `StatementCheck` — `version` (`v2` /
+  `v3`), `payload`, `root`, `root_status`, `payload_encoding` — or raises.
+  `check_statement_against_head` is deprecated since 0.15 and goes at
+  1.0; it returned the payload alone and could not say what was
+  established about a root.
+- **Every statement it does not accept is a `StatementRefused`**, a
+  `ValueError`, with a `code` from the vocabulary above
+  (`STATEMENT_REFUSAL_CODES`). That includes bytes that are no CBOR at
+  all: a verifier of someone else's bytes raises one thing. The code
+  names the check that failed, never a cause — a statement for another
+  chain, a corrupted download and a forgery are refused alike.
+- **A root is recomputed only with the chain.** Without `reader`, a v3
+  root is `carried, not recomputed`: signed, and not verified against
+  anything. A consumer says which.
+- **It does not verify receipts.** Whether a transparency service
+  registered a statement, and when, is checked by that service's
+  protocol. `verify_statement` passing says the statement is this
+  construction, signed by this key, committing to this head — not that
+  it was ever published.
+- **Algorithms: ES256 (`-7`) and EdDSA (`-8`).** Any other is refused as
+  `unsupported_alg`. Only EdDSA statements reproduce byte for byte.
+- The *bytes* of a statement are a different contract from this API:
+  they change only by content-type bump, and are what the independent
+  verification covers.
 
 ## The export contract
 
