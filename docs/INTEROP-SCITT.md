@@ -116,7 +116,7 @@ verifier has actually checked).
 - Register **the full head** in `sub`; a truncated head collides across
   chains at the truncation's birthday bound and services index by it
   (B1 F4).
-- Use EdDSA when byte-for-byte reproduction of the statement matters;
+- Use Ed25519 (`-8` or `-19`, §9) when byte-for-byte reproduction of the statement matters;
   ES256 signatures are library-dependent bytes (`scitt.py` module
   docstring, byte-stability mode 1).
 - Key custody is the deployment's policy. The bridge takes any key the
@@ -167,3 +167,47 @@ Every refusal is a `StatementRefused` whose `code` names the check that
 failed (`docs/INTEGRATION-SURFACE.md`, channel 8). The code is what to
 branch on; it names a check, never a cause — a statement for another
 chain, a corrupted download and a forgery are refused alike.
+
+## 9. Algorithms
+
+The protected header's `alg` (label 1) is one of three values:
+
+| `alg` | Meaning here | Key | Reproduces byte for byte |
+|---|---|---|---|
+| `-7` | ES256 | ECDSA on P-256 | no — the signature is library-dependent |
+| `-8` | EdDSA, used as Ed25519 | Ed25519 | yes |
+| `-19` | Ed25519 (RFC 9864), since 0.15 | Ed25519 | yes |
+
+**`-19` is an addition to the set, not a new construction.** RFC 9864
+gives Ed25519 its own identifier and deprecates `-8`, which names a
+family and leaves the curve to the key. Content types, payloads and
+protected-header labels are those of v2 and v3; the only thing that
+differs between a statement under `-8` and the same statement under
+`-19` is one signed byte of the protected header, and so the signature.
+The payload and the `kid` are identical — a thumbprint is of the key,
+not of the algorithm. `docs/interop/scitt-statement-vector-alg19.json`
+is the two published statements built again under `-19`, with that
+comparison stated in the file.
+
+**Compatibility runs one way.** Every statement issued under `-7` or
+`-8` is unchanged and verifies as before. A statement under `-19` is
+refused by a verifier from before 0.15 as an unsupported algorithm: it
+reads nothing, and does not read something wrong. A statement cannot be
+relabelled from one identifier to the other, because the header is
+signed.
+
+**The key must be of the type the algorithm means** (since 0.15). Under
+`-8` and `-19` the key is Ed25519; under `-7` it is on P-256. Anything
+else is refused before a signature is checked (`key_type_mismatch`).
+Before this check a statement signed with Ed448 under `-8` verified
+against the Ed448 key, while its `kid` was computed as if the key were
+Ed25519.
+
+**Which to emit.** The builder's default stays `-7`, and `-8` stays
+valid. Emit `-19` when the service that will register the statement
+accepts it; a service that has not adopted RFC 9864 refuses it.
+
+**What is on record for `-19`, and what is not.** Bridge runs B1–B3
+reproduced the construction under `-8`. No independent party has yet
+built or verified a statement under `-19` from this text: until one
+does, `-19` rests on this implementation and its vector alone.

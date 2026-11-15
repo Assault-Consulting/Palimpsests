@@ -17,7 +17,7 @@ import warnings
 
 cbor2 = pytest.importorskip("cbor2")
 pytest.importorskip("cryptography")
-from cryptography.hazmat.primitives.asymmetric import ec, ed25519  # noqa: E402
+from cryptography.hazmat.primitives.asymmetric import ec, ed448, ed25519  # noqa: E402
 from palimpsests.audit.pala import scitt  # noqa: E402
 from palimpsests.audit.pala.scitt import (  # noqa: E402
     STATEMENT_REFUSAL_CODES,
@@ -112,6 +112,7 @@ CASES = {
         _with_protected(lambda h: h.pop(1)),
         _with_protected(lambda h: h.__setitem__(1, True)),
     ],
+    "key_type_mismatch": [],  # filled below: the cases are keys, not messages
     "signature_invalid": [
         _message(P, U, PL, SIG[:-1] + bytes([SIG[-1] ^ 1])), _message(P, U, PL, SIG[:10]),
         _message(P, U, PL, 7), _message(P, U, PL[:-1] + bytes([PL[-1] ^ 1]), SIG),
@@ -182,19 +183,115 @@ def test_the_two_refusals_that_need_a_chain(tmp_path):
 def test_every_declared_code_is_produced_and_no_other():
     produced = set(CASES) | {"root_mismatch", "chain_too_short"}
     assert produced == set(STATEMENT_REFUSAL_CODES)
+    assert CASES["key_type_mismatch"] == []  # produced by the test below
 
 
-def test_a_key_that_cannot_verify_is_a_refusal_not_a_crash():
-    """A wrong key, a key of another type, no key: the verifier cannot tell
-    them from an altered message, and reports one thing."""
-    message = _statement()
-    for key in (ed25519.Ed25519PrivateKey.generate().public_key(),
-                ec.generate_private_key(ec.SECP256R1()).public_key(), KEY, None, "key"):
-        assert _refused(message, key=key).code == "signature_invalid"
-    es = ec.generate_private_key(ec.SECP256R1())
-    es_message = _statement(key=es, alg=scitt.ALG_ES256)
-    assert verify_statement(es_message, es.public_key(), HEAD).version == "v2"
-    assert _refused(es_message, key=PUB).code == "signature_invalid"
+ES = ec.generate_private_key(ec.SECP256R1())
+#: Keys that are not of the type the algorithm means. A private key is not
+#: a verification key; ``None`` and a string are not keys at all.
+NOT_ED25519 = [
+    ES.public_key(), ed448.Ed448PrivateKey.generate().public_key(),
+    ec.generate_private_key(ec.SECP384R1()).public_key(), KEY, None, "key"]
+NOT_P256 = [
+    PUB, ed448.Ed448PrivateKey.generate().public_key(),
+    ec.generate_private_key(ec.SECP384R1()).public_key(), ES, None, "key"]
+
+
+@pytest.mark.parametrize("alg", [scitt.ALG_EDDSA, scitt.ALG_ED25519])
+@pytest.mark.parametrize("n", range(len(NOT_ED25519)))
+def test_a_key_of_another_type_is_refused_before_the_signature(alg, n):
+    assert _refused(_statement(alg=alg), key=NOT_ED25519[n]).code == "key_type_mismatch"
+
+
+@pytest.mark.parametrize("n", range(len(NOT_P256)))
+def test_a_key_that_is_not_p256_is_refused_under_es256(n):
+    message = _statement(key=ES, alg=scitt.ALG_ES256)
+    assert verify_statement(message, ES.public_key(), HEAD).version == "v2"
+    assert _refused(message, key=NOT_P256[n]).code == "key_type_mismatch"
+
+
+def test_a_wrong_key_of_the_right_type_is_an_invalid_signature():
+    """The verifier cannot tell a wrong key from an altered message."""
+    other = ed25519.Ed25519PrivateKey.generate().public_key()
+    for alg in (scitt.ALG_EDDSA, scitt.ALG_ED25519):
+        assert _refused(_statement(alg=alg), key=other).code == "signature_invalid"
+    message = _statement(key=ES, alg=scitt.ALG_ES256)
+    other_es = ec.generate_private_key(ec.SECP256R1()).public_key()
+    assert _refused(message, key=other_es).code == "signature_invalid"
+
+
+def test_ed448_verified_under_alg_minus_8_before_this_check():
+    """What the check is for. -8 names a family; the kid this construction
+    writes names Ed25519. Before the check a statement signed with Ed448
+    under -8 verified against the Ed448 key."""
+    key = ed448.Ed448PrivateKey.generate()
+    protected, _u, payload, _s = _parts(_statement())
+    forged = _message(protected, {}, payload,
+                      key.sign(scitt._sig_structure(protected, payload)))
+    assert _refused(forged, key=key.public_key()).code == "key_type_mismatch"
+    for alg in (scitt.ALG_EDDSA, scitt.ALG_ED25519):
+        with pytest.raises(ValueError, match="not of the type"):
+            _statement(key=key, alg=alg)
+    with pytest.raises(ValueError, match="not of the type"):
+        _statement(key=ec.generate_private_key(ec.SECP384R1()), alg=scitt.ALG_ES256)
+    with pytest.raises(ValueError):
+        _statement(alg=-35)
+
+
+# -- COSE alg -19 (Ed25519, RFC 9864) ----------------------------------------
+
+def test_alg_minus_19_differs_from_minus_8_in_one_signed_byte():
+    for root in (None, ROOT):
+        a, b = _statement(root=root), _statement(root=root, alg=scitt.ALG_ED25519)
+        (p8, _, pl8, s8), (p19, _, pl19, s19) = _parts(a), _parts(b)
+        assert pl8 == pl19 and s8 != s19 and len(a) == len(b)
+        assert [(x, y) for x, y in zip(p8, p19, strict=True) if x != y] == [(0x27, 0x32)]
+        h8, h19 = cbor2.loads(p8), cbor2.loads(p19)
+        assert (h8[1], h19[1]) == (-8, -19) and h8[4] == h19[4]  # same kid
+        check = verify_statement(b, PUB, HEAD)
+        assert check.version == ("v3" if root else "v2") and check.root == root
+        assert b == _statement(root=root, alg=scitt.ALG_ED25519)  # deterministic
+
+
+def test_a_statement_cannot_be_relabelled_between_minus_8_and_minus_19():
+    for src, dst in ((scitt.ALG_EDDSA, 0x32), (scitt.ALG_ED25519, 0x27)):
+        protected, u, payload, sig = _parts(_statement(alg=src))
+        i = protected.index(0x27 if dst == 0x32 else 0x32)
+        relabelled = protected[:i] + bytes([dst]) + protected[i + 1:]
+        assert cbor2.loads(relabelled)[1] in (-8, -19)
+        assert _refused(_message(relabelled, u, payload, sig)).code == "signature_invalid"
+
+
+def test_the_writer_default_is_unchanged():
+    import inspect
+    assert inspect.signature(scitt.build_signed_statement).parameters["alg"].default \
+        == scitt.ALG_ES256
+    assert (scitt.ALG_ES256, scitt.ALG_EDDSA, scitt.ALG_ED25519) == (-7, -8, -19)
+
+
+def test_the_alg_19_vector_is_what_the_package_builds_and_regenerates():
+    import hashlib
+    import json
+    import subprocess
+    import sys
+    from pathlib import Path
+    interop = Path(__file__).resolve().parent.parent / "docs" / "interop"
+    path = interop / "scitt-statement-vector-alg19.json"
+    before = path.read_bytes()
+    doc = json.loads(before)
+    pub = ed25519.Ed25519PublicKey.from_public_bytes(bytes.fromhex(doc["key"]["public_key_hex"]))
+    for name, version in (("v2", "v2"), ("v3", "v3")):
+        st = doc["statements"][name]
+        message = bytes.fromhex(st["expected"]["statement_hex"])
+        assert hashlib.sha256(message).hexdigest() == st["expected"]["statement_sha256"]
+        check = verify_statement(message, pub, bytes.fromhex(st["inputs"]["chain_head_hex"]))
+        assert check.version == version and cbor2.loads(_parts(message)[0])[1] == -19
+    untouched = {n: (interop / n).read_bytes()
+                 for n in ("scitt-statement-vector.json", "scitt-statement-vector-v3.json")}
+    subprocess.run([sys.executable, str(interop / "gen_scitt_statement_vector_alg19.py")],
+                   check=True, capture_output=True)
+    assert path.read_bytes() == before
+    assert all((interop / n).read_bytes() == b for n, b in untouched.items())
 
 
 def test_an_expected_head_of_the_wrong_kind_is_a_mismatch():

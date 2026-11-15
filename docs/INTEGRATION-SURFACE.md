@@ -110,7 +110,7 @@ holds the API.
 | `outcome_name` | `ok`, `error`, `timeout`, `cancelled`, `unobserved` |
 | `source_name` | `parsed-from-wire`, `reported-by-client` |
 | `ShredView.reason_name` | `unspecified`, `legal_erasure`, `retention_expiry`, `policy` |
-| `StatementRefused.code` | `not_cose_sign1`, `trailing_bytes`, `protected_header_malformed`, `detached_payload`, `payload_malformed`, `repeated_key`, `indefinite_length_map`, `unsupported_alg`, `signature_invalid`, `head_mismatch`, `format_id_mismatch`, `range_invalid`, `content_type_unknown`, `payload_keys_mismatch`, `protected_labels_mismatch`, `root_malformed`, `chain_too_short`, `root_mismatch` |
+| `StatementRefused.code` | `not_cose_sign1`, `trailing_bytes`, `protected_header_malformed`, `detached_payload`, `payload_malformed`, `repeated_key`, `indefinite_length_map`, `unsupported_alg`, `key_type_mismatch`, `signature_invalid`, `head_mismatch`, `format_id_mismatch`, `range_invalid`, `content_type_unknown`, `payload_keys_mismatch`, `protected_labels_mismatch`, `root_malformed`, `chain_too_short`, `root_mismatch` |
 | `StatementCheck.root_status` | `absent`, `recomputed`, `carried, not recomputed` |
 | `StatementCheck.payload_encoding` | `deterministic`, `not deterministic` |
 | `disposition_name`, `kind_name`, `type_name`, tier and time-trust names | as the specification and the inference profile define them |
@@ -183,8 +183,13 @@ deployment may say on the strength of it).
   protocol. `verify_statement` passing says the statement is this
   construction, signed by this key, committing to this head — not that
   it was ever published.
-- **Algorithms: ES256 (`-7`) and EdDSA (`-8`).** Any other is refused as
-  `unsupported_alg`. Only EdDSA statements reproduce byte for byte.
+- **Algorithms: ES256 (`-7`), EdDSA (`-8`) and Ed25519 (`-19`, RFC 9864;
+  since 0.15).** Any other is refused as `unsupported_alg`. `-8` and `-19`
+  both mean Ed25519 here and `-7` means P-256: a key of another type —
+  Ed448, another curve, a private key — is refused as `key_type_mismatch`,
+  by the builder (`ValueError`) and by the verifier, before any signature
+  is checked. Statements under `-8` and `-19` reproduce byte for byte;
+  ES256 ones do not. The builder's default is unchanged (`-7`).
 - The *bytes* of a statement are a different contract from this API:
   they change only by content-type bump, and are what the independent
   verification covers.

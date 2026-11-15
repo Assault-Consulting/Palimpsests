@@ -1,0 +1,83 @@
+{
+  "format": "pala-1 scitt-bridge statement vector, COSE alg -19",
+  "purpose": "The published v2 statement and the later published v3 statement, each built again with COSE alg -19 (Ed25519, RFC 9864) in place of -8 (EdDSA). Nothing else changes. A verifier that admits -19 accepts these with the same public key; one that admits only -7 and -8 refuses them as an unsupported algorithm and reads nothing - that is the compatibility, and it runs one way. Real crypto, fake entropy - never use this key outside a test vector.",
+  "relation_to_the_other_vectors": "scitt-statement-vector.json and scitt-statement-vector-v3.json are unchanged and remain valid. -19 is not a new construction: the content types, the payloads and the protected header's labels are those of v2 and v3. What is extended is the set of values label 1 (alg) may take, from {-7, -8} to {-7, -8, -19}.",
+  "key": {
+    "alg": "Ed25519, COSE alg -19 (RFC 9864); the same key the other vectors sign with under alg -8",
+    "source": "RFC 8032, section 7.1, TEST 1 - a published test key, chosen so nothing about it is ours",
+    "private_seed_hex": "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60",
+    "public_key_hex": "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a",
+    "kid_hex": "866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a415743",
+    "kid_note": "RFC 9679 thumbprint of the key: kty, crv and x - not alg. The same under -8 and -19, so a signer that changes identifier keeps its kid."
+  },
+  "rules": {
+    "alg_values": "label 1 is -7, -8 or -19; any other value MUST be refused",
+    "key_type": "-8 and -19 both mean Ed25519 here. A verifier MUST refuse a key that is not Ed25519 under either - Ed448 in particular, which -8 as a family name would otherwise admit - and MUST refuse a key that is not P-256 under -7",
+    "what_alg_changes": "one signed byte of the protected header. The Sig_structure, the signature algorithm and the verification are those of -8",
+    "byte_stability": "Ed25519 is deterministic (RFC 8032), so these statements reproduce byte for byte, like the -8 ones"
+  },
+  "statements": {
+    "v2": {
+      "inputs": {
+        "chain_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "first_seq": 0,
+        "last_seq": 11,
+        "subject": "pala-1:chain:3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813"
+      },
+      "published_under_alg_minus_8": {
+        "source": "scitt-statement-vector.json",
+        "statement_sha256": "ce47efa9883090d4d6328e74f934e5dbabcf3a046d1098e768c53d92b661f941"
+      },
+      "expected": {
+        "statement_hex": "d28458cda4013203782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840cb4b5041fe422c7b5509c1f53c2b127dc967b0ad84398559dd7b29853f1e6a050d3b1d85ae15ff6e055fb22d78dac5a353662a4731122bc5cc6d6c67cdbdf809",
+        "statement_sha256": "3f033311e41abcbb45bfd4382a45018af1aaf28f7cd4da4fff6d7e58d35bc093",
+        "statement_length_bytes": 331,
+        "protected_hex": "a4013203782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133",
+        "payload_hex": "a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e30",
+        "signature_hex": "cb4b5041fe422c7b5509c1f53c2b127dc967b0ad84398559dd7b29853f1e6a050d3b1d85ae15ff6e055fb22d78dac5a353662a4731122bc5cc6d6c67cdbdf809",
+        "verifies_with_public_key": true
+      },
+      "against_the_published_statement": {
+        "payload": "identical bytes",
+        "kid": "identical",
+        "protected_header": "identical but for byte 2: 0x27 (alg -8) there, 0x32 (alg -19) here",
+        "signature": "different - the protected header is signed",
+        "length": "identical"
+      }
+    },
+    "v3": {
+      "inputs": {
+        "chain_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "first_seq": 8,
+        "last_seq": 11,
+        "subject": "pala-1:chain:3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "root_hex": "84f1e4f5c4bc75ff5edc304b35b122c3263366ed7e7ca399706a4128e7ecd7d7"
+      },
+      "published_under_alg_minus_8": {
+        "source": "scitt-statement-vector-v3.json, statements.later",
+        "statement_sha256": "32945e9309ad4deb432715cec7d0ef54c2ecc5624cb7a32dbfa39cbf270cd3fc"
+      },
+      "expected": {
+        "statement_hex": "d28458d0a4013203782e6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642d76332b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05858a50158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130208030b046b70616c612d312f76312e3005582084f1e4f5c4bc75ff5edc304b35b122c3263366ed7e7ca399706a4128e7ecd7d75840430aca81ac65799e823f90e5b7a59682dfdccb8ec28bd1f39880bda01863ee61abd759c2533fb093f77bbb9d9ebcef6c3c7117397b7572799b7fc81284293f0c",
+        "statement_sha256": "091ad26bd74488f8e1b5ee4359a5e81d1a8441d2a9c197d2e8e23a4700b58388",
+        "statement_length_bytes": 369,
+        "protected_hex": "a4013203782e6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642d76332b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133",
+        "payload_hex": "a50158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130208030b046b70616c612d312f76312e3005582084f1e4f5c4bc75ff5edc304b35b122c3263366ed7e7ca399706a4128e7ecd7d7",
+        "signature_hex": "430aca81ac65799e823f90e5b7a59682dfdccb8ec28bd1f39880bda01863ee61abd759c2533fb093f77bbb9d9ebcef6c3c7117397b7572799b7fc81284293f0c",
+        "verifies_with_public_key": true
+      },
+      "against_the_published_statement": {
+        "payload": "identical bytes",
+        "kid": "identical",
+        "protected_header": "identical but for byte 2: 0x27 (alg -8) there, 0x32 (alg -19) here",
+        "signature": "different - the protected header is signed",
+        "length": "identical"
+      }
+    }
+  },
+  "tamper_expectations": [
+    "set the alg byte of the protected header back to 0x27 (-8) and keep the signature: verification MUST fail - the protected header is signed, so a statement cannot be relabelled from one identifier to the other",
+    "verify with an Ed448 public key: MUST be refused before any signature check - the key is not of the type -19 means",
+    "every tamper expectation of the -8 vectors holds unchanged"
+  ]
+}

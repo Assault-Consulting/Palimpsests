@@ -19,6 +19,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 GENERATORS = [
     "docs/interop/gen_scitt_statement_vector_v3.py",
+    "docs/interop/gen_scitt_statement_vector_alg19.py",
     "docs/specs/pala-1/gen_vectors.py",
     "docs/specs/pala-1/profiles/gen_inference_vectors.py",
     "docs/specs/pala-1/gen_consistency_vectors.py",
@@ -81,6 +82,7 @@ ARTIFACTS = [
     "docs/specs/pala-1/consistency-vectors.json",
     "docs/interop/scitt-statement-vector.json",
     "docs/interop/scitt-statement-vector-v3.json",
+    "docs/interop/scitt-statement-vector-alg19.json",
     "site/index.html",
     "site/notes/index.html",
     "site/notes/feed.xml",

@@ -95,6 +95,7 @@ from dataclasses import dataclass
 from typing import Any
 
 __all__ = [
+    "ALG_ED25519",
     "ALG_EDDSA",
     "ALG_ES256",
     "CONTENT_TYPE",
@@ -112,6 +113,17 @@ __all__ = [
 
 ALG_ES256 = -7
 ALG_EDDSA = -8
+#: RFC 9864: the fully-specified identifier for Ed25519. ``-8`` ("EdDSA")
+#: names a family and leaves the curve to the key; ``-19`` names the curve.
+#: Here both mean Ed25519 and nothing else — an Ed448 key is refused under
+#: either — so the two identifiers differ in one signed byte of the
+#: protected header and in nothing a verifier computes. Admitted in both
+#: constructions (v2 and v3) since 0.15; the default a builder uses is
+#: unchanged, because a service has to accept ``-19`` before a deployment
+#: can register with it.
+ALG_ED25519 = -19
+_ALGS_ED25519 = (ALG_EDDSA, ALG_ED25519)
+_ALGS = (ALG_ES256, *_ALGS_ED25519)
 _HDR_ALG = 1
 _HDR_CONTENT_TYPE = 3  # RFC 9052 §3.1: what the payload is (B1 finding F2)
 _HDR_KID = 4  # RFC 9052 §3.1; required by RFC 9943 §6 absent x5t/x5chain (B1 F1)
@@ -164,7 +176,8 @@ STATEMENT_REFUSAL_CODES = frozenset({
     "repeated_key",  # a map that repeats a key reads two ways
     "indefinite_length_map",  # its keys cannot be counted
     # the signature
-    "unsupported_alg",  # not ES256 or EdDSA
+    "unsupported_alg",  # not ES256 (-7), EdDSA (-8) or Ed25519 (-19)
+    "key_type_mismatch",  # not a key of the one type the alg means here
     "signature_invalid",  # does not verify under the key given
     # what was signed is not what was expected
     "head_mismatch",  # commits to another chain head
@@ -178,6 +191,12 @@ STATEMENT_REFUSAL_CODES = frozenset({
     "chain_too_short",  # fewer records than the statement's range
     "root_mismatch",  # not the derived root of this chain
 })
+
+
+_KEY_TYPE_MESSAGE = (
+    "the key is not of the type COSE alg {alg} means in this construction: "
+    "-7 is ECDSA on P-256, -8 and -19 are Ed25519 (not Ed448)"
+)
 
 
 class StatementRefused(ValueError):
@@ -253,6 +272,26 @@ def _crypto():
     return hashes, ec, decode_dss_signature, encode_dss_signature
 
 
+def _key_fits_alg(public_key: Any, alg: int) -> bool:
+    """Is this a key of the one type ``alg`` means in this construction?
+
+    ES256 is ECDSA on P-256, and no other curve; ``-8`` and ``-19`` are
+    Ed25519, and not Ed448. ``-8`` alone would let the key decide the curve
+    — the ambiguity RFC 9864 removes — and before 0.15 this module went
+    along: it signed and verified with an Ed448 key under ``-8`` while the
+    ``kid`` it derived named Ed25519.
+    """
+    _hashes, ec, _decode, _encode = _crypto()
+    from cryptography.hazmat.primitives.asymmetric import ed25519
+
+    if alg == ALG_ES256:
+        return isinstance(public_key, ec.EllipticCurvePublicKey) and isinstance(
+            public_key.curve, ec.SECP256R1)
+    if alg in _ALGS_ED25519:
+        return isinstance(public_key, ed25519.Ed25519PublicKey)
+    return False
+
+
 def _cose_key_thumbprint(public_key: Any, alg: int) -> bytes:
     """RFC 9679 COSE Key Thumbprint (SHA-256) — the default ``kid``.
 
@@ -263,7 +302,14 @@ def _cose_key_thumbprint(public_key: Any, alg: int) -> bytes:
     import hashlib
 
     cbor2 = _cbor2()
-    if alg == ALG_EDDSA:
+    if alg not in _ALGS:
+        raise ValueError(f"unsupported COSE alg {alg}; this bridge takes -7, -8 or -19")
+    if not _key_fits_alg(public_key, alg):
+        raise ValueError(_KEY_TYPE_MESSAGE.format(alg=alg))
+    # The thumbprint is of the key, not of the algorithm: the same Ed25519
+    # key has the same kid under -8 and under -19, so a signer that moves
+    # from one identifier to the other does not become someone else.
+    if alg in _ALGS_ED25519:
         from cryptography.hazmat.primitives.serialization import (
             Encoding,
             PublicFormat,
@@ -271,7 +317,7 @@ def _cose_key_thumbprint(public_key: Any, alg: int) -> bytes:
 
         x = public_key.public_bytes(Encoding.Raw, PublicFormat.Raw)
         cose_key = {1: 1, -1: 6, -2: x}  # OKP / Ed25519 / x
-    elif alg == ALG_ES256:
+    else:
         nums = public_key.public_numbers()
         cose_key = {
             1: 2,  # EC2
@@ -279,8 +325,6 @@ def _cose_key_thumbprint(public_key: Any, alg: int) -> bytes:
             -2: nums.x.to_bytes(32, "big"),
             -3: nums.y.to_bytes(32, "big"),
         }
-    else:
-        raise ValueError(f"unsupported COSE alg {alg}; this bridge takes -7 or -8")
     return hashlib.sha256(cbor2.dumps(cose_key, canonical=True)).digest()
 
 
@@ -301,6 +345,10 @@ def _cose_sign1(
     cbor2 = _cbor2()
     hashes, ec, decode_dss, _ = _crypto()
     public_key = key.public_key() if hasattr(key, "public_key") else key
+    if alg not in _ALGS:
+        raise ValueError(f"unsupported COSE alg {alg}; this bridge takes -7, -8 or -19")
+    if not _key_fits_alg(public_key, alg):
+        raise ValueError(_KEY_TYPE_MESSAGE.format(alg=alg))
     if kid is None:
         kid = _cose_key_thumbprint(public_key, alg)
     # Labels inserted in ascending order (1, 3, 4, 15) so the encoded map
@@ -316,10 +364,8 @@ def _cose_sign1(
     if alg == ALG_ES256:
         r, s = decode_dss(key.sign(tbs, ec.ECDSA(hashes.SHA256())))
         sig = r.to_bytes(32, "big") + s.to_bytes(32, "big")
-    elif alg == ALG_EDDSA:
-        sig = key.sign(tbs)
     else:
-        raise ValueError(f"unsupported COSE alg {alg}; this bridge takes -7 or -8")
+        sig = key.sign(tbs)
     return cbor2.dumps(cbor2.CBORTag(18, [protected, {}, payload, sig]))
 
 
@@ -363,8 +409,14 @@ def _cose_verify1(message: bytes, public_key: Any) -> bytes:
     hashes, ec, _, encode_dss = _crypto()
     protected, phdr, payload, sig = _cose_parts(message)
     alg = phdr.get(_HDR_ALG)
-    if alg not in (ALG_ES256, ALG_EDDSA) or type(alg) is not int:
+    if type(alg) is not int or alg not in _ALGS:
         raise StatementRefused("unsupported_alg", f"unsupported COSE alg {alg!r}")
+    if not _key_fits_alg(public_key, alg):
+        # Knowable before any signature is checked, and so said apart from
+        # signature_invalid: the key handed in is not a key this algorithm
+        # can mean here. A key of the right type that is the wrong key is
+        # not knowable, and stays signature_invalid.
+        raise StatementRefused("key_type_mismatch", _KEY_TYPE_MESSAGE.format(alg=alg))
     tbs = _sig_structure(protected, payload)
     try:
         if alg == ALG_ES256:
@@ -375,10 +427,10 @@ def _cose_verify1(message: bytes, public_key: Any) -> bytes:
         else:
             public_key.verify(sig, tbs)
     except Exception as e:
-        # One code for every way a signature does not verify under the key
-        # given — a wrong key, a key of another type, an altered message, a
-        # malformed signature: the verifier cannot tell them apart, and does
-        # not pretend to.
+        # One code for every way a signature does not verify under a key of
+        # the right type — the wrong key, an altered message, a malformed
+        # signature: the verifier cannot tell them apart, and does not
+        # pretend to.
         raise StatementRefused(
             "signature_invalid", "COSE_Sign1 signature verification failed") from e
     return payload
@@ -432,6 +484,12 @@ def build_signed_statement(
     root: bytes | None = None,
 ) -> bytes:
     """One COSE_Sign1 committing to a chain head — the whole export.
+
+    ``alg`` is ``ALG_ES256`` (the default), ``ALG_EDDSA`` or, since 0.15,
+    ``ALG_ED25519`` (``-19``, RFC 9864). The last two sign identically; a
+    statement under ``-19`` is refused by a verifier older than 0.15 and by
+    any transparency service that has not adopted RFC 9864 — which is why
+    it is a choice and not the default.
 
     With ``root`` the statement is construction **v3**: content type
     ``CONTENT_TYPE_V3`` and the derived root over records ``0..last_seq``
