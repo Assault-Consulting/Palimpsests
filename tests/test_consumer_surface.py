@@ -35,6 +35,9 @@ READER_ALL = {
     "decode_continuation", "ShredView", "decode_shred",
     "boot_statistics", "BootStats", "AnchorCadence", "SpanStats", "step_catalog", "TimeStep",
     "HEADER_FIELDS", "HeaderField", "FIXED_HEADER_LEN",
+    "DIAGNOSIS_PATTERNS", "DIAGNOSIS_QUESTIONS", "ADVISORY_CODES", "VIOLATION_CODES",
+    "MANIFEST_STATUSES",
+    "assurance_tier_name", "time_trust_name",
     "NO_SPAN", "NO_PREDECESSOR",
     "FORMAT_VERSION",
     "RT_GENESIS", "RT_BOOT", "RT_SPAN_START", "RT_SPAN_END", "RT_EVENT", "RT_MERKLE",
@@ -241,7 +244,8 @@ def test_result_type_fields_are_kept(name):
 
 
 READER_METHODS = {
-    "open", "from_bytes", "close", "verify", "container_check", "head", "records",
+    "open", "from_bytes", "close", "verify", "container_check", "is_consistent", "head",
+    "records",
     "safety_records",
     "record_count", "record_at", "record_by_seq", "header_at", "record_fields_at",
     "record_bytes_at", "header_tlv_spans_at", "body_tlv_spans_at",
@@ -279,13 +283,37 @@ def surface_doc() -> str:
 
 
 def test_diagnosis_patterns_in_code_are_the_documented_ones(surface_doc):
+    import palimpsests.audit.reader as r
+
     emitted = _emitted(r'Diagnosis\(\s*"([a-z_]+)"')
     assert emitted == _table_row(surface_doc, "Diagnosis `pattern`")
+    # …and the ones the package states as data: a pattern the code can give
+    # and the constant does not list would be one a consumer's test cannot see
+    assert emitted == set(r.DIAGNOSIS_PATTERNS) == set(r.DIAGNOSIS_QUESTIONS)
+
+
+def test_every_pattern_is_about_one_question_and_the_document_says_which(surface_doc):
+    import palimpsests.audit.reader as r
+
+    by_question: dict = {}
+    for pattern, question in r.DIAGNOSIS_QUESTIONS.items():
+        by_question.setdefault(question, set()).add(pattern)
+    assert set(by_question) == {"consistency", "completeness", None}
+    assert by_question["consistency"] == _table_row(
+        surface_doc, "Diagnosis patterns about consistency")
+    assert by_question["completeness"] == _table_row(
+        surface_doc, "Diagnosis patterns about completeness")
+    assert by_question[None] == {"empty_container"}
+    with pytest.raises(TypeError):
+        r.DIAGNOSIS_QUESTIONS["a_new_one"] = "consistency"  # read-only
 
 
 def test_advisory_codes_in_code_are_the_documented_ones(surface_doc):
+    import palimpsests.audit.reader as r
+
     emitted = _emitted(r'AdvisoryItem\(\s*"([a-z_]+)"') | _emitted(r'code="([a-z_]+)"')
     assert emitted == _table_row(surface_doc, "Advisory `code`")
+    assert emitted == set(r.ADVISORY_CODES)
 
 
 def test_violation_codes_are_the_documented_ones(surface_doc):
@@ -303,6 +331,19 @@ def test_names_and_statuses_are_the_documented_ones(surface_doc):
         surface_doc, "`ShredView.reason_name`")
     statuses = _emitted(r'"(matches|contradicts|declared_only)"')
     assert statuses == _table_row(surface_doc, "`ManifestReading.status`")
+    assert statuses == set(r.MANIFEST_STATUSES)
+
+
+def test_the_header_enum_names_are_one_object_on_both_paths():
+    """``audit.names`` was imported by consumers and held by no test here."""
+    import palimpsests.audit.names as n
+    import palimpsests.audit.reader as r
+
+    assert set(n.__all__) == {"assurance_tier_name", "time_trust_name"}
+    for name in n.__all__:
+        assert getattr(r, name) is getattr(n, name)
+    assert r.time_trust_name(r.TIME_NTP_SYNCED) and r.assurance_tier_name(r.TIER_A)
+    assert r.time_trust_name(250) is None and r.assurance_tier_name(250) is None
 
 
 def test_kind_and_kind_name_tell_their_two_nones_apart(tmp_path):
@@ -364,7 +405,8 @@ def test_the_header_field_map_covers_the_fixed_header_and_agrees_with_the_decode
 # ── the other channels stay where INTEGRATION-SURFACE.md says ──────────────
 
 CHANNELS = {
-    "palimpsests.audit.report": ["build_report", "derive_verdict"],
+    "palimpsests.audit.report": ["build_report", "derive_verdict", "VerificationReport",
+                                 "REPORT_FORMAT", "REPORT_FORMAT_1", "VERDICTS"],
     "palimpsests.audit.report_html": ["render_html"],
     "palimpsests.audit.export": ["export_jsonl", "FORMAT"],
     "palimpsests.audit.pala.proofs": ["inclusion_proof", "range_proofs", "chain_root",
