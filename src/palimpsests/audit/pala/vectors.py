@@ -23,6 +23,8 @@ import json
 from importlib import resources
 from pathlib import Path
 
+__all__ = ["available", "load"]
+
 _FILES = {"core": "core.json", "inference": "inference.json"}
 
 _REPO_PATHS = {

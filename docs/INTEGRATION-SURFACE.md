@@ -16,8 +16,8 @@ it is not promised.
 |---|---------|---------|-----------|
 | 1 | Reading | `palimpsests.audit.reader.AuditReader` (`open`, `verify`, `records`, `spans`, `boots`, `origin_at`, `unloaded_at`, `acknowledged_candidates`, `shredded_targets`; sparse access `record_count`, `record_at`, `record_by_seq`, `header_at` since 0.13; `Verification.manifest` since 0.13; `container_check()`, `record_fields_at()` since 0.14; for a byte view `record_bytes_at()`, `header_tlv_spans_at()`, `body_tlv_spans_at()` since 0.14, and the fixed header's layout `HEADER_FIELDS` / `HeaderField` / `FIXED_HEADER_LEN` since 0.14.1; a KEY_SHRED's erasure note `decode_shred` / `ShredView` since 0.15; question one as one answer `AuditReader.is_consistent()`, `Diagnosis.question`, the vocabularies as data, and the header-enum names `assurance_tier_name` / `time_trust_name` — the same objects as in `palimpsests.audit.names` — since 0.15); a segmented chain as one set: `palimpsests.audit.segment_set.verify_segment_set` (since 0.14) | public (since 0.8) |
 | 2 | Report and export | `palimpsests.audit.report.build_report`, `derive_verdict`, format `pala-verification-report/2` (since 0.15; `/1` in 0.10 – 0.14, still read); the HTML page `palimpsests.audit.report_html.render_html` (since 0.14 — a rendering of the report's `.data`, its markup not a format); the record export `palimpsests.audit.export.export_jsonl`, format `pala-jsonl/1` (since 0.14.1) | public (since 0.10) |
-| 3 | Proofs | `palimpsests.audit.pala.proofs.inclusion_proof`, `range_proofs`; prefix consistency `chain_root`, `consistency_proof`, `ConsistencyProof`, format `pala-consistency-proof/1` (since 0.12) | public (since 0.10) |
-| 4 | Bundle | `palimpsests.audit.pala.bundle.assemble_bundle`, format `pala-bundle/1` (`docs/specs/bundle/pala-bundle-1.md`) | public (since 0.10) |
+| 3 | Proofs | `palimpsests.audit.pala.proofs.inclusion_proof`, `range_proofs`, `InclusionProof`; prefix consistency `chain_root`, `consistency_proof`, `ConsistencyProof`, format `pala-consistency-proof/1` (since 0.12) | public (since 0.10) |
+| 4 | Bundle | `palimpsests.audit.pala.bundle.assemble_bundle` (`reader=` since 0.15), `BundleResult`, format `pala-bundle/1` (`docs/specs/bundle/pala-bundle-1.md`) | public (since 0.10) |
 | 5 | Health | `palimpsests.audit.timehealth`, `palimpsests.audit.bootstats` | public (since 0.10) |
 | 6 | Conformance | `palimpsests.audit.pala.vectors.load`, `palimpsests.audit.pala.selftest.run_selftest`, `pala selftest` | public (since 0.10) |
 | 7 | Distribution | PyPI wheel; vectors and the report schema ship inside it | — |
@@ -262,8 +262,19 @@ and the detail — `null` when the verdict read no second file.
 ## Size envelope
 
 The reader holds all record headers in memory and `build_report` /
-`assemble_bundle` read the source file fully (the bundle twice). This
-is comfortable to the order of ~10^6 records / hundreds of MB;
+`assemble_bundle` read the source file fully, through the reader's mapping
+and not a copy. Both take `reader=` (`assemble_bundle` since 0.15), so a
+consumer that holds the chain open hands it over and the file is not
+opened again. A bundle holds the records of its *selection*, and a proof
+for each, in memory while the archive is written — **a bundle is for a
+selection, not for a whole large chain.** Measured on a chain of 10^6
+records (183 MB, checkpointed every 50,000): a selection of 1,000 records
+takes 9 s and 0.4 GB, nearly all of it the verification of the whole file
+that every bundle carries; 100,000 records take 14 s and 1.3 GB and make
+a 239 MB archive; the whole chain does not fit in 8 GB. The archive
+outgrows its source because `proofs.json` carries a path per record. To
+hand over a whole chain, hand over the chain: `pala segment`, or the file
+itself with its report. This is comfortable to the order of ~10^6 records / hundreds of MB;
 multi-GB retention archives (see `docs/RETENTION.md` for the storage
 math) should be segmented before interactive use. A streaming reader
 is backlog, not promise.

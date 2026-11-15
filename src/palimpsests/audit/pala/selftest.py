@@ -42,6 +42,13 @@ from pathlib import Path
 #: Records in the synthetic characteristic chain. Large enough that the
 #: per-record slope dominates fixed costs, small enough to write and
 #: verify in about a second on modest hardware.
+__all__ = [
+    "CHARACTERISTIC_RECORDS",
+    "HEAP_BYTES_PER_RECORD_MAX",
+    "SelftestResult",
+    "run_selftest",
+]
+
 CHARACTERISTIC_RECORDS = 20_000
 
 #: Tripwire: Python-heap peak during ``open()`` + ``verify()``, divided by

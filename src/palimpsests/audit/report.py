@@ -35,6 +35,7 @@ import palimpsests
 import time
 from dataclasses import dataclass, field
 from hashlib import sha256
+from palimpsests.audit.anchors import _portable_detail, _portable_error
 from palimpsests.audit.pala.codec import RT_WITNESS
 from palimpsests.audit.reader import AuditReader
 from pathlib import Path
@@ -304,13 +305,16 @@ def build_report(
             {
                 "head": ver.anchor.head.hex(),
                 "source_kind": ver.anchor.source_kind,
-                "source_detail": ver.anchor.source_detail,
+                # A file anchor is named, not located: the report holds no
+                # path of the machine that ran the check (as for ``manifest``).
+                "source_detail": _portable_detail(
+                    ver.anchor.source_kind, ver.anchor.source_detail),
                 "observed_at_ns": None,
                 "attempts": [
                     {
                         "source_kind": a.source_kind,
                         "outcome": a.outcome,
-                        "error": a.error,
+                        "error": _portable_error(a.source_kind, a.source_detail, a.error),
                     }
                     for a in ver.anchor_attempts
                 ],

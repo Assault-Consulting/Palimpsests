@@ -46,13 +46,25 @@ import struct
 import tarfile
 from dataclasses import dataclass
 from hashlib import sha256
+from palimpsests.audit.anchors import _portable_detail, _portable_error
 from palimpsests.audit.names import time_trust_name
-from palimpsests.audit.pala import MalformedRecord, iter_records
+from palimpsests.audit.pala.codec import HEADER_FIELDS
 from palimpsests.audit.pala.proofs import InclusionProof, range_proofs
 from palimpsests.audit.reader import AuditReader
 from pathlib import Path
 
+__all__ = ["BUNDLE_FORMAT", "BundleResult", "assemble_bundle"]
+
 BUNDLE_FORMAT = "pala-bundle/1"
+
+#: The four fixed-header fields the bundle reads, where the codec's own
+#: field map says they are — no offset is written here a second time.
+_FIELD = {f.name: f for f in HEADER_FIELDS}
+
+
+def _field(header: bytes, name: str) -> int:
+    f = _FIELD[name]
+    return struct.unpack_from("<" + f.format, header, f.offset)[0]
 
 _MEMBERS = (
     "records.pala",
@@ -95,18 +107,6 @@ def _proof_json(p: InclusionProof | None):
     }
 
 
-def _whole_records(data: bytes):
-    """The records that are whole, up to the first container defect (§2.4).
-
-    Past a defect, record boundaries cannot be trusted, so the walk stops
-    there; what it stopped on is reported by the container check.
-    """
-    try:
-        yield from iter_records(data)
-    except MalformedRecord:
-        return
-
-
 def assemble_bundle(
     source: str | Path,
     out: str | Path,
@@ -114,6 +114,7 @@ def assemble_bundle(
     from_seq: int | None = None,
     to_seq: int | None = None,
     anchor_source=None,
+    reader: AuditReader | None = None,
 ) -> BundleResult:
     """Assemble the evidence bundle for ``source`` into the tar at ``out``.
 
@@ -123,44 +124,68 @@ def assemble_bundle(
     at all: the whole records before the damage are bundled, and
     ``verification.json`` says where the walk stopped. Raises OSError
     only when the source or the output path cannot be used.
-    """
-    data = Path(source).read_bytes()
 
+    ``reader`` (since 0.15), when given, is used in place of opening one:
+    the bundle is assembled from the bytes that reader already holds, and
+    the file is not read again. It is used as given — never closed here —
+    and must be open on the bytes ``source`` names; ``source`` is then not
+    opened at all. ``reader`` and ``anchor_source`` together raise
+    ``ValueError``, as in ``build_report``: a shared reader answers with
+    the anchor it was opened with. The bundle is byte-identical either way.
+
+    Memory: the records of the *selection* are held while the archive is
+    written (``records.pala`` is one tar member), plus what the reader's
+    ``verify()`` holds. The source file itself is mapped, not copied.
+    """
+    if reader is not None and anchor_source is not None:
+        raise ValueError(
+            "assemble_bundle: pass anchor_source or reader, not both — a shared "
+            "reader answers with the anchor it was opened with, so this "
+            "anchor_source would be ignored; open the reader with it instead"
+        )
+    if reader is not None:
+        return _assemble(reader, out, from_seq, to_seq)
+    with AuditReader.open(source, anchor=anchor_source) as opened:
+        return _assemble(opened, out, from_seq, to_seq)
+
+
+def _assemble(reader: AuditReader, out, from_seq, to_seq) -> BundleResult:
+    # The reader's header index holds the whole records up to the first
+    # container defect (§2.4) — past one, record boundaries cannot be
+    # trusted; what the walk stopped on is in the container check below.
     picked: list[tuple[bytes, bytes]] = []
     time_claims: list[dict] = []
-    for hb, body in _whole_records(data):
-        (seq,) = struct.unpack_from("<Q", hb, 12)
+    for index in range(reader.record_count):
+        seq = _field(reader._headers[index], "seq")
         if from_seq is not None and seq < from_seq:
             continue
         if to_seq is not None and seq > to_seq:
             continue
-        picked.append((hb, body))
-        trust = hb[11]
-        (mono,) = struct.unpack_from("<Q", hb, 100)
-        (wall,) = struct.unpack_from("<q", hb, 108)
+        stored = reader.record_bytes_at(index)
+        picked.append((stored.header, stored.body))
+        trust = _field(stored.header, "time_trust")
         time_claims.append(
             {
                 "seq": seq,
-                "monotonic_ns": mono,
-                "wall_clock_ns": wall,
+                "monotonic_ns": _field(stored.header, "monotonic_ns"),
+                "wall_clock_ns": _field(stored.header, "wall_clock_ns"),
                 "time_trust": trust,
                 "time_trust_name": time_trust_name(trust),
             }
         )
 
-    with AuditReader.open(source, anchor=anchor_source) as reader:
-        ver = reader.verify()
-        seqs = [tc["seq"] for tc in time_claims]
-        proofs: dict[int, InclusionProof] = (
-            {p.seq: p for p in range_proofs(reader, min(seqs), max(seqs))}
-            if seqs
-            else {}
-        )
-        proof_map = {str(s): _proof_json(proofs.get(s)) for s in seqs}
-        # The reader's own walk (U21) — the same object the report's
-        # ``container`` section is, so the bundle and the report of one
-        # file cannot give two answers.
-        container = reader.container_check()
+    ver = reader.verify()
+    seqs = [tc["seq"] for tc in time_claims]
+    proofs: dict[int, InclusionProof] = (
+        {p.seq: p for p in range_proofs(reader, min(seqs), max(seqs))}
+        if seqs
+        else {}
+    )
+    proof_map = {str(s): _proof_json(proofs.get(s)) for s in seqs}
+    # The reader's own walk (U21) — the same object the report's
+    # ``container`` section is, so the bundle and the report of one
+    # file cannot give two answers.
+    container = reader.container_check()
 
     chain = ver.chain
     consistent = (
@@ -192,7 +217,9 @@ def assemble_bundle(
             {
                 "head": ver.anchor.head.hex(),
                 "source_kind": ver.anchor.source_kind,
-                "source_detail": ver.anchor.source_detail,
+                # named, not located: a bundle is made to be sent
+                "source_detail": _portable_detail(
+                    ver.anchor.source_kind, ver.anchor.source_detail),
             }
             if ver.anchor is not None
             else None
@@ -200,9 +227,9 @@ def assemble_bundle(
         "anchor_attempts": [
             {
                 "source_kind": a.source_kind,
-                "source_detail": a.source_detail,
+                "source_detail": _portable_detail(a.source_kind, a.source_detail),
                 "outcome": a.outcome,
-                "error": a.error,
+                "error": _portable_error(a.source_kind, a.source_detail, a.error),
             }
             for a in ver.anchor_attempts
         ],

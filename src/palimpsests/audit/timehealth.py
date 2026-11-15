@@ -46,6 +46,15 @@ from palimpsests.audit.names import time_trust_name
 #: ntpd steps the clock when the offset exceeds 128 ms and slews below
 #: it; a wall jump of at least this size between adjacent records is a
 #: clock event, not a correction in progress.
+__all__ = [
+    "STEP_THRESHOLD_NS",
+    "BootDrift",
+    "DriftPoint",
+    "TimeStep",
+    "drift_series",
+    "step_catalog",
+]
+
 STEP_THRESHOLD_NS = 128_000_000
 
 
