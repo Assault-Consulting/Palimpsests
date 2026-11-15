@@ -16,6 +16,37 @@ from pathlib import Path
 
 
 @pytest.fixture(autouse=True)
+def _no_disk_sync(request, monkeypatch):
+    """Keep the suite off the disk's sync path.
+
+    ``PalaWriter`` syncs every record by default (``Durability.RECORD``), and
+    the suite writes many thousands of records: a real sync for each would
+    make it several times slower — much more on a CI runner's disk — and
+    test nothing, since no test here can cut the power. The two sync
+    functions are replaced with counters; what is tested is *that* and
+    *when* the writer asks for a sync (tests/test_writer_durability.py).
+
+    A test marked ``real_sync`` gets the real functions.
+    """
+    if request.node.get_closest_marker("real_sync"):
+        yield None
+        return
+    from palimpsests.audit import pala_writer
+
+    calls = {"file": 0, "dir": 0}
+
+    def sync_file(_fd):
+        calls["file"] += 1
+
+    def sync_dir(_path):
+        calls["dir"] += 1
+
+    monkeypatch.setattr(pala_writer, "_sync_file", sync_file)
+    monkeypatch.setattr(pala_writer, "_sync_dir", sync_dir)
+    yield calls
+
+
+@pytest.fixture(autouse=True)
 def _isolated_keychain(monkeypatch):
     """Keep every test off the real OS keychain.
 

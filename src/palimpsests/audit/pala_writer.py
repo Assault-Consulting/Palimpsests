@@ -37,6 +37,7 @@ from __future__ import annotations
 import json
 import os
 import struct
+import sys
 import threading
 import time
 from collections.abc import Mapping
@@ -152,6 +153,7 @@ from palimpsests.audit.profiles.inference import (  # noqa: F401
     SOURCE_PARSED_FROM_WIRE,
     SOURCE_REPORTED_BY_CLIENT,
 )
+from typing import ClassVar
 
 _TOOL_NAME_MAX = 64
 
@@ -164,6 +166,7 @@ _DETAIL_CLIP = 200  # profile §3: EVT_DETAIL clipped, exception text may hide t
 # palimpsests.audit.profiles.inference and palimpsests.audit.reader.
 __all__ = [
     "ChainLocked",
+    "Durability",
     "FrontierUnavailable",
     "PalaWriter",
     "RotationPolicy",
@@ -454,6 +457,120 @@ def canonical_tool_names_digest(names) -> bytes:
     return sha256(encoded).digest()
 
 
+@dataclass(frozen=True)
+class Durability:
+    """When a record written by :class:`PalaWriter` is on stable storage.
+
+    A record handed to the operating system is in the file, and not yet on
+    the disk: the kernel writes it out when it chooses — on Linux, by
+    default, within about half a minute. Until then a loss of power takes
+    the record with it and leaves a shorter chain that verifies. Whoever can
+    cut the power, by accident or on purpose, can therefore remove the last
+    records without a trace — unless the writer waits for the disk.
+
+    - ``Durability.RECORD`` (the default) — the writer syncs the file after
+      every record. A method that has returned has its record on stable
+      storage. The cost is one sync per record: hundreds of microseconds to
+      a few milliseconds each, depending on the disk.
+    - ``Durability.group(max_delay_s)`` — records are synced together, no
+      later than ``max_delay_s`` after the first unsynced one, also when
+      nothing more is written. A power loss can take the records of the
+      last ``max_delay_s``, and no more.
+    - ``Durability.OS`` — the writer does not sync; the kernel decides. What
+      the writer did before 0.15. For a chain whose loss is acceptable, or
+      one kept on storage that is durable by other means.
+
+    What none of them can promise: a disk that reports a sync as done while
+    the data is still in its own volatile cache; and anyone who can write to
+    the file, who needs no power switch — that is what an anchor kept
+    outside the host is for.
+    """
+
+    mode: str
+    max_delay_s: float | None = None
+
+    RECORD: ClassVar[Durability]
+    OS: ClassVar[Durability]
+
+    def __post_init__(self) -> None:
+        if self.mode not in ("record", "group", "os"):
+            raise ValueError(f"durability mode must be record, group or os, not {self.mode!r}")
+        if self.mode == "group":
+            if self.max_delay_s is None or not self.max_delay_s > 0:
+                raise ValueError("group durability needs a positive max_delay_s")
+        elif self.max_delay_s is not None:
+            raise ValueError(f"max_delay_s has no meaning for {self.mode} durability")
+
+    @classmethod
+    def group(cls, max_delay_s: float) -> Durability:
+        return cls("group", float(max_delay_s))
+
+    @classmethod
+    def parse(cls, value: Durability | str) -> Durability:
+        """A policy, or its spelling in a configuration: ``record``, ``os``,
+        ``group`` (50 ms) or ``group:<seconds>``."""
+        if isinstance(value, cls):
+            return value
+        if not isinstance(value, str):
+            raise ValueError(f"durability must be a Durability or a string, not {value!r}")
+        mode, sep, delay = value.strip().lower().partition(":")
+        if mode == "group":
+            try:
+                return cls.group(float(delay) if sep else 0.05)
+            except ValueError as e:
+                raise ValueError(f"durability {value!r}: {e}") from e
+        if sep:
+            raise ValueError(f"durability {value!r}: only group takes a delay")
+        return cls(mode)
+
+    def __str__(self) -> str:
+        return f"group:{self.max_delay_s:g}" if self.mode == "group" else self.mode
+
+
+Durability.RECORD = Durability("record")
+Durability.OS = Durability("os")
+
+
+def _sync_file(fd: int) -> None:
+    """Ask for the file's data to be on stable storage before returning.
+
+    On macOS ``fsync`` only moves the data to the drive, which may keep it in
+    a volatile cache; ``F_FULLFSYNC`` asks the drive to flush as well. Where
+    that is not supported (some network filesystems), fall back to ``fsync``.
+    """
+    if sys.platform == "darwin":
+        try:
+            import fcntl
+
+            fcntl.fcntl(fd, fcntl.F_FULLFSYNC)
+            return
+        except (ImportError, OSError):
+            pass
+    os.fsync(fd)
+
+
+def _sync_dir(path: str) -> None:
+    """Make a new file's *name* durable: sync the directory that holds it.
+
+    Syncing a file does not make its directory entry durable; after a power
+    loss the records could be on disk in a file that has no name. Windows
+    has no directory handle to sync and does not need one for this.
+    """
+    if os.name == "nt":
+        return
+    folder = os.path.dirname(os.path.abspath(path))
+    try:
+        fd = os.open(folder, os.O_RDONLY)
+    except OSError:
+        return
+    try:
+        os.fsync(fd)
+    except OSError:
+        pass  # a filesystem that cannot sync a directory: nothing more to do
+    finally:
+        os.close(fd)
+
+
 class PalaWriter:
     """Emits the PALA-1 inference profile to an append-only byte container.
 
@@ -476,9 +593,11 @@ class PalaWriter:
         time_trust: int = TIME_UNSYNCED,
         assurance_tier: int = TIER_A,
         rotation: RotationPolicy | None = None,
+        durability: Durability | str = Durability.RECORD,
     ) -> None:
         if boot_id is not None and len(boot_id) != 16:
             raise ValueError("boot_id must be 16 bytes")
+        self._init_durability(durability)
         self._boot_id = boot_id if boot_id is not None else os.urandom(16)
         self._time_trust = time_trust
         self._tier = assurance_tier
@@ -508,11 +627,69 @@ class PalaWriter:
         self._xlock = _acquire_chain_lock(path)
         try:
             self._fh = open(path, "ab", buffering=0)  # noqa: SIM115 — closed in close()
+            if self._durability.mode != "os":
+                _sync_dir(self._path)  # the new file's name, before its first record
             self._init_rotation(rotation, seg_records=0, seg_first_seq=0,
                                 seg_prev_head=ZERO32, seg_bytes=0)
         except BaseException:
             self._xlock.release()
             raise
+
+    def _init_durability(self, durability: Durability | str) -> None:
+        self._durability = Durability.parse(durability)
+        self._unsynced = False
+        self._sync_timer: threading.Timer | None = None
+
+    def _sync_after_write_locked(self) -> None:
+        """Apply the durability policy to the record just written.
+
+        Called with the lock held, after the writer's state has moved past
+        the record: the record is in the file whatever happens here, so a
+        sync that fails must not leave the writer behind its own file — the
+        next record would fork the chain. The error is raised to the caller,
+        who then knows the record was written and its durability was not
+        confirmed.
+        """
+        mode = self._durability.mode
+        if mode == "os":
+            return
+        if mode == "record":
+            _sync_file(self._fh.fileno())
+            return
+        self._unsynced = True
+        if self._sync_timer is None:
+            # One timer per batch, started by its first record: the batch is
+            # synced max_delay_s after that record even if no other follows.
+            timer = threading.Timer(self._durability.max_delay_s, self._sync_batch)
+            timer.daemon = True
+            self._sync_timer = timer
+            timer.start()
+
+    def _sync_batch(self) -> None:
+        with self._lock:
+            self._sync_timer = None
+            if self._unsynced and not self._fh.closed:
+                try:
+                    _sync_file(self._fh.fileno())
+                    self._unsynced = False
+                except OSError:
+                    # No caller to tell from a timer thread. Leave the batch
+                    # marked unsynced: the next record starts a new timer,
+                    # and close() syncs and raises.
+                    pass
+
+    def _sync_now_locked(self) -> None:
+        """Sync whatever is unsynced, before the file is closed or left."""
+        if self._sync_timer is not None:
+            self._sync_timer.cancel()
+            self._sync_timer = None
+        if self._durability.mode != "os" and not self._fh.closed:
+            _sync_file(self._fh.fileno())
+            self._unsynced = False
+
+    @property
+    def durability(self) -> Durability:
+        return self._durability
 
     def _init_rotation(
         self,
@@ -629,6 +806,7 @@ class PalaWriter:
         time_trust: int = TIME_UNSYNCED,
         assurance_tier: int = TIER_A,
         recover_torn_tail: bool = True,
+        durability: Durability | str = Durability.RECORD,
     ) -> PalaWriter:
         """Resume an existing chain: adopt its tail head and seq (core §4.2).
 
@@ -646,6 +824,7 @@ class PalaWriter:
                 time_trust=time_trust,
                 assurance_tier=assurance_tier,
                 recover_torn_tail=recover_torn_tail,
+                durability=durability,
             )
         except BaseException:
             lock.release()
@@ -662,6 +841,7 @@ class PalaWriter:
         time_trust: int,
         assurance_tier: int,
         recover_torn_tail: bool,
+        durability: Durability | str,
     ) -> PalaWriter:
         size = os.path.getsize(path)
         if size == 0:
@@ -740,6 +920,7 @@ class PalaWriter:
         w = cls.__new__(cls)
         if boot_id is not None and len(boot_id) != 16:
             raise ValueError("boot_id must be 16 bytes")
+        w._init_durability(durability)
         w._boot_id = boot_id if boot_id is not None else os.urandom(16)
         w._time_trust = time_trust
         w._tier = assurance_tier
@@ -822,6 +1003,7 @@ class PalaWriter:
             )
             self._fh.write(header_bytes + body)
             self._commit_locked(record_type, header_bytes, body, rh, span_id)
+            self._sync_after_write_locked()
             self._maybe_rotate_locked()
             # The seq is read here, under the lock that wrote the record. A
             # caller reading ``writer.seq - 1`` afterwards can see another
@@ -1410,8 +1592,14 @@ class PalaWriter:
             fh.flush()
             os.fsync(fh.fileno())
         os.replace(tmp, p)
+        # The segment being left: its last records reach the disk before the
+        # writer lets go of it, and the successor's name before anything
+        # depends on it.
+        self._sync_now_locked()
         self._fh.close()
         self._fh = open(p, "ab", buffering=0)  # noqa: SIM115 — closed in close()
+        if self._durability.mode != "os":
+            _sync_dir(p)
         self._path = p
         self._seg_prev_head = self._head
         self._seg_first_seq = self._seq
@@ -1549,12 +1737,29 @@ class PalaWriter:
         tmp = f"{mp}.tmp"
         with open(tmp, "w", encoding="utf-8") as fh:
             fh.write(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+            if self._durability.mode != "os":
+                # The cut's first step is "the manifest records the closed
+                # segment" (see _rotate_core): that has to be true on disk,
+                # not only in the page cache, before the successor appears.
+                fh.flush()
+                _sync_file(fh.fileno())
         os.replace(tmp, mp)
+        if self._durability.mode != "os":
+            _sync_dir(mp)
 
     def close(self) -> None:
+        """Sync what the policy has not synced yet, release the file and the
+        lock. Idempotent. If the last sync fails the error is raised — after
+        the file and the lock are released, so a failing disk cannot keep
+        the chain locked."""
         with self._lock:
-            self._fh.close()
-            self._xlock.release()
+            if self._fh.closed:
+                return
+            try:
+                self._sync_now_locked()
+            finally:
+                self._fh.close()
+                self._xlock.release()
 
     def __enter__(self) -> PalaWriter:
         return self

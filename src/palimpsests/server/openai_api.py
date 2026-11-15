@@ -456,7 +456,13 @@ def create_app(
             }
         chain = None
         if audit is not None:
-            chain = {"records": audit.writer.seq, "head": audit.writer.head_hex}
+            chain = {
+                "records": audit.writer.seq,
+                "head": audit.writer.head_hex,
+                # When a record this serve wrote is on stable storage:
+                # record, group:<seconds> or os (docs/WRITER-SURFACE.md §4).
+                "durability": str(getattr(audit.writer, "durability", "unknown")),
+            }
         return {
             "format": "pala-serve-status/1",
             "auth_required": api_key is not None,
@@ -820,6 +826,10 @@ def _sse_prebuilt(
     yield "data: [DONE]\n\n"
 
 
+#: The serve's durability policy: record (default), group, group:<seconds>, os.
+DURABILITY_VAR = "PALIMPSESTS_AUDIT_DURABILITY"
+
+
 class ServeChainUnavailable(RuntimeError):
     """The serve cannot open its own audit chain, and so does not start."""
 
@@ -835,17 +845,31 @@ def default_audit():
     audit at all. A serve whose chain cannot be opened does not start,
     and says why.
     """
-    from palimpsests.audit.pala_writer import ChainLocked, PalaWriter
+    from palimpsests.audit.pala_writer import ChainLocked, Durability, PalaWriter
     from palimpsests.core import default_config_dir
     from palimpsests.providers.native.audit import NativeAudit
+
+    # Every record on stable storage before the call that wrote it returns,
+    # unless the operator says otherwise — and says it in a way that is
+    # visible afterwards: the status route and `palimpsests doctor` report
+    # the policy in force. A value that cannot be read stops the serve; a
+    # typo must not quietly become the weaker setting.
+    spelled = os.environ.get(DURABILITY_VAR) or "record"
+    try:
+        durability = Durability.parse(spelled)
+    except ValueError as exc:
+        raise ServeChainUnavailable(
+            f"{DURABILITY_VAR}={spelled!r} is not a durability policy ({exc}); "
+            "use record, group, group:<seconds> or os"
+        ) from exc
 
     path = default_config_dir() / "serve.pala"
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
         if path.exists() and path.stat().st_size > 0:
-            writer = PalaWriter.open_existing(path)
+            writer = PalaWriter.open_existing(path, durability=durability)
         else:
-            writer = PalaWriter(path)
+            writer = PalaWriter(path, durability=durability)
     except ChainLocked as exc:
         raise ServeChainUnavailable(
             f"{exc}. A second serve needs a chain of its own: start it with "
@@ -947,6 +971,19 @@ def run_serve(host: str, port: int, api_key: str | None) -> None:
     except ServeChainUnavailable as e:
         print(f"error: {e}", file=sys.stderr)
         raise SystemExit(1) from e
+    policy = audit.writer.durability
+    if policy.mode != "record":
+        lost = (
+            "the kernel decides when — typically up to half a minute"
+            if policy.mode == "os"
+            else f"up to {policy.max_delay_s:g} s"
+        )
+        print(
+            f"warning: audit durability is '{policy}' ({DURABILITY_VAR}): a loss of "
+            f"power can remove the last records written ({lost}) and leave a chain "
+            "that still verifies; keep an anchor outside this host",
+            file=sys.stderr,
+        )
     if api_key is None and host not in _LOCAL_HOSTS:
         print(
             f"warning: serving on {host} without a key — anything that can reach "

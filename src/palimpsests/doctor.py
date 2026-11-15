@@ -105,6 +105,15 @@ def _status(http, api_key: str | None, env: dict) -> tuple[dict | None, list[Fin
             OK, "serve_reachable",
             f"the serve answers; its chain holds {status['chain']['records']} record(s)",
         ))
+    durability = (status.get("chain") or {}).get("durability")
+    if durability is not None and durability != "record":
+        found.append(Finding(
+            WARN, "serve_durability_relaxed",
+            f"the serve's audit durability is '{durability}': a loss of power can "
+            "remove the last records it wrote and leave a chain that still verifies",
+            "unset PALIMPSESTS_AUDIT_DURABILITY (the default is record), or keep an "
+            "anchor outside the host and accept the window",
+        ))
     if not status.get("auth_required"):
         found.append(Finding(
             WARN, "serve_without_key",

@@ -82,7 +82,7 @@ def test_status_reads_the_chain_and_writes_nothing(served):
     s = _status(client)
     _status(client)
     assert (audit.writer.seq, audit.writer.head_hex) == before
-    assert s["chain"] == {"records": before[0], "head": before[1]}
+    assert s["chain"] == {"records": before[0], "head": before[1], "durability": "record"}
 
 
 def test_status_is_behind_the_bearer_and_is_not_itself_counted(served):

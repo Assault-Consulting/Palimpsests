@@ -283,6 +283,7 @@ tokens rather than an OOM.
 | `PALIMPSESTS_ALLOW_UNENCRYPTED_AUDIT` | — | set to `1` to accept a plaintext (still hash-chained) audit log when SQLCipher is unavailable |
 | `PALIMPSESTS_SERVE_API_KEY` | — | bearer key for `palimpsests serve`; the integrations read the same variable |
 | `PALIMPSESTS_SERVE_URL` | `http://127.0.0.1:11435` | where the integrations look for the serve |
+| `PALIMPSESTS_AUDIT_DURABILITY` | `record` | when a record of the serve's chain is on stable storage: `record` (every record synced before the call returns), `group` / `group:<seconds>` (synced within that window), `os` (the kernel decides — a power loss can remove the last records without a trace). See `docs/WRITER-SURFACE.md` §4 |
 | `PALIMPSESTS_AUDIT_REPORT` | — | set to `0` to disable client-side reporting in the integrations |
 
 ```bash

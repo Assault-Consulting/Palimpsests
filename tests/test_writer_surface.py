@@ -34,7 +34,7 @@ DOC = (ROOT / "docs" / "WRITER-SURFACE.md").read_text(encoding="utf-8")
 D = b"\x11" * 32
 
 DECLARED = {
-    "PalaWriter", "RotationPolicy", "ChainLocked", "FrontierUnavailable",
+    "PalaWriter", "RotationPolicy", "Durability", "ChainLocked", "FrontierUnavailable",
     "session_span_id", "canonical_config_digest", "canonical_tool_args_digest",
     "canonical_tool_names_digest",
 }
@@ -74,7 +74,8 @@ METHODS = {
     "open_existing": ["path", "rotation", "boot_id", "time_trust", "assurance_tier",
                       "recover_torn_tail"],
 }
-PROPERTIES = {"head", "head_hex", "seq", "path", "boot_id", "recovered_tail_bytes"}
+PROPERTIES = {"head", "head_hex", "seq", "path", "boot_id", "recovered_tail_bytes",
+              "durability"}
 RETURN_SEQ = {"tool_call", "incident_candidate", "guard_prefix_release",
               "guard_state_reject", "guard_tool_loop_limit"}
 
@@ -112,9 +113,10 @@ def test_the_parameters_a_caller_relies_on_are_there_in_order():
 
 def test_the_constructor_takes_what_the_document_says():
     params = inspect.signature(PalaWriter.__init__).parameters
-    assert list(params)[1:] == ["path", "boot_id", "time_trust", "assurance_tier", "rotation"]
+    assert list(params)[1:] == ["path", "boot_id", "time_trust", "assurance_tier", "rotation",
+                                "durability"]
     assert all(params[p].kind is inspect.Parameter.KEYWORD_ONLY
-               for p in ("boot_id", "time_trust", "assurance_tier", "rotation"))
+               for p in ("boot_id", "time_trust", "assurance_tier", "rotation", "durability"))
     assert list(inspect.signature(RotationPolicy).parameters) == [
         "max_records", "max_bytes", "max_age_s", "retention_s"]
 
@@ -371,6 +373,7 @@ def test_the_root_is_refused_rather_than_guessed(tmp_path):
 
 
 def test_the_document_states_the_limits_it_must():
-    for phrase in ("does **not** `fsync`", "One writer per chain", "experimental until 1.0",
-                   "Metadata only"):
+    for phrase in ("on stable storage", "`Durability.OS`", "A disk that lies",
+                   "That a stop was clean", "One writer per chain",
+                   "experimental until 1.0", "Metadata only"):
         assert phrase in DOC, phrase

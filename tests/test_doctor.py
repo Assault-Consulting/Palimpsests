@@ -163,6 +163,24 @@ def test_a_serve_older_than_the_status_route(tmp_path):
     assert _codes(findings) == ["serve_status_missing"]
 
 
+def test_a_serve_that_does_not_sync_every_record_is_a_warning(tmp_path):
+    """A power loss then removes the last records without a trace; the
+    operator who set it should see it said back, and one who did not should
+    learn it was set."""
+    for policy, warned in (("record", False), ("os", True), ("group:0.2", True)):
+        audit = NativeAudit(PalaWriter(tmp_path / f"{policy[:2]}.pala", durability=policy))
+        client = TestClient(create_app(chat_fn=_chat, models_fn=lambda: [], audit=audit,
+                                       api_key=KEY))
+        try:
+            findings = _run(client, "mcp", tmp_path)
+            assert ("serve_durability_relaxed" in _codes(findings, doctor.WARN)) is warned
+            if warned:
+                msg = next(f.message for f in findings if f.code == "serve_durability_relaxed")
+                assert policy in msg
+        finally:
+            audit.writer.close()
+
+
 def test_a_serve_without_a_key_is_a_warning(tmp_path):
     audit = NativeAudit(PalaWriter(tmp_path / "open.pala"))
     client = TestClient(create_app(chat_fn=_chat, models_fn=lambda: [], audit=audit))
