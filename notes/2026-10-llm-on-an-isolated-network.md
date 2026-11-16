@@ -46,3 +46,5 @@ Verification was measured on a test chain of one million records. On an Intel Co
 There's no measurement on a discrete GPU yet. The log implementation also hasn't had an independent penetration test.
 
 More detail, including what we don't claim, is on [air-gapped](https://palimpsests.dev/air-gapped/). The project itself is at [palimpsests.dev](https://palimpsests.dev/).
+
+Step by step: [run a local LLM behind an OpenAI-compatible API](https://palimpsests.dev/runbook/local-openai-compatible-server/) and [keep a long chat going on a small local model](https://palimpsests.dev/runbook/chat-longer-than-context-window/).

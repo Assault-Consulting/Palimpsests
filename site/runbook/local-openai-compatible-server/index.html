@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Run a local LLM behind an OpenAI-compatible API — Palimpsests runbook</title>
+<meta name="description" content="Start an OpenAI-compatible server on your own machine in front of Ollama or llama.cpp, point any OpenAI client at it, and keep a tamper-evident record of the tool calls that pass through." />
+<link rel="canonical" href="https://palimpsests.dev/runbook/local-openai-compatible-server/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Andrii Sparysh" />
+<meta name="theme-color" content="#15151f" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Palimpsests" />
+<meta property="og:title" content="Run a local LLM behind an OpenAI-compatible API — Palimpsests runbook" />
+<meta property="og:description" content="Start an OpenAI-compatible server on your own machine in front of Ollama or llama.cpp, point any OpenAI client at it, and keep a tamper-evident record of the tool calls that pass through." />
+<meta property="og:url" content="https://palimpsests.dev/runbook/local-openai-compatible-server/" />
+<meta property="og:locale" content="en" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Run a local LLM behind an OpenAI-compatible API — Palimpsests runbook" />
+<meta name="twitter:description" content="Start an OpenAI-compatible server on your own machine in front of Ollama or llama.cpp, point any OpenAI client at it, and keep a tamper-evident record of the tool calls that pass through." />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "TechArticle",
+      "@id": "https://palimpsests.dev/runbook/local-openai-compatible-server/#article",
+      "headline": "Run a local LLM behind an OpenAI-compatible API",
+      "description": "Start an OpenAI-compatible server on your own machine in front of Ollama or llama.cpp, point any OpenAI client at it, and keep a tamper-evident record of the tool calls that pass through.",
+      "url": "https://palimpsests.dev/runbook/local-openai-compatible-server/",
+      "mainEntityOfPage": "https://palimpsests.dev/runbook/local-openai-compatible-server/",
+      "datePublished": "2026-11-16",
+      "dateModified": "2026-11-16",
+      "inLanguage": "en",
+      "proficiencyLevel": "Beginner",
+      "author": {
+        "@type": "Person",
+        "name": "Andrii Sparysh"
+      },
+      "publisher": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "isPartOf": {
+        "@id": "https://palimpsests.dev/runbook/#runbook"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Palimpsests",
+          "item": "https://palimpsests.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Runbook",
+          "item": "https://palimpsests.dev/runbook/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Run a local LLM behind an OpenAI-compatible API",
+          "item": "https://palimpsests.dev/runbook/local-openai-compatible-server/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Palimpsests home">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="nav__links">
+      <a class="hide-sm" href="/#caps">Capabilities</a>
+      <a class="hide-sm" href="/pala-1/">PALA-1</a>
+      <a class="hide-sm" href="/verify-without-reading/">Verify</a>
+      <a class="hide-sm" href="/eu-ai-act-article-12/">EU AI Act</a>
+      <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
+      <a class="hide-sm" href="/integrations/">Integrations</a>
+      <a class="hide-sm" href="/runbook/">Runbook</a>
+      <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<main class="doc">
+  <div class="wrap">
+    <div class="doc__in">
+<p class="crumbs"><a href="/">Palimpsests</a> / <a href="/runbook/">Runbook</a></p>
+<span class="eyebrow">Runbook · Run a model on your own machine · updated 16 November 2026</span>
+<h1 class="display">Run a local LLM behind an OpenAI-compatible API</h1>
+<p class="lede">Start an OpenAI-compatible server on your own machine in front of Ollama or llama.cpp, point any OpenAI client at it, and keep a tamper-evident record of the tool calls that pass through.</p>
+<p>Chat apps, editor plugins and agent frameworks mostly speak the OpenAI API. If the model runs on your own machine, you can offer them that same API locally. <code>palimpsests serve</code> does it with one command.</p>
+<p>If you already run Ollama, note that Ollama has an OpenAI-compatible endpoint of its own. What this server adds is a key in front of the endpoint and a record: every tool call that crosses it is written to a log that cannot be changed without the change showing.</p>
+<h2 id="you-need">You need</h2>
+<ul>
+  <li>Python 3.11 or newer.</li>
+  <li><a href="https://ollama.com">Ollama</a> running on the same machine with a model pulled, for example <code>ollama pull llama3.1:8b</code>. Or the <code>llama-server</code> program from llama.cpp on your <code>PATH</code> and a GGUF model file named in <code>PALIMPSESTS_LLAMACPP_MODEL</code>.</li>
+</ul>
+<h2 id="steps">Steps</h2>
+<h3 id="1-install">1. Install</h3>
+<pre><code>pip install 'palimpsests[serve]'
+export PALIMPSESTS_ALLOW_UNENCRYPTED_AUDIT=1</code></pre>
+<p>The second line lets the server keep its own operations log unencrypted. The <a href="https://palimpsests.dev/runbook/">runbook's first page</a> explains it, and how to keep that log encrypted instead.</p>
+<h3 id="2-start-the-server-with-a-key">2. Start the server with a key</h3>
+<pre><code>export PALIMPSESTS_SERVE_API_KEY=choose-a-long-random-string
+palimpsests serve</code></pre>
+<p>It listens on <code>http://127.0.0.1:11435/v1</code> and asks every request for that key. It listens on this computer only, unless you give it <code>--host</code>. Without a key, any program on this computer can use it.</p>
+<h3 id="3-list-your-models">3. List your models</h3>
+<pre><code>curl -H "Authorization: Bearer $PALIMPSESTS_SERVE_API_KEY" http://127.0.0.1:11435/v1/models</code></pre>
+<p>The names are the ones your engine knows. With Ollama, they are the names <code>ollama list</code> shows.</p>
+<h3 id="4-call-it-from-code">4. Call it from code</h3>
+<p>With the <code>openai</code> Python package:</p>
+<pre><code>from openai import OpenAI
+
+client = OpenAI(base_url="http://127.0.0.1:11435/v1", api_key="choose-a-long-random-string")
+reply = client.chat.completions.create(
+    model="llama3.1:8b",
+    messages=[{"role": "user", "content": "Say hello in five words."}],
+)
+print(reply.choices[0].message.content)</code></pre>
+<p>Any other OpenAI-compatible client works the same way: give it the base URL and the key.</p>
+<h2 id="check-that-it-works">Check that it works</h2>
+<p>Stop the server with Ctrl+C, then check its log:</p>
+<pre><code>palimpsests pala verify ~/.config/palimpsests/serve.pala</code></pre>
+<p>Stop it first because a file that is still being written can end in half an entry, which reads as damage. The check answers three questions. Consistency says whether the entries still hold together. Completeness stays open on purpose, and the command exits with code 2: whether the end of the log was cut off cannot be seen from inside the log. Closing that question takes an anchor: the latest fingerprint, kept somewhere the log's owner cannot rewrite. <a href="https://palimpsests.dev/verify-without-reading/">Verify without reading</a> explains what the check proves.</p>
+<h2 id="what-is-recorded-and-what-is-not">What is recorded, and what is not</h2>
+<ul>
+  <li>Operations, not content: the tool's name, a fingerprint of its arguments and of its result, and how it ended. Prompts and replies are not in this log.</li>
+  <li>Only tool calls the model returns as structured calls. Some models write the call as plain text, and the client then runs it itself; the server cannot see that as a call. When tools were offered and no structured call came back, the server records exactly that, so the gap is visible.</li>
+  <li>In our runs, <code>llama3.1:8b</code> in Ollama returned structured calls, while <code>qwen2.5-coder</code> (7B and 14B) in Ollama wrote its calls as text.</li>
+  <li>The record shows the call the model asked for and the result your client sent back. It does not show that the tool did what it reported.</li>
+  <li>Speed: it matches a tuned llama.cpp server. It is not faster.</li>
+</ul>
+<h2 id="last-checked">Last checked</h2>
+<ul>
+  <li>Windows 11, palimpsests 0.10.0, Ollama 0.33.2, August 2026: the server returned structured tool calls from <code>llama3.1:8b</code> and recorded them. <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/specs/pala-1/independent-runs/oleksandr/ws-e-opencode-smoke/WS-E-run-record.md">Run record</a>.</li>
+  <li>The commands on this page are those of palimpsests 0.14.1.</li>
+</ul>
+<h2 id="reference">Reference</h2>
+<ul>
+  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/v0.14.1/docs/USAGE.md">Usage guide: the server, settings and environment variables</a></li>
+  <li><a href="https://palimpsests.dev/air-gapped/">Air-gapped and on-prem use</a></li>
+</ul>
+<h2 id="next">Next</h2>
+<ul>
+  <li><a href="/runbook/opencode-with-a-local-model/">Use a local model in OpenCode</a> — Point OpenCode at a model on your own machine through Palimpsests&#x27; OpenAI-compatible server, with the configuration printed for you, and know which of its tool calls reach the record.</li>
+  <li><a href="/runbook/chat-longer-than-context-window/">Chat longer than the context window on a small local model</a> — Keep a long conversation going on a model with a small context window. Palimpsests keeps the start and the latest turns, moves the middle to disk, and brings back the parts that matter.</li>
+</ul>
+<div class="related">
+  <a class="btn" href="/runbook/">All runbook pages →</a>
+  <a class="btn" href="/">Palimpsests →</a>
+</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/" aria-label="Palimpsests">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="/notes/">Notes</a>
+      <a href="/runbook/">Runbook</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

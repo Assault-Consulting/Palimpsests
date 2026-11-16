@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Chat longer than the context window on a small local model — Palimpsests runbook</title>
+<meta name="description" content="Keep a long conversation going on a model with a small context window. Palimpsests keeps the start and the latest turns, moves the middle to disk, and brings back the parts that matter." />
+<link rel="canonical" href="https://palimpsests.dev/runbook/chat-longer-than-context-window/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Andrii Sparysh" />
+<meta name="theme-color" content="#15151f" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Palimpsests" />
+<meta property="og:title" content="Chat longer than the context window on a small local model — Palimpsests runbook" />
+<meta property="og:description" content="Keep a long conversation going on a model with a small context window. Palimpsests keeps the start and the latest turns, moves the middle to disk, and brings back the parts that matter." />
+<meta property="og:url" content="https://palimpsests.dev/runbook/chat-longer-than-context-window/" />
+<meta property="og:locale" content="en" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Chat longer than the context window on a small local model — Palimpsests runbook" />
+<meta name="twitter:description" content="Keep a long conversation going on a model with a small context window. Palimpsests keeps the start and the latest turns, moves the middle to disk, and brings back the parts that matter." />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "TechArticle",
+      "@id": "https://palimpsests.dev/runbook/chat-longer-than-context-window/#article",
+      "headline": "Chat longer than the context window on a small local model",
+      "description": "Keep a long conversation going on a model with a small context window. Palimpsests keeps the start and the latest turns, moves the middle to disk, and brings back the parts that matter.",
+      "url": "https://palimpsests.dev/runbook/chat-longer-than-context-window/",
+      "mainEntityOfPage": "https://palimpsests.dev/runbook/chat-longer-than-context-window/",
+      "datePublished": "2026-11-16",
+      "dateModified": "2026-11-16",
+      "inLanguage": "en",
+      "proficiencyLevel": "Beginner",
+      "author": {
+        "@type": "Person",
+        "name": "Andrii Sparysh"
+      },
+      "publisher": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "isPartOf": {
+        "@id": "https://palimpsests.dev/runbook/#runbook"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Palimpsests",
+          "item": "https://palimpsests.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Runbook",
+          "item": "https://palimpsests.dev/runbook/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Chat longer than the context window on a small local model",
+          "item": "https://palimpsests.dev/runbook/chat-longer-than-context-window/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Palimpsests home">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="nav__links">
+      <a class="hide-sm" href="/#caps">Capabilities</a>
+      <a class="hide-sm" href="/pala-1/">PALA-1</a>
+      <a class="hide-sm" href="/verify-without-reading/">Verify</a>
+      <a class="hide-sm" href="/eu-ai-act-article-12/">EU AI Act</a>
+      <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
+      <a class="hide-sm" href="/integrations/">Integrations</a>
+      <a class="hide-sm" href="/runbook/">Runbook</a>
+      <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<main class="doc">
+  <div class="wrap">
+    <div class="doc__in">
+<p class="crumbs"><a href="/">Palimpsests</a> / <a href="/runbook/">Runbook</a></p>
+<span class="eyebrow">Runbook · Run a model on your own machine · updated 16 November 2026</span>
+<h1 class="display">Chat longer than the context window on a small local model</h1>
+<p class="lede">Keep a long conversation going on a model with a small context window. Palimpsests keeps the start and the latest turns, moves the middle to disk, and brings back the parts that matter.</p>
+<p>A model can read only so much text at once. That limit is its context window, and a small model on modest hardware may have 8,000 tokens or fewer. A long chat outgrows it, and something has to go. Drop the oldest messages and the model forgets what the task was. Drop messages at random and it forgets facts.</p>
+<p>Palimpsests fits the conversation into a budget you set, before every reply:</p>
+<ul>
+  <li>It always keeps the system prompt and the first two messages. They usually say what the task is.</li>
+  <li>It always keeps the latest eight messages.</li>
+  <li>When everything together is over the budget, it moves the oldest messages from the middle out, into a small database on your disk.</li>
+  <li>Before each reply, it looks for the moved-out messages closest in meaning to your latest message, and puts the three closest back as one note at the start.</li>
+</ul>
+<p>The budget is held at 80% of the number you give, because tokens are estimated rather than counted.</p>
+<h2 id="you-need">You need</h2>
+<ul>
+  <li>Python 3.11 or newer.</li>
+  <li><a href="https://ollama.com">Ollama</a> running, with a chat model and the embedding model that finds old messages again:</li>
+</ul>
+<pre><code>ollama pull qwen2.5:7b
+ollama pull nomic-embed-text</code></pre>
+<h2 id="steps">Steps</h2>
+<h3 id="1-install">1. Install</h3>
+<pre><code>pip install 'palimpsests[embeddings]'
+export PALIMPSESTS_ALLOW_UNENCRYPTED_AUDIT=1</code></pre>
+<p><code>[embeddings]</code> adds numpy, which compares messages. Without it the chat still works, but nothing that was moved out comes back. The second line is explained on the <a href="https://palimpsests.dev/runbook/">runbook's first page</a>.</p>
+<h3 id="2-try-one-prompt-from-the-terminal">2. Try one prompt from the terminal</h3>
+<pre><code>palimpsests chat qwen2.5:7b -m "Explain a context window in two sentences." --context-size 4096</code></pre>
+<p><code>palimpsests chat</code> sends one prompt. For a conversation that keeps going, use the few lines of Python in the next step.</p>
+<h3 id="3-a-chat-that-keeps-going">3. A chat that keeps going</h3>
+<p>Save this as <code>longchat.py</code>:</p>
+<pre><code>from palimpsests.core import chat, init_app
+
+ctx = init_app()
+messages = [{"role": "system", "content": "You are a patient tutor."}]
+
+while True:
+    text = input("you&gt; ")
+    if not text:
+        break
+    messages.append({"role": "user", "content": text})
+    reply = ""
+    for chunk in chat(ctx, model="qwen2.5:7b", messages=messages, context_size=4096):
+        print(chunk.delta, end="", flush=True)
+        reply += chunk.delta
+    print()
+    messages.append({"role": "assistant", "content": reply})</code></pre>
+<p>Run <code>python longchat.py</code> and keep talking. An empty line ends the chat. Your script keeps the whole conversation in <code>messages</code>; before each reply, Palimpsests decides what part of it the model sees.</p>
+<h2 id="check-that-it-works">Check that it works</h2>
+<p>Talk past the budget, then ask about something you said near the start, and see whether the answer uses it. The moved-out messages are kept in <code>~/.config/palimpsests/.context-memory/blocks.db</code>.</p>
+<h2 id="what-it-does-and-what-it-does-not">What it does, and what it does not</h2>
+<ul>
+  <li>It does not make the model's window bigger. The model still reads only what fits.</li>
+  <li>Bringing old messages back is a search by meaning, three at a time. A detail mentioned once, long ago, can still be missed.</li>
+  <li>Tokens are estimated at about 3.5 characters each, on the high side, so the budget errs toward sending less.</li>
+  <li>The moved-out messages are stored as plain text in that database on your disk. Treat the folder like the chat itself.</li>
+  <li>Finding old messages again needs an engine that can make embeddings, and Ollama can. Without one, or without numpy, the chat still works without it.</li>
+</ul>
+<h2 id="last-checked">Last checked</h2>
+<ul>
+  <li>The fitting and the recall are covered by the package's tests. The repository has no recorded run of this recipe on a real model yet.</li>
+  <li>The commands and Python names on this page are those of palimpsests 0.14.1.</li>
+</ul>
+<h2 id="reference">Reference</h2>
+<ul>
+  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/v0.14.1/docs/USAGE.md">Usage guide: the context-size setting and the Python API</a></li>
+  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/v0.14.1/src/palimpsests/context/window_manager.py">How the window is kept, in code</a></li>
+</ul>
+<h2 id="next">Next</h2>
+<ul>
+  <li><a href="/runbook/local-openai-compatible-server/">Run a local LLM behind an OpenAI-compatible API</a> — Start an OpenAI-compatible server on your own machine in front of Ollama or llama.cpp, point any OpenAI client at it, and keep a tamper-evident record of the tool calls that pass through.</li>
+</ul>
+<div class="related">
+  <a class="btn" href="/runbook/">All runbook pages →</a>
+  <a class="btn" href="/">Palimpsests →</a>
+</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/" aria-label="Palimpsests">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="/notes/">Notes</a>
+      <a href="/runbook/">Runbook</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

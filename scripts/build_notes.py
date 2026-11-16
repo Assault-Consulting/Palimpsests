@@ -1,13 +1,21 @@
 #!/usr/bin/env python3
-"""Build the /notes/ section of palimpsests.dev from notes/*.md.
+"""Build the /notes/ and /runbook/ sections of palimpsests.dev.
 
-Each note is a markdown file with a small front-matter block. The script
-writes site/notes/<slug>/index.html, the list page site/notes/index.html
-and the RSS feed site/notes/feed.xml, regenerates site/sitemap.xml, and
-rewrites the notes block of site/llms.txt and the latest-notes block of
+Each note (notes/*.md) and each runbook page (runbook/*.md) is a markdown
+file with a small front-matter block. The script writes
+site/notes/<slug>/index.html, the list page site/notes/index.html and the
+RSS feed site/notes/feed.xml; site/runbook/<slug>/index.html and the
+runbook's own page site/runbook/index.html, made from runbook/index.md
+plus the list of runbook pages; regenerates site/sitemap.xml; and rewrites
+the notes and runbook blocks of site/llms.txt and the latest-notes block of
 the home page. Output is deterministic: dates
 come from the front matter, never from the clock, so a re-run on unchanged
 sources changes nothing. tests/test_notes_build.py holds that.
+
+A link to a page of this site, written as https://palimpsests.dev/<path>,
+must name a page that exists — a static page, a note or a runbook page —
+and a runbook page's `next` list must name runbook pages; the build stops
+otherwise, so a reader never follows a link to a page that is not there.
 
 The markdown dialect is deliberately small, because the same text is also
 pasted by hand into other platforms: paragraphs, "## " and "### "
@@ -32,12 +40,12 @@ AUTHOR = "Andrii Sparysh"
 
 # Static pages and the date each last changed. Update a date when its page changes.
 STATIC_PAGES = [
-    ("/", "2026-10-23", "weekly", "1.0"),
+    ("/", "2026-11-16", "weekly", "1.0"),
     ("/pala-1/", "2026-10-18", "monthly", "0.9"),
     ("/verify-without-reading/", "2026-09-30", "monthly", "0.8"),
     ("/eu-ai-act-article-12/", "2026-09-30", "monthly", "0.8"),
-    ("/air-gapped/", "2026-09-30", "monthly", "0.8"),
-    ("/integrations/", "2026-10-31", "monthly", "0.8"),
+    ("/air-gapped/", "2026-11-16", "monthly", "0.8"),
+    ("/integrations/", "2026-11-16", "monthly", "0.8"),
 ]
 
 NAV = [
@@ -47,7 +55,18 @@ NAV = [
     ("/eu-ai-act-article-12/", "EU AI Act"),
     ("/air-gapped/", "Air-gapped"),
     ("/integrations/", "Integrations"),
+    ("/runbook/", "Runbook"),
 ]
+
+# The runbook's groups, in the order its page lists them. A runbook page names
+# its group in front matter; a group with no page yet is not shown.
+RUNBOOK_GROUPS = [
+    ("run", "Run a model on your own machine"),
+    ("record", "Record what an AI agent does"),
+    ("check", "Check and keep the record"),
+]
+RUNBOOK_START = "<!-- runbook:start -->"
+RUNBOOK_END = "<!-- runbook:end -->"
 
 MONTHS = ["January", "February", "March", "April", "May", "June", "July",
           "August", "September", "October", "November", "December"]
@@ -74,9 +93,37 @@ class Note:
         return f"{SITE}/notes/{self.slug}/"
 
 
+@dataclass
+class Recipe:
+    """One runbook page: a single task, in steps."""
+
+    title: str
+    slug: str
+    group: str
+    order: int
+    updated: date
+    description: str
+    next: list[str] = field(default_factory=list)
+    body: str = ""
+
+    @property
+    def url(self) -> str:
+        return f"{SITE}/runbook/{self.slug}/"
+
+
+@dataclass
+class RunbookIntro:
+    """The runbook's own page: runbook/index.md, before the list of pages."""
+
+    title: str
+    updated: date
+    description: str
+    body: str = ""
+
+
 # ---------------------------------------------------------------- parsing
 
-def parse_note(path: Path) -> Note:
+def _front_matter(path: Path, required: tuple[str, ...]) -> tuple[dict[str, str], str]:
     text = path.read_text(encoding="utf-8")
     if not text.startswith("---\n"):
         raise ValueError(f"{path}: missing front matter")
@@ -88,20 +135,77 @@ def parse_note(path: Path) -> Note:
         if line.strip():
             key, _, value = line.partition(":")
             meta[key.strip()] = value.strip()
-    for key in ("title", "slug", "date", "description"):
+    for key in required:
         if not meta.get(key):
             raise ValueError(f"{path}: front matter needs '{key}'")
-    if not re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", meta["slug"]):
+    if "slug" in required and not re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", meta["slug"]):
         raise ValueError(f"{path}: slug must be lowercase words joined by '-'")
-    tags = [t.strip() for t in meta.get("tags", "").split(",") if t.strip()]
+    return meta, body.strip() + "\n"
+
+
+def _listed(value: str) -> list[str]:
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
+def parse_note(path: Path) -> Note:
+    meta, body = _front_matter(path, ("title", "slug", "date", "description"))
     return Note(
         title=meta["title"],
         slug=meta["slug"],
         published=date.fromisoformat(meta["date"]),
         description=meta["description"],
-        tags=tags,
-        body=body.strip() + "\n",
+        tags=_listed(meta.get("tags", "")),
+        body=body,
     )
+
+
+def parse_recipe(path: Path) -> Recipe:
+    meta, body = _front_matter(
+        path, ("title", "slug", "group", "order", "updated", "description"))
+    groups = [key for key, _ in RUNBOOK_GROUPS]
+    if meta["group"] not in groups:
+        raise ValueError(f"{path}: group must be one of {', '.join(groups)}")
+    return Recipe(
+        title=meta["title"],
+        slug=meta["slug"],
+        group=meta["group"],
+        order=int(meta["order"]),
+        updated=date.fromisoformat(meta["updated"]),
+        description=meta["description"],
+        next=_listed(meta.get("next", "")),
+        body=body,
+    )
+
+
+def parse_runbook_intro(path: Path) -> RunbookIntro:
+    meta, body = _front_matter(path, ("title", "updated", "description"))
+    return RunbookIntro(
+        title=meta["title"],
+        updated=date.fromisoformat(meta["updated"]),
+        description=meta["description"],
+        body=body,
+    )
+
+
+def load_runbook(runbook_dir: Path) -> tuple[RunbookIntro | None, list[Recipe]]:
+    """The runbook's own page and its pages, in the order its page lists them."""
+    if not runbook_dir.is_dir():
+        return None, []
+    intro_path = runbook_dir / "index.md"
+    recipes = [parse_recipe(p) for p in sorted(runbook_dir.glob("*.md")) if p != intro_path]
+    if recipes and not intro_path.exists():
+        raise ValueError(f"{intro_path} is missing: the runbook needs its own page")
+    slugs = [r.slug for r in recipes]
+    if len(slugs) != len(set(slugs)):
+        raise ValueError("two runbook pages share a slug")
+    for r in recipes:
+        unknown = [s for s in r.next if s not in slugs or s == r.slug]
+        if unknown:
+            raise ValueError(f"runbook/{r.slug}: 'next' names no other runbook page: {unknown}")
+    group_rank = {key: i for i, (key, _) in enumerate(RUNBOOK_GROUPS)}
+    recipes.sort(key=lambda r: (group_rank[r.group], r.order, r.title))
+    intro = parse_runbook_intro(intro_path) if intro_path.exists() else None
+    return intro, recipes
 
 
 def load_notes(notes_dir: Path) -> list[Note]:
@@ -191,6 +295,35 @@ def render(md: str) -> str:
             i += 1
     flush()
     return "\n".join(out)
+
+
+def site_paths(notes: list[Note], recipes: list[Recipe]) -> set[str]:
+    """Every path of this site a note or a runbook page may link to."""
+    paths = {loc for loc, *_ in STATIC_PAGES}
+    paths |= {"/notes/", "/notes/feed.xml"} | {f"/notes/{n.slug}/" for n in notes}
+    if recipes:
+        paths |= {"/runbook/"} | {f"/runbook/{r.slug}/" for r in recipes}
+    return paths
+
+
+def check_site_links(sources: dict[str, str], known: set[str]) -> None:
+    """Refuse a link to a page of this site that does not exist.
+
+    ``sources`` maps a name for the error message to markdown. Only links
+    written as https://palimpsests.dev/... are checked; the anchor and the
+    query are not part of the page.
+    """
+    broken: list[str] = []
+    for name, text in sources.items():
+        for match in _LINK.finditer(text):
+            url = match.group(2)
+            if url != SITE and not url.startswith(SITE + "/"):
+                continue
+            path = re.split(r"[#?]", url[len(SITE):], maxsplit=1)[0] or "/"
+            if path not in known:
+                broken.append(f"{name}: {url}")
+    if broken:
+        raise ValueError("links to pages this site does not have:\n  " + "\n  ".join(broken))
 
 
 # ---------------------------------------------------------------- pages
@@ -286,6 +419,7 @@ def page(path: str, title: str, description: str, graph: list[dict], body: str) 
     </a>
     <div class="foot__links">
       <a href="/notes/">Notes</a>
+      <a href="/runbook/">Runbook</a>
       <a href="{REPO}" rel="noopener">GitHub</a>
       <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
       <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
@@ -373,6 +507,106 @@ def index_page(notes: list[Note]) -> str:
     return page("/notes/", "Notes — Palimpsests (PALA-1)", description, graph, body)
 
 
+def _group_title(key: str) -> str:
+    return dict(RUNBOOK_GROUPS)[key]
+
+
+def recipe_page(recipe: Recipe, recipes: list[Recipe]) -> str:
+    path = f"/runbook/{recipe.slug}/"
+    by_slug = {r.slug: r for r in recipes}
+    graph = [
+        {
+            "@type": "TechArticle",
+            "@id": recipe.url + "#article",
+            "headline": recipe.title,
+            "description": recipe.description,
+            "url": recipe.url,
+            "mainEntityOfPage": recipe.url,
+            "datePublished": recipe.updated.isoformat(),
+            "dateModified": recipe.updated.isoformat(),
+            "inLanguage": "en",
+            "proficiencyLevel": "Beginner",
+            "author": {"@type": "Person", "name": AUTHOR},
+            "publisher": {"@id": SITE + "/#org"},
+            "isPartOf": {"@id": SITE + "/runbook/#runbook"},
+        },
+        {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                {"@type": "ListItem", "position": 1, "name": "Palimpsests", "item": SITE + "/"},
+                {"@type": "ListItem", "position": 2, "name": "Runbook", "item": SITE + "/runbook/"},
+                {"@type": "ListItem", "position": 3, "name": recipe.title, "item": recipe.url},
+            ],
+        },
+    ]
+    following = ""
+    if recipe.next:
+        items = "\n".join(
+            f'  <li><a href="/runbook/{s}/">{html.escape(by_slug[s].title)}</a> — '
+            f"{html.escape(by_slug[s].description)}</li>"
+            for s in recipe.next
+        )
+        following = f'<h2 id="next">Next</h2>\n<ul>\n{items}\n</ul>\n'
+    body = f"""<p class="crumbs"><a href="/">Palimpsests</a> / <a href="/runbook/">Runbook</a></p>
+<span class="eyebrow">Runbook · {html.escape(_group_title(recipe.group))} · updated {human_date(recipe.updated)}</span>
+<h1 class="display">{html.escape(recipe.title)}</h1>
+<p class="lede">{html.escape(recipe.description)}</p>
+{render(recipe.body)}
+{following}<div class="related">
+  <a class="btn" href="/runbook/">All runbook pages →</a>
+  <a class="btn" href="/">Palimpsests →</a>
+</div>"""
+    return page(path, f"{recipe.title} — Palimpsests runbook", recipe.description, graph, body)
+
+
+def runbook_page(intro: RunbookIntro, recipes: list[Recipe]) -> str:
+    sections = []
+    for key, heading in RUNBOOK_GROUPS:
+        members = [r for r in recipes if r.group == key]
+        if not members:
+            continue
+        entries = "\n".join(
+            f"""<h3><a href="/runbook/{r.slug}/">{html.escape(r.title)}</a></h3>
+<p>{html.escape(r.description)}</p>"""
+            for r in members
+        )
+        sections.append(f'<h2 id="{key}">{html.escape(heading)}</h2>\n{entries}')
+    graph = [
+        {
+            "@type": "CollectionPage",
+            "@id": SITE + "/runbook/#runbook",
+            "name": intro.title,
+            "description": intro.description,
+            "url": SITE + "/runbook/",
+            "inLanguage": "en",
+            "dateModified": intro.updated.isoformat(),
+            "publisher": {"@id": SITE + "/#org"},
+            "hasPart": [
+                {"@type": "TechArticle", "headline": r.title, "url": r.url}
+                for r in recipes
+            ],
+        },
+        {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                {"@type": "ListItem", "position": 1, "name": "Palimpsests", "item": SITE + "/"},
+                {"@type": "ListItem", "position": 2, "name": "Runbook", "item": SITE + "/runbook/"},
+            ],
+        },
+    ]
+    body = f"""<p class="crumbs"><a href="/">Palimpsests</a> / Runbook</p>
+<span class="eyebrow">Runbook · updated {human_date(intro.updated)}</span>
+<h1 class="display">{html.escape(intro.title)}</h1>
+<p class="lede">{html.escape(intro.description)}</p>
+{render(intro.body)}
+{chr(10).join(sections)}
+<div class="related">
+  <a class="btn" href="/integrations/">Integrations →</a>
+  <a class="btn" href="/">Palimpsests →</a>
+</div>"""
+    return page("/runbook/", f"{intro.title} — Palimpsests", intro.description, graph, body)
+
+
 def feed(notes: list[Note]) -> str:
     items = []
     for n in notes:
@@ -404,8 +638,14 @@ def feed(notes: list[Note]) -> str:
 """
 
 
-def sitemap(notes: list[Note]) -> str:
+def sitemap(notes: list[Note], intro: RunbookIntro | None = None,
+            recipes: list[Recipe] | None = None) -> str:
     rows = list(STATIC_PAGES)
+    if intro is not None and recipes:
+        newest = max([intro.updated, *(r.updated for r in recipes)])
+        rows.append(("/runbook/", newest.isoformat(), "weekly", "0.8"))
+        rows += [(f"/runbook/{r.slug}/", r.updated.isoformat(), "monthly", "0.7")
+                 for r in recipes]
     if notes:
         rows.append(("/notes/", notes[0].published.isoformat(), "weekly", "0.7"))
         rows += [(f"/notes/{n.slug}/", n.published.isoformat(), "monthly", "0.6") for n in notes]
@@ -451,10 +691,36 @@ def llms_block(notes: list[Note]) -> str:
     return "\n".join([LLMS_START, "## Notes", "", *lines, LLMS_END])
 
 
+def llms_runbook_block(recipes: list[Recipe]) -> str:
+    lines = [f"- [{r.title}]({r.url}): {r.description}" for r in recipes]
+    head = (f"The [runbook]({SITE}/runbook/): one task per page, in steps, each with "
+            "what it does not do.")
+    return "\n".join([RUNBOOK_START, "## Runbook", "", head, "", *lines, RUNBOOK_END])
+
+
 # ---------------------------------------------------------------- build
 
-def build(notes_dir: Path, site_dir: Path) -> None:
+def build(notes_dir: Path, site_dir: Path, runbook_dir: Path | None = None) -> None:
     notes = load_notes(notes_dir)
+    intro, recipes = load_runbook(runbook_dir or notes_dir.parent / "runbook")
+    sources = {f"notes/{n.slug}": n.body for n in notes}
+    sources |= {f"runbook/{r.slug}": r.body for r in recipes}
+    if intro is not None:
+        sources["runbook/index"] = intro.body
+    check_site_links(sources, site_paths(notes, recipes))
+
+    if intro is not None and recipes:
+        book = site_dir / "runbook"
+        book.mkdir(parents=True, exist_ok=True)
+        for r in recipes:
+            (book / r.slug).mkdir(exist_ok=True)
+            (book / r.slug / "index.html").write_text(
+                recipe_page(r, recipes), encoding="utf-8", newline="\n")
+        (book / "index.html").write_text(
+            runbook_page(intro, recipes), encoding="utf-8", newline="\n")
+        replace_block(site_dir / "llms.txt", RUNBOOK_START, RUNBOOK_END,
+                      llms_runbook_block(recipes))
+
     out = site_dir / "notes"
     out.mkdir(parents=True, exist_ok=True)
     for n in notes:
@@ -462,7 +728,8 @@ def build(notes_dir: Path, site_dir: Path) -> None:
         (out / n.slug / "index.html").write_text(note_page(n), encoding="utf-8", newline="\n")
     (out / "index.html").write_text(index_page(notes), encoding="utf-8", newline="\n")
     (out / "feed.xml").write_text(feed(notes), encoding="utf-8", newline="\n")
-    (site_dir / "sitemap.xml").write_text(sitemap(notes), encoding="utf-8", newline="\n")
+    (site_dir / "sitemap.xml").write_text(sitemap(notes, intro, recipes), encoding="utf-8",
+                                          newline="\n")
 
     replace_block(site_dir / "llms.txt", LLMS_START, LLMS_END, llms_block(notes))
     replace_block(site_dir / "index.html", HOME_START, HOME_END, home_block(notes))

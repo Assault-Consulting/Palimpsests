@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Runbook: self-hosted LLM setup and AI agent logging, step by step — Palimpsests</title>
+<meta name="description" content="Short recipes you can copy for running language models on your own machine and recording what AI agents do, each with what it needs, how to check it worked and what it does not do." />
+<link rel="canonical" href="https://palimpsests.dev/runbook/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Andrii Sparysh" />
+<meta name="theme-color" content="#15151f" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Palimpsests" />
+<meta property="og:title" content="Runbook: self-hosted LLM setup and AI agent logging, step by step — Palimpsests" />
+<meta property="og:description" content="Short recipes you can copy for running language models on your own machine and recording what AI agents do, each with what it needs, how to check it worked and what it does not do." />
+<meta property="og:url" content="https://palimpsests.dev/runbook/" />
+<meta property="og:locale" content="en" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Runbook: self-hosted LLM setup and AI agent logging, step by step — Palimpsests" />
+<meta name="twitter:description" content="Short recipes you can copy for running language models on your own machine and recording what AI agents do, each with what it needs, how to check it worked and what it does not do." />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "CollectionPage",
+      "@id": "https://palimpsests.dev/runbook/#runbook",
+      "name": "Runbook: self-hosted LLM setup and AI agent logging, step by step",
+      "description": "Short recipes you can copy for running language models on your own machine and recording what AI agents do, each with what it needs, how to check it worked and what it does not do.",
+      "url": "https://palimpsests.dev/runbook/",
+      "inLanguage": "en",
+      "dateModified": "2026-11-16",
+      "publisher": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "hasPart": [
+        {
+          "@type": "TechArticle",
+          "headline": "Run a local LLM behind an OpenAI-compatible API",
+          "url": "https://palimpsests.dev/runbook/local-openai-compatible-server/"
+        },
+        {
+          "@type": "TechArticle",
+          "headline": "Chat longer than the context window on a small local model",
+          "url": "https://palimpsests.dev/runbook/chat-longer-than-context-window/"
+        },
+        {
+          "@type": "TechArticle",
+          "headline": "Use a local model in OpenCode",
+          "url": "https://palimpsests.dev/runbook/opencode-with-a-local-model/"
+        },
+        {
+          "@type": "TechArticle",
+          "headline": "Log Claude Code tool calls on your own machine",
+          "url": "https://palimpsests.dev/runbook/log-claude-code-tool-calls/"
+        },
+        {
+          "@type": "TechArticle",
+          "headline": "Claude Code hooks not working? Find where the reports go missing",
+          "url": "https://palimpsests.dev/runbook/claude-code-hooks-not-working/"
+        },
+        {
+          "@type": "TechArticle",
+          "headline": "Log MCP tool calls with a one-file proxy",
+          "url": "https://palimpsests.dev/runbook/mcp-tool-call-logging/"
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Palimpsests",
+          "item": "https://palimpsests.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Runbook",
+          "item": "https://palimpsests.dev/runbook/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Palimpsests home">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="nav__links">
+      <a class="hide-sm" href="/#caps">Capabilities</a>
+      <a class="hide-sm" href="/pala-1/">PALA-1</a>
+      <a class="hide-sm" href="/verify-without-reading/">Verify</a>
+      <a class="hide-sm" href="/eu-ai-act-article-12/">EU AI Act</a>
+      <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
+      <a class="hide-sm" href="/integrations/">Integrations</a>
+      <a class="hide-sm" href="/runbook/">Runbook</a>
+      <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<main class="doc">
+  <div class="wrap">
+    <div class="doc__in">
+<p class="crumbs"><a href="/">Palimpsests</a> / Runbook</p>
+<span class="eyebrow">Runbook · updated 16 November 2026</span>
+<h1 class="display">Runbook: self-hosted LLM setup and AI agent logging, step by step</h1>
+<p class="lede">Short recipes you can copy for running language models on your own machine and recording what AI agents do, each with what it needs, how to check it worked and what it does not do.</p>
+<p>Palimpsests is one open-source Python package that does three kinds of jobs. It runs language models on your own computer, through Ollama or llama.cpp. It writes down what an AI agent did, which tools it called and what came back, in a log that cannot be changed without the change showing. And it lets anyone check that log later, without having to trust you or us.</p>
+<p>This runbook is a set of short recipes. Each one does one job in a few commands. Each says what you need first, how to check that it worked, and what it does not do.</p>
+<h2 id="before-you-start">Before you start</h2>
+<ul>
+  <li>Python 3.11 or newer, and <code>pip</code>.</li>
+  <li>Recipes that run a model need <a href="https://ollama.com">Ollama</a> with a model pulled, or the <code>llama-server</code> program from llama.cpp. Recipes that only record an agent need no local model at all.</li>
+  <li>Most recipes start the Palimpsests server with <code>palimpsests serve</code>. Next to the log of tool calls, it keeps a log of its own operations, and that one is encrypted by default. For a first try, let it be stored unencrypted. It stays hash-chained either way.</li>
+</ul>
+<pre><code>pip install 'palimpsests[serve]'
+export PALIMPSESTS_ALLOW_UNENCRYPTED_AUDIT=1</code></pre>
+<p>In Windows PowerShell, the second line is <code>$env:PALIMPSESTS_ALLOW_UNENCRYPTED_AUDIT = "1"</code>. To keep that log encrypted instead, install <code>'palimpsests[serve,keyring,encryption]'</code> on a computer with a system keychain, and leave the variable unset.</p>
+<h2 id="the-log-in-one-paragraph">The log in one paragraph</h2>
+<p>Each entry carries a fingerprint of the entry before it. Change an entry, remove one or swap two, and the fingerprints stop matching from that point on. Checking them needs no key and never opens what the entries hold. One change the log cannot show by itself is a cut at the very end. For that, you keep a copy of the latest fingerprint somewhere else, called an anchor. More in <a href="https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/">what makes an audit log tamper-evident</a> and <a href="https://palimpsests.dev/verify-without-reading/">verify without reading</a>.</p>
+<h2 id="what-it-is-not">What it is not</h2>
+<ul>
+  <li>Not a compliance product. It gives you a record. What your rules require of that record is still yours to decide.</li>
+  <li>Not faster than a well-tuned llama.cpp server. On speed, measured, it matches one.</li>
+  <li>Not a copy of your content. The log holds operations and fingerprints of data, not prompts, replies or files.</li>
+</ul>
+<h2 id="run">Run a model on your own machine</h2>
+<h3><a href="/runbook/local-openai-compatible-server/">Run a local LLM behind an OpenAI-compatible API</a></h3>
+<p>Start an OpenAI-compatible server on your own machine in front of Ollama or llama.cpp, point any OpenAI client at it, and keep a tamper-evident record of the tool calls that pass through.</p>
+<h3><a href="/runbook/chat-longer-than-context-window/">Chat longer than the context window on a small local model</a></h3>
+<p>Keep a long conversation going on a model with a small context window. Palimpsests keeps the start and the latest turns, moves the middle to disk, and brings back the parts that matter.</p>
+<h3><a href="/runbook/opencode-with-a-local-model/">Use a local model in OpenCode</a></h3>
+<p>Point OpenCode at a model on your own machine through Palimpsests&#x27; OpenAI-compatible server, with the configuration printed for you, and know which of its tool calls reach the record.</p>
+<h2 id="record">Record what an AI agent does</h2>
+<h3><a href="/runbook/log-claude-code-tool-calls/">Log Claude Code tool calls on your own machine</a></h3>
+<p>Record every tool call Claude Code makes in a tamper-evident log on your own machine, with three hook entries and a local server. Fingerprints instead of content, and failures marked as failures.</p>
+<h3><a href="/runbook/claude-code-hooks-not-working/">Claude Code hooks not working? Find where the reports go missing</a></h3>
+<p>A failing hook never stops the agent, so a broken hook looks exactly like a working one. The silent failures we measured, how to spot each, and one command that names them.</p>
+<h3><a href="/runbook/mcp-tool-call-logging/">Log MCP tool calls with a one-file proxy</a></h3>
+<p>Put a small proxy in front of any MCP server that speaks stdio, and every tools/call lands in a tamper-evident log on your machine, with whether it came back ok, as an error or not at all.</p>
+<div class="related">
+  <a class="btn" href="/integrations/">Integrations →</a>
+  <a class="btn" href="/">Palimpsests →</a>
+</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/" aria-label="Palimpsests">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="/notes/">Notes</a>
+      <a href="/runbook/">Runbook</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

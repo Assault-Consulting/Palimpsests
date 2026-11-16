@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Use a local model in OpenCode — Palimpsests runbook</title>
+<meta name="description" content="Point OpenCode at a model on your own machine through Palimpsests&#x27; OpenAI-compatible server, with the configuration printed for you, and know which of its tool calls reach the record." />
+<link rel="canonical" href="https://palimpsests.dev/runbook/opencode-with-a-local-model/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Andrii Sparysh" />
+<meta name="theme-color" content="#15151f" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Palimpsests" />
+<meta property="og:title" content="Use a local model in OpenCode — Palimpsests runbook" />
+<meta property="og:description" content="Point OpenCode at a model on your own machine through Palimpsests&#x27; OpenAI-compatible server, with the configuration printed for you, and know which of its tool calls reach the record." />
+<meta property="og:url" content="https://palimpsests.dev/runbook/opencode-with-a-local-model/" />
+<meta property="og:locale" content="en" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Use a local model in OpenCode — Palimpsests runbook" />
+<meta name="twitter:description" content="Point OpenCode at a model on your own machine through Palimpsests&#x27; OpenAI-compatible server, with the configuration printed for you, and know which of its tool calls reach the record." />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "TechArticle",
+      "@id": "https://palimpsests.dev/runbook/opencode-with-a-local-model/#article",
+      "headline": "Use a local model in OpenCode",
+      "description": "Point OpenCode at a model on your own machine through Palimpsests' OpenAI-compatible server, with the configuration printed for you, and know which of its tool calls reach the record.",
+      "url": "https://palimpsests.dev/runbook/opencode-with-a-local-model/",
+      "mainEntityOfPage": "https://palimpsests.dev/runbook/opencode-with-a-local-model/",
+      "datePublished": "2026-11-16",
+      "dateModified": "2026-11-16",
+      "inLanguage": "en",
+      "proficiencyLevel": "Beginner",
+      "author": {
+        "@type": "Person",
+        "name": "Andrii Sparysh"
+      },
+      "publisher": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "isPartOf": {
+        "@id": "https://palimpsests.dev/runbook/#runbook"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Palimpsests",
+          "item": "https://palimpsests.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Runbook",
+          "item": "https://palimpsests.dev/runbook/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Use a local model in OpenCode",
+          "item": "https://palimpsests.dev/runbook/opencode-with-a-local-model/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Palimpsests home">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="nav__links">
+      <a class="hide-sm" href="/#caps">Capabilities</a>
+      <a class="hide-sm" href="/pala-1/">PALA-1</a>
+      <a class="hide-sm" href="/verify-without-reading/">Verify</a>
+      <a class="hide-sm" href="/eu-ai-act-article-12/">EU AI Act</a>
+      <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
+      <a class="hide-sm" href="/integrations/">Integrations</a>
+      <a class="hide-sm" href="/runbook/">Runbook</a>
+      <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<main class="doc">
+  <div class="wrap">
+    <div class="doc__in">
+<p class="crumbs"><a href="/">Palimpsests</a> / <a href="/runbook/">Runbook</a></p>
+<span class="eyebrow">Runbook · Run a model on your own machine · updated 16 November 2026</span>
+<h1 class="display">Use a local model in OpenCode</h1>
+<p class="lede">Point OpenCode at a model on your own machine through Palimpsests&#x27; OpenAI-compatible server, with the configuration printed for you, and know which of its tool calls reach the record.</p>
+<p>OpenCode is a coding agent for the terminal. It can use any model behind an OpenAI-compatible API, including one on your own machine. This recipe puts the Palimpsests server between OpenCode and Ollama, so the model stays local and the server keeps a record.</p>
+<p>Read "What reaches the record" below before you rely on that record. With small local models, OpenCode's tool calls often do not cross the server as calls.</p>
+<h2 id="you-need">You need</h2>
+<ul>
+  <li>OpenCode installed.</li>
+  <li><a href="https://ollama.com">Ollama</a> with a model pulled, for example <code>ollama pull llama3.1:8b</code>.</li>
+  <li>Python 3.11 or newer.</li>
+</ul>
+<h2 id="steps">Steps</h2>
+<h3 id="1-install-and-start-the-server">1. Install and start the server</h3>
+<pre><code>pip install 'palimpsests[serve]'
+export PALIMPSESTS_ALLOW_UNENCRYPTED_AUDIT=1
+export PALIMPSESTS_SERVE_API_KEY=choose-a-long-random-string
+palimpsests serve</code></pre>
+<p>The second line is explained on the <a href="https://palimpsests.dev/runbook/">runbook's first page</a>.</p>
+<h3 id="2-print-the-configuration-for-opencode">2. Print the configuration for OpenCode</h3>
+<p>In a second terminal:</p>
+<pre><code>palimpsests-serve --print-opencode-config</code></pre>
+<p>It prints a provider block for <code>opencode.json</code>:</p>
+<pre><code>{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "palimpsests": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Palimpsests (local, audited)",
+      "options": {
+        "baseURL": "http://127.0.0.1:11435/v1"
+      },
+      "models": {
+        "MODEL_ID": {
+          "name": "MODEL_ID"
+        }
+      }
+    }
+  }
+}</code></pre>
+<h3 id="3-add-it-to-opencode-s-configuration">3. Add it to OpenCode's configuration</h3>
+<p>Put the <code>provider</code> block into your <code>opencode.json</code>, and replace both <code>MODEL_ID</code> with your model's name, for example <code>llama3.1:8b</code>.</p>
+<p>OpenCode also needs a credentials entry for this provider, even when the server has no key. The printed text names the file, <code>~/.local/share/opencode/auth.json</code>. Add:</p>
+<pre><code>{"palimpsests": {"type": "api", "key": "choose-a-long-random-string"}}</code></pre>
+<p>Use the same key the server was started with.</p>
+<h3 id="4-pick-the-model">4. Pick the model</h3>
+<p>Start OpenCode and choose the Palimpsests model from its list of models.</p>
+<h2 id="what-reaches-the-record">What reaches the record</h2>
+<ul>
+  <li>When the model returns a structured tool call, the call crosses the server and is recorded: the tool's name, fingerprints of its arguments and its result, and how it ended.</li>
+  <li>When the model writes the call as text, OpenCode reads that text and runs the tool itself. The server never sees a call. It records only that tools were offered and no structured call came back. OpenCode shows both kinds the same way on screen.</li>
+  <li>Measured with OpenCode 1.18.25 and four local models in Ollama: under OpenCode's own system prompt, about 9,500 characters long, none of the four returned structured calls, so no tool call reached the record. With a short prompt, <code>llama3.1:8b</code> returned structured calls for the same tools.</li>
+  <li>To record the tools OpenCode runs either way, use the <a href="https://github.com/Assault-Consulting/Palimpsests/blob/v0.14.1/integrations/opencode/README.md">OpenCode plugin</a>. It reports them from inside OpenCode, marked as reported by the client.</li>
+</ul>
+<h2 id="last-checked">Last checked</h2>
+<ul>
+  <li>Windows 11, palimpsests 0.10.0, OpenCode 1.18.25, Ollama 0.33.2, August 2026. <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/specs/pala-1/independent-runs/oleksandr/ws-e-opencode-smoke/WS-E-run-record.md">Run record</a>.</li>
+  <li>The printed configuration on this page is that of palimpsests 0.14.1.</li>
+</ul>
+<h2 id="reference">Reference</h2>
+<ul>
+  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/v0.14.1/integrations/opencode/README.md">OpenCode plugin, with its status on each OpenCode version</a></li>
+  <li><a href="https://palimpsests.dev/integrations/">All integrations and their limits</a></li>
+</ul>
+<h2 id="next">Next</h2>
+<ul>
+  <li><a href="/runbook/local-openai-compatible-server/">Run a local LLM behind an OpenAI-compatible API</a> — Start an OpenAI-compatible server on your own machine in front of Ollama or llama.cpp, point any OpenAI client at it, and keep a tamper-evident record of the tool calls that pass through.</li>
+  <li><a href="/runbook/mcp-tool-call-logging/">Log MCP tool calls with a one-file proxy</a> — Put a small proxy in front of any MCP server that speaks stdio, and every tools/call lands in a tamper-evident log on your machine, with whether it came back ok, as an error or not at all.</li>
+</ul>
+<div class="related">
+  <a class="btn" href="/runbook/">All runbook pages →</a>
+  <a class="btn" href="/">Palimpsests →</a>
+</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/" aria-label="Palimpsests">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="/notes/">Notes</a>
+      <a href="/runbook/">Runbook</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

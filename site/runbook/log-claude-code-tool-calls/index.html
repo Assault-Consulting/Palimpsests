@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Log Claude Code tool calls on your own machine — Palimpsests runbook</title>
+<meta name="description" content="Record every tool call Claude Code makes in a tamper-evident log on your own machine, with three hook entries and a local server. Fingerprints instead of content, and failures marked as failures." />
+<link rel="canonical" href="https://palimpsests.dev/runbook/log-claude-code-tool-calls/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Andrii Sparysh" />
+<meta name="theme-color" content="#15151f" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Palimpsests" />
+<meta property="og:title" content="Log Claude Code tool calls on your own machine — Palimpsests runbook" />
+<meta property="og:description" content="Record every tool call Claude Code makes in a tamper-evident log on your own machine, with three hook entries and a local server. Fingerprints instead of content, and failures marked as failures." />
+<meta property="og:url" content="https://palimpsests.dev/runbook/log-claude-code-tool-calls/" />
+<meta property="og:locale" content="en" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Log Claude Code tool calls on your own machine — Palimpsests runbook" />
+<meta name="twitter:description" content="Record every tool call Claude Code makes in a tamper-evident log on your own machine, with three hook entries and a local server. Fingerprints instead of content, and failures marked as failures." />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "TechArticle",
+      "@id": "https://palimpsests.dev/runbook/log-claude-code-tool-calls/#article",
+      "headline": "Log Claude Code tool calls on your own machine",
+      "description": "Record every tool call Claude Code makes in a tamper-evident log on your own machine, with three hook entries and a local server. Fingerprints instead of content, and failures marked as failures.",
+      "url": "https://palimpsests.dev/runbook/log-claude-code-tool-calls/",
+      "mainEntityOfPage": "https://palimpsests.dev/runbook/log-claude-code-tool-calls/",
+      "datePublished": "2026-11-16",
+      "dateModified": "2026-11-16",
+      "inLanguage": "en",
+      "proficiencyLevel": "Beginner",
+      "author": {
+        "@type": "Person",
+        "name": "Andrii Sparysh"
+      },
+      "publisher": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "isPartOf": {
+        "@id": "https://palimpsests.dev/runbook/#runbook"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Palimpsests",
+          "item": "https://palimpsests.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Runbook",
+          "item": "https://palimpsests.dev/runbook/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Log Claude Code tool calls on your own machine",
+          "item": "https://palimpsests.dev/runbook/log-claude-code-tool-calls/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Palimpsests home">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="nav__links">
+      <a class="hide-sm" href="/#caps">Capabilities</a>
+      <a class="hide-sm" href="/pala-1/">PALA-1</a>
+      <a class="hide-sm" href="/verify-without-reading/">Verify</a>
+      <a class="hide-sm" href="/eu-ai-act-article-12/">EU AI Act</a>
+      <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
+      <a class="hide-sm" href="/integrations/">Integrations</a>
+      <a class="hide-sm" href="/runbook/">Runbook</a>
+      <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<main class="doc">
+  <div class="wrap">
+    <div class="doc__in">
+<p class="crumbs"><a href="/">Palimpsests</a> / <a href="/runbook/">Runbook</a></p>
+<span class="eyebrow">Runbook · Record what an AI agent does · updated 16 November 2026</span>
+<h1 class="display">Log Claude Code tool calls on your own machine</h1>
+<p class="lede">Record every tool call Claude Code makes in a tamper-evident log on your own machine, with three hook entries and a local server. Fingerprints instead of content, and failures marked as failures.</p>
+<p>Claude Code thinks on a hosted model, but it acts on your machine: it reads files, edits them and runs commands. Its hooks can report each of those actions as it happens. Palimpsests receives the reports and writes them into a log that cannot be changed without the change showing. The log stays on your machine, and you do not need a local model for this.</p>
+<h2 id="you-need">You need</h2>
+<ul>
+  <li>Claude Code.</li>
+  <li>Python 3.11 or newer.</li>
+</ul>
+<h2 id="steps">Steps</h2>
+<h3 id="1-start-the-server-with-a-key">1. Start the server with a key</h3>
+<pre><code>pip install 'palimpsests[serve]'
+export PALIMPSESTS_ALLOW_UNENCRYPTED_AUDIT=1
+export PALIMPSESTS_SERVE_API_KEY=choose-a-long-random-string
+palimpsests serve</code></pre>
+<p>The second line is explained on the <a href="https://palimpsests.dev/runbook/">runbook's first page</a>.</p>
+<h3 id="2-add-three-hooks">2. Add three hooks</h3>
+<p>Add this to <code>~/.claude/settings.json</code>. If the file already has <code>hooks</code>, merge these in.</p>
+<pre><code>{
+  "hooks": {
+    "PreToolUse":         [{ "matcher": "*", "hooks": [{ "type": "http", "url": "http://127.0.0.1:11435/v1/pala/hooks/claude", "headers": { "Authorization": "Bearer $PALIMPSESTS_SERVE_API_KEY" }, "allowedEnvVars": ["PALIMPSESTS_SERVE_API_KEY"] }] }],
+    "PostToolUse":        [{ "matcher": "*", "hooks": [{ "type": "http", "url": "http://127.0.0.1:11435/v1/pala/hooks/claude", "headers": { "Authorization": "Bearer $PALIMPSESTS_SERVE_API_KEY" }, "allowedEnvVars": ["PALIMPSESTS_SERVE_API_KEY"] }] }],
+    "PostToolUseFailure": [{ "matcher": "*", "hooks": [{ "type": "http", "url": "http://127.0.0.1:11435/v1/pala/hooks/claude", "headers": { "Authorization": "Bearer $PALIMPSESTS_SERVE_API_KEY" }, "allowedEnvVars": ["PALIMPSESTS_SERVE_API_KEY"] }] }]
+  }
+}</code></pre>
+<p>Keep <code>allowedEnvVars</code>. Claude Code puts a variable into a header only if the variable is listed there. Without it the key goes out empty, every report is refused, and Claude Code works on as if nothing were wrong.</p>
+<h3 id="3-start-claude-code">3. Start Claude Code</h3>
+<p>Start it from a shell where <code>PALIMPSESTS_SERVE_API_KEY</code> has the same value as for the server, and work as usual.</p>
+<h3 id="4-check">4. Check</h3>
+<pre><code>palimpsests doctor claude-code</code></pre>
+<p>It asks the server what arrived, sends a test report that writes nothing, and reads your settings file. Each line ends with a code, and a <code>FAIL</code> line comes with a fix. After Claude Code has used a tool:</p>
+<pre><code>palimpsests pala export ~/.config/palimpsests/serve.pala | grep '"kind_name":"TOOL_'</code></pre>
+<p>Each line is a call or a result, marked <code>"source_name": "reported-by-client"</code>. In Windows PowerShell, use <code>Select-String</code> in place of <code>grep</code>.</p>
+<h2 id="what-is-recorded-and-what-is-not">What is recorded, and what is not</h2>
+<ul>
+  <li>The tool's name, a fingerprint of its input and of its result, and whether it succeeded or failed. The content of files, commands and outputs never enters the log.</li>
+  <li>A failed tool is recorded as <code>error</code>, because Claude Code reports failures.</li>
+  <li>Prompts, replies and session events reach the server and are ignored.</li>
+  <li>The record shows that Claude Code reported a call and a result, and when. It does not show that the tool ran.</li>
+  <li>Claude Code runs many reads and searches through its shell tool, so the log often names <code>Bash</code> where you might expect more variety.</li>
+  <li>A hook never stops Claude Code. If the server is not running, the agent carries on and nothing is recorded, so start the server first.</li>
+</ul>
+<h2 id="last-checked">Last checked</h2>
+<ul>
+  <li>Linux, Claude Code 2.1.319, palimpsests 0.14.0, 13 November 2026: one call and its result reached the log, in a surface check.</li>
+  <li>Windows 11, Claude Code 2.1.310, palimpsests 0.13.0, 26 October 2026: a real session, eleven calls with their results, the failed file read recorded as <code>error</code>. Four of the 26 hook posts arrived without the key, and why has not been established.</li>
+  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/integrations/COMPATIBILITY.md">Every check, with its date and machine</a></li>
+</ul>
+<h2 id="reference">Reference</h2>
+<ul>
+  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/v0.14.1/integrations/agent-hooks/README.md">Claude Code and Codex hooks: README</a></li>
+  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/specs/pala-1/independent-runs/traffic-0.14-r1-claude-code/RUN-RECORD.md">The real Claude Code session, recorded</a></li>
+  <li><a href="https://palimpsests.dev/notes/audit-log-for-agents-on-cloud-models/">Recording agents that use cloud models</a></li>
+</ul>
+<h2 id="next">Next</h2>
+<ul>
+  <li><a href="/runbook/claude-code-hooks-not-working/">Claude Code hooks not working? Find where the reports go missing</a> — A failing hook never stops the agent, so a broken hook looks exactly like a working one. The silent failures we measured, how to spot each, and one command that names them.</li>
+  <li><a href="/runbook/mcp-tool-call-logging/">Log MCP tool calls with a one-file proxy</a> — Put a small proxy in front of any MCP server that speaks stdio, and every tools/call lands in a tamper-evident log on your machine, with whether it came back ok, as an error or not at all.</li>
+</ul>
+<div class="related">
+  <a class="btn" href="/runbook/">All runbook pages →</a>
+  <a class="btn" href="/">Palimpsests →</a>
+</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/" aria-label="Palimpsests">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="/notes/">Notes</a>
+      <a href="/runbook/">Runbook</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

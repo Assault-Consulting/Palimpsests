@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Claude Code hooks not working? Find where the reports go missing — Palimpsests runbook</title>
+<meta name="description" content="A failing hook never stops the agent, so a broken hook looks exactly like a working one. The silent failures we measured, how to spot each, and one command that names them." />
+<link rel="canonical" href="https://palimpsests.dev/runbook/claude-code-hooks-not-working/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Andrii Sparysh" />
+<meta name="theme-color" content="#15151f" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Palimpsests" />
+<meta property="og:title" content="Claude Code hooks not working? Find where the reports go missing — Palimpsests runbook" />
+<meta property="og:description" content="A failing hook never stops the agent, so a broken hook looks exactly like a working one. The silent failures we measured, how to spot each, and one command that names them." />
+<meta property="og:url" content="https://palimpsests.dev/runbook/claude-code-hooks-not-working/" />
+<meta property="og:locale" content="en" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Claude Code hooks not working? Find where the reports go missing — Palimpsests runbook" />
+<meta name="twitter:description" content="A failing hook never stops the agent, so a broken hook looks exactly like a working one. The silent failures we measured, how to spot each, and one command that names them." />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "TechArticle",
+      "@id": "https://palimpsests.dev/runbook/claude-code-hooks-not-working/#article",
+      "headline": "Claude Code hooks not working? Find where the reports go missing",
+      "description": "A failing hook never stops the agent, so a broken hook looks exactly like a working one. The silent failures we measured, how to spot each, and one command that names them.",
+      "url": "https://palimpsests.dev/runbook/claude-code-hooks-not-working/",
+      "mainEntityOfPage": "https://palimpsests.dev/runbook/claude-code-hooks-not-working/",
+      "datePublished": "2026-11-16",
+      "dateModified": "2026-11-16",
+      "inLanguage": "en",
+      "proficiencyLevel": "Beginner",
+      "author": {
+        "@type": "Person",
+        "name": "Andrii Sparysh"
+      },
+      "publisher": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "isPartOf": {
+        "@id": "https://palimpsests.dev/runbook/#runbook"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Palimpsests",
+          "item": "https://palimpsests.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Runbook",
+          "item": "https://palimpsests.dev/runbook/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Claude Code hooks not working? Find where the reports go missing",
+          "item": "https://palimpsests.dev/runbook/claude-code-hooks-not-working/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Palimpsests home">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="nav__links">
+      <a class="hide-sm" href="/#caps">Capabilities</a>
+      <a class="hide-sm" href="/pala-1/">PALA-1</a>
+      <a class="hide-sm" href="/verify-without-reading/">Verify</a>
+      <a class="hide-sm" href="/eu-ai-act-article-12/">EU AI Act</a>
+      <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
+      <a class="hide-sm" href="/integrations/">Integrations</a>
+      <a class="hide-sm" href="/runbook/">Runbook</a>
+      <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<main class="doc">
+  <div class="wrap">
+    <div class="doc__in">
+<p class="crumbs"><a href="/">Palimpsests</a> / <a href="/runbook/">Runbook</a></p>
+<span class="eyebrow">Runbook · Record what an AI agent does · updated 16 November 2026</span>
+<h1 class="display">Claude Code hooks not working? Find where the reports go missing</h1>
+<p class="lede">A failing hook never stops the agent, so a broken hook looks exactly like a working one. The silent failures we measured, how to spot each, and one command that names them.</p>
+<p>A hook is built never to block the agent. That is good for your work and bad for your record: when a hook fails, the agent carries on and nothing tells you. The tools run, and the log stays empty.</p>
+<h2 id="the-silent-failures-we-measured">The silent failures we measured</h2>
+<h3 id="the-key-goes-out-empty">The key goes out empty</h3>
+<p>An HTTP hook in Claude Code can send a header with a variable in it, such as <code>Bearer $PALIMPSESTS_SERVE_API_KEY</code>. Claude Code fills in only the variables listed in that hook's <code>allowedEnvVars</code>. Any other becomes an empty string, without a warning, and the receiver refuses every report.</p>
+<p>Fix: list the variable in <code>allowedEnvVars</code> of each hook, and start Claude Code from a shell where the variable is set.</p>
+<h3 id="the-two-sides-hold-different-keys">The two sides hold different keys</h3>
+<p>The client sends a key, but not the one the receiver was started with: a stale value in one shell, a second server, a typo. Every report is refused.</p>
+<p>Fix: give both sides the same value.</p>
+<h3 id="nothing-arrives-at-all">Nothing arrives at all</h3>
+<p>The hooks are missing from the settings file Claude Code reads, they point to another address or port, or the receiver was not running while the tools ran.</p>
+<p>Fix: check the file and the URL, and start the receiver before the agent.</p>
+<h3 id="a-failed-tool-is-never-reported">A failed tool is never reported</h3>
+<p>Without a <code>PostToolUseFailure</code> hook, Claude Code reports a failed tool to nobody. The call stays open, and Palimpsests closes it as <code>cancelled</code> when the server stops.</p>
+<p>Fix: add the third hook.</p>
+<h3 id="codex-hooks-that-were-never-trusted">Codex: hooks that were never trusted</h3>
+<p>Codex runs a new hook only after you trust it. An untrusted hook is skipped without a word: the tools run and nothing is reported, even with the hooks on disk and correctly written.</p>
+<p>Fix: trust them when Codex asks at startup, or later in <code>/hooks</code>.</p>
+<h2 id="one-command-that-names-each-failure">One command that names each failure</h2>
+<p>If the receiver is the Palimpsests server, set up as in <a href="https://palimpsests.dev/runbook/log-claude-code-tool-calls/">log Claude Code tool calls</a>, run:</p>
+<pre><code>palimpsests doctor claude-code</code></pre>
+<p>It does three things. It asks the server what reached its route and what it refused, counting empty keys apart from wrong ones. It sends a test report through the real key check and parsing, with nothing written to the log. And it reads <code>~/.claude/settings.json</code>. A broken setup looks like this:</p>
+<pre><code>ok    the serve answers; its chain holds 2 record(s)  [serve_reachable]
+warn  nothing has reached /v1/pala/hooks/claude since the serve started  [reports_none]
+      -&gt; are the three hooks in ~/.claude/settings.json, and was a tool used since?
+ok    /v1/pala/hooks/claude would record a call and its result, marked reported-by-client, outcome 'ok' — nothing was written  [dry_run_ok]
+FAIL  the PreToolUse hook's header uses $PALIMPSESTS_SERVE_API_KEY but does not list it in allowedEnvVars — Claude Code then sends an empty bearer, and every report is refused without a sign on its side  [claude_allowed_env_missing]
+      -&gt; add "allowedEnvVars": ["PALIMPSESTS_SERVE_API_KEY"] to that hook</code></pre>
+<p>The exit code is 1 if any line says <code>FAIL</code>. Warnings do not fail it. <code>--json</code> prints the findings for a script. The codes you are most likely to meet:</p>
+<ul>
+  <li><code>serve_unreachable</code>: no server answered. Start it, or pass <code>--url</code>.</li>
+  <li><code>serve_key_missing</code> and <code>serve_key_refused</code>: this shell has no key, or not the server's key.</li>
+  <li><code>reports_refused_empty_bearer</code>: reports arrived with no key. That is the <code>allowedEnvVars</code> case.</li>
+  <li><code>reports_refused_wrong_bearer</code>: reports carried a key that is not the server's.</li>
+  <li><code>reports_none</code>: nothing has reached the route since the server started.</li>
+  <li><code>claude_hook_missing</code>, <code>claude_hook_other_serve</code> and <code>claude_allowed_env_missing</code>: what is wrong in the settings file.</li>
+  <li><code>serve_without_key</code>: a warning that anything able to reach the port can write to the log.</li>
+</ul>
+<p>The same command checks the other integrations: <code>codex</code>, <code>opencode</code>, <code>litellm</code>, <code>mcp</code> and <code>otel</code>. For Codex it cannot see from outside whether a hook is trusted, and it says so.</p>
+<h2 id="last-checked">Last checked</h2>
+<ul>
+  <li>The empty key: Windows 11, Claude Code 2.1.310, palimpsests 0.13.0, 26 October 2026. Four of 26 hook posts arrived without the key; why those four has not been established.</li>
+  <li>The untrusted hooks: Windows 11, Codex 0.164.0, palimpsests 0.13.0, 26 October 2026. Nothing was recorded before the hooks were trusted.</li>
+  <li><code>palimpsests doctor</code> exists since 0.14.1, and the output above is its own.</li>
+</ul>
+<h2 id="reference">Reference</h2>
+<ul>
+  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/v0.14.1/integrations/agent-hooks/README.md">Claude Code and Codex hooks: README</a></li>
+  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/specs/pala-1/independent-runs/traffic-0.14-r1-claude-code/RUN-RECORD.md">The real Claude Code session, recorded</a></li>
+  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/specs/pala-1/independent-runs/traffic-0.14-r2-codex/RUN-RECORD.md">The real Codex session, recorded</a></li>
+</ul>
+<h2 id="next">Next</h2>
+<ul>
+  <li><a href="/runbook/log-claude-code-tool-calls/">Log Claude Code tool calls on your own machine</a> — Record every tool call Claude Code makes in a tamper-evident log on your own machine, with three hook entries and a local server. Fingerprints instead of content, and failures marked as failures.</li>
+  <li><a href="/runbook/mcp-tool-call-logging/">Log MCP tool calls with a one-file proxy</a> — Put a small proxy in front of any MCP server that speaks stdio, and every tools/call lands in a tamper-evident log on your machine, with whether it came back ok, as an error or not at all.</li>
+</ul>
+<div class="related">
+  <a class="btn" href="/runbook/">All runbook pages →</a>
+  <a class="btn" href="/">Palimpsests →</a>
+</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/" aria-label="Palimpsests">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="/notes/">Notes</a>
+      <a href="/runbook/">Runbook</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

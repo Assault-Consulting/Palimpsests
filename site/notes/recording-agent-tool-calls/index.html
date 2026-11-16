@@ -107,6 +107,7 @@
       <a class="hide-sm" href="/eu-ai-act-article-12/">EU AI Act</a>
       <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
       <a class="hide-sm" href="/integrations/">Integrations</a>
+      <a class="hide-sm" href="/runbook/">Runbook</a>
       <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
     </div>
   </div>
@@ -140,6 +141,7 @@ litellm.callbacks = [PalimpsestsAudit()]</code></pre>
 <p>The LiteLLM and MCP adapters have been tested against a live server with made-up tool calls. Neither has been run on real traffic yet. For OpenCode 1.18.31, one reported call from a real session has reached the log. It was a failed file read, and it was recorded correctly. We haven't yet seen a successful result arrive the same way.</p>
 <p>Client hook interfaces change between versions, so each adapter's README says which version its behaviour was checked on.</p>
 <p>Setup details and limits for all three are on <a href="https://palimpsests.dev/integrations/">integrations</a>. How to check the resulting log without the key is on <a href="https://palimpsests.dev/verify-without-reading/">verify without reading</a>.</p>
+<p>Step by step: <a href="https://palimpsests.dev/runbook/mcp-tool-call-logging/">log MCP tool calls with a one-file proxy</a> and <a href="https://palimpsests.dev/runbook/log-claude-code-tool-calls/">log Claude Code tool calls</a>.</p>
 <div class="related">
   <a class="btn" href="/notes/">All notes →</a>
   <a class="btn" href="/">Palimpsests →</a>
@@ -166,6 +168,7 @@ litellm.callbacks = [PalimpsestsAudit()]</code></pre>
     </a>
     <div class="foot__links">
       <a href="/notes/">Notes</a>
+      <a href="/runbook/">Runbook</a>
       <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
       <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
       <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>

@@ -223,7 +223,8 @@ export OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=http/protobuf</code></pre>
 <p>If your agents reach hosted models through LiteLLM, its callback reports every structured tool loop that passes through it. If they use MCP servers over standard input and output, a small proxy in front of each server records both the request and the response of every tool call. Both are covered in <a href="https://palimpsests.dev/notes/recording-agent-tool-calls/">recording the tool calls your agent already makes</a>.</p>
 <h2 id="limits">Limits</h2>
 <p>A reported record shows what the client said happened and that nobody changed the report later. It doesn't prove the tool ran, and it can't see a tool the client never reports. Hook interfaces change between client versions, so we probe them regularly and note the version each claim was checked on. The record is only as trustworthy as the chain it sits in, and what makes that chain trustworthy is covered in <a href="https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/">what makes an audit log tamper-evident</a>.</p>
-<p>The full list of integrations is on <a href="https://palimpsests.dev/integrations/">integrations</a>.</p>]]></content:encoded>
+<p>The full list of integrations is on <a href="https://palimpsests.dev/integrations/">integrations</a>.</p>
+<p>Step by step: <a href="https://palimpsests.dev/runbook/log-claude-code-tool-calls/">log Claude Code tool calls</a>, and if nothing arrives, <a href="https://palimpsests.dev/runbook/claude-code-hooks-not-working/">find where the reports go missing</a>.</p>]]></content:encoded>
   </item>
   <item>
     <title>OpenSSF Gold software and the Cyber Resilience Act</title>
@@ -481,7 +482,8 @@ litellm.callbacks = [PalimpsestsAudit()]</code></pre>
 <h2 id="where-things-stand">Where things stand</h2>
 <p>The LiteLLM and MCP adapters have been tested against a live server with made-up tool calls. Neither has been run on real traffic yet. For OpenCode 1.18.31, one reported call from a real session has reached the log. It was a failed file read, and it was recorded correctly. We haven't yet seen a successful result arrive the same way.</p>
 <p>Client hook interfaces change between versions, so each adapter's README says which version its behaviour was checked on.</p>
-<p>Setup details and limits for all three are on <a href="https://palimpsests.dev/integrations/">integrations</a>. How to check the resulting log without the key is on <a href="https://palimpsests.dev/verify-without-reading/">verify without reading</a>.</p>]]></content:encoded>
+<p>Setup details and limits for all three are on <a href="https://palimpsests.dev/integrations/">integrations</a>. How to check the resulting log without the key is on <a href="https://palimpsests.dev/verify-without-reading/">verify without reading</a>.</p>
+<p>Step by step: <a href="https://palimpsests.dev/runbook/mcp-tool-call-logging/">log MCP tool calls with a one-file proxy</a> and <a href="https://palimpsests.dev/runbook/log-claude-code-tool-calls/">log Claude Code tool calls</a>.</p>]]></content:encoded>
   </item>
   <item>
     <title>Running a language model on an isolated network, with a log you can prove</title>
@@ -510,7 +512,8 @@ pip install --no-index --find-links ./wheels palimpsests</code></pre>
 <pre><code>palimpsests pala verify serve.pala --anchor &lt;latest-hash&gt;</code></pre>
 <p>Verification was measured on a test chain of one million records. On an Intel Core Ultra 9 machine running Windows 11, verifying with version 0.11 needed 4.77 GB of memory. Version 0.12 brought that down to 0.57 GB. On an integrated Intel Arc GPU, the engine's tool loop runs as fast as a hand-tuned llama-server, without a separate server process.</p>
 <p>There's no measurement on a discrete GPU yet. The log implementation also hasn't had an independent penetration test.</p>
-<p>More detail, including what we don't claim, is on <a href="https://palimpsests.dev/air-gapped/">air-gapped</a>. The project itself is at <a href="https://palimpsests.dev/">palimpsests.dev</a>.</p>]]></content:encoded>
+<p>More detail, including what we don't claim, is on <a href="https://palimpsests.dev/air-gapped/">air-gapped</a>. The project itself is at <a href="https://palimpsests.dev/">palimpsests.dev</a>.</p>
+<p>Step by step: <a href="https://palimpsests.dev/runbook/local-openai-compatible-server/">run a local LLM behind an OpenAI-compatible API</a> and <a href="https://palimpsests.dev/runbook/chat-longer-than-context-window/">keep a long chat going on a small local model</a>.</p>]]></content:encoded>
   </item>
 </channel>
 </rss>

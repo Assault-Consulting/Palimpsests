@@ -50,3 +50,5 @@ If your agents reach hosted models through LiteLLM, its callback reports every s
 A reported record shows what the client said happened and that nobody changed the report later. It doesn't prove the tool ran, and it can't see a tool the client never reports. Hook interfaces change between client versions, so we probe them regularly and note the version each claim was checked on. The record is only as trustworthy as the chain it sits in, and what makes that chain trustworthy is covered in [what makes an audit log tamper-evident](https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/).
 
 The full list of integrations is on [integrations](https://palimpsests.dev/integrations/).
+
+Step by step: [log Claude Code tool calls](https://palimpsests.dev/runbook/log-claude-code-tool-calls/), and if nothing arrives, [find where the reports go missing](https://palimpsests.dev/runbook/claude-code-hooks-not-working/).
