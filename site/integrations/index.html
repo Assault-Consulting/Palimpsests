@@ -31,7 +31,7 @@
       "description": "Put the tool calls of AI agents on a tamper-evident log on your own machine, whether the model is local or hosted: Claude Code, Codex, OpenTelemetry, LiteLLM, MCP and OpenCode, with each adapter's status and limits.",
       "url": "https://palimpsests.dev/integrations/",
       "inLanguage": "en",
-      "dateModified": "2026-10-31",
+      "dateModified": "2026-11-16",
       "author": {
         "@id": "https://palimpsests.dev/#org"
       },
@@ -92,6 +92,7 @@
       <a class="hide-sm" href="/eu-ai-act-article-12/">EU AI Act</a>
       <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
       <a class="hide-sm" href="/integrations/" aria-current="page">Integrations</a>
+      <a class="hide-sm" href="/runbook/">Runbook</a>
       <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
     </div>
   </div>
@@ -125,6 +126,8 @@ palimpsests-serve --api-key "$PALIMPSESTS_SERVE_API_KEY"   # http://127.0.0.1:11
       <p>Claude Code sends its hooks over HTTP, so there's nothing to install. Add <code>PreToolUse</code>, <code>PostToolUse</code> and <code>PostToolUseFailure</code> entries to <code>~/.claude/settings.json</code>, each pointing at <code>/v1/pala/hooks/claude</code> with your key in the <code>Authorization</code> header. List the key's variable in <code>allowedEnvVars</code>: without it Claude Code sends an empty header and every report is refused while the agent keeps working.</p>
       <p><b>Results:</b> <code>ok</code> or <code>error</code>, because Claude Code reports failures. <b>On real traffic</b> (Claude Code 2.1.310): eleven pairs from a ten-prompt session, the failed read recorded as <code>error</code>. Four of the session's 26 hook posts arrived without the key for a reason not yet established; the server now logs each refusal with its event and tool. Claude Code runs reads, searches and edits through its shell tool, so the chain names <code>Bash</code> where you might expect more variety. The route is watched by the surface checker.</p>
 
+      <p>Step by step: <a href="/runbook/log-claude-code-tool-calls/">log Claude Code tool calls</a>, and if nothing arrives, <a href="/runbook/claude-code-hooks-not-working/">find where the reports go missing</a>.</p>
+
       <h2 id="codex">Codex</h2>
       <p>Codex runs only command hooks, so a one-file forwarder, <code>palimpsests_hook.py</code>, passes each event to <code>/v1/pala/hooks/codex</code>. Add it as the <code>PreToolUse</code> and <code>PostToolUse</code> command in <code>~/.codex/hooks.json</code>, then trust them: Codex asks at startup, before the first prompt (<i>Trust all and continue</i>). Codex skips an untrusted hook without a warning, and the tools then run with nothing recorded — measured, with the hooks on disk and correctly formed. On Windows Codex also asks to set up a sandbox; that question does not affect the hooks.</p>
       <p><b>Results:</b> <code>unobserved</code>, because Codex has no failure hook — including for reads that certainly failed. <b>On real traffic</b> (Codex CLI 0.164.0): thirteen pairs, all <code>unobserved</code>; before trusting, zero.</p>
@@ -148,8 +151,12 @@ litellm.callbacks = [PalimpsestsAudit()]</code></pre>
       <p>A one-file proxy in front of any MCP server that speaks standard input and output. It sees both the request and the response of every <code>tools/call</code>, forwards every byte unchanged and never blocks a call.</p>
       <p><b>Results:</b> <code>ok</code>, <code>error</code> or <code>cancelled</code>. <b>On real traffic</b> (Claude Code as the client, a filesystem server): eleven pairs, the server's <code>isError</code> recorded as <code>error</code> — and the only adapter whose chain carries the real tool names, because it sits at the MCP boundary. Since 0.13.1 the proxy starts <code>npx</code> and <code>uvx</code> servers on Windows by name; before, it needed the full path.</p>
 
+      <p>Step by step: <a href="/runbook/mcp-tool-call-logging/">log MCP tool calls with the proxy</a>.</p>
+
       <h2 id="opencode">OpenCode</h2>
       <p>A dependency-free plugin you copy into <code>.opencode/plugins/</code>. It reports the tools OpenCode runs, including calls the model wrote as plain text. <b>Status on OpenCode 1.18.31:</b> one reported pair has reached the chain from a real session, a failed <code>read</code> that was bound correctly. A successful result arriving the same way hasn't been observed yet.</p>
+
+      <p>To use a local model in OpenCode through the server, see <a href="/runbook/opencode-with-a-local-model/">use a local model in OpenCode</a>, which also says which tool calls reach the record that way.</p>
 
       <h2 id="limits">Limits</h2>
       <ul>

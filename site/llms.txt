@@ -29,6 +29,19 @@ Palimpsests is honest about scope: it supplies the runtime primitives that speci
 - [Air-gapped](https://palimpsests.dev/air-gapped/): inference and the audit log on hardware you control, time without a trusted clock, anchors without a network, measured numbers and what is not claimed.
 - [Integrations](https://palimpsests.dev/integrations/): tool calls from Claude Code, Codex, OpenTelemetry GenAI spans, LiteLLM, MCP and OpenCode on the chain, marked as reported by the client, with what each result can show (ok, error or unobserved), each adapter's status and its limits.
 
+<!-- runbook:start -->
+## Runbook
+
+The [runbook](https://palimpsests.dev/runbook/): one task per page, in steps, each with what it does not do.
+
+- [Run a local LLM behind an OpenAI-compatible API](https://palimpsests.dev/runbook/local-openai-compatible-server/): Start an OpenAI-compatible server on your own machine in front of Ollama or llama.cpp, point any OpenAI client at it, and keep a tamper-evident record of the tool calls that pass through.
+- [Chat longer than the context window on a small local model](https://palimpsests.dev/runbook/chat-longer-than-context-window/): Keep a long conversation going on a model with a small context window. Palimpsests keeps the start and the latest turns, moves the middle to disk, and brings back the parts that matter.
+- [Use a local model in OpenCode](https://palimpsests.dev/runbook/opencode-with-a-local-model/): Point OpenCode at a model on your own machine through Palimpsests' OpenAI-compatible server, with the configuration printed for you, and know which of its tool calls reach the record.
+- [Log Claude Code tool calls on your own machine](https://palimpsests.dev/runbook/log-claude-code-tool-calls/): Record every tool call Claude Code makes in a tamper-evident log on your own machine, with three hook entries and a local server. Fingerprints instead of content, and failures marked as failures.
+- [Claude Code hooks not working? Find where the reports go missing](https://palimpsests.dev/runbook/claude-code-hooks-not-working/): A failing hook never stops the agent, so a broken hook looks exactly like a working one. The silent failures we measured, how to spot each, and one command that names them.
+- [Log MCP tool calls with a one-file proxy](https://palimpsests.dev/runbook/mcp-tool-call-logging/): Put a small proxy in front of any MCP server that speaks stdio, and every tools/call lands in a tamper-evident log on your machine, with whether it came back ok, as an error or not at all.
+<!-- runbook:end -->
+
 <!-- notes:start -->
 ## Notes
 

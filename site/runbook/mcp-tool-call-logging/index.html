@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Log MCP tool calls with a one-file proxy — Palimpsests runbook</title>
+<meta name="description" content="Put a small proxy in front of any MCP server that speaks stdio, and every tools/call lands in a tamper-evident log on your machine, with whether it came back ok, as an error or not at all." />
+<link rel="canonical" href="https://palimpsests.dev/runbook/mcp-tool-call-logging/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Andrii Sparysh" />
+<meta name="theme-color" content="#15151f" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Palimpsests" />
+<meta property="og:title" content="Log MCP tool calls with a one-file proxy — Palimpsests runbook" />
+<meta property="og:description" content="Put a small proxy in front of any MCP server that speaks stdio, and every tools/call lands in a tamper-evident log on your machine, with whether it came back ok, as an error or not at all." />
+<meta property="og:url" content="https://palimpsests.dev/runbook/mcp-tool-call-logging/" />
+<meta property="og:locale" content="en" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Log MCP tool calls with a one-file proxy — Palimpsests runbook" />
+<meta name="twitter:description" content="Put a small proxy in front of any MCP server that speaks stdio, and every tools/call lands in a tamper-evident log on your machine, with whether it came back ok, as an error or not at all." />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "TechArticle",
+      "@id": "https://palimpsests.dev/runbook/mcp-tool-call-logging/#article",
+      "headline": "Log MCP tool calls with a one-file proxy",
+      "description": "Put a small proxy in front of any MCP server that speaks stdio, and every tools/call lands in a tamper-evident log on your machine, with whether it came back ok, as an error or not at all.",
+      "url": "https://palimpsests.dev/runbook/mcp-tool-call-logging/",
+      "mainEntityOfPage": "https://palimpsests.dev/runbook/mcp-tool-call-logging/",
+      "datePublished": "2026-11-16",
+      "dateModified": "2026-11-16",
+      "inLanguage": "en",
+      "proficiencyLevel": "Beginner",
+      "author": {
+        "@type": "Person",
+        "name": "Andrii Sparysh"
+      },
+      "publisher": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "isPartOf": {
+        "@id": "https://palimpsests.dev/runbook/#runbook"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Palimpsests",
+          "item": "https://palimpsests.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Runbook",
+          "item": "https://palimpsests.dev/runbook/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Log MCP tool calls with a one-file proxy",
+          "item": "https://palimpsests.dev/runbook/mcp-tool-call-logging/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Palimpsests home">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="nav__links">
+      <a class="hide-sm" href="/#caps">Capabilities</a>
+      <a class="hide-sm" href="/pala-1/">PALA-1</a>
+      <a class="hide-sm" href="/verify-without-reading/">Verify</a>
+      <a class="hide-sm" href="/eu-ai-act-article-12/">EU AI Act</a>
+      <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
+      <a class="hide-sm" href="/integrations/">Integrations</a>
+      <a class="hide-sm" href="/runbook/">Runbook</a>
+      <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<main class="doc">
+  <div class="wrap">
+    <div class="doc__in">
+<p class="crumbs"><a href="/">Palimpsests</a> / <a href="/runbook/">Runbook</a></p>
+<span class="eyebrow">Runbook · Record what an AI agent does · updated 16 November 2026</span>
+<h1 class="display">Log MCP tool calls with a one-file proxy</h1>
+<p class="lede">Put a small proxy in front of any MCP server that speaks stdio, and every tools/call lands in a tamper-evident log on your machine, with whether it came back ok, as an error or not at all.</p>
+<p>An MCP server gives an AI agent tools: files, a database, a browser. The agent's client starts the server as a local program and talks to it over standard input and output. A proxy placed on that line sees both halves of every tool call, what was asked and what came back. It reports each pair to Palimpsests, which writes it into a log that cannot be changed without the change showing.</p>
+<p>The proxy is one Python file with no dependencies. It forwards every byte unchanged and never blocks a call.</p>
+<h2 id="you-need">You need</h2>
+<ul>
+  <li>An MCP client that starts its servers as local commands, and the server you want to record.</li>
+  <li>Python 3.11 or newer for the Palimpsests server. The proxy itself needs only Python 3.</li>
+</ul>
+<h2 id="steps">Steps</h2>
+<h3 id="1-start-the-server-with-a-key">1. Start the server with a key</h3>
+<pre><code>pip install 'palimpsests[serve]'
+export PALIMPSESTS_ALLOW_UNENCRYPTED_AUDIT=1
+export PALIMPSESTS_SERVE_API_KEY=choose-a-long-random-string
+palimpsests serve</code></pre>
+<p>The second line is explained on the <a href="https://palimpsests.dev/runbook/">runbook's first page</a>.</p>
+<h3 id="2-download-the-proxy">2. Download the proxy</h3>
+<pre><code>curl -O https://raw.githubusercontent.com/Assault-Consulting/Palimpsests/v0.14.1/integrations/mcp/palimpsests_audit_mcp.py</code></pre>
+<h3 id="3-put-it-in-front-of-your-mcp-server">3. Put it in front of your MCP server</h3>
+<p>Wherever the server's command is configured, put the proxy first and keep the original command after <code>--</code>:</p>
+<pre><code>python3 /path/to/palimpsests_audit_mcp.py -- &lt;server command&gt; [args...]</code></pre>
+<p>In a client that takes its MCP configuration as JSON, a filesystem server becomes:</p>
+<pre><code>{
+  "mcpServers": {
+    "fs": {
+      "command": "python3",
+      "args": ["/path/to/palimpsests_audit_mcp.py", "--",
+               "npx", "-y", "@modelcontextprotocol/server-filesystem", "/data"],
+      "env": {"PALIMPSESTS_SERVE_API_KEY": "choose-a-long-random-string"}
+    }
+  }
+}</code></pre>
+<p>The proxy reads the key from <code>PALIMPSESTS_SERVE_API_KEY</code>, and the server's address from <code>PALIMPSESTS_SERVE_URL</code> when it is not <code>http://127.0.0.1:11435</code>. If your client cannot set variables per server, start the client from a shell where the key is set. On Windows the command is often <code>python</code> rather than <code>python3</code>, and <code>npx</code> and <code>uvx</code> work by name.</p>
+<h3 id="4-check">4. Check</h3>
+<pre><code>palimpsests doctor mcp</code></pre>
+<p>Then make one tool call through your client, and look for it:</p>
+<pre><code>palimpsests pala export ~/.config/palimpsests/serve.pala | grep '"kind_name":"TOOL_CALL"'</code></pre>
+<h2 id="what-is-recorded-and-what-is-not">What is recorded, and what is not</h2>
+<ul>
+  <li>A <code>tools/call</code> request: the tool's name and a fingerprint of its arguments.</li>
+  <li>Its answer, matched by request id: <code>ok</code> if the server returned a result, <code>error</code> if the result says <code>isError</code> or the server answered with an error, and <code>cancelled</code> if the server exited without answering.</li>
+  <li><code>ok</code> means the server answered. It does not mean the action took effect in the world.</li>
+  <li>The arguments and results go to the Palimpsests server, which keeps only their fingerprints.</li>
+  <li>Only servers that speak stdio. A server your client reaches over HTTP is outside this proxy.</li>
+  <li>Everything else on the line, such as listing tools or notifications, passes through and is not recorded.</li>
+</ul>
+<h2 id="last-checked">Last checked</h2>
+<ul>
+  <li>Linux on 13 November 2026 and Windows 11 on 14 November 2026, palimpsests 0.14.0: one call and its result reached the log, in surface checks.</li>
+  <li>Windows 11, palimpsests 0.13.0, 26 October 2026: a real Claude Code session through a filesystem server, eleven calls and eleven results. Ten were <code>ok</code> and one <code>error</code>, for a file that did not exist, each with the real tool name.</li>
+  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/integrations/COMPATIBILITY.md">Every check, with its date and machine</a></li>
+</ul>
+<h2 id="reference">Reference</h2>
+<ul>
+  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/v0.14.1/integrations/mcp/README.md">MCP proxy: README</a></li>
+  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/specs/pala-1/independent-runs/traffic-0.14-r5-mcp/RUN-RECORD.md">The real MCP session, recorded</a></li>
+  <li><a href="https://palimpsests.dev/notes/recording-agent-tool-calls/">Recording agent tool calls</a></li>
+</ul>
+<h2 id="next">Next</h2>
+<ul>
+  <li><a href="/runbook/claude-code-hooks-not-working/">Claude Code hooks not working? Find where the reports go missing</a> — A failing hook never stops the agent, so a broken hook looks exactly like a working one. The silent failures we measured, how to spot each, and one command that names them.</li>
+  <li><a href="/runbook/log-claude-code-tool-calls/">Log Claude Code tool calls on your own machine</a> — Record every tool call Claude Code makes in a tamper-evident log on your own machine, with three hook entries and a local server. Fingerprints instead of content, and failures marked as failures.</li>
+</ul>
+<div class="related">
+  <a class="btn" href="/runbook/">All runbook pages →</a>
+  <a class="btn" href="/">Palimpsests →</a>
+</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/" aria-label="Palimpsests">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="/notes/">Notes</a>
+      <a href="/runbook/">Runbook</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

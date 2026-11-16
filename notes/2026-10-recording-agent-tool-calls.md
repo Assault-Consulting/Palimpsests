@@ -50,3 +50,5 @@ The LiteLLM and MCP adapters have been tested against a live server with made-up
 Client hook interfaces change between versions, so each adapter's README says which version its behaviour was checked on.
 
 Setup details and limits for all three are on [integrations](https://palimpsests.dev/integrations/). How to check the resulting log without the key is on [verify without reading](https://palimpsests.dev/verify-without-reading/).
+
+Step by step: [log MCP tool calls with a one-file proxy](https://palimpsests.dev/runbook/mcp-tool-call-logging/) and [log Claude Code tool calls](https://palimpsests.dev/runbook/log-claude-code-tool-calls/).
