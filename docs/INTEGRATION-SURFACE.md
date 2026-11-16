@@ -274,7 +274,25 @@ that every bundle carries; 100,000 records take 14 s and 1.3 GB and make
 a 239 MB archive; the whole chain does not fit in 8 GB. The archive
 outgrows its source because `proofs.json` carries a path per record. To
 hand over a whole chain, hand over the chain: `pala segment`, or the file
-itself with its report. This is comfortable to the order of ~10^6 records / hundreds of MB;
+itself with its report.
+
+The other commands on that same chain (10^6 records, 183 MB; one run each,
+Python 3.13 on a 2-core x86-64 Linux VM with 8 GB, peak resident memory of the
+process):
+
+| Command | Time | Peak memory | Output |
+|---|---|---|---|
+| `pala verify` | 9 s | 0.5 GB | — |
+| `pala export` (whole chain) | 23 s | 0.3 GB | 535 MB of JSONL |
+| `pala segment` (100,000 per segment) | 7 s | 0.6 GB | 11 segments and the manifest |
+| `pala bundle`, 1,000 records | 9 s | 0.4 GB | 2.4 MB |
+| `pala bundle`, 100,000 records | 14 s | 1.3 GB | 239 MB |
+
+Memory is about half a kilobyte per record for everything but a large
+bundle; the export streams its output and does not grow with it. These
+are measurements of one machine, not limits and not a promise.
+
+This is comfortable to the order of ~10^6 records / hundreds of MB;
 multi-GB retention archives (see `docs/RETENTION.md` for the storage
 math) should be segmented before interactive use. A streaming reader
 is backlog, not promise.
