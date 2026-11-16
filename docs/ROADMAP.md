@@ -95,7 +95,10 @@ The criteria, agreed in October 2026:
   habit.
 - **Readiness to fix, declared as a commitment.** Which versions receive
   fixes, how a vulnerability is handled and how fast, and that a critical
-  problem reported by someone running Palimpsests is the first priority.
+  problem reported by someone running Palimpsests is the first priority —
+  written down in [SECURITY.md](../SECURITY.md) since 0.15, with what is
+  deprecated and when it goes in
+  [INTEGRATION-SURFACE.md](INTEGRATION-SURFACE.md#deprecations).
   The OpenSSF Gold badge and Scorecard are the practice this rests on;
   1.0 makes it a stated promise.
 

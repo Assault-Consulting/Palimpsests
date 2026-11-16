@@ -9,19 +9,69 @@ Please report suspected vulnerabilities **privately**, not in a public issue.
 - email as@assault.consulting
 
 Include, where possible: affected version or commit, a description of the issue,
-reproduction steps or a proof of concept, and the impact you foresee. We aim to
-acknowledge a report within a few business days and to agree on a disclosure
-timeline with you. Please give us reasonable time to investigate and ship a fix
-before any public disclosure.
+reproduction steps or a proof of concept, and the impact you foresee.
 
 We do not currently run a paid bug-bounty program. We will credit reporters in
 release notes unless you ask us not to.
 
+## What happens to a report
+
+These are targets the project commits to and reports against, not a paid
+service level. The team is small; the order below is what it does first.
+
+| Step | Target |
+|---|---|
+| Acknowledge the report | 3 business days |
+| First assessment: confirmed or not, and how severe | 7 days |
+| Fix released — critical | 14 days from confirmation |
+| Fix released — high | 30 days from confirmation |
+| Fix released — everything else | the next scheduled release |
+| Public disclosure | with the fix, or 90 days after the report, whichever is first — sooner or later only by agreement with the reporter |
+
+**Critical** here means a defect that makes the audit log say something
+false: a verifier that accepts an altered, truncated or replaced chain as
+sound, a writer that loses or reorders records without the chain showing
+it, a signed statement or proof that verifies when it should not, or a
+disclosure of record bodies or key material. **High** is a defect that
+weakens one of those guarantees under conditions an operator can
+reasonably be in, or lets a local process act through the serve without
+its key.
+
+A fix for a confirmed vulnerability is published with a GitHub security
+advisory and a **Security** entry in the changelog that says what was
+wrong, since which version, and how to tell whether a deployment was
+affected. If a target is going to be missed, the reporter is told before
+it passes, with the reason and a new date.
+
+**A critical problem reported by someone running Palimpsests comes
+first** — before planned features and before the release schedule. That
+holds for a defect that is not a vulnerability too: a chain that cannot
+be read, a verdict that is wrong, a release that does not install.
+Report those in a public issue.
+
 ## Supported versions
 
-Palimpsests is pre-1.0 and evolving. Security fixes land on `main` and in the
-latest published release. Older `0.x` releases are not maintained; please track
-the latest version.
+| Version | Receives fixes |
+|---|---|
+| The latest release | security and correctness fixes, as a patch release (`x.y.Z`) |
+| Earlier `0.x` releases | none — the fix is in the latest release |
+| From 1.0: the latest minor of the current major | security and correctness fixes |
+| From 1.0: the last minor of the previous major | security fixes only, for 6 months after the new major |
+
+Until 1.0 a minor release may change an interface, with every such change
+named in the changelog, so "upgrade to the latest release" can cost a
+consumer some work. When a fix cannot wait for that work — a consumer is
+pinned below the latest minor and the defect is critical — the fix is
+also released as a patch of the minor they are on. That is decided case
+by case; it has not been needed yet. Fixes between minors have gone out
+as patches of the latest one (0.13.1, 0.14.1).
+
+**What stays readable does not depend on the version.** A chain is
+PALA-1 and PALA-1 is frozen: every release reads every chain. Reports,
+bundles, segment manifests and statements written by any released version
+stay readable by later ones; a format is retired by a format-id bump and
+a migration note. What is deprecated, and when it goes, is listed in
+[`docs/INTEGRATION-SURFACE.md`](docs/INTEGRATION-SURFACE.md#deprecations).
 
 ---
 
