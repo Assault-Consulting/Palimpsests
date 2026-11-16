@@ -293,9 +293,24 @@ EXIT_VERIFIED = 0
 # name does not pick one. It was called TAMPERED until 0.15, which stated a
 # cause the tool cannot know; the number is unchanged.
 EXIT_VIOLATION = 1
-EXIT_TAMPERED = EXIT_VIOLATION  # the old name, kept for anything that imports it
 EXIT_PARTIAL = 2
 EXIT_UNREADABLE = 3
+
+
+def __getattr__(name: str):
+    # The old name of exit code 1, for anything that imports it. It resolves
+    # until 1.0 and says so; the number it names does not change.
+    if name == "EXIT_TAMPERED":
+        import warnings
+
+        warnings.warn(
+            "palimpsests.cli.EXIT_TAMPERED is deprecated since 0.15 and will be "
+            "removed in 1.0; use EXIT_VIOLATION (the same value, 1)",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return EXIT_VIOLATION
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 @audit_app.command("verify")

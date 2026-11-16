@@ -167,7 +167,7 @@ deployment may say on the strength of it).
   reader=None)`.** It returns a `StatementCheck` — `version` (`v2` /
   `v3`), `payload`, `root`, `root_status`, `payload_encoding` — or raises.
   `check_statement_against_head` is deprecated since 0.15 and goes at
-  1.0; it returned the payload alone and could not say what was
+  1.0 ([Deprecations](#deprecations)); it returned the payload alone and could not say what was
   established about a root.
 - **Every statement it does not accept is a `StatementRefused`**, a
   `ValueError`, with a `code` from the vocabulary above
@@ -374,6 +374,29 @@ bytes at offsets copied from the specification.
 - The companion vector set's `semantics` block covers a subset of its
   records by design (the block grows additively); rendering-conformance
   tests should assert against the seqs present, not assume totality.
+
+## Deprecations
+
+A name that is going away keeps working, says so when used, and is listed
+here with the release it leaves in. Nothing is removed without having
+been in this table for at least one minor release; from 1.0, nothing is
+removed within a major.
+
+| Name | Deprecated | Removed | Use instead | What differs |
+|---|---|---|---|---|
+| `palimpsests.audit.pala.scitt.check_statement_against_head` | 0.15 | 1.0 | `verify_statement` | Returned the payload alone; `verify_statement` returns a `StatementCheck` (version, range, root). Refusals are the same `StatementRefused`. |
+| `palimpsests.cli.EXIT_TAMPERED` | 0.15 | 1.0 | `EXIT_VIOLATION` | The same value, 1. The old name stated a cause the tool cannot know. |
+
+Both emit a `DeprecationWarning` naming the replacement. Python hides
+that warning outside tests by default; run a suite with
+`-W error::DeprecationWarning` to find a use before the name is gone.
+
+**Not deprecated, and not going:** reading what earlier releases wrote.
+`pala-verification-report/1` has not been written since 0.15 and is still
+read and rendered (`REPORT_FORMAT_1`, and its schema ships); a bundle, a
+segments manifest or a statement made by any released version stays
+readable. A format is retired by a format-id bump and a migration note,
+never by an unreadable file.
 
 ## How a break is found before a release
 
