@@ -1,0 +1,964 @@
+{
+  "format": "pala-1 scitt-bridge statement refusal vectors",
+  "purpose": "A refused statement for every code a verifier of the PALA-1 SCITT statement refuses with, so that another verifier can compare its refusals with this one's. A case with a base is that published statement with one change; a case whose base is null is an input that is not a statement at all. Each is refused by the first check it breaks. Real crypto, fake entropy - never use these keys outside a test vector.",
+  "relation_to_the_other_vectors": "The bases are the published statements of scitt-statement-vector.json, scitt-statement-vector-v3.json and scitt-statement-vector-alg19.json, which verify and are unchanged. A changed statement is signed again with their test key, so it fails on the check it is about and not on the signature, unless the signature is what the case is about.",
+  "codes": [
+    "chain_too_short",
+    "content_type_unknown",
+    "detached_payload",
+    "format_id_mismatch",
+    "head_mismatch",
+    "indefinite_length_map",
+    "key_type_mismatch",
+    "not_cose_sign1",
+    "payload_keys_mismatch",
+    "payload_malformed",
+    "protected_header_malformed",
+    "protected_labels_mismatch",
+    "range_invalid",
+    "repeated_key",
+    "root_malformed",
+    "root_mismatch",
+    "signature_invalid",
+    "trailing_bytes",
+    "unsupported_alg"
+  ],
+  "codes_note": "An open vocabulary: a release may add a code, never rename one or give it another meaning. The code names the check that failed, never a cause.",
+  "check_order": [
+    "message structure: not_cose_sign1, trailing_bytes, protected_header_malformed (with repeated_key in the protected header), detached_payload, payload_malformed for a payload that is not a byte string",
+    "unsupported_alg (label 1 is -7, -8 or -19)",
+    "key_type_mismatch (-8 and -19 mean Ed25519, -7 means P-256), before any signature",
+    "signature_invalid - also for a signature that is not a byte string or has the wrong length: the fourth member is not looked at before this check",
+    "the payload as CBOR: payload_malformed, repeated_key, indefinite_length_map",
+    "head_mismatch",
+    "format_id_mismatch",
+    "range_invalid (0 <= first_seq <= last_seq, both integers)",
+    "by the protected content type: v2 - payload_keys_mismatch, then protected_labels_mismatch; v3 - payload_keys_mismatch, root_malformed, then protected_labels_mismatch; any other - content_type_unknown",
+    "with a chain at hand: chain_too_short, then root_mismatch"
+  ],
+  "keys": {
+    "ed25519-test": {
+      "kty": "OKP",
+      "crv": "Ed25519",
+      "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+      "source": "RFC 8032, section 7.1, TEST 1 - a published test key, chosen so nothing about it is ours"
+    },
+    "p256": {
+      "kty": "EC",
+      "crv": "P-256",
+      "x": "Kp9oyR4SK-7xOTDo1Tut6BPiWB1IPVS9RG6aArfywhI",
+      "y": "pjVlQooxacuKUjSRJpkp6hPVIbFjDr67Tm0Tml7Mhz0",
+      "derivation": "private scalar = SHA-256('pala-1 refusal vectors P-256') as a big-endian integer"
+    },
+    "p384": {
+      "kty": "EC",
+      "crv": "P-384",
+      "x": "reOahvwEwtQ365HPETXSAb-HgW3ywu9NiCuoyR1alwT01YXAEQVQJwaC1Daqgler",
+      "y": "NA0loc1zXS5hBqJrq4j6FRquP4uj3ZWkOu6SM05k3kZlwtqa8GQcLUaWznuyylxY",
+      "derivation": "private scalar = SHA-384('pala-1 refusal vectors P-384') as a big-endian integer"
+    },
+    "ed448": {
+      "kty": "OKP",
+      "crv": "Ed448",
+      "x": "WaME3udLCqKr9PatigK5SwJn6B6KDzAneFUPmjcNuwIEkuMArKJ0mu6E2B-UOFmh1oq56kJJ5ckA",
+      "derivation": "private key = SHAKE-256('pala-1 refusal vectors Ed448'), 57 bytes"
+    }
+  },
+  "bases": {
+    "v2": {
+      "source": "scitt-statement-vector.json, expected.statement_hex",
+      "statement_sha256": "ce47efa9883090d4d6328e74f934e5dbabcf3a046d1098e768c53d92b661f941",
+      "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813"
+    },
+    "v3": {
+      "source": "scitt-statement-vector-v3.json, statements.later.expected.statement_hex",
+      "statement_sha256": "32945e9309ad4deb432715cec7d0ef54c2ecc5624cb7a32dbfa39cbf270cd3fc",
+      "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813"
+    },
+    "v2-alg19": {
+      "source": "scitt-statement-vector-alg19.json, statements.v2.expected.statement_hex",
+      "statement_sha256": "3f033311e41abcbb45bfd4382a45018af1aaf28f7cd4da4fff6d7e58d35bc093",
+      "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813"
+    }
+  },
+  "subject_chain": {
+    "source": "the twelve records of the PALA-1 core test vectors (test-vectors.json): the same hashes as scitt-statement-vector-v3.json, subject_chain.record_hashes_hex",
+    "records": 12,
+    "record_hashes_hex": [
+      "7fbd428355851ac808bfefba02149629116cb93c669adfa78f8d48edbc359f3a",
+      "554202850536182b2e95e2b5e62742bc17fedfa7a194edca3feecc4a3972f770",
+      "f029d6b226fced3344d73c884e958e453a389bd486344589dde7b15594b6f225",
+      "f65f04a763a1da6fe1d88b87243e4fcf99c756c0d10dc3727157943d8d945271",
+      "fc63fb7ba13e043c5c1307464b298a5afb6e33d366f0e1daf2ae01b250946fc2",
+      "c0a1e84f4915bc38346751a360fac936ba1616ee7332e67debc63419e1dd2a9c",
+      "72a115227edaba47aa2b6ec85149065c137e55ea6d6539b45153b70756e42182",
+      "4d6c75cdf52510fc7c4ea3a5be141249bc386de9e2565ffeface1dce8e2b9d00",
+      "14434088e5f5866cf0276ba5a9055d8ee0d115a750b2cdf9cc4006d9481b29b4",
+      "059574eab08dd14b01f98b28327a1110f39595995ad2278efb5904b711cca61d",
+      "5e69e513ee0542d3dd6eca6d4127af52ba932b8539218692358ecbf695163e40",
+      "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813"
+    ],
+    "use": "a case with verify_with.chain set is verified against this chain: the v3 root is recomputed as the PALA-1 section 4.3 tree over the record hashes of records 0..last_seq"
+  },
+  "counts": {
+    "cases": 64,
+    "chain_too_short": 1,
+    "content_type_unknown": 2,
+    "detached_payload": 1,
+    "format_id_mismatch": 1,
+    "head_mismatch": 1,
+    "indefinite_length_map": 1,
+    "key_type_mismatch": 9,
+    "not_cose_sign1": 8,
+    "payload_keys_mismatch": 3,
+    "payload_malformed": 5,
+    "protected_header_malformed": 5,
+    "protected_labels_mismatch": 4,
+    "range_invalid": 4,
+    "repeated_key": 2,
+    "root_malformed": 2,
+    "root_mismatch": 2,
+    "signature_invalid": 7,
+    "trailing_bytes": 2,
+    "unsupported_alg": 4
+  },
+  "not_in_this_file": [
+    "inputs that are not bytes (a text string or nil handed to the verifier as the message) and keys that are not public keys (a private key, nil, a string): they depend on a language's types and stay in this package's test suite",
+    "an expected head of the wrong kind (text, nil, an empty byte string): refused as head_mismatch in the test suite",
+    "ES256 statements that verify: an ECDSA signature does not reproduce byte for byte"
+  ],
+  "cases": [
+    {
+      "id": "not_cose_sign1-01",
+      "code": "not_cose_sign1",
+      "base": null,
+      "change": "empty input",
+      "statement_hex": "",
+      "statement_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "not_cose_sign1-02",
+      "code": "not_cose_sign1",
+      "base": null,
+      "change": "five bytes of text, 'hello'",
+      "statement_hex": "68656c6c6f",
+      "statement_sha256": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "not_cose_sign1-03",
+      "code": "not_cose_sign1",
+      "base": "v2",
+      "change": "the first 20 bytes of the statement",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f",
+      "statement_sha256": "a6a858269c75944bc383dcd3c054b26b518a8d877f0137fecb401ec3f1ddd837",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "not_cose_sign1-04",
+      "code": "not_cose_sign1",
+      "base": null,
+      "change": "the CBOR integer 5",
+      "statement_hex": "05",
+      "statement_sha256": "e77b9a9ae9e30b0dbdb6f510a264ef9de781501d7b6b92ae89eb059c5ab743db",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "not_cose_sign1-05",
+      "code": "not_cose_sign1",
+      "base": "v2",
+      "change": "the four members as an untagged array",
+      "statement_hex": "8458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "dbc329460e1136d97146634673a65eac880c24a5ef35cb1e1caa90ec32ee8814",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "not_cose_sign1-06",
+      "code": "not_cose_sign1",
+      "base": null,
+      "change": "tag 18 around the integer 5",
+      "statement_hex": "d205",
+      "statement_sha256": "1b5f02fcbb8c07ba5de0827d00a9ba1c1998e29ee04ff1d467ef73a687276e4e",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "not_cose_sign1-07",
+      "code": "not_cose_sign1",
+      "base": "v2",
+      "change": "tag 18 around three members (no signature)",
+      "statement_hex": "d28358cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e30",
+      "statement_sha256": "3a63649f0f7158e07b5489c0bd663d32d81f713f8e95485767a2c74da830e400",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "not_cose_sign1-08",
+      "code": "not_cose_sign1",
+      "base": "v2",
+      "change": "the four members under tag 17 (COSE_Mac0) instead of 18",
+      "statement_hex": "d18458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "ada0a23fb0b091f5d03b9579c933db2b9af97effe1721023ef91ac70cc03585a",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "trailing_bytes-01",
+      "code": "trailing_bytes",
+      "base": "v2",
+      "change": "the statement followed by one zero byte",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a70300",
+      "statement_sha256": "9b3a8f91501f9aa05f3eaf86b689f46c5f8b389cdb16b15616082dc45951cdab",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "trailing_bytes-02",
+      "code": "trailing_bytes",
+      "base": "v2",
+      "change": "the statement followed by itself",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "0434a62f0dc37c4192b396b6f629e9d476ad635df891b09e0f4e0f177f587075",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "protected_header_malformed-01",
+      "code": "protected_header_malformed",
+      "base": "v2",
+      "change": "the protected header is the integer 5, not a byte string",
+      "statement_hex": "d28405a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "0344321e5905c45dc515f3a7de84654ab5b02a763734bee6cd8c7fc61f972b54",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "protected_header_malformed-02",
+      "code": "protected_header_malformed",
+      "base": "v2",
+      "change": "the protected header is the bytes ff ff, not CBOR",
+      "statement_hex": "d28442ffffa05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "5c388137cf677213f2343cfc15bc121197bdc01652742e47d2b19b8217fb0ada",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "protected_header_malformed-03",
+      "code": "protected_header_malformed",
+      "base": "v2",
+      "change": "the protected header is empty",
+      "statement_hex": "d28440a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "dd038e87bf709e07ea46e1654a175127d5e7d1775d180888c449e224aa891752",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "protected_header_malformed-04",
+      "code": "protected_header_malformed",
+      "base": "v2",
+      "change": "the protected header encodes an array, not a map",
+      "statement_hex": "d284428101a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "8253b73daf67a78b20181aa4a84e7f0ad0261d60b1f3c97dee67d637fb78a602",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "protected_header_malformed-05",
+      "code": "protected_header_malformed",
+      "base": "v2",
+      "change": "the protected header map is followed by a zero byte, signed again",
+      "statement_hex": "d28458cea4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a3361316133363733663530343938656231643163366639346239383364366336303663643835656435333632376234653466666535353135336337616638313300a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840a1676583c719e94f5862b4c25a64429e5f42a58d7b708f747bca78f9da2a9a760853dc9a202a102a60235e6405c4faeeb01858e8aa59d0b0e0d6fcc014b4fa07",
+      "statement_sha256": "879b6f4e4b6e0f02d5ef65141be520ccd98cbdef676069ef304d556bb705e5d4",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "detached_payload-01",
+      "code": "detached_payload",
+      "base": "v2",
+      "change": "the payload is nil (detached)",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a0f65840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "a0874811f8f6f3916d0348f4eb36132fa2ba53c95685ac40858208b84ac02467",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "payload_malformed-01",
+      "code": "payload_malformed",
+      "base": "v2",
+      "change": "the payload is the bytes ff ff ff, signed",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a043ffffff5840b2ef053ed90942ef7e83bf12679f0834228f9fdb5360334cbeab80835cfef331aa0bfbe990926af4048f6d00607486edcf2ef39ef6a8ed907ac42f4da2928a0b",
+      "statement_sha256": "00f224d2df77e32ea09acb2810e26320c45a7f0d3af1b2230de2b75888d1ede7",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "payload_malformed-02",
+      "code": "payload_malformed",
+      "base": "v2",
+      "change": "the payload is empty, signed",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a0405840dc20128bf3968c0c8a346d7954f895b3b9c5a6f051da71f77300050ac4a2941ba17cec2ca2c3159ac9a36c91ec0ba90ea2bbedeb91ee34033dacc6c1d8c83305",
+      "statement_sha256": "eed4237ed360f5cbe8410d36258ad67b09eeb86c6296425085eb977f67eb090e",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "payload_malformed-03",
+      "code": "payload_malformed",
+      "base": "v2",
+      "change": "the payload encodes an array, not a map, signed",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a0438201025840451e48a6a865d7b16fce341315a74bdd5d5eaed642f6fdb90e2e6c6e5f5938353c1659c5fbe295a93cd904944dc9afe9f7b03bb188ab430c8704b93f3d55520b",
+      "statement_sha256": "2ec8e2b9e31e1d45aabde8c565475860825caa5dff8ddee5d6567cccd71e44c6",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "payload_malformed-04",
+      "code": "payload_malformed",
+      "base": "v2",
+      "change": "the payload map is followed by a zero byte, signed",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05836a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e30005840e11ef5b0a0175ef0c89301f3adb325200818e95a08e2cfe2a0ae1278885c6a432d2dfbf3880bd917bc27011278b04b9d7c9f9aca9e0d43b1afb6fbc29518b203",
+      "statement_sha256": "2d98ea288d63635ae1c975479bbb1972c03ad827230ef856842a04bdd7e64f0f",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "payload_malformed-05",
+      "code": "payload_malformed",
+      "base": "v2",
+      "change": "the payload is the integer 7, not a byte string",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a0075840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "50857919208f8f632d71aaad28ad8a10c32f0ecf4f1cc05ff8a690d00b7bef87",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "repeated_key-01",
+      "code": "repeated_key",
+      "base": "v2",
+      "change": "the payload map repeats key 1, signed",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05858a50158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e300158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af81358404e5911dde79c77cc945d6c3376d8d9e8457974e8186f444952bf5a17fe6f27d18f7017f347b45e9240e2a553e1175c7c843288e91d12a12f1882957549df8a0f",
+      "statement_sha256": "492b3e8fa693bd13d7bb20322cbf1a70cbf465d36ac84f9daf4dabbd8e6a0ef0",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "repeated_key-02",
+      "code": "repeated_key",
+      "base": "v2",
+      "change": "the protected header repeats label 1, signed",
+      "statement_hex": "d28458cfa5012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a336131613336373366353034393865623164316336663934623938336436633630366364383565643533363237623465346666653535313533633761663831330127a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e3058408c5c70b84f43634cfe4a6a9a4d65d17303b0f16aa6f91b443f18cb4e0eb377ac89a08bb48aec766faa93dcead2772bd9aa5d2a73cc2351e54e940774db32140d",
+      "statement_sha256": "3ca0f6542fcd8bbe64504546c9b4c2926270442d591c75adb1461dc875fad571",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "indefinite_length_map-01",
+      "code": "indefinite_length_map",
+      "base": "v2",
+      "change": "the payload map has indefinite length, signed",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05836bf0158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e30ff58404291feb5b38bd2b1c0ddd0d03bee68647327d26a6349dc5fc6f387feec8f7c63e4e30ccbe509f241a4b3f74d0186805ef5480afc0e66ce32caf5cef8035df800",
+      "statement_sha256": "52b54c958dc490d6752ae40011e35b80f5992f7b1216b41d1e0d230098ee6933",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "unsupported_alg-01",
+      "code": "unsupported_alg",
+      "base": "v2",
+      "change": "alg is -35 (ES384), signed",
+      "statement_hex": "d28458cea401382203782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840c255a2b0baf799deddd7e5f5cb94abd174d60ec4a057099877aed345a13b1397064670c234ddd097a5a3b723daca37ea3505b71347f7272d2d3397e700b6f704",
+      "statement_sha256": "096b2e5e0f0e756a2f401fbe17aa07708530180596fc2e514b1a74b54772c202",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "unsupported_alg-02",
+      "code": "unsupported_alg",
+      "base": "v2",
+      "change": "alg is the text 'EdDSA', signed",
+      "statement_hex": "d28458d2a40165456444534103782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840a124aef0215b0a851957770f2a899c958d9cc9f6362d935166cb77e4763491c22366ce48bde247f67b6677fbd66d418c553adcd5ff6bd3c98e2d0288efdeb90d",
+      "statement_sha256": "d75b67116890bcac9782213cfb2db7b96c95e454cd248a500dc73ab4c75134fa",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "unsupported_alg-03",
+      "code": "unsupported_alg",
+      "base": "v2",
+      "change": "the protected header has no alg, signed",
+      "statement_hex": "d28458cba303782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e3058403e821d35db87cf8321c189f03e1e2a20101b70da6e0706dac980123499caaa1a316cd54e6f20dd1b334b93a4ced74429795f1fd36f4ac9d84d212540fa90b60a",
+      "statement_sha256": "135d354a57ec608ccc2790e23fc10c4f1f18ab9020146340d656058095dd10aa",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "unsupported_alg-04",
+      "code": "unsupported_alg",
+      "base": "v2",
+      "change": "alg is the simple value true, signed",
+      "statement_hex": "d28458cda401f503782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840eaf9abe76fb51c68d1efc171b29f2da9b6b06b4fea6b88f854c25cbc6c56eebfdc9217dd429f1d9fe2769a2b6f05803bb1b2d9043b1ab821c1912f45e7b97005",
+      "statement_sha256": "ec0d09cfb4b87d9bd76e212c5f9653aef501716d1fa06513ed5e4444340d23fb",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "key_type_mismatch-01",
+      "code": "key_type_mismatch",
+      "base": "v2",
+      "change": "the published statement (alg -8) verified with a P-256 key",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "ce47efa9883090d4d6328e74f934e5dbabcf3a046d1098e768c53d92b661f941",
+      "verify_with": {
+        "key": "p256",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "key_type_mismatch-02",
+      "code": "key_type_mismatch",
+      "base": "v2",
+      "change": "the published statement (alg -8) verified with a P-384 key",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "ce47efa9883090d4d6328e74f934e5dbabcf3a046d1098e768c53d92b661f941",
+      "verify_with": {
+        "key": "p384",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "key_type_mismatch-03",
+      "code": "key_type_mismatch",
+      "base": "v2",
+      "change": "the published statement (alg -8) verified with an Ed448 key",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "ce47efa9883090d4d6328e74f934e5dbabcf3a046d1098e768c53d92b661f941",
+      "verify_with": {
+        "key": "ed448",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "key_type_mismatch-04",
+      "code": "key_type_mismatch",
+      "base": "v2-alg19",
+      "change": "the published statement under alg -19 verified with a P-256 key",
+      "statement_hex": "d28458cda4013203782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840cb4b5041fe422c7b5509c1f53c2b127dc967b0ad84398559dd7b29853f1e6a050d3b1d85ae15ff6e055fb22d78dac5a353662a4731122bc5cc6d6c67cdbdf809",
+      "statement_sha256": "3f033311e41abcbb45bfd4382a45018af1aaf28f7cd4da4fff6d7e58d35bc093",
+      "verify_with": {
+        "key": "p256",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "key_type_mismatch-05",
+      "code": "key_type_mismatch",
+      "base": "v2-alg19",
+      "change": "the published statement under alg -19 verified with a P-384 key",
+      "statement_hex": "d28458cda4013203782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840cb4b5041fe422c7b5509c1f53c2b127dc967b0ad84398559dd7b29853f1e6a050d3b1d85ae15ff6e055fb22d78dac5a353662a4731122bc5cc6d6c67cdbdf809",
+      "statement_sha256": "3f033311e41abcbb45bfd4382a45018af1aaf28f7cd4da4fff6d7e58d35bc093",
+      "verify_with": {
+        "key": "p384",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "key_type_mismatch-06",
+      "code": "key_type_mismatch",
+      "base": "v2-alg19",
+      "change": "the published statement under alg -19 verified with an Ed448 key",
+      "statement_hex": "d28458cda4013203782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840cb4b5041fe422c7b5509c1f53c2b127dc967b0ad84398559dd7b29853f1e6a050d3b1d85ae15ff6e055fb22d78dac5a353662a4731122bc5cc6d6c67cdbdf809",
+      "statement_sha256": "3f033311e41abcbb45bfd4382a45018af1aaf28f7cd4da4fff6d7e58d35bc093",
+      "verify_with": {
+        "key": "ed448",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "key_type_mismatch-07",
+      "code": "key_type_mismatch",
+      "base": "v2",
+      "change": "the statement relabelled alg -7 (ES256) and signed with the Ed25519 test key, verified with that Ed25519 key",
+      "statement_hex": "d28458cda4012603782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e3058407dbaf43512019fb7ab96afddd45d6fb30ee8d80ab0fb662df0e2a82042d64263ede846b39deb3a0eb92548ea50c7ce6c0b65b8d90ec4d047f32f081067122d04",
+      "statement_sha256": "7620c0977de392d726bfd24c926d4ed6372e9408a2f8e0e9a317f4eb6dedb969",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "key_type_mismatch-08",
+      "code": "key_type_mismatch",
+      "base": "v2",
+      "change": "the statement relabelled alg -7, verified with a P-384 key",
+      "statement_hex": "d28458cda4012603782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e3058407dbaf43512019fb7ab96afddd45d6fb30ee8d80ab0fb662df0e2a82042d64263ede846b39deb3a0eb92548ea50c7ce6c0b65b8d90ec4d047f32f081067122d04",
+      "statement_sha256": "7620c0977de392d726bfd24c926d4ed6372e9408a2f8e0e9a317f4eb6dedb969",
+      "verify_with": {
+        "key": "p384",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "key_type_mismatch-09",
+      "code": "key_type_mismatch",
+      "base": "v2",
+      "change": "the statement relabelled alg -7, verified with an Ed448 key",
+      "statement_hex": "d28458cda4012603782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e3058407dbaf43512019fb7ab96afddd45d6fb30ee8d80ab0fb662df0e2a82042d64263ede846b39deb3a0eb92548ea50c7ce6c0b65b8d90ec4d047f32f081067122d04",
+      "statement_sha256": "7620c0977de392d726bfd24c926d4ed6372e9408a2f8e0e9a317f4eb6dedb969",
+      "verify_with": {
+        "key": "ed448",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "signature_invalid-01",
+      "code": "signature_invalid",
+      "base": "v2",
+      "change": "the last signature byte with its low bit flipped",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a702",
+      "statement_sha256": "0303fc8331b52daa1309c15ca1e786b6a97b467ca01ab9369a2b4e626c13b682",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "signature_invalid-02",
+      "code": "signature_invalid",
+      "base": "v2",
+      "change": "the signature cut to its first 10 bytes",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e304a923b6e501dee8849809e",
+      "statement_sha256": "cde0001d7d5759dfcb38ef0b9c264ff909f1d539ac937ab79da539f270a54205",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "signature_invalid-03",
+      "code": "signature_invalid",
+      "base": "v2",
+      "change": "the signature is the integer 7",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e3007",
+      "statement_sha256": "f257ceeb46cd55e14cc47f732cf15dfcef9b40841daba13d9bb9517550c80441",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "signature_invalid-04",
+      "code": "signature_invalid",
+      "base": "v2",
+      "change": "the last payload byte with its low bit flipped, signature unchanged",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e315840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "795b172bb84f809a4bc6b06421de1527532b1b5ccf2fb4958743ce8477d6af68",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "signature_invalid-05",
+      "code": "signature_invalid",
+      "base": "v2",
+      "change": "the alg byte of the protected header changed from 0x27 (-8) to 0x32 (-19), signature unchanged: a statement cannot be relabelled",
+      "statement_hex": "d28458cda4013203782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "3b07cae04a852f16d4c239ef403faa0e856d46a15b331b0f67fb8026b76d3072",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "signature_invalid-06",
+      "code": "signature_invalid",
+      "base": "v2-alg19",
+      "change": "the statement under alg -19 with the last signature byte's low bit flipped",
+      "statement_hex": "d28458cda4013203782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840cb4b5041fe422c7b5509c1f53c2b127dc967b0ad84398559dd7b29853f1e6a050d3b1d85ae15ff6e055fb22d78dac5a353662a4731122bc5cc6d6c67cdbdf808",
+      "statement_sha256": "9a36d57d017390b2698dc59aa5b5d56a86b950ecc53b127234556655e55893d9",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "signature_invalid-07",
+      "code": "signature_invalid",
+      "base": "v2",
+      "change": "the statement relabelled alg -7 (ES256) and signed with the Ed25519 test key, verified with a P-256 key: the key fits the algorithm, and the 64 signature bytes are not an ECDSA signature of it",
+      "statement_hex": "d28458cda4012603782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e3058407dbaf43512019fb7ab96afddd45d6fb30ee8d80ab0fb662df0e2a82042d64263ede846b39deb3a0eb92548ea50c7ce6c0b65b8d90ec4d047f32f081067122d04",
+      "statement_sha256": "7620c0977de392d726bfd24c926d4ed6372e9408a2f8e0e9a317f4eb6dedb969",
+      "verify_with": {
+        "key": "p256",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "head_mismatch-01",
+      "code": "head_mismatch",
+      "base": "v2",
+      "change": "payload key 1 (chain head) is 32 bytes of 0x33, signed",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a401582033333333333333333333333333333333333333333333333333333333333333330200030b046b70616c612d312f76312e3058407f01b571e9750ef01781ee4591cfb9f4246a2dd49159b49a6fd2ddcd919466b2bb67bcb3488d5dc97ccdeaf09ba8a69cc50dc78ce12f13580930f84c06069207",
+      "statement_sha256": "d833d1c1af5956a5494d5097093d32b590e1533fd4383e0bf211848a195421ca",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "format_id_mismatch-01",
+      "code": "format_id_mismatch",
+      "base": "v2",
+      "change": "payload key 4 is 'pala-1/v9', signed",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05833a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046970616c612d312f763958403bbdd0f9d63c8beb643185ee99a4d930e9d5a1239aeaf152050a1267fc00d00656680d1a632b75133178ba9d857dcdd920ad2fcb9b3d657ac8094c23763d3e0a",
+      "statement_sha256": "6a20176d7eb2bdeee45e842e9c8714d52fb100794d937ec092799524dad00bf5",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "range_invalid-01",
+      "code": "range_invalid",
+      "base": "v2",
+      "change": "first_seq is last_seq + 1, signed",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813020c030b046b70616c612d312f76312e305840276fbcecf5216d298f927af7ae561ab96e8c61f4443009075985633a7d1109c384b1ffe2ee08270ff16bb127f18e8a303e30d62e205c27ea7a07615bb9448c09",
+      "statement_sha256": "acd4779951552330d133e7a740529a2e67c0d554ed0e1e2dec5605ee4186528f",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "range_invalid-02",
+      "code": "range_invalid",
+      "base": "v2",
+      "change": "first_seq is -1, signed",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130220030b046b70616c612d312f76312e305840f607c8c4b199d94fa800634ff782d1881a5126034d62f846404cb9ba041b7eb9043fda7e6c2f7402ddf814613ac9c718432435d343053d2674eb16cd3c71b80f",
+      "statement_sha256": "1f54a3daca59eb51f6217c7b94741b0e3156e259ebe846a90143c4e73ead636b",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "range_invalid-03",
+      "code": "range_invalid",
+      "base": "v2",
+      "change": "last_seq is the text '11', signed",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05837a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813020003623131046b70616c612d312f76312e30584018a1239a3507dff6a7a5c8a3a16714947afa39e8d265a2b6d81dd3a15f7abd670c3e500164d92b63731f10c2e38ac0c9cc2b1f2f67daced55e9fd4406f820704",
+      "statement_sha256": "3cddac8db7bddfc8f6fc940faca93eb0a11741fd1a233bc0514e1d71ff690c57",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "range_invalid-04",
+      "code": "range_invalid",
+      "base": "v2",
+      "change": "last_seq is the simple value true, signed",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813020003f5046b70616c612d312f76312e305840c6093ab2a24aa503547d8a23eaaac55bb5491d62e2f205b8759aaa8c49017234834158cd16e70592c0aa831c9fe96d0a8254a98bf64e746235b4e03905728d02",
+      "statement_sha256": "edbc2edb4a922740ee82e4d0d386c9ebb621ba9f31b186859bc647bc2e32dd08",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "content_type_unknown-01",
+      "code": "content_type_unknown",
+      "base": "v2",
+      "change": "content type is 'application/x-other', signed",
+      "statement_hex": "d28458b4a4012703736170706c69636174696f6e2f782d6f74686572045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840b6d3bf183e0faccfa4aa9905f2e2b729e692423df941e0da2d7caf1c07d172edd3e86a9c1df0ca2b153549e85f9291eb171da7fc327bceb622a4fab4258e7502",
+      "statement_sha256": "ec0f6e1f9a81b7fa646050760c8bed33798c9d508e3d1c990385ca786eb44f6d",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "content_type_unknown-02",
+      "code": "content_type_unknown",
+      "base": "v2",
+      "change": "the protected header has no content type, signed",
+      "statement_hex": "d284589fa30127045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e30584035504b97ec2aae3a4a378107a9ce0928da6529f234482d3fa066b6477462e203990c51c479534fdc5318bc4aad08782cce3c10b8e278802722db4a12a8a79e07",
+      "statement_sha256": "94480b205008bb6976760d2b99cc31802d45487c67603a538a39c62e09f5bbf1",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "payload_keys_mismatch-01",
+      "code": "payload_keys_mismatch",
+      "base": "v2",
+      "change": "a 32-byte root in payload key 5 under the v2 content type, signed",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05858a50158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e3005582084f1e4f5c4bc75ff5edc304b35b122c3263366ed7e7ca399706a4128e7ecd7d7584093f9b218a110373884f483b4ae7d1335f6ab2f0d4eefc67532a7b37c79817d92b25d1292642f2e798f4f4de9592292573ae9189015d2ea3b90889ecad30f2f05",
+      "statement_sha256": "2e07f7d6069ac75d0fe518c264b40ef0d70818873e442b6637b2d0a1550aa2b0",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "payload_keys_mismatch-02",
+      "code": "payload_keys_mismatch",
+      "base": "v2",
+      "change": "an extra payload key 'note', signed",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a0583ba50158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e30646e6f74650158405d1899c5ad3e2be4f4d47c08725a4e8b257688544f826d097dcc086c66156a8b252112360f9421e4d39128a5cda45ec7b41c0558d63635a6a0f1d69716a55006",
+      "statement_sha256": "c96ed06d1ac34a7d62f9e1974af33b90b289f4b55d239dab967bb288ee857a16",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "payload_keys_mismatch-03",
+      "code": "payload_keys_mismatch",
+      "base": "v2",
+      "change": "the v2 statement relabelled with the v3 content type, so it has no root, signed",
+      "statement_hex": "d28458d0a4012703782e6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642d76332b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e3058408faed10a6b369fa383f7dd0b045e041fc273448cbf2419e7b51b89e9b378c3ce34e60caf09d01024f2e7b13b082a430e12917455ba8b5c18ad4921c2929db600",
+      "statement_sha256": "8186898e8affe835a2e00d931a3dfd7096b49fcac35a697ad0c4c39c2fac806f",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "protected_labels_mismatch-01",
+      "code": "protected_labels_mismatch",
+      "base": "v2",
+      "change": "protected label 33 (x5chain) added, signed",
+      "statement_hex": "d28458d7a5012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a336131613336373366353034393865623164316336663934623938336436633630366364383565643533363237623465346666653535313533633761663831331821477835636861696ea05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840ca53cbd627c59d4bd79d906cf60a07fab7be98c9b7e0824e0db0b0402ca6afc5f5c70a1dd65c1295a265d2afb4a4d160ec72fe3acdbac8fe18c32d16d936f601",
+      "statement_sha256": "4c694e7225c857fa2b526db85d1163cb4797cacba276dc9fbfb8c0b67fc81f28",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "protected_labels_mismatch-02",
+      "code": "protected_labels_mismatch",
+      "base": "v2",
+      "change": "the protected header has no kid (label 4), signed",
+      "statement_hex": "d28458aaa3012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f720fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e3058400c352762772777b1367abbb3cda6893d5d81c3396518b2bd7c046c00ff4d5f5a5d26c7bbbec78fe7eb370959f933563ff205d03a65d7a949a35ca25f88281304",
+      "statement_sha256": "3d61eeb4beca37d34a6a50d1f6a2926248ec320d8085b9583f79d9f76c9b06e0",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "protected_labels_mismatch-03",
+      "code": "protected_labels_mismatch",
+      "base": "v3",
+      "change": "protected label 33 added to the v3 statement, signed",
+      "statement_hex": "d28458d4a5012703782e6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642d76332b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a3361316133363733663530343938656231643163366639346239383364366336303663643835656435333632376234653466666535353135336337616638313318214178a05858a50158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130208030b046b70616c612d312f76312e3005582084f1e4f5c4bc75ff5edc304b35b122c3263366ed7e7ca399706a4128e7ecd7d758407458a0bb9ffa45c8edf5937c54d0b94cb0920faf6e44e21d7bdae1a957ad2bdd1283633093587b670e20dcc9e344d96ab74bd171cc8564e2939d4131fb15630a",
+      "statement_sha256": "d00465b49abf0a3a2ca4ae7d699d7f99297fa63c35beafee61de6ad6a2278654",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "protected_labels_mismatch-04",
+      "code": "protected_labels_mismatch",
+      "base": "v2",
+      "change": "a text label 'x5t' among the integer labels, signed",
+      "statement_hex": "d28458d3a5012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133637835744178a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840465fe402b2186298e7a3830df7155f60edee50ba005e51389ed42f6450fb7b6876179f502819edbae17515a9eab05d757f542f9bc78bc7952319a1ad790af00e",
+      "statement_sha256": "b0226d0f074c5fd3becde58b33b0b2cb56fa288bec398ddf5699f2addb8dde9a",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "root_malformed-01",
+      "code": "root_malformed",
+      "base": "v3",
+      "change": "the v3 root (payload key 5) is the 5 bytes 'short', signed",
+      "statement_hex": "d28458d0a4012703782e6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642d76332b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a0583ca50158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130208030b046b70616c612d312f76312e30054573686f72745840a6cac724e150a6cac6b0b012d966d54c50eedaba439ff946000242d4537a73a5e77a2c7e25ef33d98a0fbf64ed10449dfad7b9dc1b3215579ff2a24f7749c00f",
+      "statement_sha256": "b04920a781537c6582da05e4828f5072a42cc1bcdaf6b26e45732a49dc083fda",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "root_malformed-02",
+      "code": "root_malformed",
+      "base": "v3",
+      "change": "the v3 root is the text 'text', signed",
+      "statement_hex": "d28458d0a4012703782e6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642d76332b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a0583ba50158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130208030b046b70616c612d312f76312e300564746578745840a861c9ca7c4e3446546d03382223d3ea6a6d81156e23355d66b11a7c2abf0c80be6aff7de677a7f766e187de1fc95c54ef9386216c89786c9d15613e77c21704",
+      "statement_sha256": "bece835ccf79666dcc0004afb95d67b8706e0ce32b06e7cf170e7b2e25a387d3",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "chain_too_short-01",
+      "code": "chain_too_short",
+      "base": "v3",
+      "change": "last_seq is 12 against the 12-record subject chain (records 0..11), with the root over all 12 records, signed",
+      "statement_hex": "d28458d0a4012703782e6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642d76332b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05858a50158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130208030c046b70616c612d312f76312e3005582084f1e4f5c4bc75ff5edc304b35b122c3263366ed7e7ca399706a4128e7ecd7d75840d4385c026c9ef96e0f6c4758741425907137709ef76aad462a01501d6b03fc61799e94db99e2ebca4fb04cdea25155b0b62e6e6b5ae737add1c23e0e0a89990b",
+      "statement_sha256": "4559f3820e5861e167687a4f3a3947930eaec7353c6cea2e92884a3a788d1d7e",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": "subject_chain"
+      }
+    },
+    {
+      "id": "root_mismatch-01",
+      "code": "root_mismatch",
+      "base": "v3",
+      "change": "the root over records 0..10 (one short) where 0..11 is required, signed",
+      "statement_hex": "d28458d0a4012703782e6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642d76332b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05858a50158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130208030b046b70616c612d312f76312e30055820575166cc613d5e63d6f22156b6d98507af6eccedfbab027a04ce6410a7b5f3f85840962203924f8c8ac6d4168150da705ba72908e752dbfee99351f2de2f4710a4d7c707f62b72cce38b266dac8720fd30fd3cd9a154fd182be936537fa0ad5a3207",
+      "statement_sha256": "728a6754f689a8c5aac404d732c7ec3fd4f1ddb23c8680d208033e7b9259f1f1",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": "subject_chain"
+      }
+    },
+    {
+      "id": "root_mismatch-02",
+      "code": "root_mismatch",
+      "base": "v3",
+      "change": "the root over records 8..11 (first_seq..last_seq) where 0..11 is required, signed",
+      "statement_hex": "d28458d0a4012703782e6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642d76332b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05858a50158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130208030b046b70616c612d312f76312e30055820b81fb7fb423bd7909330f0294a74962dd662e21b6efe21c3f95945f609217f76584003d9f37df44ea22fef9c32a71972ab35aea740179bf46aaf7d3d6196c7188142a2d2e40fb98dcc84016f98a90844aaf2a1be5e8d13fdbc134edfbcc0ba386409",
+      "statement_sha256": "4fc0bd2f0196b2fdaf5f5961c6f03b29dfb9d4ecfa0655cdf43fd785bc5035b2",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": "subject_chain"
+      }
+    }
+  ]
+}
