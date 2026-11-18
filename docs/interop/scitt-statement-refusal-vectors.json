@@ -1,6 +1,6 @@
 {
   "format": "pala-1 scitt-bridge statement refusal vectors",
-  "purpose": "A refused statement for every code a verifier of the PALA-1 SCITT statement refuses with, so that another verifier can compare its refusals with this one's. Each case is a published statement with one change, refused by the first check the change breaks. Real crypto, fake entropy - never use these keys outside a test vector.",
+  "purpose": "A refused statement for every code a verifier of the PALA-1 SCITT statement refuses with, so that another verifier can compare its refusals with this one's. A case with a base is that published statement with one change; a case whose base is null is an input that is not a statement at all. Each is refused by the first check it breaks. Real crypto, fake entropy - never use these keys outside a test vector.",
   "relation_to_the_other_vectors": "The bases are the published statements of scitt-statement-vector.json, scitt-statement-vector-v3.json and scitt-statement-vector-alg19.json, which verify and are unchanged. A changed statement is signed again with their test key, so it fails on the check it is about and not on the signature, unless the signature is what the case is about.",
   "codes": [
     "chain_too_short",
@@ -28,7 +28,7 @@
     "message structure: not_cose_sign1, trailing_bytes, protected_header_malformed (with repeated_key in the protected header), detached_payload, payload_malformed for a payload that is not a byte string",
     "unsupported_alg (label 1 is -7, -8 or -19)",
     "key_type_mismatch (-8 and -19 mean Ed25519, -7 means P-256), before any signature",
-    "signature_invalid",
+    "signature_invalid - also for a signature that is not a byte string or has the wrong length: the fourth member is not looked at before this check",
     "the payload as CBOR: payload_malformed, repeated_key, indefinite_length_map",
     "head_mismatch",
     "format_id_mismatch",
@@ -82,12 +82,26 @@
     }
   },
   "subject_chain": {
-    "source": "scitt-statement-vector-v3.json, subject_chain.record_hashes_hex",
+    "source": "the twelve records of the PALA-1 core test vectors (test-vectors.json): the same hashes as scitt-statement-vector-v3.json, subject_chain.record_hashes_hex",
     "records": 12,
+    "record_hashes_hex": [
+      "7fbd428355851ac808bfefba02149629116cb93c669adfa78f8d48edbc359f3a",
+      "554202850536182b2e95e2b5e62742bc17fedfa7a194edca3feecc4a3972f770",
+      "f029d6b226fced3344d73c884e958e453a389bd486344589dde7b15594b6f225",
+      "f65f04a763a1da6fe1d88b87243e4fcf99c756c0d10dc3727157943d8d945271",
+      "fc63fb7ba13e043c5c1307464b298a5afb6e33d366f0e1daf2ae01b250946fc2",
+      "c0a1e84f4915bc38346751a360fac936ba1616ee7332e67debc63419e1dd2a9c",
+      "72a115227edaba47aa2b6ec85149065c137e55ea6d6539b45153b70756e42182",
+      "4d6c75cdf52510fc7c4ea3a5be141249bc386de9e2565ffeface1dce8e2b9d00",
+      "14434088e5f5866cf0276ba5a9055d8ee0d115a750b2cdf9cc4006d9481b29b4",
+      "059574eab08dd14b01f98b28327a1110f39595995ad2278efb5904b711cca61d",
+      "5e69e513ee0542d3dd6eca6d4127af52ba932b8539218692358ecbf695163e40",
+      "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813"
+    ],
     "use": "a case with verify_with.chain set is verified against this chain: the v3 root is recomputed as the PALA-1 section 4.3 tree over the record hashes of records 0..last_seq"
   },
   "counts": {
-    "cases": 61,
+    "cases": 64,
     "chain_too_short": 1,
     "content_type_unknown": 2,
     "detached_payload": 1,
@@ -104,7 +118,7 @@
     "repeated_key": 2,
     "root_malformed": 2,
     "root_mismatch": 2,
-    "signature_invalid": 4,
+    "signature_invalid": 7,
     "trailing_bytes": 2,
     "unsupported_alg": 4
   },
@@ -643,6 +657,45 @@
       "statement_sha256": "795b172bb84f809a4bc6b06421de1527532b1b5ccf2fb4958743ce8477d6af68",
       "verify_with": {
         "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "signature_invalid-05",
+      "code": "signature_invalid",
+      "base": "v2",
+      "change": "the alg byte of the protected header changed from 0x27 (-8) to 0x32 (-19), signature unchanged: a statement cannot be relabelled",
+      "statement_hex": "d28458cda4013203782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "3b07cae04a852f16d4c239ef403faa0e856d46a15b331b0f67fb8026b76d3072",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "signature_invalid-06",
+      "code": "signature_invalid",
+      "base": "v2-alg19",
+      "change": "the statement under alg -19 with the last signature byte's low bit flipped",
+      "statement_hex": "d28458cda4013203782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840cb4b5041fe422c7b5509c1f53c2b127dc967b0ad84398559dd7b29853f1e6a050d3b1d85ae15ff6e055fb22d78dac5a353662a4731122bc5cc6d6c67cdbdf808",
+      "statement_sha256": "9a36d57d017390b2698dc59aa5b5d56a86b950ecc53b127234556655e55893d9",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "signature_invalid-07",
+      "code": "signature_invalid",
+      "base": "v2",
+      "change": "the statement relabelled alg -7 (ES256) and signed with the Ed25519 test key, verified with a P-256 key: the key fits the algorithm, and the 64 signature bytes are not an ECDSA signature of it",
+      "statement_hex": "d28458cda4012603782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e3058407dbaf43512019fb7ab96afddd45d6fb30ee8d80ab0fb662df0e2a82042d64263ede846b39deb3a0eb92548ea50c7ce6c0b65b8d90ec4d047f32f081067122d04",
+      "statement_sha256": "7620c0977de392d726bfd24c926d4ed6372e9408a2f8e0e9a317f4eb6dedb969",
+      "verify_with": {
+        "key": "p256",
         "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
         "chain": null
       }

@@ -22,8 +22,9 @@ from pathlib import Path
 
 pytest.importorskip("cbor2")
 pytest.importorskip("cryptography")
+import cbor2  # noqa: E402
 from cryptography.hazmat.primitives.asymmetric import ec, ed448, ed25519  # noqa: E402
-from palimpsests.audit.pala import proofs, scitt  # noqa: E402
+from palimpsests.audit.pala import scitt, vectors  # noqa: E402
 
 REPO = Path(__file__).resolve().parent.parent
 INTEROP = REPO / "docs" / "interop"
@@ -52,18 +53,19 @@ def _key(jwk: dict):
 
 
 class _Chain:
-    """The subject chain is published as record hashes; ``chain_root`` reads
-    a reader's headers, so this reader's headers are those hashes."""
+    """The subject chain as the verifier reads one: record headers in seq
+    order. They are the headers of the published core vectors, so the root
+    comes from real records and nothing in the package is replaced."""
 
-    def __init__(self, record_hashes: list[bytes]) -> None:
-        self._headers = record_hashes
+    def __init__(self, headers: list[bytes]) -> None:
+        self._headers = headers
 
 
 @pytest.fixture
-def chain(monkeypatch):
-    v3 = json.loads((INTEROP / "scitt-statement-vector-v3.json").read_text(encoding="utf-8"))
-    monkeypatch.setattr(proofs, "_record_hash", lambda h: h)
-    return _Chain([bytes.fromhex(h) for h in v3["subject_chain"]["record_hashes_hex"]])
+def chain(doc):
+    core = vectors.load("core")["records"]
+    assert [r["record_hash"] for r in core] == doc["subject_chain"]["record_hashes_hex"]
+    return _Chain([bytes.fromhex(r["header_hex"]) for r in core])
 
 
 def test_every_case_is_refused_with_its_code(doc, chain):
@@ -84,6 +86,33 @@ def test_every_code_has_a_case_and_no_other(doc):
     assert len({c["id"] for c in doc["cases"]}) == len(doc["cases"]) == doc["counts"]["cases"]
     for code in codes:
         assert doc["counts"][code] == sum(c["code"] == code for c in doc["cases"])
+
+
+def test_the_file_carries_its_subject_chain(doc):
+    """The root cases need the chain; the file gives it and does not send
+    the reader to another one."""
+    v3 = json.loads((INTEROP / INPUTS[1]).read_text(encoding="utf-8"))
+    chain = doc["subject_chain"]
+    assert chain["record_hashes_hex"] == v3["subject_chain"]["record_hashes_hex"]
+    assert chain["records"] == len(chain["record_hashes_hex"]) == 12
+    assert sum(c["verify_with"]["chain"] == "subject_chain" for c in doc["cases"]) == 3
+
+
+def test_every_algorithm_reaches_the_signature_check(doc):
+    """A refusal by key type stops before the signature. Each of -7, -8 and
+    -19 also has a case that gets as far as the signature and fails there."""
+    reached = set()
+    for case in doc["cases"]:
+        if case["code"] == "signature_invalid":
+            protected = cbor2.loads(bytes.fromhex(case["statement_hex"])).value[0]
+            reached.add(cbor2.loads(protected)[1])
+    assert reached == {scitt.ALG_ES256, scitt.ALG_EDDSA, scitt.ALG_ED25519}
+
+
+def test_a_case_without_a_base_is_not_a_statement(doc):
+    no_base = [c for c in doc["cases"] if c["base"] is None]
+    assert len(no_base) == 4 and {c["code"] for c in no_base} == {"not_cose_sign1"}
+    assert all(c["base"] in doc["bases"] for c in doc["cases"] if c["base"] is not None)
 
 
 def test_the_bases_are_the_published_statements_and_verify(doc):
