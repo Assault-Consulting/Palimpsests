@@ -44,6 +44,7 @@ from __future__ import annotations
 import json
 from hashlib import sha256
 from palimpsests import __version__
+from palimpsests.audit._header_fields import span
 from palimpsests.audit.pala import KNOWN_RECORD_TYPES, MalformedRecord, body_digest_of, iter_records
 from palimpsests.audit.pala.codec import record_hash
 from palimpsests.audit.pala.incremental import IncrementalVerifier
@@ -66,6 +67,8 @@ _AUTHORITATIVE_NOTE = (
     "re-verify any claim against it (core §1.1)"
 )
 
+
+_BODY_DIGEST = span("body_digest")
 
 def _hex_or_none(b: bytes) -> str | None:
     """Render an id field: hex, or ``None`` for the all-zero sentinel."""
@@ -177,7 +180,7 @@ def export_jsonl(
             dr = decode_record(index, hb, body)
             # The same rule `pala verify` and the report apply: an empty body
             # has nothing to bind; the digest sits at a frozen offset (§2.1).
-            body_matches = not body or body_digest_of(body) == hb[124:156]
+            body_matches = not body or body_digest_of(body) == hb[_BODY_DIGEST]
             if not body_matches:
                 mismatches.append(dr.seq)
             if from_seq is not None and dr.seq < from_seq:

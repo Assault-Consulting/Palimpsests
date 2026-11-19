@@ -39,8 +39,8 @@ advisory stream and the advisory does not grow analytics.
 """
 from __future__ import annotations
 
-import struct
 from dataclasses import dataclass
+from palimpsests.audit._header_fields import field
 from palimpsests.audit.names import time_trust_name
 
 #: ntpd steps the clock when the offset exceeds 128 ms and slews below
@@ -56,6 +56,9 @@ __all__ = [
 ]
 
 STEP_THRESHOLD_NS = 128_000_000
+
+_boot_id, _seq, _time_trust = field("boot_id"), field("seq"), field("time_trust")
+_monotonic_ns, _wall_clock_ns = field("monotonic_ns"), field("wall_clock_ns")
 
 
 @dataclass(frozen=True)
@@ -83,12 +86,7 @@ class TimeStep:
 def _walk(reader):
     """(boot_id, seq, mono, wall, trust) per record, in file order."""
     for hb in reader._headers:
-        (seq,) = struct.unpack_from("<Q", hb, 12)
-        boot_id = bytes(hb[20:36])
-        (mono,) = struct.unpack_from("<Q", hb, 100)
-        (wall,) = struct.unpack_from("<q", hb, 108)
-        trust = hb[11]
-        yield boot_id, seq, mono, wall, trust
+        yield _boot_id(hb), _seq(hb), _monotonic_ns(hb), _wall_clock_ns(hb), _time_trust(hb)
 
 
 def _boots(reader):

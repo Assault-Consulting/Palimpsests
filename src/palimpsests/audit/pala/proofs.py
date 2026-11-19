@@ -26,6 +26,7 @@ from __future__ import annotations
 import struct
 from bisect import bisect_right
 from dataclasses import dataclass
+from palimpsests.audit._header_fields import field
 from palimpsests.audit.pala.codec import (
     FIXED_HEADER_LEN,
     RT_MERKLE,
@@ -43,6 +44,8 @@ from palimpsests.audit.pala.merkle import (
     node_hash,
     verify_consistency,
 )
+
+_header_len, _record_type, _seq = field("header_len"), field("record_type"), field("seq")
 
 __all__ = [
     "CONSISTENCY_FORMAT",
@@ -76,9 +79,7 @@ def _index(reader) -> tuple[dict[int, bytes], list[tuple[int, bytes, int]]]:
     hashes: dict[int, bytes] = {}
     merkles: list[tuple[int, bytes, int]] = []
     for hb in reader._headers:
-        (hlen,) = struct.unpack_from("<H", hb, 6)
-        (rtype,) = struct.unpack_from("<H", hb, 8)
-        (seq,) = struct.unpack_from("<Q", hb, 12)
+        hlen, rtype, seq = _header_len(hb), _record_type(hb), _seq(hb)
         hashes[seq] = _record_hash(hb)
         if rtype != RT_MERKLE:
             continue

@@ -31,10 +31,10 @@ the consumer's dial.
 
 from __future__ import annotations
 
-import struct
 import time
 from collections.abc import Iterator
 from dataclasses import dataclass
+from palimpsests.audit._header_fields import field
 from palimpsests.audit.anchors import AnchorSource
 from palimpsests.audit.pala.codec import (
     FIXED_HEADER_LEN,
@@ -62,6 +62,8 @@ TAIL_EVENT_KINDS = (
 )
 
 
+_header_len, _body_len = field("header_len"), field("body_len")
+
 @dataclass(frozen=True)
 class TailEvent:
     """One thing that happened at the tail. ``kind`` is the discriminator."""
@@ -84,10 +86,10 @@ def _parse_one(buf: bytes, off: int) -> tuple[int, bytes, bytes] | None:
         return None
     if buf[off : off + 4] != MAGIC:
         return None
-    (hlen,) = struct.unpack_from("<H", buf, off + 6)
+    hlen = _header_len(buf, off)
     if hlen < FIXED_HEADER_LEN:
         return None
-    (blen,) = struct.unpack_from("<I", buf, off + 120)
+    blen = _body_len(buf, off)
     end = off + hlen + blen
     if end > n:
         return None

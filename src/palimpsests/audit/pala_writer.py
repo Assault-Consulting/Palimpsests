@@ -44,6 +44,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from hashlib import sha256
 from palimpsests import __version__
+from palimpsests.audit._header_fields import field as _header_field
+from palimpsests.audit._header_fields import span as _header_span
 from palimpsests.audit._oslock import ExclusiveLock, LockHeld
 from palimpsests.audit.canonical_json import canonical_json
 from palimpsests.audit.pala.codec import (
@@ -181,6 +183,10 @@ __all__ = [
     "session_span_id",
 ]
 
+
+_header_len, _seq_of = _header_field("header_len"), _header_field("seq")
+_body_len = _header_field("body_len")
+_PREV_HASH = _header_span("prev_hash")
 
 def _detail(text: str) -> bytes:
     """Encode EVT_DETAIL: credentials scrubbed, UTF-8, clipped to 200 bytes
@@ -821,7 +827,7 @@ class PalaWriter:
             except OSError:
                 continue
             if len(fixed) == FIXED_HEADER_LEN and fixed[:4] == MAGIC and (
-                fixed[36:68].hex() == head_hex
+                fixed[_PREV_HASH].hex() == head_hex
             ):
                 return path
         return None
@@ -903,9 +909,7 @@ class PalaWriter:
                 fixed = fh.read(FIXED_HEADER_LEN)
                 if fixed[:4] != MAGIC:
                     break
-                (hlen,) = struct.unpack_from("<H", fixed, 6)
-                (seq,) = struct.unpack_from("<Q", fixed, 12)
-                (body_len,) = struct.unpack_from("<I", fixed, 120)
+                hlen, seq, body_len = _header_len(fixed), _seq_of(fixed), _body_len(fixed)
                 if hlen < FIXED_HEADER_LEN or off + hlen + body_len > size:
                     break
                 rest = fh.read(hlen - FIXED_HEADER_LEN)
@@ -1558,8 +1562,7 @@ class PalaWriter:
         with open(source, "rb") as fh:
             for _ in range(count):
                 fixed = fh.read(FIXED_HEADER_LEN)
-                (hlen,) = struct.unpack_from("<H", fixed, 6)
-                (body_len,) = struct.unpack_from("<I", fixed, 120)
+                hlen, body_len = _header_len(fixed), _body_len(fixed)
                 f.append(record_hash(fixed + fh.read(hlen - FIXED_HEADER_LEN)))
                 fh.seek(body_len, os.SEEK_CUR)
         for rh in self._frontier_pending:

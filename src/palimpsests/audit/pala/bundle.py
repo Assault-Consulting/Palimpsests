@@ -42,13 +42,12 @@ from __future__ import annotations
 
 import io
 import json
-import struct
 import tarfile
 from dataclasses import dataclass
 from hashlib import sha256
+from palimpsests.audit._header_fields import field
 from palimpsests.audit.anchors import _portable_detail, _portable_error
 from palimpsests.audit.names import time_trust_name
-from palimpsests.audit.pala.codec import HEADER_FIELDS
 from palimpsests.audit.pala.proofs import InclusionProof, range_proofs
 from palimpsests.audit.reader import AuditReader
 from pathlib import Path
@@ -59,12 +58,12 @@ BUNDLE_FORMAT = "pala-bundle/1"
 
 #: The four fixed-header fields the bundle reads, where the codec's own
 #: field map says they are — no offset is written here a second time.
-_FIELD = {f.name: f for f in HEADER_FIELDS}
+_FIELD = {name: field(name)
+          for name in ("seq", "time_trust", "monotonic_ns", "wall_clock_ns")}
 
 
 def _field(header: bytes, name: str) -> int:
-    f = _FIELD[name]
-    return struct.unpack_from("<" + f.format, header, f.offset)[0]
+    return _FIELD[name](header)
 
 _MEMBERS = (
     "records.pala",
