@@ -419,6 +419,7 @@ CHANNELS = {
     "palimpsests.audit.bootstats": ["boot_statistics", "BootStats", "SpanStats",
                                     "AnchorCadence"],
     "palimpsests.audit.pala.vectors": ["load", "available"],
+    "palimpsests.audit.tailing": ["TailingReader", "TailEvent", "TAIL_EVENT_KINDS"],
     "palimpsests.audit.pala.selftest": ["run_selftest", "SelftestResult",
                                         "CHARACTERISTIC_RECORDS",
                                         "HEAP_BYTES_PER_RECORD_MAX"],

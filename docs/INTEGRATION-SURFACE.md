@@ -23,6 +23,16 @@ it is not promised.
 | 7 | Distribution | PyPI wheel; vectors and the report schema ship inside it | — |
 | 8 | SCITT statements | `palimpsests.audit.pala.scitt` — `build_signed_statement`, `head_payload`, `verify_statement`, `StatementCheck`, `StatementRefused`; needs the `[scitt]` extra | public (since 0.15) |
 
+| 9 | Live reading | `palimpsests.audit.tailing.TailingReader` (`events`, `snapshot`, `close`), `TailEvent`, `TAIL_EVENT_KINDS` | **provisional** (since 0.15) |
+
+**Stability class "provisional":** declared, tested and meant to become
+public, but not yet held to the rule below — it may change in a minor
+release, and the changelog names the change. A consumer may build on it
+and should pin the minor. Live reading is provisional because no consumer
+has run it yet and two properties may have to change when one does: it
+keeps every verified record in memory, and `snapshot()` verifies them all
+again on each call. It becomes public, or says why not, before 1.0.
+
 **Stability class "public":** breaking changes only with a minor version
 bump and a CHANGELOG entry naming the break; additive changes (new
 fields, new functions) may land in any release. One named format,
@@ -374,6 +384,28 @@ bytes at offsets copied from the specification.
 - The companion vector set's `semantics` block covers a subset of its
   records by design (the block grows additively); rendering-conformance
   tests should assert against the seqs present, not assume totality.
+
+## Live reading (provisional)
+
+`TailingReader(path, anchor=…, poll_interval=…, torn_grace=…)` follows a
+container that is still being written. `events()` blocks and yields
+`TailEvent(kind, seq, record, detail)` until `close()`; `snapshot()`
+returns the same `Verification` `AuditReader` would give for the records
+verified so far, because it is produced by the same code — a chain read
+live and the same chain read afterwards give the same answers.
+
+| `kind` | What happened |
+|---|---|
+| `record` | a whole record was verified; `record` is its `DecodedRecord` |
+| `anchor_seen` | that record was an `ANCHOR` |
+| `pending_tail` | bytes after the last whole record: a record in flight, not a defect |
+| `shrunk` | the file lost bytes *within* the pending region — a writer truncating its own torn tail on resume |
+| `recovered` | the writer's recovery records followed |
+| `diagnosis` | a pending tail that stopped growing for `torn_grace` (`truncated_tail`), or the file shrinking below a verified record (`replaced_or_rolled_back`) — the one real alarm |
+
+`kind` is an open vocabulary (`TAIL_EVENT_KINDS`); `detail` is a sentence,
+never parsed. The reader polls with `os.stat`; it does not follow a
+rotation into the next segment.
 
 ## Deprecations
 
