@@ -82,7 +82,9 @@ The criteria, agreed in October 2026:
   (one import path, no removal within a major, deprecation over one minor)
   take effect at 1.0. The writer has a contract of its own
   (`docs/WRITER-SURFACE.md`, U27, since 0.15), for runtime integrators and
-  for the tests of whatever reads a chain.
+  for the tests of whatever reads a chain. The serve's HTTP routes have a
+  third (`docs/SERVE-SURFACE.md`, since 0.15): the reporting routes are
+  public, the OTLP route provisional, the OpenAI-shaped ones compatibility.
 - **Stable formats beside the frozen core.** The report
   (`pala-verification-report/2`, open to added keys), the bundle (`pala-bundle/1`), the
   consistency proof (`pala-consistency-proof/1`) and the segments manifest

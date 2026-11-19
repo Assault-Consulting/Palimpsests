@@ -10,6 +10,10 @@ shell drives everything below through a Python sidecar. If a behaviour
 matters to a consumer and is not written here or in the linked specs,
 it is not promised.
 
+This is the surface for reading a chain. Writing one has its own contract
+([WRITER-SURFACE.md](WRITER-SURFACE.md)), and so have the HTTP routes an
+integration reports to ([SERVE-SURFACE.md](SERVE-SURFACE.md)).
+
 ## The channels
 
 | # | Channel | Surface | Stability |
