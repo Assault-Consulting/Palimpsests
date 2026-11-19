@@ -64,6 +64,8 @@ KIND_TOOL_CALL = 8  # r3 — the loop dispatched a tool invocation
 KIND_TOOL_RESULT = 9  # r3 — the invocation returned / failed / was abandoned
 KIND_TOOLS_OFFERED_NO_CALL = 10  # r4 — tools offered, no structured call produced
 KIND_SEGMENT_CONTINUATION = 11  # r6 — first record of a segment opened after a cut
+KIND_WRITER_CLOSE = 12  # r8 — the writer was closed; the last record it writes
+KIND_WRITER_OPEN = 13  # r8 — a writer that closes with kind 12 began writing here
 # EVT_KIND values — guard refusals (profile §4), from 100 upward
 KIND_GUARD_PREFIX_RELEASE = 100
 KIND_GUARD_STATE_REJECT = 101
@@ -155,6 +157,8 @@ __all__ = [
     "KIND_TOOL_RESULT",
     "KIND_TOOLS_OFFERED_NO_CALL",
     "KIND_SEGMENT_CONTINUATION",
+    "KIND_WRITER_CLOSE",
+    "KIND_WRITER_OPEN",
     "KIND_GUARD_PREFIX_RELEASE",
     "KIND_GUARD_STATE_REJECT",
     "KIND_INCIDENT_CANDIDATE",

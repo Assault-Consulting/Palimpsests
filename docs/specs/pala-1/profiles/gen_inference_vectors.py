@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: Assault Consulting
 # SPDX-License-Identifier: CC0-1.0
-"""Generate the inference-profile companion vectors (r2–r7 semantics).
+"""Generate the inference-profile companion vectors (r2–r8 semantics).
 
 Deterministic: fixed key, seq-derived nonces, fixed ids and clocks —
 real crypto, fake entropy. Never do this outside a test vector.
@@ -19,7 +19,9 @@ recording vantage could not observe) and SEGMENT_CONTINUATION (kind 11):
 the declaration a writer makes as the first record of each segment it
 opens after a cut, with the derived root of everything before it — and,
 from r7, a TOOL_CALL/TOOL_RESULT pair carrying EVT_SOURCE = 2: derived
-from a telemetry span the client exported after the tool returned.
+from a telemetry span the client exported after the tool returned — and,
+from r8, a second boot whose writer marks where it began (WRITER_OPEN,
+kind 13) and that it was closed (WRITER_CLOSE, kind 12).
 Prior-revision records are appended-to, never edited:
 their bytes are identical to the revision that introduced them. They are a
 **companion** artifact: `../test-vectors.json` is frozen with the core
@@ -33,6 +35,7 @@ tags and kinds can check its decoding against `semantics` below.
 """
 from __future__ import annotations
 
+import dataclasses
 import hashlib
 import json
 import struct
@@ -606,13 +609,61 @@ prev = emit(
     "Anchor over the r7-extended chain; anchor_head below tracks this tip.",
 )
 
+# ─── r8: the writer's lifecycle (profile §3.3) ──────────────────────────
+
+# A second boot, as a resumed writer opens one: BOOT, then WRITER_OPEN
+# directly behind it, then — the writer being closed in order — WRITER_CLOSE
+# as its last record. The boot before it (seq 0–23) holds no WRITER_OPEN: it
+# was written before r8 and promises nothing, so a reader says nothing of it.
+BOOT_ID_2 = bytes.fromhex("b0071d000000000000000000000000b8")
+KIND_WRITER_CLOSE = 12
+KIND_WRITER_OPEN = 13
+
+
+def second_boot(**kw) -> R.Header:
+    return dataclasses.replace(header(**kw), boot_id=BOOT_ID_2)
+
+
+# 24 — BOOT: its prev_hash is the cross-boot link (core §4.2)
+prev = emit(
+    "boot_2",
+    second_boot(record_type=R.RT_BOOT, seq=24, prev=prev),
+    "A second boot. The first one (seq 0-23) holds no WRITER_OPEN and is "
+    "not judged by the r8 rule.",
+)
+
+# 25 — EVENT kind 13: WRITER_OPEN, directly behind the BOOT
+writer_open_body = R.encode_tlvs([
+    R.tlv(EVT_KIND, u16(KIND_WRITER_OPEN)),
+    R.tlv(EVT_DETAIL, b"example-writer 1.0; inference r8"),
+])
+prev = emit(
+    "writer_open",
+    second_boot(record_type=R.RT_EVENT, seq=25, prev=prev, body=writer_open_body,
+                tlvs=[R.tlv(R.TLV_ORIGIN_ROLE, b"engine.native")]),
+    "WRITER_OPEN (kind 13, r8): this writer writes WRITER_CLOSE when it is "
+    "closed. EVT_DETAIL names the writer - metadata, never content.",
+    body=writer_open_body,
+)
+
+# 26 — EVENT kind 12: WRITER_CLOSE, the last record the writer writes
+writer_close_body = R.encode_tlvs([R.tlv(EVT_KIND, u16(KIND_WRITER_CLOSE))])
+prev = emit(
+    "writer_close",
+    second_boot(record_type=R.RT_EVENT, seq=26, prev=prev, body=writer_close_body,
+                tlvs=[R.tlv(R.TLV_ORIGIN_ROLE, b"engine.native")]),
+    "WRITER_CLOSE (kind 12, r8): the writer was closed in order. The head "
+    "of a closed chain is this record's hash.",
+    body=writer_close_body,
+)
+
 chain_head = prev
 
 # ─── self-verify before writing anything ────────────────────────────────
 
 res = R.verify_chain(chain)
 assert res.chain_ok, f"generated chain does not verify: {res}"
-assert res.count == 24
+assert res.count == 27
 assert not res.breaks and not res.gaps and not res.violations
 # the encrypted body round-trips under the spec'd nonce/AAD derivation
 back = AESGCM(KEY).decrypt(R.nonce_for(3), bodies[3][12:],
@@ -621,13 +672,13 @@ assert back == plaintext
 
 out = {
     "$comment": (
-        "Inference-profile companion vectors (r2-r7). Deterministic; real "
+        "Inference-profile companion vectors (r2-r8). Deterministic; real "
         "crypto, fake entropy — never derive keys or ids like this outside "
         "a test vector. ../test-vectors.json is frozen with the core and "
         "is deliberately untouched by these."
     ),
     "profile": "inference",
-    "profile_revision": "r7",
+    "profile_revision": "r8",
     "generator": "gen_inference_vectors.py",
     "boot_id": h(BOOT_ID),
     "encryption": {
@@ -743,6 +794,18 @@ out = {
             "payload_digest": hashlib.sha256(telemetry_result).digest().hex(),
             "source": 2, "source_name": "derived-from-telemetry",
         },
+        "25": {
+            "kind": 13, "kind_name": "WRITER_OPEN",
+            "detail": "example-writer 1.0; inference r8",
+        },
+        "26": {"kind": 12, "kind_name": "WRITER_CLOSE"},
+        "lifecycle_rule": (
+            "r8: a boot that holds WRITER_OPEN and is followed by another "
+            "boot ends with WRITER_CLOSE, or was stopped without being "
+            "closed. Here the second boot (seq 24-26) is opened and closed; "
+            "the first holds no WRITER_OPEN and is not judged. Drop seq 26 "
+            "and append a third BOOT, and a reader reports the second boot."
+        ),
         "source_rule": (
             "EVT_SOURCE (0x0011) is present only for a non-default value: 1 "
             "(reported-by-client) or, from r7, 2 (derived-from-telemetry); "

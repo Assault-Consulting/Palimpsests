@@ -43,6 +43,7 @@ import time
 from collections.abc import Mapping
 from dataclasses import dataclass
 from hashlib import sha256
+from palimpsests import __version__
 from palimpsests.audit._oslock import ExclusiveLock, LockHeld
 from palimpsests.audit.canonical_json import canonical_json
 from palimpsests.audit.pala.codec import (
@@ -129,6 +130,8 @@ from palimpsests.audit.profiles.inference import (  # noqa: F401
     KIND_TOOL_CALL,
     KIND_TOOL_RESULT,
     KIND_TOOLS_OFFERED_NO_CALL,
+    KIND_WRITER_CLOSE,
+    KIND_WRITER_OPEN,
     OUTCOME_CANCELLED,
     OUTCOME_ERROR,
     OUTCOME_OK,
@@ -229,6 +232,12 @@ def canonical_tool_args_digest(arguments: object) -> bytes:
     if isinstance(arguments, (bytes, bytearray)):
         return sha256(bytes(arguments)).digest()
     return sha256(canonical_json(arguments)).digest()
+
+
+#: What ``WRITER_OPEN`` says about the writer: metadata, never content. It
+#: lets a reader tell which release wrote a boot — and so which rules its
+#: digests follow.
+_WRITER_ID = f"palimpsests {__version__}; inference r8"
 
 
 def _tool_payload_digest(value: object) -> bytes | None:
@@ -611,10 +620,17 @@ class PalaWriter:
         assurance_tier: int = TIER_A,
         rotation: RotationPolicy | None = None,
         durability: Durability | str = Durability.RECORD,
+        lifecycle: bool = True,
     ) -> None:
         if boot_id is not None and len(boot_id) != 16:
             raise ValueError("boot_id must be 16 bytes")
         self._init_durability(durability)
+        # r8: WRITER_OPEN after this writer's first GENESIS or BOOT, and
+        # WRITER_CLOSE as its last record — so a stop that was not a close
+        # (a crash, a power cut) is visible as the missing second half.
+        self._lifecycle = lifecycle
+        self._open_marked = False
+        self._close_marked = False
         self._boot_id = boot_id if boot_id is not None else os.urandom(16)
         self._time_trust = time_trust
         self._tier = assurance_tier
@@ -824,6 +840,7 @@ class PalaWriter:
         assurance_tier: int = TIER_A,
         recover_torn_tail: bool = True,
         durability: Durability | str = Durability.RECORD,
+        lifecycle: bool = True,
     ) -> PalaWriter:
         """Resume an existing chain: adopt its tail head and seq (core §4.2).
 
@@ -842,6 +859,7 @@ class PalaWriter:
                 assurance_tier=assurance_tier,
                 recover_torn_tail=recover_torn_tail,
                 durability=durability,
+                lifecycle=lifecycle,
             )
         except BaseException:
             lock.release()
@@ -859,6 +877,7 @@ class PalaWriter:
         assurance_tier: int,
         recover_torn_tail: bool,
         durability: Durability | str,
+        lifecycle: bool = True,
     ) -> PalaWriter:
         size = os.path.getsize(path)
         if size == 0:
@@ -938,6 +957,9 @@ class PalaWriter:
         if boot_id is not None and len(boot_id) != 16:
             raise ValueError("boot_id must be 16 bytes")
         w._init_durability(durability)
+        w._lifecycle = lifecycle
+        w._open_marked = False
+        w._close_marked = False
         w._boot_id = boot_id if boot_id is not None else os.urandom(16)
         w._time_trust = time_trust
         w._tier = assurance_tier
@@ -1013,19 +1035,48 @@ class PalaWriter:
                     )
                 self._resume_boot_pending = False
 
-            seq = self._seq
-            header_bytes, rh = self._encode_locked(
+            seq, rh = self._write_locked(
                 record_type, tlvs=tlvs, body=body,
                 span_id=span_id, parent_span_id=parent_span_id,
             )
-            self._fh.write(header_bytes + body)
-            self._commit_locked(record_type, header_bytes, body, rh, span_id)
-            self._sync_after_write_locked()
+            if (
+                self._lifecycle
+                and not self._open_marked
+                and record_type in (RT_GENESIS, RT_BOOT)
+            ):
+                # Right behind the record that starts this writer's part of
+                # the chain, under the same lock: nothing can come between.
+                self._open_marked = True
+                self._write_locked(
+                    RT_EVENT,
+                    tlvs=self._origin(ROLE_NATIVE),
+                    body=self._event_body(KIND_WRITER_OPEN, detail=_WRITER_ID),
+                )
             self._maybe_rotate_locked()
             # The seq is read here, under the lock that wrote the record. A
             # caller reading ``writer.seq - 1`` afterwards can see another
             # thread's record instead — and bind a result to the wrong call.
             return (seq, rh) if return_seq else rh
+
+    def _write_locked(
+        self,
+        record_type: int,
+        *,
+        tlvs: list[tuple[int, bytes]] | None = None,
+        body: bytes = b"",
+        span_id: bytes = ZERO16,
+        parent_span_id: bytes = ZERO16,
+    ) -> tuple[int, bytes]:
+        """One record onto the file, and into the writer's state. No rotation."""
+        seq = self._seq
+        header_bytes, rh = self._encode_locked(
+            record_type, tlvs=tlvs, body=body,
+            span_id=span_id, parent_span_id=parent_span_id,
+        )
+        self._fh.write(header_bytes + body)
+        self._commit_locked(record_type, header_bytes, body, rh, span_id)
+        self._sync_after_write_locked()
+        return seq, rh
 
     def _encode_locked(
         self,
@@ -1775,6 +1826,15 @@ class PalaWriter:
             if self._fh.closed:
                 return
             try:
+                if self._lifecycle and self._open_marked and not self._close_marked:
+                    # The last record this writer writes (r8). No rotation
+                    # after it: a new segment would put a record behind it.
+                    self._close_marked = True
+                    self._write_locked(
+                        RT_EVENT,
+                        tlvs=self._origin(ROLE_NATIVE),
+                        body=self._event_body(KIND_WRITER_CLOSE),
+                    )
                 self._sync_now_locked()
             finally:
                 self._fh.close()

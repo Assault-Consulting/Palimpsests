@@ -1,7 +1,7 @@
 {
-  "$comment": "Inference-profile companion vectors (r2-r7). Deterministic; real crypto, fake entropy \u2014 never derive keys or ids like this outside a test vector. ../test-vectors.json is frozen with the core and is deliberately untouched by these.",
+  "$comment": "Inference-profile companion vectors (r2-r8). Deterministic; real crypto, fake entropy \u2014 never derive keys or ids like this outside a test vector. ../test-vectors.json is frozen with the core and is deliberately untouched by these.",
   "profile": "inference",
-  "profile_revision": "r7",
+  "profile_revision": "r8",
   "generator": "gen_inference_vectors.py",
   "boot_id": "b0071d000000000000000000000000a2",
   "encryption": {
@@ -258,10 +258,41 @@
       "header_len": 192,
       "header_hex": "50414c410100c000500000031700000000000000b0071d000000000000000000000000a243b9b951adb465afbbe45996e99141862bafea443cdf83fc4f071bb48999b4fd0000000000000000000000000000000000000000000000000000000000000000c00dd01902000000c0db2191a30ac218000000000000000000000000000000000000000000000000000000000000000000000000000000005000200043b9b951adb465afbbe45996e99141862bafea443cdf83fc4f071bb48999b4fd",
       "record_hash": "08153c838f0cafe371ece7aa736c51be81f21c84fed91fc97ae96ed7d0839d5e"
+    },
+    {
+      "label": "boot_2",
+      "note": "A second boot. The first one (seq 0-23) holds no WRITER_OPEN and is not judged by the r8 rule.",
+      "seq": 24,
+      "record_type": "0x0002",
+      "header_len": 156,
+      "header_hex": "50414c4101009c00020000031800000000000000b0071d000000000000000000000000b808153c838f0cafe371ece7aa736c51be81f21c84fed91fc97ae96ed7d0839d5e00000000000000000000000000000000000000000000000000000000000000000050df1902000000001e3191a30ac21800000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "record_hash": "d9fd60fd5039b029377ee2df2fcb15853d90272694fbfe88e8fde0fffc2ac3be"
+    },
+    {
+      "label": "writer_open",
+      "note": "WRITER_OPEN (kind 13, r8): this writer writes WRITER_CLOSE when it is closed. EVT_DETAIL names the writer - metadata, never content.",
+      "seq": 25,
+      "record_type": "0x0012",
+      "header_len": 173,
+      "header_hex": "50414c410100ad00120000031900000000000000b0071d000000000000000000000000b8d9fd60fd5039b029377ee2df2fcb15853d90272694fbfe88e8fde0fffc2ac3be00000000000000000000000000000000000000000000000000000000000000004092ee190200000040604091a30ac218000000002a000000871d6de793f872e059b37e8713f5e0ebb1a871cf99243faec1a3aa6d18e4f1f401000d00656e67696e652e6e6174697665",
+      "record_hash": "27bca128311b6bcc593f7be531e46ba6416aedddbccf2ade4fbf47c192a5642b",
+      "body_len": 42,
+      "body_hex": "010002000d00040020006578616d706c652d77726974657220312e303b20696e666572656e6365207238"
+    },
+    {
+      "label": "writer_close",
+      "note": "WRITER_CLOSE (kind 12, r8): the writer was closed in order. The head of a closed chain is this record's hash.",
+      "seq": 26,
+      "record_type": "0x0012",
+      "header_len": 173,
+      "header_hex": "50414c410100ad00120000031a00000000000000b0071d000000000000000000000000b827bca128311b6bcc593f7be531e46ba6416aedddbccf2ade4fbf47c192a5642b000000000000000000000000000000000000000000000000000000000000000080d4fd190200000080a24f91a30ac2180000000006000000a0f0a0a571d4eb6d7dba58437da43d6f196af288291e13fcb2a353974472954b01000d00656e67696e652e6e6174697665",
+      "record_hash": "1bb6c51b1b2e2035d26c9dfd1d3d9111dedcfa8b8a0489997e932ed4c97ee397",
+      "body_len": 6,
+      "body_hex": "010002000c00"
     }
   ],
-  "chain_head": "08153c838f0cafe371ece7aa736c51be81f21c84fed91fc97ae96ed7d0839d5e",
-  "anchor_head": "08153c838f0cafe371ece7aa736c51be81f21c84fed91fc97ae96ed7d0839d5e",
+  "chain_head": "1bb6c51b1b2e2035d26c9dfd1d3d9111dedcfa8b8a0489997e932ed4c97ee397",
+  "anchor_head": "1bb6c51b1b2e2035d26c9dfd1d3d9111dedcfa8b8a0489997e932ed4c97ee397",
   "semantics": {
     "$comment": "Decoded r2/r3 body expectations, so a profile-aware reader can check its tag/kind resolution \u2014 the envelope answers above are checkable with any core verifier.",
     "4": {
@@ -386,6 +417,16 @@
       "source": 2,
       "source_name": "derived-from-telemetry"
     },
+    "25": {
+      "kind": 13,
+      "kind_name": "WRITER_OPEN",
+      "detail": "example-writer 1.0; inference r8"
+    },
+    "26": {
+      "kind": 12,
+      "kind_name": "WRITER_CLOSE"
+    },
+    "lifecycle_rule": "r8: a boot that holds WRITER_OPEN and is followed by another boot ends with WRITER_CLOSE, or was stopped without being closed. Here the second boot (seq 24-26) is opened and closed; the first holds no WRITER_OPEN and is not judged. Drop seq 26 and append a third BOOT, and a reader reports the second boot.",
     "source_rule": "EVT_SOURCE (0x0011) is present only for a non-default value: 1 (reported-by-client) or, from r7, 2 (derived-from-telemetry); absent means 0 (parsed-from-wire). Seq 8/9 carry no EVT_SOURCE and are byte-identical to their r3 form."
   }
 }

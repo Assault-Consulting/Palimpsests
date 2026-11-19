@@ -999,6 +999,14 @@ def run_serve(host: str, port: int, api_key: str | None) -> None:
         if cancel is not None:
             cancel()
         audit.writer.close()
+        # The head to anchor is the head *after* the close: closing wrote one
+        # more record (WRITER_CLOSE, profile r8), so a head read from
+        # /v1/pala/status while the serve ran is one record short of this.
+        print(
+            f"audit chain closed: {audit.writer.seq} record(s), head "
+            f"{audit.writer.head_hex}",
+            file=sys.stderr,
+        )
 
 
 def _opencode_config(host: str, port: int, api_key: str | None) -> str:

@@ -154,6 +154,6 @@ def test_one_pass_structure_equals_the_two_views(tmp_path):
         list(warm.records())
         assert (boots, spans) == warm.structure()
         assert cold._decoded is None
-        assert len(boots) == (2 if path.name == "busy.pala" else 1)
+        assert len(boots) == 2  # the vectors hold a second boot since profile r8
         cold.close()
         warm.close()

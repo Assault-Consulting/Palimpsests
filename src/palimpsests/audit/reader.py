@@ -131,6 +131,8 @@ from palimpsests.audit.profiles.inference import (
     KIND_TOOL_CALL,
     KIND_TOOL_RESULT,
     KIND_TOOLS_OFFERED_NO_CALL,
+    KIND_WRITER_CLOSE,
+    KIND_WRITER_OPEN,
     OUTCOME_CANCELLED,
     OUTCOME_ERROR,
     OUTCOME_OK,
@@ -248,6 +250,8 @@ __all__ = [
     "KIND_TOOL_RESULT",
     "KIND_TOOLS_OFFERED_NO_CALL",
     "KIND_SEGMENT_CONTINUATION",
+    "KIND_WRITER_CLOSE",
+    "KIND_WRITER_OPEN",
     "KIND_GUARD_PREFIX_RELEASE",
     "KIND_GUARD_STATE_REJECT",
     "KIND_INCIDENT_CANDIDATE",
@@ -329,6 +333,8 @@ _KIND_NAMES = {
     KIND_TOOLS_OFFERED_NO_CALL: "TOOLS_OFFERED_NO_CALL",
     KIND_TOOL_RESULT: "TOOL_RESULT",
     KIND_SEGMENT_CONTINUATION: "SEGMENT_CONTINUATION",
+    KIND_WRITER_CLOSE: "WRITER_CLOSE",
+    KIND_WRITER_OPEN: "WRITER_OPEN",
     KIND_GUARD_TOOL_LOOP_LIMIT: "GUARD_TOOL_LOOP_LIMIT",
 }
 
@@ -705,6 +711,7 @@ ADVISORY_CODES = frozenset({
     "span_unclosed",
     "span_unopened",
     "anchor_never_written",
+    "boot_ended_without_close",
     "continuation_malformed",
     "continuation_predecessor_mismatch",
     "continuation_index_not_increasing",
@@ -1148,6 +1155,48 @@ class AuditReader:
                 # phase 3, warm reader — the decoded records are at hand
                 items.extend(self._check_reference(by_seq.at(i), by_seq))
         items.extend(self._check_continuations(continuations))
+        items.extend(self._lifecycle_advisories(pos_by_seq))
+        return items
+
+    def _lifecycle_advisories(self, pos_by_seq: dict[int, int]) -> list[AdvisoryItem]:
+        """A boot whose writer said it would close, and did not (profile r8).
+
+        A writer that writes ``WRITER_CLOSE`` as its last record says so
+        first, with ``WRITER_OPEN`` directly behind its ``GENESIS`` or
+        ``BOOT``. A boot that holds a ``WRITER_OPEN``, is followed by another
+        boot, and does not end with ``WRITER_CLOSE`` was stopped without
+        being closed: a crash, a kill, a power cut. Advisory, never a
+        violation — the chain is whole, and a process that died is not an
+        altered record.
+
+        Nothing is said of the last boot in the file: its writer may still
+        be writing. Nothing is said of a boot with no ``WRITER_OPEN``: its
+        writer never promised a close (every chain written before r8).
+
+        Reads two bodies' first TLV per boot, in place — the record behind
+        each ``GENESIS``/``BOOT``, and the last record of each boot.
+        """
+        boots = self.boots()
+        if len(boots) < 2:
+            return []
+        rtype_at = self._headers.record_type_at
+        items: list[AdvisoryItem] = []
+        for boot in boots[:-1]:
+            first, last = pos_by_seq.get(boot.first_seq), pos_by_seq.get(boot.last_seq)
+            if first is None or last is None or last < first:
+                continue  # a chain too damaged to speak of boots; the verdict says so
+            promised = any(
+                self._kind_probe(i + 1) == KIND_WRITER_OPEN
+                for i in range(first, last)  # i + 1 stays inside the boot
+                if rtype_at(i) in (RT_GENESIS, RT_BOOT)
+            )
+            if promised and self._kind_probe(last) != KIND_WRITER_CLOSE:
+                items.append(AdvisoryItem(
+                    "boot_ended_without_close", boot.last_seq, boot.boot_id,
+                    "this boot's writer declared that it marks its close (WRITER_OPEN) "
+                    f"and the boot ends at seq {boot.last_seq} without WRITER_CLOSE: "
+                    "it was stopped without being closed",
+                ))
         return items
 
     def _check_continuations(self, records: list[DecodedRecord]) -> list[AdvisoryItem]:

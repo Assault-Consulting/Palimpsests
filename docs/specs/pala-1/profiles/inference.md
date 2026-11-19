@@ -14,7 +14,7 @@ questions.
 | **Profile of** | PALA-1, version 1 |
 | **Status** | **Frozen — v1.0** (2026-08-09, with the core). Existing tag and kind allocations are permanent; the `EVT_KIND` and `AGG_*` spaces grow **additively** in profile revisions (§6.3) — additions never renumber and never touch the envelope. The profile is emitted by the Palimpsests writer (Phase 3, wired). |
 | **Date** | 2026-08-09 (frozen; first draft 2026-08-03) |
-| **Revision** | **r7** (2026-11-19) — additive only; see §9 for the revision history. r1 is the freeze. |
+| **Revision** | **r8** (2026-11-19) — additive only; see §9 for the revision history. r1 is the freeze. |
 | **Licence** | CC0-1.0, like the core specification and its test vectors. |
 
 **Metadata-only discipline.** The emitting library's existing audit log
@@ -102,6 +102,8 @@ own type namespace:
 | 9 | `TOOL_RESULT` — a dispatched invocation returned and its result re-entered generation (§3.1). *(r3)* |
 | 10 | `TOOLS_OFFERED_NO_CALL` — the request offered structured tools, the completion produced no structured tool call, and the request itself carried no structured tool traffic; the serving layer records the visibility boundary it sits behind (§3.1). An observation of offer and absence, never an inference about what the reply text did. *(r4)* |
 | 11 | `SEGMENT_CONTINUATION` — the first record of a segment the writer opened after a cut, declaring what precedes it (§3.2). *(r6)* |
+| 12 | `WRITER_CLOSE` — the writer was closed; the last record it writes (§3.3). *(r8)* |
+| 13 | `WRITER_OPEN` — a writer that marks its close with kind 12 began writing here (§3.3). *(r8)* |
 
 A `RECOVERY_TRUNCATED_TAIL` event is written by a resumed writer as the
 first record after `BOOT`, when opening the chain truncated a torn
@@ -276,6 +278,53 @@ and any later derived root proves that prefix intact without the deleted
 records. A writer keeps this root incrementally (a Merkle frontier) so
 that it can state it after the records are gone.
 
+### 3.3 The writer's lifecycle *(r8)*
+
+A chain that simply stops says nothing about why. The writer may have
+been closed, or the process may have been killed, or the power cut — and
+a power cut can be someone's choice. The core already makes one such stop
+visible: a crash in the middle of a record leaves a torn tail, which the
+resumed writer removes and records (kind 7). A stop *between* records
+left no trace. These two kinds give it one.
+
+- **`WRITER_OPEN` (13)** is written by a writer directly behind the first
+  `GENESIS` or `BOOT` record it writes. It declares: *this writer writes
+  `WRITER_CLOSE` when it is closed.* `EVT_DETAIL` MAY name the writer and
+  its version — metadata, never content — which also tells a reader which
+  release's rules the boot's digests follow (§11).
+- **`WRITER_CLOSE` (12)** is the last record a writer writes, when it is
+  closed in order. It carries nothing but its kind.
+
+Both are cleartext (`key_id = 0`), carry no span, and are ordinary links
+of the chain.
+
+**What the pair means.** A boot that holds a `WRITER_OPEN` and ends with
+`WRITER_CLOSE` was closed in order. A boot that holds a `WRITER_OPEN`, is
+followed by another boot, and does not end with `WRITER_CLOSE` was
+stopped without being closed. A boot with no `WRITER_OPEN` promises
+nothing: every chain written before r8 is such a chain, and its boots
+are not judged by this rule.
+
+**What it does not mean.** `WRITER_CLOSE` says the writer was closed, not
+that the work it recorded succeeded: a process that exits on an error
+closes its writer on the way out. And an unclosed boot is not an altered
+chain: the records are whole and the links hold.
+
+**Reader check (advisory, never a rejection).** For every boot but the
+last in what the reader holds: if it holds a `WRITER_OPEN` and its last
+record is not a `WRITER_CLOSE`, the reader reports it. The last boot is
+not judged — its writer may be writing still. That one case this profile
+cannot close: a writer stopped for good, and never resumed, leaves a
+chain that looks like one still being written. Only something outside
+the chain can tell the two apart — an anchor that stops advancing, or a
+watcher.
+
+**The head of a closed chain** is the hash of its `WRITER_CLOSE`. A head
+read from a running writer and anchored is the head of a chain that then
+grew by that one record; a verifier holding the earlier head reports the
+closed chain as extending one record beyond it. An emitter that anchors
+at shutdown anchors after the close.
+
 ## 4. `SAFETY` — guard refusals
 
 The library's serving path contains guards that refuse operations rather
@@ -417,6 +466,7 @@ and the note must outlive every key by design. Whether
 | r5 | 2026-09-03 | Additive only: `EVT` tag 0x0011 (`EVT_SOURCE`) — the wire-parsed / client-reported evidence mark for kinds 8/9; absent means wire-parsed, so every prior record's meaning and bytes are unchanged. No envelope byte, no core text, no byte of `test-vectors.json` changed; companion vectors extend `inference-vectors.json` in the implementing PR chain. |
 | r6 | 2026-10-10 | Additive only: `EVT_OUTCOME` value 4 (`unobserved`, §3.1) — a return whose failure the recording vantage could not observe; `EVENT` kind 11 (`SEGMENT_CONTINUATION`, §3.2); `EVT` tags 0x0012–0x0015 (`SEG_PREDECESSOR_HEAD`, `SEG_INDEX`, `SEG_RETENTION_S`, `SEG_PRIOR_ROOT`) — the retention-continuation design (`retention-continuation.md`) adopted. No envelope byte, no core text, no byte of `test-vectors.json` changed; `inference-vectors.json` gains four records (21 in all, every earlier record byte-identical), and the prefix-consistency vectors stay pinned to the 17-record r5 prefix and unchanged. |
 | r7 | 2026-11-19 | Additive only, and the open issues closed (§6). `EVT_SOURCE` value 2 (`derived-from-telemetry`, §3.1) — a pair written from an exported telemetry span. `MERKLE` records defined for this profile as chain checkpoints whose leaves are record hashes (§10), which is what the writer has emitted since 0.10; the r1 "SHOULD NOT emit" is withdrawn. The digests over JSON values — `ORIGIN_CONFIG_DIGEST` and `EVT_PAYLOAD_DIGEST` — are taken over the RFC 8785 canonical form (§11): a new rule for the first, and for the second the r3 rule pinned to a standard, with the same bytes wherever r3 was unambiguous. Issues 3 and 5 recorded as closed without a change of bytes or meaning. No envelope byte, no core text, no byte of `test-vectors.json` changed; `inference-vectors.json` gains three records (24 in all, every earlier record byte-identical), and the prefix-consistency vectors stay pinned to the 17-record r5 prefix and unchanged. |
+| r8 | 2026-11-19 | Additive only: `EVENT` kinds 12 (`WRITER_CLOSE`) and 13 (`WRITER_OPEN`), §3.3 — a writer marks where it began and that it was closed, so a boot stopped without a close is visible once the chain goes on. No new tag. No envelope byte, no core text, no byte of `test-vectors.json` changed; `inference-vectors.json` gains three records (27 in all, every earlier record byte-identical), and the prefix-consistency vectors stay pinned to the 17-record r5 prefix and unchanged. |
 
 ## 10. `MERKLE` — chain checkpoints *(r7)*
 

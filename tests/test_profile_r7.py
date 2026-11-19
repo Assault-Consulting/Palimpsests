@@ -34,7 +34,7 @@ from palimpsests.audit.pala_writer import (
     PalaWriter,
     canonical_config_digest,
 )
-from palimpsests.audit.profiles.inference import EVT_SOURCE
+from palimpsests.audit.profiles.inference import EVT_KIND, EVT_SOURCE
 from palimpsests.audit.reader import AuditReader
 from pathlib import Path
 
@@ -56,9 +56,9 @@ def test_the_three_sources_are_0_1_2_and_only_the_default_is_absent(tmp_path):
             w.tool_result(seq, call, OUTCOME_ERROR, source=source)
         with pytest.raises(ValueError, match="source must be"):
             w.tool_call("t", source=3)
-    bodies = [decode_tlvs(body) for _hb, body in iter_records(log.read_bytes()) if body]
-    marks = [struct.unpack("<H", dict(t)[EVT_SOURCE])[0] if EVT_SOURCE in dict(t) else None
-             for t in bodies]
+    bodies = [dict(decode_tlvs(body)) for _hb, body in iter_records(log.read_bytes()) if body]
+    pairs = [t for t in bodies if struct.unpack("<H", t[EVT_KIND])[0] in (8, 9)]
+    marks = [struct.unpack("<H", t[EVT_SOURCE])[0] if EVT_SOURCE in t else None for t in pairs]
     assert marks == [None, None, 1, 1, 2, 2]  # value 0 is written as absence
     with AuditReader.open(log) as reader:
         pairs = [d for d in reader.records() if d.source is not None]
@@ -70,7 +70,7 @@ def test_a_wire_parsed_record_is_the_same_bytes_as_before_r7(tmp_path):
     """Absent still means 0: adding a value did not move a byte of the default."""
     def body(source):
         log = tmp_path / f"{source}.pala"
-        with PalaWriter(log, boot_id=b"\x07" * 16) as w:
+        with PalaWriter(log, boot_id=b"\x07" * 16, lifecycle=False) as w:
             w.genesis()
             w.tool_call("t", args_digest=b"\x01" * 32, source=source)
         return [b for _h, b in iter_records(log.read_bytes())][-1]
@@ -83,13 +83,13 @@ def test_a_wire_parsed_record_is_the_same_bytes_as_before_r7(tmp_path):
 
 def test_the_vectors_carry_the_telemetry_pair_and_the_reader_decodes_it(tmp_path):
     doc = vectors.load("inference")
-    assert doc["profile_revision"] == "r7" and len(doc["records"]) == 24
+    assert doc["profile_revision"] in ("r7", "r8") and len(doc["records"]) >= 24
     call, result = doc["semantics"]["21"], doc["semantics"]["22"]
     assert (call["source"], call["source_name"]) == (2, "derived-from-telemetry")
     assert (result["source"], result["outcome_name"], result["ref_seq"]) == (2, "error", 21)
     labels = [r["label"] for r in doc["records"]]
-    assert labels[21:] == ["tool_call_from_telemetry", "tool_result_from_telemetry",
-                           "anchor_r7"]
+    assert labels[21:24] == ["tool_call_from_telemetry", "tool_result_from_telemetry",
+                             "anchor_r7"]
     assert doc["chain_head"] == doc["records"][-1]["record_hash"]
 
 
@@ -153,6 +153,7 @@ def test_a_checkpoint_is_what_section_10_says(tmp_path):
             merkle_checkpoint(w)
         w.prefix_warm(token_count=1)  # a tail no checkpoint covers
     records = list(iter_records(log.read_bytes()))
+    # GENESIS and the writer's WRITER_OPEN (r8) are leaves like any record
     hashes = [record_hash(hb) for hb, _ in records]
     types = [struct.unpack_from("<H", hb, 8)[0] for hb, _ in records]
     merkles = [i for i, t in enumerate(types) if t == RT_MERKLE]
@@ -184,7 +185,7 @@ def test_the_profile_no_longer_says_not_to_emit_what_the_writer_emits():
 # -- the issues, closed -------------------------------------------------------
 
 def test_every_issue_of_section_6_is_closed_and_the_revision_is_r7():
-    assert "| **Revision** | **r7** (" in PROFILE
+    assert re.search(r"\| \*\*Revision\*\* \| \*\*r[78]\*\* \(", PROFILE)
     section = PROFILE.split("## 6. Open issues (profile)", 1)[1].split("\n## ", 1)[0]
     rows = [line for line in section.splitlines() if re.match(r"\| \d \|", line)]
     assert [row[2] for row in rows] == list("12345")
