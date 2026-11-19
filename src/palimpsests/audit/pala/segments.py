@@ -26,8 +26,8 @@ from the bytes.
 from __future__ import annotations
 
 import json
-import struct
 from dataclasses import dataclass
+from palimpsests.audit._header_fields import field
 from palimpsests.audit.pala import MalformedRecord, iter_records
 from palimpsests.audit.pala.codec import ZERO32
 from palimpsests.audit.pala.codec import record_hash as _record_hash
@@ -35,6 +35,8 @@ from pathlib import Path
 
 SEGMENTS_FORMAT = "pala-segments/1"
 
+
+_seq = field("seq")
 
 @dataclass(frozen=True)
 class SegmentInfo:
@@ -116,7 +118,7 @@ def segment_chain(
         buf, first_seq = [], None
 
     for hb, body in records:
-        (seq,) = struct.unpack_from("<Q", hb, 12)
+        seq = _seq(hb)
         if first_seq is None:
             first_seq = seq
         last_seq = seq

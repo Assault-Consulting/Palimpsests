@@ -35,9 +35,10 @@ from __future__ import annotations
 
 import json
 import os
-import struct
 from dataclasses import dataclass, field, replace
 from hashlib import sha256
+from palimpsests.audit._header_fields import field as _header_field
+from palimpsests.audit._header_fields import span as _header_span
 from palimpsests.audit.pala.codec import (
     FIXED_HEADER_LEN,
     MAGIC,
@@ -52,6 +53,9 @@ from pathlib import Path
 
 __all__ = ["SegmentCheck", "SegmentSetVerification", "verify_segment_set"]
 
+
+_seq_of = _header_field("seq")
+_PREV_HASH = _header_span("prev_hash")
 
 @dataclass(frozen=True)
 class SegmentCheck:
@@ -245,7 +249,7 @@ def _is_file_name(name: str) -> bool:
 
 
 def _seq(headers: list[bytes], i: int) -> int | None:
-    return struct.unpack_from("<Q", headers[i], 12)[0] if headers else None
+    return _seq_of(headers[i]) if headers else None
 
 
 def _live_tail(folder: Path, mpath: Path, entries: list[dict]) -> Path | None:
@@ -264,6 +268,7 @@ def _live_tail(folder: Path, mpath: Path, entries: list[dict]) -> Path | None:
                 fixed = fh.read(FIXED_HEADER_LEN)
         except OSError:
             continue
-        if len(fixed) == FIXED_HEADER_LEN and fixed[:4] == MAGIC and fixed[36:68].hex() == last:
+        if (len(fixed) == FIXED_HEADER_LEN and fixed[:4] == MAGIC
+                and fixed[_PREV_HASH].hex() == last):
             return path
     return None

@@ -23,6 +23,7 @@ thread), which is how every writer method is used already.
 from __future__ import annotations
 
 import struct
+from palimpsests.audit._header_fields import field
 from palimpsests.audit.pala import iter_records
 from palimpsests.audit.pala.codec import (
     RT_MERKLE,
@@ -34,6 +35,8 @@ from palimpsests.audit.pala.codec import (
 )
 from palimpsests.audit.pala.merkle import merkle_root
 from pathlib import Path
+
+_record_type = field("record_type")
 
 
 def merkle_checkpoint(writer) -> bytes | None:
@@ -48,7 +51,7 @@ def merkle_checkpoint(writer) -> bytes | None:
     data = Path(writer._path).read_bytes()
     window: list[bytes] = []
     for hb, _body in iter_records(data):
-        (rtype,) = struct.unpack_from("<H", hb, 8)
+        rtype = _record_type(hb)
         rh = _record_hash(hb)
         if rtype == RT_MERKLE:
             window = [rh]  # the new window starts at the checkpoint itself

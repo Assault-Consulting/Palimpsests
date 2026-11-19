@@ -21,13 +21,16 @@ exactly when nobody was looking.
 """
 from __future__ import annotations
 
-import struct
 from dataclasses import dataclass
+from palimpsests.audit._header_fields import field
 from palimpsests.audit.pala.codec import RT_ANCHOR, RT_SPAN_END, RT_SPAN_START
 from palimpsests.audit.reader import BootView
 from statistics import median
 
 __all__ = ["AnchorCadence", "BootStats", "SpanStats", "boot_statistics"]
+
+_boot_id, _seq, _record_type = field("boot_id"), field("seq"), field("record_type")
+_monotonic_ns, _span_id = field("monotonic_ns"), field("span_id")
 
 
 @dataclass(frozen=True)
@@ -61,11 +64,11 @@ def _per_boot_rows(reader):
     current: bytes | None = None
     rows: list[tuple[int, int, int, bytes]] = []
     for hb in reader._headers:
-        boot_id = bytes(hb[20:36])
-        (seq,) = struct.unpack_from("<Q", hb, 12)
-        (rtype,) = struct.unpack_from("<H", hb, 8)
-        (mono,) = struct.unpack_from("<Q", hb, 100)
-        span_id = bytes(hb[68:84])
+        boot_id = _boot_id(hb)
+        seq = _seq(hb)
+        rtype = _record_type(hb)
+        mono = _monotonic_ns(hb)
+        span_id = _span_id(hb)
         if boot_id != current:
             if rows:
                 yield current, rows

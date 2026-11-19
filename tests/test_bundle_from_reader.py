@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import json
 import pytest
-import struct
 import tarfile
 from palimpsests.audit import testing
 from palimpsests.audit.anchors import ManualAnchor
@@ -103,8 +102,9 @@ def test_the_bundle_takes_its_offsets_from_the_field_map(monkeypatch, log, tmp_p
     """The bundle read ``seq``, ``time_trust``, ``monotonic_ns`` and
     ``wall_clock_ns`` at 12, 11, 100 and 108, written out in the module — a
     second statement of the layout, outside the codec's contract test. Here
-    the field map is moved, and the bundle must follow it."""
-    assert {f.name: bundle._FIELD[f.name] for f in HEADER_FIELDS} == bundle._FIELD
+    the two clock readers are swapped, and the bundle must follow them."""
+    assert set(bundle._FIELD) == {"seq", "time_trust", "monotonic_ns", "wall_clock_ns"}
+    assert {f.name for f in HEADER_FIELDS} >= set(bundle._FIELD)
     fields = dict(bundle._FIELD)
     fields["monotonic_ns"], fields["wall_clock_ns"] = (
         fields["wall_clock_ns"], fields["monotonic_ns"])
@@ -115,5 +115,5 @@ def test_the_bundle_takes_its_offsets_from_the_field_map(monkeypatch, log, tmp_p
         claims = json.loads(tar.extractfile("time-claims.json").read())["claims"]
     with AuditReader.open(log) as reader:
         h = reader.header_at(3)
-    q = struct.unpack("<q", struct.pack("<Q", h.monotonic_ns))[0]
-    assert claims[3]["wall_clock_ns"] == q  # followed the map, not a literal
+    assert claims[3]["wall_clock_ns"] == h.monotonic_ns  # followed the reader, not a literal
+    assert claims[3]["monotonic_ns"] == h.wall_clock_ns
