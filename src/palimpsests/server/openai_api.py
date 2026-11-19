@@ -446,8 +446,8 @@ def create_app(
         length and head, an operator can tell "nothing was sent" from "it
         was sent and refused" from "it arrived" — the three cases a client
         shows identically. Behind the same bearer as every route; reads
-        state, writes nothing. The shape is experimental until the HTTP
-        surface is given a stability class (0.15 plan, A3).
+        state, writes nothing. The shape is ``pala-serve-status/1``,
+        public and open to added keys (``docs/SERVE-SURFACE.md``).
         """
         with stats_lock:
             ingest = {
