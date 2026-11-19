@@ -158,7 +158,10 @@ that nobody made.
 - `pending_calls` — calls reported with no result yet.
 - `chain` — `null` when the serve has no audit chain; otherwise its
   length, its head, and when a record is on stable storage
-  ([WRITER-SURFACE.md](WRITER-SURFACE.md) §4).
+  ([WRITER-SURFACE.md](WRITER-SURFACE.md) §4). The head is the head *now*:
+  stopping the serve writes one more record (`WRITER_CLOSE`), and the
+  serve prints the closing head as it stops. That one is the head to
+  anchor.
 
 Behind the same bearer as every route. It reads state and writes
 nothing. `pala-serve-status/1` is open to added keys and added routes.

@@ -155,6 +155,46 @@ recorded frontier and so cannot state it.
   `recover_torn_tail=False` to refuse instead.
 - **A record that was returned survives a loss of power** — under the
   default, `Durability.RECORD`. See below.
+- **A stop that was not a close shows, once the chain goes on** (since
+  0.15, inference profile r8). See "The writer's own two records".
+
+### The writer's own two records
+
+A writer writes two records nobody asked it for (inference profile r8,
+§3.3):
+
+- `WRITER_OPEN`, directly behind the first `GENESIS` or `BOOT` it
+  writes. Its detail names the release that wrote it.
+- `WRITER_CLOSE`, as its last record, in `close()`.
+
+A chain that simply stopped used to say nothing about why. Now a boot
+that opened and was followed by another boot either ends with
+`WRITER_CLOSE` or was stopped without being closed — a crash, a kill, a
+power cut — and a reader reports it (`boot_ended_without_close`, an
+advisory: the chain is whole either way).
+
+What follows from it:
+
+- **Record counts and seqs move.** `genesis()` returns the hash of the
+  `GENESIS` record, and the chain has grown by two records by the time it
+  returns. Take a seq from `return_seq=True` or from `seq`, never by
+  counting calls.
+- **The head of a closed chain is the hash of `WRITER_CLOSE`.** `head`
+  and `seq` stay readable on a closed writer. A head read while the
+  writer ran, and anchored, is the anchor of a chain one record shorter:
+  the closed file extends beyond it and is not complete against it.
+  **Anchor after the close.** `palimpsests serve` prints the closing head
+  when it stops.
+- **`close()` is the only orderly end.** A `with` block calls it, on an
+  exception too: `WRITER_CLOSE` says the writer was closed, not that the
+  work succeeded.
+- **The last boot of a file is never judged** — its writer may be
+  writing still. A writer stopped for good and never resumed looks like
+  one still running; only something outside the chain tells them apart.
+- `PalaWriter(path, lifecycle=False)` writes neither record, and its
+  boots are judged by nobody. It exists for a chain that must match one
+  written before 0.15 record for record; a deployment has no reason to
+  use it.
 
 ### Durability: when a record is on stable storage
 

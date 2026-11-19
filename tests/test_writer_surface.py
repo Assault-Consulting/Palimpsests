@@ -111,10 +111,12 @@ def test_the_parameters_a_caller_relies_on_are_there_in_order():
             assert extra.kind is inspect.Parameter.KEYWORD_ONLY, (name, extra.name)
 
 
+@pytest.mark.lifecycle
 def test_the_constructor_takes_what_the_document_says():
     params = inspect.signature(PalaWriter.__init__).parameters
     assert list(params)[1:] == ["path", "boot_id", "time_trust", "assurance_tier", "rotation",
-                                "durability"]
+                                "durability", "lifecycle"]
+    assert params["lifecycle"].default is True
     assert all(params[p].kind is inspect.Parameter.KEYWORD_ONLY
                for p in ("boot_id", "time_trust", "assurance_tier", "rotation", "durability"))
     assert list(inspect.signature(RotationPolicy).parameters) == [

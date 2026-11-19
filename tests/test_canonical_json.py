@@ -248,6 +248,6 @@ def test_a_call_whose_arguments_have_no_canonical_form_is_still_recorded(tmp_pat
     audit.writer.close()
     assert r.status_code == 200 and all("error" not in x for x in r.json()["results"])
     assert (hook.status_code, hook.json()) == (200, {})
-    digests = [EVT_PAYLOAD_DIGEST in dict(decode_tlvs(b))
-               for _h, b in iter_records(log.read_bytes()) if b]
-    assert digests == [False, True, False]
+    calls = [dict(decode_tlvs(b)) for _h, b in iter_records(log.read_bytes()) if b]
+    calls = [t for t in calls if EVT_PAYLOAD_DIGEST in t or 0x000C in t]  # tool records
+    assert [EVT_PAYLOAD_DIGEST in t for t in calls] == [False, True, False]

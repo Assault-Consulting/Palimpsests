@@ -221,6 +221,7 @@ testpaths = ["tests"]
 addopts = "--import-mode=importlib"
 markers = [
     "real_sync: the test needs the writer's real disk sync (tests/conftest.py replaces it with a counter otherwise)",
+    "lifecycle: in a file of PRE_R8_WRITER_TESTS (tests/conftest.py), the test still wants the writer's default lifecycle marks",
 ]
 
 [tool.coverage.run]
