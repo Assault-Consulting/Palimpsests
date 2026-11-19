@@ -74,6 +74,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 REPORTED = 1  # EVT_SOURCE reported-by-client
+TELEMETRY = 2  # EVT_SOURCE derived-from-telemetry (profile r7): the OTLP route
 
 
 @dataclass
@@ -500,7 +501,7 @@ def probe_otel(workdir: Path) -> Result:
             tp.shutdown()
         # TestModel answers locally, as LiteLLM's mock does: the stub model
         # is never asked, so there is no completion count to pass.
-        return _verdict("otel", version, serve.pairs(), REPORTED)
+        return _verdict("otel", version, serve.pairs(), TELEMETRY)
 
 
 PROBES = {

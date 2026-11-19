@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: Assault Consulting
 # SPDX-License-Identifier: CC0-1.0
-"""Generate the inference-profile companion vectors (r2–r6 semantics).
+"""Generate the inference-profile companion vectors (r2–r7 semantics).
 
 Deterministic: fixed key, seq-derived nonces, fixed ids and clocks —
 real crypto, fake entropy. Never do this outside a test vector.
@@ -17,7 +17,9 @@ pair carrying EVT_SOURCE = 1 (absent means parsed-from-wire) — and, from
 r6, a TOOL_RESULT with EVT_OUTCOME = 4 (a return whose failure the
 recording vantage could not observe) and SEGMENT_CONTINUATION (kind 11):
 the declaration a writer makes as the first record of each segment it
-opens after a cut, with the derived root of everything before it.
+opens after a cut, with the derived root of everything before it — and,
+from r7, a TOOL_CALL/TOOL_RESULT pair carrying EVT_SOURCE = 2: derived
+from a telemetry span the client exported after the tool returned.
 Prior-revision records are appended-to, never edited:
 their bytes are identical to the revision that introduced them. They are a
 **companion** artifact: `../test-vectors.json` is frozen with the core
@@ -92,6 +94,7 @@ KIND_TOOLS_OFFERED_NO_CALL = 10
 EVT_SOURCE = 0x0011
 SOURCE_PARSED_FROM_WIRE = 0  # the default — the tag is absent
 SOURCE_REPORTED_BY_CLIENT = 1
+SOURCE_DERIVED_FROM_TELEMETRY = 2  # r7 (profile §3.1)
 
 # r6 profile allocations (profile §3.1 outcome 4; §3.2 segment continuation)
 OUTCOME_UNOBSERVED = 4
@@ -547,13 +550,69 @@ prev = emit(
     "Anchor over the r6-extended chain; anchor_head below tracks this tip.",
 )
 
+# ─── r7: the telemetry-derived pair (profile §3.1, EVT_SOURCE = 2) ──────
+
+# 21 — EVENT kind 8: TOOL_CALL derived from an exported telemetry span.
+# One span carries the call and its outcome together and is exported after
+# the tool returned, so the pair is written at one moment: its place in the
+# chain says when the export arrived, not when the call was made.
+telemetry_args = b'{"city":"Kyiv"}'
+telemetry_call_body = R.encode_tlvs([
+    R.tlv(EVT_KIND, u16(KIND_TOOL_CALL)),
+    R.tlv(EVT_TOOL_NAME, b"weather.lookup"),
+    R.tlv(EVT_PAYLOAD_DIGEST, hashlib.sha256(telemetry_args).digest()),
+    R.tlv(EVT_SOURCE, u16(SOURCE_DERIVED_FROM_TELEMETRY)),
+])
+telemetry_call_hash = emit(
+    "tool_call_from_telemetry",
+    header(record_type=R.RT_EVENT, seq=21, prev=prev, body=telemetry_call_body,
+           tlvs=[R.tlv(R.TLV_ORIGIN_ROLE, b"engine.native")],
+           span_id=SPAN_S1),
+    "TOOL_CALL (kind 8) with EVT_SOURCE = 2 (r7): derived from a telemetry "
+    "span the client exported after the tool returned. A client's report "
+    "like source 1, and one step further from the event: the record's "
+    "position in the chain is the export's arrival, not the call.",
+    body=telemetry_call_body,
+)
+prev = telemetry_call_hash
+
+# 22 — EVENT kind 9: its result, from the same span. Outcome 1 (error):
+# a span carries a status, so this vantage can observe a failure.
+telemetry_result = b'upstream timeout'
+telemetry_result_body = R.encode_tlvs([
+    R.tlv(EVT_KIND, u16(KIND_TOOL_RESULT)),
+    R.tlv(EVT_REF_SEQ, u64(21)),
+    R.tlv(EVT_REF_HASH, telemetry_call_hash),
+    R.tlv(EVT_OUTCOME, u16(1)),
+    R.tlv(EVT_PAYLOAD_DIGEST, hashlib.sha256(telemetry_result).digest()),
+    R.tlv(EVT_SOURCE, u16(SOURCE_DERIVED_FROM_TELEMETRY)),
+])
+prev = emit(
+    "tool_result_from_telemetry",
+    header(record_type=R.RT_EVENT, seq=22, prev=prev, body=telemetry_result_body,
+           tlvs=[R.tlv(R.TLV_ORIGIN_ROLE, b"engine.native")],
+           span_id=SPAN_S1),
+    "TOOL_RESULT (kind 9) with EVT_SOURCE = 2 (r7): the same span's "
+    "outcome, bound to seq 21 by seq and hash like every other pair.",
+    body=telemetry_result_body,
+)
+
+# 23 — ANCHOR noting the new head
+anchored_r7 = prev
+prev = emit(
+    "anchor_r7",
+    header(record_type=R.RT_ANCHOR, seq=23, prev=prev,
+           tlvs=[R.tlv(R.TLV_ANCHOR_HEAD, anchored_r7)]),
+    "Anchor over the r7-extended chain; anchor_head below tracks this tip.",
+)
+
 chain_head = prev
 
 # ─── self-verify before writing anything ────────────────────────────────
 
 res = R.verify_chain(chain)
 assert res.chain_ok, f"generated chain does not verify: {res}"
-assert res.count == 21
+assert res.count == 24
 assert not res.breaks and not res.gaps and not res.violations
 # the encrypted body round-trips under the spec'd nonce/AAD derivation
 back = AESGCM(KEY).decrypt(R.nonce_for(3), bodies[3][12:],
@@ -562,13 +621,13 @@ assert back == plaintext
 
 out = {
     "$comment": (
-        "Inference-profile companion vectors (r2-r6). Deterministic; real "
+        "Inference-profile companion vectors (r2-r7). Deterministic; real "
         "crypto, fake entropy — never derive keys or ids like this outside "
         "a test vector. ../test-vectors.json is frozen with the core and "
         "is deliberately untouched by these."
     ),
     "profile": "inference",
-    "profile_revision": "r6",
+    "profile_revision": "r7",
     "generator": "gen_inference_vectors.py",
     "boot_id": h(BOOT_ID),
     "encryption": {
@@ -671,10 +730,24 @@ out = {
             "record is the first one. Reader-side and advisory: the core "
             "verdict never changes because of this record."
         ),
+        "21": {
+            "kind": 8, "kind_name": "TOOL_CALL",
+            "tool_name": "weather.lookup",
+            "payload_digest": hashlib.sha256(telemetry_args).digest().hex(),
+            "source": 2, "source_name": "derived-from-telemetry",
+        },
+        "22": {
+            "kind": 9, "kind_name": "TOOL_RESULT",
+            "ref_seq": 21, "ref_hash": h(telemetry_call_hash),
+            "outcome": 1, "outcome_name": "error",
+            "payload_digest": hashlib.sha256(telemetry_result).digest().hex(),
+            "source": 2, "source_name": "derived-from-telemetry",
+        },
         "source_rule": (
-            "EVT_SOURCE (0x0011) is present only for the non-default value 1 "
-            "(reported-by-client); absent means 0 (parsed-from-wire). Seq 8/9 "
-            "carry no EVT_SOURCE and are byte-identical to their r3 form."
+            "EVT_SOURCE (0x0011) is present only for a non-default value: 1 "
+            "(reported-by-client) or, from r7, 2 (derived-from-telemetry); "
+            "absent means 0 (parsed-from-wire). Seq 8/9 carry no EVT_SOURCE "
+            "and are byte-identical to their r3 form."
         ),
     },
 }

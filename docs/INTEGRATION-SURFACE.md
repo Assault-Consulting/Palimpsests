@@ -122,7 +122,7 @@ holds the API.
 | Diagnosis patterns about completeness | `unanchored_tail`, `replaced_or_rolled_back` |
 | `ManifestReading.status` | `matches`, `contradicts`, `declared_only` |
 | `outcome_name` | `ok`, `error`, `timeout`, `cancelled`, `unobserved` |
-| `source_name` | `parsed-from-wire`, `reported-by-client` |
+| `source_name` | `parsed-from-wire`, `reported-by-client`, `derived-from-telemetry` (since 0.15) |
 | `ShredView.reason_name` | `unspecified`, `legal_erasure`, `retention_expiry`, `policy` |
 | `StatementRefused.code` | `not_cose_sign1`, `trailing_bytes`, `protected_header_malformed`, `detached_payload`, `payload_malformed`, `repeated_key`, `indefinite_length_map`, `unsupported_alg`, `key_type_mismatch`, `signature_invalid`, `head_mismatch`, `format_id_mismatch`, `range_invalid`, `content_type_unknown`, `payload_keys_mismatch`, `protected_labels_mismatch`, `root_malformed`, `chain_too_short`, `root_mismatch` |
 | `StatementCheck.root_status` | `absent`, `recomputed`, `carried, not recomputed` |

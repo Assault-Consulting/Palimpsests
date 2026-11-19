@@ -16,7 +16,7 @@ from __future__ import annotations
 DRY_RUN_HEADER = "x-palimpsests-dry-run"
 
 _OUTCOMES = {0: "ok", 1: "error", 2: "timeout", 3: "cancelled", 4: "unobserved"}
-_SOURCES = {0: "parsed-from-wire", 1: "reported-by-client"}
+_SOURCES = {0: "parsed-from-wire", 1: "reported-by-client", 2: "derived-from-telemetry"}
 
 
 def is_dry_run(request) -> bool:

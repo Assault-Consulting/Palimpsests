@@ -202,7 +202,8 @@ def test_the_route_records_one_pair_per_tool_span(tmp_path):
     assert [c.detail for c in calls][0] == "otel execute_tool; semconv 1.41.0"
     assert "error.type FileNotFoundError" in calls[1].detail
     assert [r.outcome for r in results] == [OUTCOME_OK, OUTCOME_ERROR, OUTCOME_OK]
-    assert {d.source_name for d in recs} == {"reported-by-client"}
+    assert {d.source_name for d in recs} == {"derived-from-telemetry"}
+    assert {d.source for d in recs} == {2}
 
 
 def test_digests_are_canonical_and_content_never_lands(tmp_path):

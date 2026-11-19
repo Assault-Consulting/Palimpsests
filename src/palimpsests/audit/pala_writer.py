@@ -150,6 +150,7 @@ from palimpsests.audit.profiles.inference import (  # noqa: F401
     SHRED_DETAIL,
     SHRED_REASON,
     SHRED_TARGET_SEQS,
+    SOURCE_DERIVED_FROM_TELEMETRY,
     SOURCE_PARSED_FROM_WIRE,
     SOURCE_REPORTED_BY_CLIENT,
 )
@@ -1080,17 +1081,19 @@ class PalaWriter:
 
     @staticmethod
     def _append_source(tlvs: list[tuple[int, bytes]], source: int) -> None:
-        """Append ``EVT_SOURCE`` for non-default sources (r5).
+        """Append ``EVT_SOURCE`` for non-default sources (r5; value 2, r7).
 
         The default value is expressed by absence: r3/r4 emitters and
         this writer with ``source=SOURCE_PARSED_FROM_WIRE`` produce the
         same bytes.
         """
-        if source not in (SOURCE_PARSED_FROM_WIRE, SOURCE_REPORTED_BY_CLIENT):
+        if source not in (SOURCE_PARSED_FROM_WIRE, SOURCE_REPORTED_BY_CLIENT,
+                          SOURCE_DERIVED_FROM_TELEMETRY):
             raise ValueError(
-                "source must be SOURCE_PARSED_FROM_WIRE or SOURCE_REPORTED_BY_CLIENT"
+                "source must be SOURCE_PARSED_FROM_WIRE, SOURCE_REPORTED_BY_CLIENT "
+                "or SOURCE_DERIVED_FROM_TELEMETRY"
             )
-        if source == SOURCE_REPORTED_BY_CLIENT:
+        if source != SOURCE_PARSED_FROM_WIRE:
             tlvs.append((EVT_SOURCE, struct.pack("<H", source)))
 
     @staticmethod

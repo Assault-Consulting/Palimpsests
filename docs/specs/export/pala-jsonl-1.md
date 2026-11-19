@@ -56,7 +56,7 @@ Present only where the record has them — each equal to what
 
 | Key | On |
 |---|---|
-| `source`, `source_name` | a `TOOL_CALL` or `TOOL_RESULT`: `0` parsed-from-wire, `1` reported-by-client |
+| `source`, `source_name` | a `TOOL_CALL` or `TOOL_RESULT`: `0` parsed-from-wire, `1` reported-by-client, `2` derived-from-telemetry (since 0.15) |
 | `outcome`, `outcome_name` | a `TOOL_RESULT`: `ok`, `error`, `timeout`, `cancelled`, `unobserved` |
 | `disposition`, `disposition_name` | an `OVERSIGHT_ACK` |
 | `operator_id` | an `OVERSIGHT_ACK`: 16 bytes, hex, pseudonymous |
@@ -64,7 +64,9 @@ Present only where the record has them — each equal to what
 
 `ok` is a return, never a success; `unobserved` is a return whose failure the
 recording vantage could not see (inference profile §3.1). A line with
-`source: 1` is the client's report, recorded — not the runtime's observation.
+`source: 1` is the client's report, recorded — not the runtime's observation;
+`source: 2` is the same, taken from a telemetry span the client exported
+after the tool returned.
 
 The body, when `body_len` is not `0`:
 

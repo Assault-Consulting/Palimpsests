@@ -37,6 +37,12 @@ vantage *does* observe failure (unlike Codex's hooks, where r6's
 ``unobserved`` applies). What it cannot see is a tool that returned an
 error *as its result*: to OpenTelemetry that is a success, and to the
 chain it is ``ok`` — a return, never a confirmed effect.
+
+**Source.** The pair is marked ``derived-from-telemetry`` (profile r7,
+``EVT_SOURCE = 2``; until 0.15 it was marked ``reported-by-client``). A
+span is exported after the tool returned, and carries the call and its
+outcome together: the pair is written at one moment, and its place in
+the chain is when the export arrived, not when the call was made.
 """
 
 from __future__ import annotations
@@ -315,7 +321,7 @@ class TraceIngest:
         from palimpsests.audit.pala_writer import (
             OUTCOME_ERROR,
             OUTCOME_OK,
-            SOURCE_REPORTED_BY_CLIENT,
+            SOURCE_DERIVED_FROM_TELEMETRY,
             canonical_tool_args_digest,
         )
 
@@ -335,7 +341,7 @@ class TraceIngest:
                     span.tool_name,
                     canonical_tool_args_digest(args) if args is not None else None,
                     None,
-                    source=SOURCE_REPORTED_BY_CLIENT,
+                    source=SOURCE_DERIVED_FROM_TELEMETRY,
                     detail=detail,
                 )
                 self._audit.tool_result(
@@ -344,7 +350,7 @@ class TraceIngest:
                     OUTCOME_ERROR if span.failed else OUTCOME_OK,
                     canonical_tool_args_digest(result) if result is not None else None,
                     None,
-                    source=SOURCE_REPORTED_BY_CLIENT,
+                    source=SOURCE_DERIVED_FROM_TELEMETRY,
                 )
                 self._seen[key] = None
                 while len(self._seen) > SEEN_MEMORY:
