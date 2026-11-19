@@ -31,8 +31,8 @@ What the hooks really send was measured before this was written
   string, and no ``tool_response``.
 
 Digests use the profile's canonical form for tool payloads
-(:func:`canonical_tool_args_digest`: JSON, sorted keys, compact
-separators, UTF-8, SHA-256) for the input *and* the result, so an object
+(:func:`canonical_tool_args_digest`: RFC 8785 canonical JSON, UTF-8,
+SHA-256) for the input *and* the result, so an object
 and a string go through one rule and two deliveries of one result give
 one digest. Content never enters the chain.
 
@@ -51,7 +51,7 @@ from palimpsests.audit.pala_writer import (
     OUTCOME_OK,
     OUTCOME_UNOBSERVED,
     SOURCE_REPORTED_BY_CLIENT,
-    canonical_tool_args_digest,
+    _tool_payload_digest,
 )
 
 TOOL_EVENTS = ("PreToolUse", "PostToolUse", "PostToolUseFailure")
@@ -146,13 +146,13 @@ class HookIngest:
             # confirmed effect.
             outcome = self._client["post_outcome"]
             digest = (
-                canonical_tool_args_digest(payload["tool_response"])
+                _tool_payload_digest(payload["tool_response"])
                 if "tool_response" in payload
                 else None
             )
         else:  # the client's failure event (checked above that it has one)
             outcome = OUTCOME_ERROR
-            digest = canonical_tool_args_digest(payload["error"]) if "error" in payload else None
+            digest = _tool_payload_digest(payload["error"]) if "error" in payload else None
 
         self._audit.tool_result(seq, call_hash, outcome, digest, None, source=source)
         self._remember_closed(key)
@@ -160,7 +160,7 @@ class HookIngest:
 
     def _open(self, key: str, name: str, payload: dict) -> None:
         args = payload.get("tool_input")
-        digest = canonical_tool_args_digest(args) if args is not None else None
+        digest = _tool_payload_digest(args) if args is not None else None
         seq, call_hash = self._audit.tool_called(
             name, digest, None, source=SOURCE_REPORTED_BY_CLIENT
         )
