@@ -127,7 +127,8 @@ would have been recorded:
 ```
 
 `would_record` entries carry `record` (`TOOL_CALL` or `TOOL_RESULT`),
-`source`, `payload_digest` (whether a digest would be kept), and `tool`
+`source` (`reported-by-client`, or `derived-from-telemetry` on the traces
+route), `payload_digest` (whether a digest would be kept), and `tool`
 or `outcome`. There is no `seq` and no `record_hash`: nothing was written
 to refer to. The hook routes add `reply`, the reply the agent would have
 had.
@@ -178,7 +179,8 @@ branch on, from an open vocabulary; `message` and `fix` are sentences.
 
 OTLP/HTTP trace export, JSON or protobuf, optionally gzip. Only
 `execute_tool` spans are recorded, one call and one result each, marked
-`reported-by-client`; the rest of a trace is accepted and not kept — this
+`derived-from-telemetry` (until 0.15: `reported-by-client`); the rest of a
+trace is accepted and not kept — this
 is not a trace backend. Tool spans that cannot be recorded are reported as
 OTLP `partialSuccess`, not as an error, so an exporter does not retry what
 will never be recorded. Protobuf needs the `[serve]` extra.

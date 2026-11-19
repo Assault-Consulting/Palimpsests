@@ -1,7 +1,7 @@
 {
-  "$comment": "Inference-profile companion vectors (r2-r6). Deterministic; real crypto, fake entropy \u2014 never derive keys or ids like this outside a test vector. ../test-vectors.json is frozen with the core and is deliberately untouched by these.",
+  "$comment": "Inference-profile companion vectors (r2-r7). Deterministic; real crypto, fake entropy \u2014 never derive keys or ids like this outside a test vector. ../test-vectors.json is frozen with the core and is deliberately untouched by these.",
   "profile": "inference",
-  "profile_revision": "r6",
+  "profile_revision": "r7",
   "generator": "gen_inference_vectors.py",
   "boot_id": "b0071d000000000000000000000000a2",
   "encryption": {
@@ -227,10 +227,41 @@
       "header_len": 192,
       "header_hex": "50414c410100c000500000031400000000000000b0071d000000000000000000000000a280bce26837d160018588639361fcf97b0a64872750cf1b606d4dd3ee240a29ce00000000000000000000000000000000000000000000000000000000000000000047a219020000000015f490a30ac218000000000000000000000000000000000000000000000000000000000000000000000000000000005000200080bce26837d160018588639361fcf97b0a64872750cf1b606d4dd3ee240a29ce",
       "record_hash": "26ea26c0934e7791c50becdfc8642ffd9c70fb80fff3e935e5eeb9a47fe8058c"
+    },
+    {
+      "label": "tool_call_from_telemetry",
+      "note": "TOOL_CALL (kind 8) with EVT_SOURCE = 2 (r7): derived from a telemetry span the client exported after the tool returned. A client's report like source 1, and one step further from the event: the record's position in the chain is the export's arrival, not the call.",
+      "seq": 21,
+      "record_type": "0x0012",
+      "header_len": 173,
+      "header_hex": "50414c410100ad00120000031500000000000000b0071d000000000000000000000000a226ea26c0934e7791c50becdfc8642ffd9c70fb80fff3e935e5eeb9a47fe8058c31313131313131313131313131313131000000000000000000000000000000004089b1190200000040570391a30ac2180000000042000000705dc1a5a1abd9c0496f07df381ca9364e93289e1a0e72e4e42a74db87bac55901000d00656e67696e652e6e6174697665",
+      "record_hash": "237ae35f660cb365d738ff2bfd654cbd5f7cd9c8e07ee498c9051287056189ae",
+      "body_len": 66,
+      "body_hex": "0100020008000c000e00776561746865722e6c6f6f6b75700d0020003086ef261df836f5f8e863a30d66c657c3ea335329afc554038762ceb1823949110002000200"
+    },
+    {
+      "label": "tool_result_from_telemetry",
+      "note": "TOOL_RESULT (kind 9) with EVT_SOURCE = 2 (r7): the same span's outcome, bound to seq 21 by seq and hash like every other pair.",
+      "seq": 22,
+      "record_type": "0x0012",
+      "header_len": 173,
+      "header_hex": "50414c410100ad00120000031600000000000000b0071d000000000000000000000000a2237ae35f660cb365d738ff2bfd654cbd5f7cd9c8e07ee498c9051287056189ae313131313131313131313131313131310000000000000000000000000000000080cbc0190200000080991291a30ac2180000000066000000f4de9aebe3f4f163efb8446bd9edaca6ce269531d2983d5e423991e9cfd91b8101000d00656e67696e652e6e6174697665",
+      "record_hash": "43b9b951adb465afbbe45996e99141862bafea443cdf83fc4f071bb48999b4fd",
+      "body_len": 102,
+      "body_hex": "01000200090008000800150000000000000009002000237ae35f660cb365d738ff2bfd654cbd5f7cd9c8e07ee498c9051287056189ae0e00020001000d0020000bfc357562b94773cdcaebc29cb8870640b64f9aed0515abb053b42f01924058110002000200"
+    },
+    {
+      "label": "anchor_r7",
+      "note": "Anchor over the r7-extended chain; anchor_head below tracks this tip.",
+      "seq": 23,
+      "record_type": "0x0050",
+      "header_len": 192,
+      "header_hex": "50414c410100c000500000031700000000000000b0071d000000000000000000000000a243b9b951adb465afbbe45996e99141862bafea443cdf83fc4f071bb48999b4fd0000000000000000000000000000000000000000000000000000000000000000c00dd01902000000c0db2191a30ac218000000000000000000000000000000000000000000000000000000000000000000000000000000005000200043b9b951adb465afbbe45996e99141862bafea443cdf83fc4f071bb48999b4fd",
+      "record_hash": "08153c838f0cafe371ece7aa736c51be81f21c84fed91fc97ae96ed7d0839d5e"
     }
   ],
-  "chain_head": "26ea26c0934e7791c50becdfc8642ffd9c70fb80fff3e935e5eeb9a47fe8058c",
-  "anchor_head": "26ea26c0934e7791c50becdfc8642ffd9c70fb80fff3e935e5eeb9a47fe8058c",
+  "chain_head": "08153c838f0cafe371ece7aa736c51be81f21c84fed91fc97ae96ed7d0839d5e",
+  "anchor_head": "08153c838f0cafe371ece7aa736c51be81f21c84fed91fc97ae96ed7d0839d5e",
   "semantics": {
     "$comment": "Decoded r2/r3 body expectations, so a profile-aware reader can check its tag/kind resolution \u2014 the envelope answers above are checkable with any core verifier.",
     "4": {
@@ -336,6 +367,25 @@
       "prior_root_covers": "records 0..18 (the 19 records before seq 19)"
     },
     "continuation_rules": "SEG_PREDECESSOR_HEAD MUST equal the record's prev_hash; SEG_PRIOR_ROOT is the derived \u00a74.3 root of [0, seq), always from record 0; the body MUST be cleartext; in a segment file the record is the first one. Reader-side and advisory: the core verdict never changes because of this record.",
-    "source_rule": "EVT_SOURCE (0x0011) is present only for the non-default value 1 (reported-by-client); absent means 0 (parsed-from-wire). Seq 8/9 carry no EVT_SOURCE and are byte-identical to their r3 form."
+    "21": {
+      "kind": 8,
+      "kind_name": "TOOL_CALL",
+      "tool_name": "weather.lookup",
+      "payload_digest": "3086ef261df836f5f8e863a30d66c657c3ea335329afc554038762ceb1823949",
+      "source": 2,
+      "source_name": "derived-from-telemetry"
+    },
+    "22": {
+      "kind": 9,
+      "kind_name": "TOOL_RESULT",
+      "ref_seq": 21,
+      "ref_hash": "237ae35f660cb365d738ff2bfd654cbd5f7cd9c8e07ee498c9051287056189ae",
+      "outcome": 1,
+      "outcome_name": "error",
+      "payload_digest": "0bfc357562b94773cdcaebc29cb8870640b64f9aed0515abb053b42f01924058",
+      "source": 2,
+      "source_name": "derived-from-telemetry"
+    },
+    "source_rule": "EVT_SOURCE (0x0011) is present only for a non-default value: 1 (reported-by-client) or, from r7, 2 (derived-from-telemetry); absent means 0 (parsed-from-wire). Seq 8/9 carry no EVT_SOURCE and are byte-identical to their r3 form."
   }
 }

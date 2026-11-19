@@ -251,9 +251,15 @@ def _dry_run(http, api_key: str | None, integration: str) -> list[Finding]:
         return [Finding(FAIL, "dry_run_incomplete",
                         f"a dry run of {route} would record {kinds or 'nothing'}, "
                         "not a call and its result")]
-    if any(w.get("source") != "reported-by-client" for w in would):
+    # A serve older than 0.15 marks a telemetry span reported-by-client.
+    marks = ({"derived-from-telemetry", "reported-by-client"} if integration == "otel"
+             else {"reported-by-client"})
+    sources = {w.get("source") for w in would}
+    if len(sources) != 1 or not sources <= marks:
         return [Finding(FAIL, "dry_run_wrong_source",
-                        "the route would record the pair without the reported-by-client mark")]
+                        f"the route would record the pair marked {sorted(map(str, sources))}, "
+                        f"not {' or '.join(sorted(marks))}")]
+    mark = sources.pop()
     outcome = would[1].get("outcome")
     expected = EXPECTED_OUTCOME.get(integration)
     if expected is not None and outcome != expected:
@@ -261,7 +267,7 @@ def _dry_run(http, api_key: str | None, integration: str) -> list[Finding]:
                         f"the route would record outcome {outcome!r}, expected {expected!r}")]
     return [Finding(
         OK, "dry_run_ok",
-        f"{route} would record a call and its result, marked reported-by-client, "
+        f"{route} would record a call and its result, marked {mark}, "
         f"outcome {outcome!r} — nothing was written",
     )]
 

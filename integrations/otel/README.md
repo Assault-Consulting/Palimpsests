@@ -8,7 +8,8 @@ describes every tool it runs: the GenAI semantic conventions put one span
 on each tool execution — `gen_ai.operation.name = execute_tool`, named
 `execute_tool <tool name>`. Point its OTLP trace exporter at the serve and
 those spans land on the chain as `TOOL_CALL` / `TOOL_RESULT` pairs, marked
-`reported-by-client`. Nothing to install on the application side.
+`derived-from-telemetry` (`reported-by-client` on a serve older than 0.15).
+Nothing to install on the application side.
 
 ## Setup
 

@@ -14,7 +14,7 @@ questions.
 | **Profile of** | PALA-1, version 1 |
 | **Status** | **Frozen — v1.0** (2026-08-09, with the core). Existing tag and kind allocations are permanent; the `EVT_KIND` and `AGG_*` spaces grow **additively** in profile revisions (§6.3) — additions never renumber and never touch the envelope. The profile is emitted by the Palimpsests writer (Phase 3, wired). |
 | **Date** | 2026-08-09 (frozen; first draft 2026-08-03) |
-| **Revision** | **r6** (2026-10-10) — additive only; see §9 for the revision history. r1 is the freeze. |
+| **Revision** | **r7** (2026-11-19) — additive only; see §9 for the revision history. r1 is the freeze. |
 | **Licence** | CC0-1.0, like the core specification and its test vectors. |
 
 **Metadata-only discipline.** The emitting library's existing audit log
@@ -47,7 +47,7 @@ GGUF file for levels 2–3), and `ORIGIN_CONFIG_DIGEST` is the digest of
 the canonical encoding of the engine's memory configuration — a config
 change is a different origin and the chain shows it. How the canonical
 config encoding is produced is fixed by the writer, not this profile,
-and is an open issue until it is (§6).
+and is recorded in §6, issue 2.
 
 ## 2. Spans — sessions and requests
 
@@ -83,7 +83,7 @@ own type namespace:
 | 0x000E | `EVT_OUTCOME` | u16 — 0 ok, 1 error, 2 timeout, 3 cancelled (§3.1, kind 9). *(r3)* 4 unobserved: a result returned, and the recording vantage could not observe whether the tool failed. *(r6)* |
 | 0x000F | `EVT_TOOLS_OFFERED` | u16 — number of structured tools offered in the request (kind 10). *(r4)* |
 | 0x0010 | `EVT_TOOLS_DIGEST` | 32 bytes — SHA-256 over the canonical offered-name list: the *sorted* names as a JSON array, compact separators, non-ASCII preserved, UTF-8 (the §6.2 discipline applied to names; kind 10). Order-independent: the offer is a set. *(r4)* |
-| 0x0011 | `EVT_SOURCE` | u16 — how the serving layer learned of the event: 0 parsed from the wire it mediated, 1 reported by the client through the ingestion surface. Absent means 0, so every prior record's meaning and bytes are unchanged. Kinds 8/9. An evidence-quality mark, never a trust upgrade. *(r5)* |
+| 0x0011 | `EVT_SOURCE` | u16 — how the serving layer learned of the event: 0 parsed from the wire it mediated, 1 reported by the client through the ingestion surface, 2 derived from a telemetry span the client exported *(r7)*. Absent means 0, so every prior record's meaning and bytes are unchanged. Kinds 8/9. An evidence-quality mark, never a trust upgrade. *(r5)* |
 | 0x0012 | `SEG_PREDECESSOR_HEAD` | 32 bytes — `record_hash` of the last record of the previous segment; MUST equal the record's own `prev_hash` (§3.2, kind 11). *(r6)* |
 | 0x0013 | `SEG_INDEX` | u32 — ordinal of the segment the record opens, counting from 0 for the segment that holds `GENESIS` (kind 11). *(r6)* |
 | 0x0014 | `SEG_RETENTION_S` | u64 — the retention floor in force at the cut, in seconds; 0 means none declared (kind 11). Policy, not something the chain enforces. *(r6)* |
@@ -212,6 +212,21 @@ may *claim*: a wire-parsed pair is the runtime's own observation; a
 reported pair is the client's assertion, faithfully recorded — the
 chain proves the report happened, what it digested, and when, never
 that the tool actually ran.
+
+**Telemetry *(r7)*.** A pair written from a telemetry span — an
+OpenTelemetry `execute_tool` span exported to the serving layer — MUST
+carry `EVT_SOURCE` with value 2. It is a client's assertion like value 1,
+and one step further from the event: a span is exported after the tool
+returned and carries the call and its outcome together, so both records
+of the pair are written at one moment, and their place in the chain is
+when the export arrived — not when the call was made, and not in order
+with the calls around it. A reader MUST NOT read the position or the
+time claims of a value-2 pair as the time of the call. Value 1 keeps its
+meaning: a report made for the audit, as the event happened. A reader
+that does not know value 2 sees a source it cannot name, which is the
+right answer for it. Records written before r7 from telemetry carry
+value 1; they are not re-marked, and nothing in them was false — value 2
+says more, not something else.
 
 ### 3.2 Segment continuation *(r6)*
 
@@ -344,13 +359,17 @@ per-second convention of the robotics profile does not carry over.
 
 ## 6. Open issues (profile)
 
-| # | Issue |
-|---|---|
-| 1 | **`MERKLE` leaf source — deferred.** Version 1 of this profile defines no leaf source, and an inference chain SHOULD NOT emit `MERKLE` records until a revision defines one. Candidates: per-request metadata digests (selective disclosure of one request's existence) vs per-token-batch digests (finer, heavier). The choice changes what a disclosed leaf proves and is not needed for the first writer. |
-| 2 | **Canonical config encoding for `ORIGIN_CONFIG_DIGEST`.** Must be byte-deterministic across versions of the emitting library, or the same config produces different origins. Fixed by the writer; recorded here when it is. |
-| 3 | **`EVT_KIND` completeness.** The enum will grow under Phase 3–4 instrumentation (shed classes, engine switches, context-memory events). Additions before freeze are expected; renumbering is not. *r2 exercised exactly this path: kinds 102–103 and tags 0x0005–0x000B arrived additively with the envelope untouched. r3 repeated it: kinds 8–9 and 104, tags 0x000C–0x000E, one `AGG_*` tag.* |
-| 4 | **Canonical tool-argument encoding for `EVT_PAYLOAD_DIGEST`** — **resolved by the writer** (the §6.2 path): JSON with sorted keys, compact separators, non-ASCII preserved, UTF-8, then SHA-256; pre-canonicalized `bytes` digest as-is (`canonical_tool_args_digest`). *(r3)* |
-| 5 | **`EVT_OUTCOME = ok` is a return, not a confirmed effect.** On a `TOOL_RESULT` (kind 9), outcome 0 states that a result payload came back and re-entered generation — the loop observed a return with the digest recorded. It does not state that the action the tool was asked to perform took effect in the world: a payment tool can return `ok` on a request the downstream system later rejected, and a runtime at the model boundary cannot see that. Readers and reports MUST NOT render `ok` as "effect confirmed". A separate, boundary-observed confirmation — if a deployment has one — is a different record from a different vantage, and this profile does not define it; whether it should (an additive kind, or a tag on kind 9 for a bound confirmation digest) is open. Stating the boundary is the point; the data model is unchanged. *(r5 note, 2026-09-05)* |
+None is open as of r7. Each is kept here with how it was closed, because
+earlier revisions, the core specification and recorded runs refer to
+them by number.
+
+| # | Issue | Closed |
+|---|---|---|
+| 1 | **`MERKLE` leaf source.** Version 1 defined none, and said an inference chain SHOULD NOT emit `MERKLE` records until a revision did. | **r7 — §10.** The leaves are record hashes: a `MERKLE` record is a checkpoint over the chain itself. The content-level candidates of r1 (per-request metadata digests, per-token-batch digests) are not adopted and stay undefined; a later revision may add one under a new leaf-source mark, never by changing §10. |
+| 2 | **Canonical config encoding for `ORIGIN_CONFIG_DIGEST`.** Must be byte-deterministic, or the same config produces different origins. | **By the writer, recorded in r7.** The config's `key=value` pairs, keys sorted, joined by a newline (`0x0A`), UTF-8, then SHA-256. A value is rendered as text: a string as it is, an integer in decimal, a boolean as `True` or `False`, a float in its shortest decimal form that reads back to the same value. The rule covers a flat config of such values; an emitter with a nested config flattens it first, and how it does so is part of what its digest means. |
+| 3 | **`EVT_KIND` completeness.** The enum grows with instrumentation. | **Not an issue but a rule, stated as one in r7:** kinds, tags and vocabulary values are added, never renumbered, renamed or given another meaning. r2–r7 each exercised it with the envelope untouched. A reader meets a kind or a value it does not know and says so; it does not fail. |
+| 4 | **Canonical tool-argument encoding for `EVT_PAYLOAD_DIGEST`.** | **By the writer (r3):** JSON with sorted keys, compact separators, non-ASCII preserved, UTF-8, then SHA-256; pre-canonicalized `bytes` are digested as they are. |
+| 5 | **`EVT_OUTCOME = ok` is a return, not a confirmed effect.** | **Final as of r7.** On a `TOOL_RESULT` (kind 9), outcome 0 states that a result payload came back and re-entered generation. It does not state that the action took effect in the world: a payment tool can return `ok` on a request the downstream system later rejected, and a runtime at the model boundary cannot see that. Readers and reports MUST NOT render `ok` as "effect confirmed". This profile defines no confirmation record. A deployment that observes effects at another boundary records them as its own records from that vantage; if a later revision gives them a kind, it is added, and the meaning of outcome 0 does not move. |
 
 ---
 
@@ -397,3 +416,46 @@ and the note must outlive every key by design. Whether
 | r4 | 2026-09-02 | Additive only: `EVENT` kind 10 (`TOOLS_OFFERED_NO_CALL`, §3.1); `EVT` tags 0x000F (`EVT_TOOLS_OFFERED`) and 0x0010 (`EVT_TOOLS_DIGEST`); the canonical offered-name digest (writer-owned, the §6.2 discipline applied to sorted names). No envelope byte, no core text, no byte of `test-vectors.json` changed; companion vectors for kind 10 extend `inference-vectors.json` in the implementing PR chain. |
 | r5 | 2026-09-03 | Additive only: `EVT` tag 0x0011 (`EVT_SOURCE`) — the wire-parsed / client-reported evidence mark for kinds 8/9; absent means wire-parsed, so every prior record's meaning and bytes are unchanged. No envelope byte, no core text, no byte of `test-vectors.json` changed; companion vectors extend `inference-vectors.json` in the implementing PR chain. |
 | r6 | 2026-10-10 | Additive only: `EVT_OUTCOME` value 4 (`unobserved`, §3.1) — a return whose failure the recording vantage could not observe; `EVENT` kind 11 (`SEGMENT_CONTINUATION`, §3.2); `EVT` tags 0x0012–0x0015 (`SEG_PREDECESSOR_HEAD`, `SEG_INDEX`, `SEG_RETENTION_S`, `SEG_PRIOR_ROOT`) — the retention-continuation design (`retention-continuation.md`) adopted. No envelope byte, no core text, no byte of `test-vectors.json` changed; `inference-vectors.json` gains four records (21 in all, every earlier record byte-identical), and the prefix-consistency vectors stay pinned to the 17-record r5 prefix and unchanged. |
+| r7 | 2026-11-19 | Additive only, and the open issues closed (§6). `EVT_SOURCE` value 2 (`derived-from-telemetry`, §3.1) — a pair written from an exported telemetry span. `MERKLE` records defined for this profile as chain checkpoints whose leaves are record hashes (§10), which is what the writer has emitted since 0.10; the r1 "SHOULD NOT emit" is withdrawn. Issues 2, 3 and 5 recorded as closed without a change of bytes or meaning. No envelope byte, no core text, no byte of `test-vectors.json` changed; `inference-vectors.json` gains three records (24 in all, every earlier record byte-identical), and the prefix-consistency vectors stay pinned to the 17-record r5 prefix and unchanged. |
+
+## 10. `MERKLE` — chain checkpoints *(r7)*
+
+The core defines the `MERKLE` record and its tree (core §4.3) and leaves
+to each profile what the leaves are. For this profile:
+
+**A `MERKLE` record is a checkpoint over the chain itself.** Its leaves
+are the record hashes (core §4.1) of every record after the previous
+`MERKLE` record, *that record included*, up to but not including the new
+one, in `seq` order. The first checkpoint of a chain starts at `seq` 0.
+The windows therefore tile the chain: every record but the tail after the
+last checkpoint is a leaf of exactly one window, and each checkpoint is a
+leaf of the next.
+
+| Field | Value |
+|---|---|
+| `MERKLE_TREE_HASH` (0x0011) | the core §4.3 root over those leaves |
+| `MERKLE_LEAF_COUNT` (0x0012) | how many — the window is the `MERKLE_LEAF_COUNT` records ending at `seq − 1` |
+| body | none (`body_len = 0`) |
+
+When to write one is the emitter's choice — by count, by time, at a
+session's end. Nothing in a reader depends on the cadence.
+
+**What a disclosed leaf proves.** A record's header and its audit path
+(core §4.3) show that the record is one of those the checkpoint commits
+to: its `seq`, its type, its time claims and the digest of its body, as
+the chain holds them — without the other records of the window. With the
+body, the whole record. It proves nothing about a request beyond what
+that one record says, and nothing about records that are not disclosed.
+
+**What it is not.** Not the derived root of §3.2 and of the consistency
+proofs, which is one tree over *every* record hash from `seq` 0 and is
+computed by whoever holds the chain, never carried in a `MERKLE` record.
+Both are the core §4.3 tree over record hashes; they differ in what they
+span. And not a content digest: no leaf here is a digest of request or
+completion text.
+
+**Verification.** A `MERKLE` record is an ordinary link of the chain and
+is verified as one. Whether its tree hash is the root of its window is
+not one of the core's checks (core §7.4) and is not added here: a party
+that builds or checks an audit path recomputes the window, and a tree
+hash that is not its root makes every path of that window fail.

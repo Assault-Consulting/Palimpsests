@@ -91,6 +91,8 @@ OUTCOME_UNOBSERVED = 4  # r6 — returned; the vantage could not observe failure
 # r5 — kind 8/9 evidence-source values (EVT_SOURCE; absent tag == 0)
 SOURCE_PARSED_FROM_WIRE = 0
 SOURCE_REPORTED_BY_CLIENT = 1
+# r7 — derived from a telemetry span the client exported after the event
+SOURCE_DERIVED_FROM_TELEMETRY = 2
 
 
 # r2 KEY_SHRED body — its OWN namespace (profile §8), not EVT tags
@@ -171,6 +173,7 @@ __all__ = [
     "OUTCOME_UNOBSERVED",
     "SOURCE_PARSED_FROM_WIRE",
     "SOURCE_REPORTED_BY_CLIENT",
+    "SOURCE_DERIVED_FROM_TELEMETRY",
     "SHRED_REASON",
     "SHRED_TARGET_SEQS",
     "SHRED_DETAIL",
