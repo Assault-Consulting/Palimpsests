@@ -47,6 +47,7 @@ __all__ = [
     "VerificationReport",
     "build_report",
     "derive_verdict",
+    "health_summary",
 ]
 
 REPORT_FORMAT = "pala-verification-report/2"
@@ -57,6 +58,71 @@ REPORT_FORMAT_1 = "pala-verification-report/1"
 VERDICTS = ("sound", "partial", "empty", "violation")
 SPEC_ID = "PALA-1 v1.0"
 _ADVISORY_NOTE = "advisory items do not affect the verdict"
+
+
+_HEALTH_NOTE = (
+    "advisory: the record's own account of its clocks and its anchoring, taken from "
+    "its headers; no figure is a threshold and none affects the verdict"
+)
+
+
+def health_summary(reader: AuditReader) -> dict:
+    """The report's ``health`` section for the chain ``reader`` holds.
+
+    A summary of fixed size over the health channel
+    (``boot_statistics``, ``step_catalog``, ``drift_series``): it does not
+    grow with the chain, so a report stays a document. Every group names
+    the clock its figures are measured on, because a figure on the
+    writer's wall clock is a claim and one in proved order is not. There
+    is no threshold and no word of judgement: what a gap of an hour or a
+    step of a second means is the reader's to decide.
+    """
+    from palimpsests.audit.bootstats import boot_statistics
+    from palimpsests.audit.timehealth import STEP_THRESHOLD_NS, drift_series, step_catalog
+
+    boots = boot_statistics(reader)
+    steps = step_catalog(reader)
+    slopes = [d.slope_ppm for d in drift_series(reader) if d.slope_ppm is not None]
+
+    anchored = [b for b in boots if b.anchors.widest_anchor_gap_ns is not None]
+    widest = max(anchored, key=lambda b: b.anchors.widest_anchor_gap_ns, default=None)
+    largest = max(steps, key=lambda s: abs(s.delta_ns), default=None)
+    return {
+        "note": _HEALTH_NOTE,
+        "boots": {
+            "basis": "proved order",
+            "count": len(boots),
+            "resumed_after_truncated_tail": sum(
+                b.view.recovery_seq is not None for b in boots),
+            "with_time_trust_change": sum(len(b.view.time_trust_values) > 1 for b in boots),
+        },
+        "anchors": {
+            "basis": "the monotonic clock, within one boot",
+            "count": sum(b.anchors.count for b in boots),
+            "boots_without_anchor": sum(b.anchors.count == 0 for b in boots),
+            # boot start to first anchor and last anchor to boot end count
+            # as gaps: an existed-by bracket is never narrower than this
+            "widest_gap_ns": widest.anchors.widest_anchor_gap_ns if widest else None,
+            "widest_gap_boot_first_seq": widest.view.first_seq if widest else None,
+        },
+        "wall_clock": {
+            "basis": "the writer's wall clock against its monotonic clock, within one boot",
+            "step_threshold_ns": STEP_THRESHOLD_NS,
+            "steps": sum(s.kind == "step" for s in steps),
+            "regressions": sum(s.kind == "regression" for s in steps),
+            "slews": sum(s.kind == "slew" for s in steps),
+            "largest_delta_ns": largest.delta_ns if largest else None,
+            "largest_at_seq": largest.seq if largest else None,
+            "drift_boots_measured": len(slopes),
+            "drift_slope_ppm_min": round(min(slopes), 3) if slopes else None,
+            "drift_slope_ppm_max": round(max(slopes), 3) if slopes else None,
+        },
+        "spans": {
+            "basis": "proved order",
+            "closed": sum(b.spans.closed for b in boots),
+            "open": sum(b.spans.open for b in boots),
+        },
+    }
 
 
 def derive_verdict(data: dict) -> str:
@@ -175,6 +241,7 @@ def build_report(
     anchor_source=None,
     tool: str | None = None,
     reader: AuditReader | None = None,
+    health: bool = False,
 ) -> VerificationReport:
     """Build the report for the chain at ``source``.
 
@@ -218,6 +285,13 @@ def build_report(
     different anchor than the caller named. Pass the anchor when opening
     the reader, or pass no reader.
 
+    ``health`` (since 0.15) fills the report's ``health`` section: a
+    summary, of fixed size, of the record's own account of its clocks and
+    its anchoring — boots, the widest gap between anchors, wall-clock
+    steps, drift, open spans. It is advisory: no figure is a threshold and
+    none enters the verdict. Without it the key is ``None``, and nothing
+    is computed. See :func:`health_summary`.
+
     ``reader`` must be open on the same bytes as ``source`` names. This
     is not checked — the caller already holds both and is the only one
     in a position to know they agree; a report built from a mismatched
@@ -250,6 +324,7 @@ def build_report(
         container = reader.container_check()
         subject_sha256 = sha256(reader._data).hexdigest()
         subject_bytes = len(reader._data)
+        health_section = health_summary(reader) if health else None
     else:
         with AuditReader.open(path, anchor=anchor_source) as opened:
             ver, boots, spans, safety, witness_pins, first_seq, last_seq = _structure(
@@ -258,6 +333,7 @@ def build_report(
             container = opened.container_check()
             subject_sha256 = sha256(opened._data).hexdigest()
             subject_bytes = len(opened._data)
+            health_section = health_summary(opened) if health else None
 
     chain = ver.chain
     version = palimpsests.__version__
@@ -382,6 +458,9 @@ def build_report(
             "note": _ADVISORY_NOTE,
         },
         "safety": safety,
+        # Advisory, and only when asked for (``health=True``): ``None``
+        # means it was not computed, never that the record is healthy.
+        "health": health_section,
         "time_basis": {
             "axis": "proved-order",
             "wall_claims_qualified_by": "time_trust",

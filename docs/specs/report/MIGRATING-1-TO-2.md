@@ -21,6 +21,7 @@ validates against the schema it holds.
 | `chain.violation_codes` | absent | `[[seq, code], …]`, parallel to `chain.violations` |
 | `diagnosis.code` | absent | the violation's code for the pattern `record_violation`; `null` otherwise |
 | `manifest` | absent | `null`, or `{filename, status, sha256, detail}` |
+| `health` | absent | `null`, or the advisory health summary — only when the report was built with `health=True` / `pala report --health` |
 | `anchor.source_detail`, for an anchor read from a file | the file's full path | the file's name |
 | unknown keys | an error | allowed: the format is open to additions |
 

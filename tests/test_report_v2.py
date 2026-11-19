@@ -349,7 +349,7 @@ def test_a_v1_report_of_an_empty_container_keeps_its_word_and_the_right_gloss(tm
     diagnosis. Reading it must not rewrite its verdict, and the page must
     still not call an empty file sound as far as checked."""
     data = build_report(_empty(tmp_path)).data
-    v1 = {k: v for k, v in data.items() if k != "manifest"}
+    v1 = {k: v for k, v in data.items() if k not in ("manifest", "health")}
     v1["format"] = REPORT_FORMAT_1
     v1["chain"] = {k: v for k, v in data["chain"].items() if k != "violation_codes"}
     v1["diagnosis"] = {

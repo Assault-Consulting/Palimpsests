@@ -15,7 +15,7 @@ it is not promised.
 | # | Channel | Surface | Stability |
 |---|---------|---------|-----------|
 | 1 | Reading | `palimpsests.audit.reader.AuditReader` (`open`, `verify`, `records`, `spans`, `boots`, `origin_at`, `unloaded_at`, `acknowledged_candidates`, `shredded_targets`; sparse access `record_count`, `record_at`, `record_by_seq`, `header_at` since 0.13; `Verification.manifest` since 0.13; `container_check()`, `record_fields_at()` since 0.14; for a byte view `record_bytes_at()`, `header_tlv_spans_at()`, `body_tlv_spans_at()` since 0.14, and the fixed header's layout `HEADER_FIELDS` / `HeaderField` / `FIXED_HEADER_LEN` since 0.14.1; a KEY_SHRED's erasure note `decode_shred` / `ShredView` since 0.15; question one as one answer `AuditReader.is_consistent()`, `Diagnosis.question`, the vocabularies as data, and the header-enum names `assurance_tier_name` / `time_trust_name` — the same objects as in `palimpsests.audit.names` — since 0.15); a segmented chain as one set: `palimpsests.audit.segment_set.verify_segment_set` (since 0.14) | public (since 0.8) |
-| 2 | Report and export | `palimpsests.audit.report.build_report`, `derive_verdict`, format `pala-verification-report/2` (since 0.15; `/1` in 0.10 – 0.14, still read); the HTML page `palimpsests.audit.report_html.render_html` (since 0.14 — a rendering of the report's `.data`, its markup not a format); the record export `palimpsests.audit.export.export_jsonl`, format `pala-jsonl/1` (since 0.14.1) | public (since 0.10) |
+| 2 | Report and export | `palimpsests.audit.report.build_report` (`health=` since 0.15), `health_summary`, `derive_verdict`, format `pala-verification-report/2` (since 0.15; `/1` in 0.10 – 0.14, still read); the HTML page `palimpsests.audit.report_html.render_html` (since 0.14 — a rendering of the report's `.data`, its markup not a format); the record export `palimpsests.audit.export.export_jsonl`, format `pala-jsonl/1` (since 0.14.1) | public (since 0.10) |
 | 3 | Proofs | `palimpsests.audit.pala.proofs.inclusion_proof`, `range_proofs`, `InclusionProof`; prefix consistency `chain_root`, `consistency_proof`, `ConsistencyProof`, format `pala-consistency-proof/1` (since 0.12) | public (since 0.10) |
 | 4 | Bundle | `palimpsests.audit.pala.bundle.assemble_bundle` (`reader=` since 0.15), `BundleResult`, format `pala-bundle/1` (`docs/specs/bundle/pala-bundle-1.md`) | public (since 0.10) |
 | 5 | Health | `palimpsests.audit.timehealth`, `palimpsests.audit.bootstats` | public (since 0.10) |
@@ -429,6 +429,32 @@ read and rendered (`REPORT_FORMAT_1`, and its schema ships); a bundle, a
 segments manifest or a statement made by any released version stays
 readable. A format is retired by a format-id bump and a migration note,
 never by an unreadable file.
+
+## The report's health section
+
+`build_report(..., health=True)` (`pala report --health`) fills the
+report's `health` key with a summary of channel 5: boots, the widest gap
+between anchors, wall-clock steps and drift, open spans. Without the flag
+the key is `null` and nothing is computed — `null` means "not asked for",
+never "healthy".
+
+- **Advisory.** No figure is a threshold, there is no word of judgement,
+  and `derive_verdict` does not read the section.
+- **Of fixed size.** Counts and extremes, no series: it does not grow
+  with the chain. A consumer that wants the series calls
+  `step_catalog`, `drift_series` and `boot_statistics` itself.
+- **Each group names its clock** in `basis`: proved order, the monotonic
+  clock within one boot, or the writer's wall clock against it. A figure
+  on the wall clock is the writer's claim.
+- `anchors.widest_gap_ns` counts the edges (boot start to the first
+  anchor, the last anchor to the boot's end): an existed-by bracket for a
+  record of that boot is never narrower.
+- **It costs a walk.** Measured on a chain of 10^6 records, a report with
+  the section took 11 s and 0.7 GB against 9 s and 0.4 GB without it.
+
+The schema names every key; the section is open to added ones.
+`health_summary(reader)` returns the same section for a reader a consumer
+already holds.
 
 ## How a break is found before a release
 
