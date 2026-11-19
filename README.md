@@ -1,6 +1,6 @@
 # <img src="https://raw.githubusercontent.com/Assault-Consulting/Palimpsests/main/assets/icon-dark.svg" alt="" height="30" align="center"> Palimpsests
 
-**Local-first LLM inference with a tamper-evident, independently-verifiable audit trail — built for regulated and air-gapped deployments under the EU AI Act. The audit format is frozen; the inference is measured.**
+**A tamper-evident audit log for AI agents and local LLMs — verifiable by anyone, without the decryption key, and independently reproduced. With a local-first inference runtime beside it, built for regulated and air-gapped deployments under the EU AI Act. The audit format is frozen; the inference is measured.**
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE)
 [![CI](https://github.com/Assault-Consulting/Palimpsests/actions/workflows/ci.yml/badge.svg)](https://github.com/Assault-Consulting/Palimpsests/actions/workflows/ci.yml)
