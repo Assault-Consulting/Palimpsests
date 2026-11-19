@@ -158,3 +158,41 @@ def test_shrink_below_verified_is_rollback(tmp_path):
     diag = next(e for e in events if e.kind == "diagnosis")
     assert "replaced_or_rolled_back" in diag.detail
     tr.close()
+
+
+# -- the declared surface (provisional since 0.15) ---------------------------
+
+def test_the_event_kinds_are_the_ones_the_module_emits():
+    import re
+    from palimpsests.audit import tailing
+    from pathlib import Path
+
+    source = Path(tailing.__file__).read_text(encoding="utf-8")
+    emitted = set(re.findall(r'TailEvent\(\s*"([a-z_]+)"', source))
+    assert emitted == set(tailing.TAIL_EVENT_KINDS)
+    assert len(tailing.TAIL_EVENT_KINDS) == len(set(tailing.TAIL_EVENT_KINDS))
+
+
+def test_the_surface_document_lists_every_kind_and_the_class():
+    from palimpsests.audit import tailing
+    from pathlib import Path
+
+    doc = (Path(__file__).resolve().parent.parent / "docs" / "INTEGRATION-SURFACE.md"
+           ).read_text(encoding="utf-8")
+    section = doc.split("## Live reading (provisional)", 1)[1].split("\n## ", 1)[0]
+    rows = {line.split("|")[1].strip().strip("`") for line in section.splitlines()
+            if line.startswith("| `")}
+    assert rows - {"kind"} == set(tailing.TAIL_EVENT_KINDS)
+    assert "**provisional** (since 0.15)" in doc
+
+
+def test_the_constructor_and_the_three_methods_are_as_documented():
+    import inspect
+    from palimpsests.audit.tailing import TailEvent, TailingReader
+
+    params = inspect.signature(TailingReader.__init__).parameters
+    assert list(params) == ["self", "path", "anchor", "poll_interval", "torn_grace"]
+    assert all(params[p].kind is inspect.Parameter.KEYWORD_ONLY
+               for p in ("anchor", "poll_interval", "torn_grace"))
+    assert [f for f in TailEvent.__dataclass_fields__] == ["kind", "seq", "record", "detail"]
+    assert all(callable(getattr(TailingReader, m)) for m in ("events", "snapshot", "close"))

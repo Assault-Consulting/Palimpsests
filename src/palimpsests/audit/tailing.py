@@ -53,14 +53,20 @@ from palimpsests.audit.reader import (
 )
 from pathlib import Path
 
-__all__ = ["TailingReader", "TailEvent"]
+__all__ = ["TAIL_EVENT_KINDS", "TailEvent", "TailingReader"]
+
+#: Every ``TailEvent.kind`` this module emits. Open: a release may add a
+#: kind, so a consumer has a branch for one it does not know.
+TAIL_EVENT_KINDS = (
+    "record", "pending_tail", "shrunk", "recovered", "anchor_seen", "diagnosis",
+)
 
 
 @dataclass(frozen=True)
 class TailEvent:
     """One thing that happened at the tail. ``kind`` is the discriminator."""
 
-    kind: str  # record | pending_tail | shrunk | recovered | anchor_seen | diagnosis
+    kind: str  # one of TAIL_EVENT_KINDS
     seq: int | None
     record: DecodedRecord | None
     detail: str
