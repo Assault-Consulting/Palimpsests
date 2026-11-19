@@ -31,7 +31,7 @@ def test_section15_shape_and_safety_accounting(tmp_path):
         [
             "format", "subject", "verifier", "checked_at", "chain",
             "container", "anchor", "completeness", "existence",
-            "diagnosis", "manifest", "advisory", "safety", "time_basis", "verdict",
+            "diagnosis", "manifest", "advisory", "safety", "health", "time_basis", "verdict",
         ]
     )
     assert report["chain"]["chain_ok"] is True

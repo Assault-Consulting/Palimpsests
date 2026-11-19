@@ -274,6 +274,40 @@ def render_html(data: dict) -> str:
              for i in adv["items"]],
         ))
 
+    health = data.get("health")
+    if health is not None:
+        def ns(value) -> str:
+            return "—" if value is None else f"{value:,} ns"
+
+        def num(value) -> str:
+            return "—" if value is None else str(value)
+
+        b, a, w, sp = (health[k] for k in ("boots", "anchors", "wall_clock", "spans"))
+        parts.append("<h2>Record health — advisory</h2>")
+        parts.append(f'<p class="muted">{_e(health["note"])}.</p>')
+        parts.append(_table(
+            ["measured on", "figure", "value"],
+            [
+                [_e(b["basis"]), "boots", str(b["count"])],
+                ["", "resumed after a truncated tail", str(b["resumed_after_truncated_tail"])],
+                ["", "with a change of time trust", str(b["with_time_trust_change"])],
+                [_e(a["basis"]), "anchors", str(a["count"])],
+                ["", "boots without an anchor", str(a["boots_without_anchor"])],
+                ["", "widest gap between anchors", ns(a["widest_gap_ns"])],
+                ["", "in the boot starting at seq", num(a["widest_gap_boot_first_seq"])],
+                [_e(w["basis"]), "steps / regressions / slews",
+                 f'{w["steps"]} / {w["regressions"]} / {w["slews"]}'],
+                ["", "step threshold", ns(w["step_threshold_ns"])],
+                ["", "largest", ns(w["largest_delta_ns"])],
+                ["", "at seq", num(w["largest_at_seq"])],
+                ["", "drift slope, ppm (min … max)",
+                 "—" if w["drift_slope_ppm_min"] is None
+                 else f'{w["drift_slope_ppm_min"]} … {w["drift_slope_ppm_max"]} '
+                      f'over {w["drift_boots_measured"]} boot(s)'],
+                [_e(sp["basis"]), "spans closed / open", f'{sp["closed"]} / {sp["open"]}'],
+            ],
+        ))
+
     safety = data["safety"]
     parts.append("<h2>Safety records</h2>")
     parts.append(_kv([

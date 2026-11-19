@@ -549,6 +549,163 @@
           }
         }
       }
+    },
+    "health": {
+      "description": "Advisory, optional (since 0.15): a fixed-size summary of the record's own account of its clocks and its anchoring. null when it was not asked for - never a statement that the record is healthy. No figure is a threshold and none enters the verdict. Each group names the clock its figures are measured on.",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "note",
+            "boots",
+            "anchors",
+            "wall_clock",
+            "spans"
+          ],
+          "properties": {
+            "note": {
+              "type": "string"
+            },
+            "boots": {
+              "type": "object",
+              "required": [
+                "basis",
+                "count",
+                "resumed_after_truncated_tail",
+                "with_time_trust_change"
+              ],
+              "properties": {
+                "basis": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": "integer"
+                },
+                "resumed_after_truncated_tail": {
+                  "type": "integer"
+                },
+                "with_time_trust_change": {
+                  "type": "integer"
+                }
+              }
+            },
+            "anchors": {
+              "type": "object",
+              "required": [
+                "basis",
+                "count",
+                "boots_without_anchor",
+                "widest_gap_ns",
+                "widest_gap_boot_first_seq"
+              ],
+              "properties": {
+                "basis": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": "integer"
+                },
+                "boots_without_anchor": {
+                  "type": "integer"
+                },
+                "widest_gap_ns": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "widest_gap_boot_first_seq": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "wall_clock": {
+              "type": "object",
+              "required": [
+                "basis",
+                "step_threshold_ns",
+                "steps",
+                "regressions",
+                "slews",
+                "largest_delta_ns",
+                "largest_at_seq",
+                "drift_boots_measured",
+                "drift_slope_ppm_min",
+                "drift_slope_ppm_max"
+              ],
+              "properties": {
+                "basis": {
+                  "type": "string"
+                },
+                "step_threshold_ns": {
+                  "type": "integer"
+                },
+                "steps": {
+                  "type": "integer"
+                },
+                "regressions": {
+                  "type": "integer"
+                },
+                "slews": {
+                  "type": "integer"
+                },
+                "largest_delta_ns": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "largest_at_seq": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "drift_boots_measured": {
+                  "type": "integer"
+                },
+                "drift_slope_ppm_min": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "drift_slope_ppm_max": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "spans": {
+              "type": "object",
+              "required": [
+                "basis",
+                "closed",
+                "open"
+              ],
+              "properties": {
+                "basis": {
+                  "type": "string"
+                },
+                "closed": {
+                  "type": "integer"
+                },
+                "open": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      ]
     }
   }
 }

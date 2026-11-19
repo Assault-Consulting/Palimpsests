@@ -862,6 +862,11 @@ def pala_report_cmd(
     out: str = typer.Option(
         None, "--out", "-o", help="Write to a file instead of stdout.",
     ),
+    health: bool = typer.Option(
+        False, "--health",
+        help="Add the advisory health section: boots, the widest gap between "
+        "anchors, wall-clock steps and drift, open spans. It never changes the verdict.",
+    ),
 ) -> None:
     """The verification report — an attestation document, not a gate.
 
@@ -902,7 +907,7 @@ def pala_report_cmd(
     from palimpsests.audit.report_html import render_html
 
     try:
-        rep = build_report(file, anchor_source=anchor_source)
+        rep = build_report(file, anchor_source=anchor_source, health=health)
     except OSError as e:
         typer.echo(f"UNREADABLE: {e}", err=True)
         raise typer.Exit(EXIT_UNREADABLE) from e
