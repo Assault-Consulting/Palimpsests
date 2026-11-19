@@ -102,6 +102,7 @@ except `session_start`, which returns the session's **span id**
 | `tool_result` | EVENT | TOOL_RESULT |
 | `tools_offered_no_call` | EVENT | TOOLS_OFFERED_NO_CALL |
 | `recovery_truncated_tail` | EVENT | RECOVERY_TRUNCATED_TAIL |
+| `reports_refused` | EVENT | REPORTS_REFUSED |
 | `guard_prefix_release` | SAFETY | GUARD_PREFIX_RELEASE |
 | `guard_state_reject` | SAFETY | GUARD_STATE_REJECT |
 | `guard_tool_loop_limit` | SAFETY | GUARD_TOOL_LOOP_LIMIT |

@@ -83,7 +83,7 @@ def test_a_wire_parsed_record_is_the_same_bytes_as_before_r7(tmp_path):
 
 def test_the_vectors_carry_the_telemetry_pair_and_the_reader_decodes_it(tmp_path):
     doc = vectors.load("inference")
-    assert doc["profile_revision"] in ("r7", "r8") and len(doc["records"]) >= 24
+    assert doc["profile_revision"] in ("r7", "r8", "r9") and len(doc["records"]) >= 24
     call, result = doc["semantics"]["21"], doc["semantics"]["22"]
     assert (call["source"], call["source_name"]) == (2, "derived-from-telemetry")
     assert (result["source"], result["outcome_name"], result["ref_seq"]) == (2, "error", 21)
@@ -185,7 +185,7 @@ def test_the_profile_no_longer_says_not_to_emit_what_the_writer_emits():
 # -- the issues, closed -------------------------------------------------------
 
 def test_every_issue_of_section_6_is_closed_and_the_revision_is_r7():
-    assert re.search(r"\| \*\*Revision\*\* \| \*\*r[78]\*\* \(", PROFILE)
+    assert re.search(r"\| \*\*Revision\*\* \| \*\*r[789]\*\* \(", PROFILE)
     section = PROFILE.split("## 6. Open issues (profile)", 1)[1].split("\n## ", 1)[0]
     rows = [line for line in section.splitlines() if re.match(r"\| \d \|", line)]
     assert [row[2] for row in rows] == list("12345")

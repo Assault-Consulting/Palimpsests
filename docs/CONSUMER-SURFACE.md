@@ -87,6 +87,7 @@ Two consumer modules for reading: `palimpsests.audit.reader` for everything abou
 | Resolutions | `acknowledged_candidates()`, `shredded_targets()`, `origin_state_at(seq) -> OriginState`, `OriginView` | Exists; bounded since 0.13 (U23, #295) |
 | Clock health | `step_catalog(reader)`, `TimeStep` | Exists — 0.14 (U19); channel 5 path kept |
 | Segments | `ContinuationView`, `decode_continuation` | Exists |
+| Refused reports | `ReportsRefusedView`, `decode_reports_refused(record) -> ReportsRefusedView \| None` — the route and the counts of a REPORTS_REFUSED record (profile r9) | Exists — 0.15 |
 | Erasure notes | `ShredView`, `decode_shred(record) -> ShredView \| None` — a KEY_SHRED's reason, declared targets and reference (profile §8); `DecodedRecord.detail` is not widened to carry it | Exists — 0.15 (asked for by Auditor) |
 | Constants | `RT_*`, `KIND_*`, `OUTCOME_*`, `SOURCE_*`, `DISP_*`, `TIER_*`, `TIME_*`, `FORMAT_VERSION`, `NO_SPAN`, `NO_PREDECESSOR` | Exists — 0.14 (U19); the profile's numbers live in `audit.profiles.inference`, the last two are aliases of `ZERO16`, `ZERO32` |
 | Names | `assurance_tier_name`, `time_trust_name` | Exists |
@@ -107,7 +108,7 @@ Two kinds of vocabulary cross the surface, and they get different promises. Numb
 | Vocabulary | Members | Kind |
 | --- | --- | --- |
 | Diagnosis `pattern` (11) | `not_a_container` (U22), `empty_container` (U26), `truncated_tail`, `prefix_absent`, `seq_gap`, `chain_break`, `record_violation`, `unanchored_tail`, `replaced_or_rolled_back`, `declared_continuation`, `continuation_contradicts_manifest` | Open |
-| Advisory `code` (18) | `anchor_never_written`, `boot_ended_without_close` (0.15, profile r8), `mid_boot_time_trust_change`, `mono_regression_in_boot`, `wall_regression_in_boot`, `span_unclosed`, `span_unopened`, `reference_hash_mismatch`, `reference_unresolved`, `ack_target_not_a_candidate`, `tool_target_not_a_call`, `shred_target_key_mismatch`, `shred_target_unresolved`, `continuation_malformed`, `continuation_predecessor_mismatch`, `continuation_index_not_increasing`, `continuation_index_gap`, `continuation_prior_root_mismatch` | Open |
+| Advisory `code` (19) | `anchor_never_written`, `boot_ended_without_close` (0.15, profile r8), `reports_refused` (0.15, profile r9), `mid_boot_time_trust_change`, `mono_regression_in_boot`, `wall_regression_in_boot`, `span_unclosed`, `span_unopened`, `reference_hash_mismatch`, `reference_unresolved`, `ack_target_not_a_candidate`, `tool_target_not_a_call`, `shred_target_key_mismatch`, `shred_target_unresolved`, `continuation_malformed`, `continuation_predecessor_mismatch`, `continuation_index_not_increasing`, `continuation_index_gap`, `continuation_prior_root_mismatch` | Open |
 | **(r2)** Violation `code` (10, U24) | `prefix_absent`, `genesis_not_first`, `genesis_prev_hash_nonzero`, `header_len_mismatch`, `malformed_tlv`, `time_trust_undefined`, `time_unknown_with_wall_clock`, `empty_body_digest_nonzero`, `nonempty_body_digest_zero`, `encrypted_body_too_short` — one per reason the verifier emits today | Open |
 | `outcome_name` | `ok`, `error`, `timeout`, `cancelled`, `unobserved` | Open names over frozen numbers |
 | `source_name` | `parsed-from-wire`, `reported-by-client`, `derived-from-telemetry` (0.15, profile r7) | Open names over frozen numbers |

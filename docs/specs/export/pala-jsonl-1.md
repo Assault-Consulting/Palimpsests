@@ -61,6 +61,7 @@ Present only where the record has them — each equal to what
 | `disposition`, `disposition_name` | an `OVERSIGHT_ACK` |
 | `operator_id` | an `OVERSIGHT_ACK`: 16 bytes, hex, pseudonymous |
 | `detail` | an EVENT or SAFETY body carrying `EVT_DETAIL` |
+| `reports_refused` | a `REPORTS_REFUSED` (since 0.15): `{route, empty_credential, wrong_credential, accepted}` — the counts as they stood when the record was written |
 
 `ok` is a return, never a success; `unobserved` is a return whose failure the
 recording vantage could not see (inference profile §3.1). A line with

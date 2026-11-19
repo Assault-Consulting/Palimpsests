@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: Assault Consulting
 # SPDX-License-Identifier: CC0-1.0
-"""Generate the inference-profile companion vectors (r2–r8 semantics).
+"""Generate the inference-profile companion vectors (r2–r9 semantics).
 
 Deterministic: fixed key, seq-derived nonces, fixed ids and clocks —
 real crypto, fake entropy. Never do this outside a test vector.
@@ -21,7 +21,9 @@ opens after a cut, with the derived root of everything before it — and,
 from r7, a TOOL_CALL/TOOL_RESULT pair carrying EVT_SOURCE = 2: derived
 from a telemetry span the client exported after the tool returned — and,
 from r8, a second boot whose writer marks where it began (WRITER_OPEN,
-kind 13) and that it was closed (WRITER_CLOSE, kind 12).
+kind 13) and that it was closed (WRITER_CLOSE, kind 12) — and, from r9,
+a third boot holding REPORTS_REFUSED (kind 14): the first refusal on a
+route, and the counts as they stood when the serving layer stopped.
 Prior-revision records are appended-to, never edited:
 their bytes are identical to the revision that introduced them. They are a
 **companion** artifact: `../test-vectors.json` is frozen with the core
@@ -657,13 +659,79 @@ prev = emit(
     body=writer_close_body,
 )
 
+# ─── r9: reports that were refused (profile §3.4) ───────────────────────
+
+# A third boot: opened, a report refused on the hook route at once, the
+# counts once more as the serving layer stops, closed.
+BOOT_ID_3 = bytes.fromhex("b0071d000000000000000000000000c9")
+KIND_REPORTS_REFUSED = 14
+EVT_ROUTE = 0x0016
+EVT_REFUSED_EMPTY = 0x0017
+EVT_REFUSED_WRONG = 0x0018
+EVT_ACCEPTED = 0x0019
+REFUSED_ROUTE = b"/v1/pala/hooks/claude"
+
+
+def third_boot(**kw) -> R.Header:
+    return dataclasses.replace(header(**kw), boot_id=BOOT_ID_3)
+
+
+def refused_body(empty: int, wrong: int, accepted: int) -> bytes:
+    return R.encode_tlvs([
+        R.tlv(EVT_KIND, u16(KIND_REPORTS_REFUSED)),
+        R.tlv(EVT_ROUTE, REFUSED_ROUTE),
+        R.tlv(EVT_REFUSED_EMPTY, u32(empty)),
+        R.tlv(EVT_REFUSED_WRONG, u32(wrong)),
+        R.tlv(EVT_ACCEPTED, u32(accepted)),
+    ])
+
+
+prev = emit(
+    "boot_3",
+    third_boot(record_type=R.RT_BOOT, seq=27, prev=prev),
+    "A third boot, for the r9 records.",
+)
+prev = emit(
+    "writer_open_3",
+    third_boot(record_type=R.RT_EVENT, seq=28, prev=prev, body=writer_open_body,
+               tlvs=[R.tlv(R.TLV_ORIGIN_ROLE, b"engine.native")]),
+    "WRITER_OPEN (kind 13), as at seq 25.",
+    body=writer_open_body,
+)
+first_refusal_body = refused_body(1, 0, 0)
+prev = emit(
+    "reports_refused_first",
+    third_boot(record_type=R.RT_EVENT, seq=29, prev=prev, body=first_refusal_body,
+               tlvs=[R.tlv(R.TLV_ORIGIN_ROLE, b"engine.native")]),
+    "REPORTS_REFUSED (kind 14, r9): the first refusal on a route in this run, "
+    "recorded at once. One report with an empty credential; none accepted yet.",
+    body=first_refusal_body,
+)
+closing_refusal_body = refused_body(4, 0, 22)
+prev = emit(
+    "reports_refused_at_stop",
+    third_boot(record_type=R.RT_EVENT, seq=30, prev=prev, body=closing_refusal_body,
+               tlvs=[R.tlv(R.TLV_ORIGIN_ROLE, b"engine.native")]),
+    "REPORTS_REFUSED (kind 14, r9): the counts as they stood when the serving "
+    "layer stopped - 4 refused for an empty credential, 22 accepted. The second "
+    "and last record this route gets in this run.",
+    body=closing_refusal_body,
+)
+prev = emit(
+    "writer_close_3",
+    third_boot(record_type=R.RT_EVENT, seq=31, prev=prev, body=writer_close_body,
+               tlvs=[R.tlv(R.TLV_ORIGIN_ROLE, b"engine.native")]),
+    "WRITER_CLOSE (kind 12), as at seq 26.",
+    body=writer_close_body,
+)
+
 chain_head = prev
 
 # ─── self-verify before writing anything ────────────────────────────────
 
 res = R.verify_chain(chain)
 assert res.chain_ok, f"generated chain does not verify: {res}"
-assert res.count == 27
+assert res.count == 32
 assert not res.breaks and not res.gaps and not res.violations
 # the encrypted body round-trips under the spec'd nonce/AAD derivation
 back = AESGCM(KEY).decrypt(R.nonce_for(3), bodies[3][12:],
@@ -672,13 +740,13 @@ assert back == plaintext
 
 out = {
     "$comment": (
-        "Inference-profile companion vectors (r2-r8). Deterministic; real "
+        "Inference-profile companion vectors (r2-r9). Deterministic; real "
         "crypto, fake entropy — never derive keys or ids like this outside "
         "a test vector. ../test-vectors.json is frozen with the core and "
         "is deliberately untouched by these."
     ),
     "profile": "inference",
-    "profile_revision": "r8",
+    "profile_revision": "r9",
     "generator": "gen_inference_vectors.py",
     "boot_id": h(BOOT_ID),
     "encryption": {
@@ -805,6 +873,21 @@ out = {
             "closed. Here the second boot (seq 24-26) is opened and closed; "
             "the first holds no WRITER_OPEN and is not judged. Drop seq 26 "
             "and append a third BOOT, and a reader reports the second boot."
+        ),
+        "29": {
+            "kind": 14, "kind_name": "REPORTS_REFUSED",
+            "route": "/v1/pala/hooks/claude",
+            "refused_empty": 1, "refused_wrong": 0, "accepted": 0,
+        },
+        "30": {
+            "kind": 14, "kind_name": "REPORTS_REFUSED",
+            "route": "/v1/pala/hooks/claude",
+            "refused_empty": 4, "refused_wrong": 0, "accepted": 22,
+        },
+        "reports_refused_rule": (
+            "r9: counts are as they stood when the record was written, since "
+            "the serving layer started. At most two records per route per run: "
+            "the first refusal at once, and the counts once more at the stop."
         ),
         "source_rule": (
             "EVT_SOURCE (0x0011) is present only for a non-default value: 1 "

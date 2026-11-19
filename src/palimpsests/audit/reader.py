@@ -107,6 +107,7 @@ from palimpsests.audit.profiles.inference import (
     DISP_ACKNOWLEDGED,
     DISP_DISMISSED,
     DISP_ESCALATED,
+    EVT_ACCEPTED,
     EVT_DETAIL,
     EVT_DISPOSITION,
     EVT_KIND,
@@ -114,6 +115,9 @@ from palimpsests.audit.profiles.inference import (
     EVT_OUTCOME,
     EVT_REF_HASH,
     EVT_REF_SEQ,
+    EVT_REFUSED_EMPTY,
+    EVT_REFUSED_WRONG,
+    EVT_ROUTE,
     EVT_SOURCE,
     KIND_GUARD_PREFIX_RELEASE,
     KIND_GUARD_STATE_REJECT,
@@ -127,6 +131,7 @@ from palimpsests.audit.profiles.inference import (
     KIND_PREFIX_COPY,
     KIND_PREFIX_WARM,
     KIND_RECOVERY_TRUNCATED_TAIL,
+    KIND_REPORTS_REFUSED,
     KIND_SEGMENT_CONTINUATION,
     KIND_TOOL_CALL,
     KIND_TOOL_RESULT,
@@ -193,6 +198,8 @@ __all__ = [
     "decode_continuation",
     "ShredView",
     "decode_shred",
+    "ReportsRefusedView",
+    "decode_reports_refused",
     # analytics (channel 5, re-exported)
     "boot_statistics",
     "BootStats",
@@ -252,6 +259,7 @@ __all__ = [
     "KIND_SEGMENT_CONTINUATION",
     "KIND_WRITER_CLOSE",
     "KIND_WRITER_OPEN",
+    "KIND_REPORTS_REFUSED",
     "KIND_GUARD_PREFIX_RELEASE",
     "KIND_GUARD_STATE_REJECT",
     "KIND_INCIDENT_CANDIDATE",
@@ -335,6 +343,7 @@ _KIND_NAMES = {
     KIND_SEGMENT_CONTINUATION: "SEGMENT_CONTINUATION",
     KIND_WRITER_CLOSE: "WRITER_CLOSE",
     KIND_WRITER_OPEN: "WRITER_OPEN",
+    KIND_REPORTS_REFUSED: "REPORTS_REFUSED",
     KIND_GUARD_TOOL_LOOP_LIMIT: "GUARD_TOOL_LOOP_LIMIT",
 }
 
@@ -712,6 +721,7 @@ ADVISORY_CODES = frozenset({
     "span_unopened",
     "anchor_never_written",
     "boot_ended_without_close",
+    "reports_refused",
     "continuation_malformed",
     "continuation_predecessor_mismatch",
     "continuation_index_not_increasing",
@@ -1142,6 +1152,22 @@ class AuditReader:
             probed = self._kind_probe(i)
             if probed == KIND_SEGMENT_CONTINUATION:
                 continuations.append(by_seq.at(i))
+                continue
+            if probed == KIND_REPORTS_REFUSED:
+                dr = by_seq.at(i)
+                view = decode_reports_refused(dr)
+                if view is not None:
+                    # The record is the evidence; the advisory is how a
+                    # report says so without the reader of it walking records.
+                    items.append(AdvisoryItem(
+                        "reports_refused", dr.seq,
+                        dr.header.boot_id if dr.header is not None else None,
+                        f"{view.refused_empty + view.refused_wrong} report(s) to "
+                        f"{view.route} had been refused when this was written "
+                        f"({view.refused_empty} with an empty credential, "
+                        f"{view.refused_wrong} with a wrong one; {view.accepted} accepted): "
+                        "tool events a client tried to report may be missing from this chain",
+                    ))
                 continue
             if probed not in _REFERENCING_KINDS:
                 continue
@@ -2477,6 +2503,48 @@ class ShredView:
     reason_name: str | None  # None: a reason this build does not know
     target_seqs: tuple[int, ...]  # SHRED_TARGET_SEQS, as written; () when absent
     detail: str | None  # SHRED_DETAIL — a ticket or request reference
+
+
+@dataclass(frozen=True)
+class ReportsRefusedView:
+    """A REPORTS_REFUSED record, decoded (inference profile r9, §3.4).
+
+    What the serving layer had counted on one reporting route when it wrote
+    the record: reports refused before they were read, by kind of refusal,
+    and reports accepted. It says that someone tried to report and was
+    turned away — not who, and not what the reports held.
+    """
+
+    seq: int
+    route: str  # the reporting route the counts are about
+    refused_empty: int  # refused: no credential, or an empty one
+    refused_wrong: int  # refused: a credential that is not the serve's
+    accepted: int  # accepted on the same route so far
+
+
+def decode_reports_refused(dr: DecodedRecord) -> ReportsRefusedView | None:
+    """The counts ``dr`` carries, or None if it carries no usable ones.
+
+    Usable means: an EVENT of kind 14 with a cleartext body holding
+    ``EVT_ROUTE`` and the three counts at their profile width (4 bytes).
+    """
+    if dr.kind != KIND_REPORTS_REFUSED or dr.body_tlvs is None:
+        return None
+    tags: dict[int, bytes] = {}
+    for t, v in dr.body_tlvs:
+        tags.setdefault(t, v)
+    route = tags.get(EVT_ROUTE)
+    counts = [tags.get(t) for t in (EVT_REFUSED_EMPTY, EVT_REFUSED_WRONG, EVT_ACCEPTED)]
+    if not route or any(c is None or len(c) != 4 for c in counts):
+        return None
+    empty, wrong, accepted = (struct.unpack("<I", c)[0] for c in counts)
+    return ReportsRefusedView(
+        seq=dr.seq,
+        route=route.decode("utf-8", "replace"),
+        refused_empty=empty,
+        refused_wrong=wrong,
+        accepted=accepted,
+    )
 
 
 def decode_shred(dr: DecodedRecord) -> ShredView | None:
