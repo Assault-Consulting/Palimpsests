@@ -322,7 +322,7 @@ class TraceIngest:
             OUTCOME_ERROR,
             OUTCOME_OK,
             SOURCE_DERIVED_FROM_TELEMETRY,
-            canonical_tool_args_digest,
+            _tool_payload_digest,
         )
 
         recorded = duplicates = 0
@@ -339,7 +339,7 @@ class TraceIngest:
                     detail += f"; error.type {span.error_type}"
                 seq, call_hash = self._audit.tool_called(
                     span.tool_name,
-                    canonical_tool_args_digest(args) if args is not None else None,
+                    _tool_payload_digest(args) if args is not None else None,
                     None,
                     source=SOURCE_DERIVED_FROM_TELEMETRY,
                     detail=detail,
@@ -348,7 +348,7 @@ class TraceIngest:
                     seq,
                     call_hash,
                     OUTCOME_ERROR if span.failed else OUTCOME_OK,
-                    canonical_tool_args_digest(result) if result is not None else None,
+                    _tool_payload_digest(result) if result is not None else None,
                     None,
                     source=SOURCE_DERIVED_FROM_TELEMETRY,
                 )

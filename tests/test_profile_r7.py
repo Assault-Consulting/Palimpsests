@@ -193,15 +193,20 @@ def test_every_issue_of_section_6_is_closed_and_the_revision_is_r7():
     assert re.search(r"^\| r7 \| 2026-11-19 \|", PROFILE, re.M)
 
 
-def test_the_config_digest_is_the_rule_the_profile_records():
-    """Issue 2: key=value, keys sorted, joined by a newline, UTF-8, SHA-256."""
+def test_the_profile_names_the_canonical_form_and_both_digests_use_it():
+    section = PROFILE.split("## 11. The canonical form of a JSON value", 1)[1]
+    assert "RFC 8785" in section and "UTF-16 code unit" in section
+    rows = PROFILE.split("## 6. Open issues (profile)", 1)[1].split("\n## ", 1)[0]
+    assert rows.count("RFC 8785 (§11)") == 2  # issues 2 and 4
     from hashlib import sha256
+    from palimpsests.audit.canonical_json import canonical_json
+    from palimpsests.audit.pala_writer import canonical_tool_args_digest
 
-    config = {"n_ctx": 4096, "kv": "disk", "flash_attn": True, "temp": 0.7}
-    expected = sha256(b"flash_attn=True\nkv=disk\nn_ctx=4096\ntemp=0.7").digest()
-    assert canonical_config_digest(config) == expected
-    assert canonical_config_digest(dict(reversed(config.items()))) == expected
-    assert canonical_config_digest({**config, "temp": 0.8}) != expected
+    value = {"b": 1.0, "a": {"z": [1e21, None]}}
+    form = canonical_json(value)
+    assert form == b'{"a":{"z":[1e+21,null]},"b":1}'
+    assert canonical_config_digest(value) == canonical_tool_args_digest(value) == sha256(
+        form).digest()
 
 
 def test_the_packaged_vectors_are_the_published_file():

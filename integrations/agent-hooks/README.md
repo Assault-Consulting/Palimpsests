@@ -141,7 +141,7 @@ No script runs on your side — Claude Code posts the event itself.
    Every line carries `"source": 1`, `"source_name": "reported-by-client"`.
 
 **What lands, and what it proves.** The call's input and the result
-are digested — JSON with sorted keys, compact, UTF-8, SHA-256, the
+are digested — RFC 8785 canonical JSON, UTF-8, SHA-256, the
 profile's canonical form — and only the digests are written; content
 never enters the chain. A failed call (`PostToolUseFailure`) closes its
 pair as `error`. A result whose call the serve never saw is recorded as

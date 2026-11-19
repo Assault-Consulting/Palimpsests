@@ -75,7 +75,7 @@ from palimpsests.audit.pala_writer import (
     OUTCOME_ERROR,
     OUTCOME_TIMEOUT,
     OUTCOME_UNOBSERVED,
-    canonical_tool_args_digest,
+    _tool_payload_digest,
 )
 from palimpsests.engine.messages import ChatChunk
 from palimpsests.providers.native.backend import NativeBackend, Token
@@ -264,7 +264,7 @@ class NativeSession:
         ref: tuple[int, bytes] | None = None
         if self._audit is not None:
             if args_digest is None and arguments is not None:
-                args_digest = canonical_tool_args_digest(arguments)
+                args_digest = _tool_payload_digest(arguments)
             ref = self._audit.tool_called(name, args_digest, self._audit_span)
         self._pending_tool_calls[tool_call_id] = ref
 

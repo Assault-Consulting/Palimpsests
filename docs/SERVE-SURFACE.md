@@ -65,7 +65,7 @@ Request:
 |---|---|---|
 | `tool_call` | `id` | required — the client's own id for the call |
 | | `name` | required — the tool |
-| | `arguments` | optional — digested by the serve (canonical JSON), never stored |
+| | `arguments` | optional — digested by the serve (RFC 8785 canonical JSON, then SHA-256), never stored |
 | | `args_digest` | optional, hex — a digest the client computed; used as given, instead of `arguments` |
 | `tool_result` | `call_id` | required — the `id` of a call reported earlier |
 | | `outcome` | optional — `ok`, `error`, `timeout`, `cancelled`, `unobserved`. **Absent means `unobserved`**: a client that does not state success has not stated it |

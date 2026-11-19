@@ -366,9 +366,9 @@ them by number.
 | # | Issue | Closed |
 |---|---|---|
 | 1 | **`MERKLE` leaf source.** Version 1 defined none, and said an inference chain SHOULD NOT emit `MERKLE` records until a revision did. | **r7 — §10.** The leaves are record hashes: a `MERKLE` record is a checkpoint over the chain itself. The content-level candidates of r1 (per-request metadata digests, per-token-batch digests) are not adopted and stay undefined; a later revision may add one under a new leaf-source mark, never by changing §10. |
-| 2 | **Canonical config encoding for `ORIGIN_CONFIG_DIGEST`.** Must be byte-deterministic, or the same config produces different origins. | **By the writer, recorded in r7.** The config's `key=value` pairs, keys sorted, joined by a newline (`0x0A`), UTF-8, then SHA-256. A value is rendered as text: a string as it is, an integer in decimal, a boolean as `True` or `False`, a float in its shortest decimal form that reads back to the same value. The rule covers a flat config of such values; an emitter with a nested config flattens it first, and how it does so is part of what its digest means. |
+| 2 | **Canonical config encoding for `ORIGIN_CONFIG_DIGEST`.** Must be byte-deterministic, or the same config produces different origins. | **r7.** SHA-256 over the configuration as one JSON object in the canonical form of RFC 8785 (§11). A key order, a number or a nesting written another way is the same origin; a changed value is a different one. A chain written before r7 (Palimpsests 0.9–0.14) carries digests under the writer's earlier rule — `key=value` lines, keys sorted, each value as Python's `str()` prints it, joined by a newline, UTF-8, SHA-256 — which another language could not reproduce for every value. Those digests compare among themselves and with a configuration checked under that rule; they do not compare with r7 digests, so a chain that spans the change shows a new origin at it. |
 | 3 | **`EVT_KIND` completeness.** The enum grows with instrumentation. | **Not an issue but a rule, stated as one in r7:** kinds, tags and vocabulary values are added, never renumbered, renamed or given another meaning. r2–r7 each exercised it with the envelope untouched. A reader meets a kind or a value it does not know and says so; it does not fail. |
-| 4 | **Canonical tool-argument encoding for `EVT_PAYLOAD_DIGEST`.** | **By the writer (r3):** JSON with sorted keys, compact separators, non-ASCII preserved, UTF-8, then SHA-256; pre-canonicalized `bytes` are digested as they are. |
+| 4 | **Canonical tool-argument encoding for `EVT_PAYLOAD_DIGEST`.** | **By the writer (r3), pinned to a standard in r7.** SHA-256 over the value in the canonical form of RFC 8785 (§11); pre-canonicalized `bytes` are digested as they are. r3 said "JSON with sorted keys, compact separators, non-ASCII preserved", which left the writing of numbers and the order of keys to one library's serializer. The r7 form is the same bytes for every value that holds no non-integer or exponent-form number written by that serializer and no key outside the Basic Multilingual Plane — so those digests on existing chains still reproduce — and differs otherwise: `1.0` was digested as `1.0` and is digested as `1`. |
 | 5 | **`EVT_OUTCOME = ok` is a return, not a confirmed effect.** | **Final as of r7.** On a `TOOL_RESULT` (kind 9), outcome 0 states that a result payload came back and re-entered generation. It does not state that the action took effect in the world: a payment tool can return `ok` on a request the downstream system later rejected, and a runtime at the model boundary cannot see that. Readers and reports MUST NOT render `ok` as "effect confirmed". This profile defines no confirmation record. A deployment that observes effects at another boundary records them as its own records from that vantage; if a later revision gives them a kind, it is added, and the meaning of outcome 0 does not move. |
 
 ---
@@ -416,7 +416,7 @@ and the note must outlive every key by design. Whether
 | r4 | 2026-09-02 | Additive only: `EVENT` kind 10 (`TOOLS_OFFERED_NO_CALL`, §3.1); `EVT` tags 0x000F (`EVT_TOOLS_OFFERED`) and 0x0010 (`EVT_TOOLS_DIGEST`); the canonical offered-name digest (writer-owned, the §6.2 discipline applied to sorted names). No envelope byte, no core text, no byte of `test-vectors.json` changed; companion vectors for kind 10 extend `inference-vectors.json` in the implementing PR chain. |
 | r5 | 2026-09-03 | Additive only: `EVT` tag 0x0011 (`EVT_SOURCE`) — the wire-parsed / client-reported evidence mark for kinds 8/9; absent means wire-parsed, so every prior record's meaning and bytes are unchanged. No envelope byte, no core text, no byte of `test-vectors.json` changed; companion vectors extend `inference-vectors.json` in the implementing PR chain. |
 | r6 | 2026-10-10 | Additive only: `EVT_OUTCOME` value 4 (`unobserved`, §3.1) — a return whose failure the recording vantage could not observe; `EVENT` kind 11 (`SEGMENT_CONTINUATION`, §3.2); `EVT` tags 0x0012–0x0015 (`SEG_PREDECESSOR_HEAD`, `SEG_INDEX`, `SEG_RETENTION_S`, `SEG_PRIOR_ROOT`) — the retention-continuation design (`retention-continuation.md`) adopted. No envelope byte, no core text, no byte of `test-vectors.json` changed; `inference-vectors.json` gains four records (21 in all, every earlier record byte-identical), and the prefix-consistency vectors stay pinned to the 17-record r5 prefix and unchanged. |
-| r7 | 2026-11-19 | Additive only, and the open issues closed (§6). `EVT_SOURCE` value 2 (`derived-from-telemetry`, §3.1) — a pair written from an exported telemetry span. `MERKLE` records defined for this profile as chain checkpoints whose leaves are record hashes (§10), which is what the writer has emitted since 0.10; the r1 "SHOULD NOT emit" is withdrawn. Issues 2, 3 and 5 recorded as closed without a change of bytes or meaning. No envelope byte, no core text, no byte of `test-vectors.json` changed; `inference-vectors.json` gains three records (24 in all, every earlier record byte-identical), and the prefix-consistency vectors stay pinned to the 17-record r5 prefix and unchanged. |
+| r7 | 2026-11-19 | Additive only, and the open issues closed (§6). `EVT_SOURCE` value 2 (`derived-from-telemetry`, §3.1) — a pair written from an exported telemetry span. `MERKLE` records defined for this profile as chain checkpoints whose leaves are record hashes (§10), which is what the writer has emitted since 0.10; the r1 "SHOULD NOT emit" is withdrawn. The digests over JSON values — `ORIGIN_CONFIG_DIGEST` and `EVT_PAYLOAD_DIGEST` — are taken over the RFC 8785 canonical form (§11): a new rule for the first, and for the second the r3 rule pinned to a standard, with the same bytes wherever r3 was unambiguous. Issues 3 and 5 recorded as closed without a change of bytes or meaning. No envelope byte, no core text, no byte of `test-vectors.json` changed; `inference-vectors.json` gains three records (24 in all, every earlier record byte-identical), and the prefix-consistency vectors stay pinned to the 17-record r5 prefix and unchanged. |
 
 ## 10. `MERKLE` — chain checkpoints *(r7)*
 
@@ -459,3 +459,39 @@ is verified as one. Whether its tree hash is the root of its window is
 not one of the core's checks (core §7.4) and is not added here: a party
 that builds or checks an audit path recomputes the window, and a tree
 hash that is not its root makes every path of that window fail.
+
+## 11. The canonical form of a JSON value *(r7)*
+
+Two digests of this profile are taken over a JSON value: the engine's
+configuration (`ORIGIN_CONFIG_DIGEST`) and a tool's arguments or result
+(`EVT_PAYLOAD_DIGEST`). A digest is evidence only if another party can
+compute it again from the value, in another language and without the
+emitter's code. So the form is a published one:
+
+**the JSON Canonicalization Scheme, RFC 8785, as UTF-8, then SHA-256.**
+
+In short, and the RFC governs:
+
+- no whitespace;
+- object keys sorted by UTF-16 code unit;
+- strings as they are, with `"` and `\` escaped, the short escapes for
+  U+0008, U+0009, U+000A, U+000C and U+000D, and lowercase `\u00xx` for
+  the other control characters;
+- numbers as ECMAScript writes them: `1.0` is `1`, `1e21` is `1e+21`,
+  `0.000001` stays as it is and `1e-7` is exponential.
+
+Three consequences an emitter should know:
+
+- **A number is an IEEE 754 double.** An integer beyond 2^53 is digested
+  as the double nearest to it. An identifier that large belongs in a
+  string.
+- **NaN, the infinities and a lone surrogate have no canonical form.** A
+  value holding one cannot be digested; the emitter records the event
+  without a digest, or refuses it — it does not substitute a form of its
+  own.
+- **A value handed over as bytes is digested as those bytes.** That is
+  for an emitter whose protocol already has a canonical encoding, and it
+  is what the tool-loop vectors of r3–r6 do.
+
+`EVT_TOOLS_DIGEST` (r4) is unchanged: the sorted names as a JSON array
+of strings is already the same bytes under RFC 8785.

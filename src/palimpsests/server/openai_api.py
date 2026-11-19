@@ -763,10 +763,10 @@ def _sse(
     yield "data: [DONE]\n\n"
 
 
-def _args_digest(arguments: dict) -> bytes:
-    from palimpsests.audit.pala_writer import canonical_tool_args_digest
+def _args_digest(arguments: dict) -> bytes | None:
+    from palimpsests.audit.pala_writer import _tool_payload_digest
 
-    return canonical_tool_args_digest(arguments)
+    return _tool_payload_digest(arguments)
 
 
 def _record_tool_results(audit, messages: list, pending: dict) -> None:

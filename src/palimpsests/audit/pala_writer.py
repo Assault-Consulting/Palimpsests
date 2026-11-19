@@ -44,6 +44,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from hashlib import sha256
 from palimpsests.audit._oslock import ExclusiveLock, LockHeld
+from palimpsests.audit.canonical_json import canonical_json
 from palimpsests.audit.pala.codec import (
     FIXED_HEADER_LEN,
     MAGIC,
@@ -197,35 +198,51 @@ def _detail(text: str) -> bytes:
 
 
 def canonical_config_digest(config: Mapping[str, object]) -> bytes:
-    """Digest of the engine's memory configuration for ``ORIGIN_CONFIG_DIGEST``.
+    """Digest of the engine's configuration for ``ORIGIN_CONFIG_DIGEST``.
 
-    Resolves inference-profile open issue §6.2: the encoding must be
-    byte-deterministic across versions of the library, or the same config
-    yields different origins. The canonical form is the config's ``key=value``
-    pairs, keys sorted, values ``str()``-rendered, joined by newlines, UTF-8,
-    then SHA-256. A config change is a different origin and the chain shows it.
+    SHA-256 over the configuration as one JSON object in the RFC 8785
+    canonical form (:mod:`palimpsests.audit.canonical_json`): a key order,
+    a number or a nesting written differently is the same origin, and a
+    changed value is a different one. Inference profile §6, issue 2.
+
+    Until 0.15 the digest was taken over ``key=value`` lines with each
+    value rendered by ``str()`` — reproducible only from Python, and not
+    canonical for a nested value. A chain written by 0.9–0.14 carries
+    digests under that rule; they compare among themselves, not with these.
     """
-    lines = "\n".join(f"{k}={config[k]}" for k in sorted(config))
-    return sha256(lines.encode("utf-8")).digest()
+    return sha256(canonical_json(config)).digest()
 
 
 def canonical_tool_args_digest(arguments: object) -> bytes:
-    """Digest of a tool invocation's arguments for ``EVT_PAYLOAD_DIGEST``.
+    """Digest of a tool invocation's arguments or result for ``EVT_PAYLOAD_DIGEST``.
 
-    Resolves inference-profile open issue §6.4 the same way §6.2 was
-    resolved for the config digest: the encoding must be byte-deterministic
-    across library versions, or the same call yields different digests.
-    The canonical form is JSON with sorted keys, compact separators, and
-    non-ASCII preserved, UTF-8, then SHA-256. ``bytes`` are treated as
-    already-canonical and digested as-is — for callers whose tool protocol
-    has its own canonical encoding.
+    SHA-256 over the value in the RFC 8785 canonical form
+    (:mod:`palimpsests.audit.canonical_json`). Inference profile §6,
+    issue 4. ``bytes`` are treated as already canonical and digested as
+    they are — for callers whose tool protocol has its own encoding.
+
+    Until 0.15 the form was what ``json.dumps`` printed with sorted keys
+    and compact separators. That is the same bytes for any value without a
+    float and without a key outside the Basic Multilingual Plane; with one,
+    the digest differs — ``1.0`` was ``1.0`` and is ``1``.
     """
     if isinstance(arguments, (bytes, bytearray)):
         return sha256(bytes(arguments)).digest()
-    encoded = json.dumps(
-        arguments, sort_keys=True, separators=(",", ":"), ensure_ascii=False
-    ).encode("utf-8")
-    return sha256(encoded).digest()
+    return sha256(canonical_json(arguments)).digest()
+
+
+def _tool_payload_digest(value: object) -> bytes | None:
+    """The payload digest for a value that came from a client, or ``None``.
+
+    A payload with no canonical form — NaN, an infinity, a lone surrogate,
+    which a lenient JSON parser lets through — is not a reason to lose the
+    record of the call: the event is recorded without a digest, as the
+    profile says (§11), never with a form of this package's own.
+    """
+    try:
+        return canonical_tool_args_digest(value)
+    except ValueError:
+        return None
 
 
 _monotonic = time.monotonic  # module alias: tests substitute a fake clock
@@ -452,10 +469,9 @@ def canonical_tool_names_digest(names) -> bytes:
     set, and two clients sending the same tools in different order made
     the same offer.
     """
-    encoded = json.dumps(
-        sorted(names), sort_keys=True, separators=(",", ":"), ensure_ascii=False
-    ).encode("utf-8")
-    return sha256(encoded).digest()
+    # An array of strings: the same bytes under RFC 8785 as under the r4
+    # wording, so the published vector's digest did not move.
+    return sha256(canonical_json(sorted(names))).digest()
 
 
 @dataclass(frozen=True)
