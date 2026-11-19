@@ -1,7 +1,7 @@
 # Palimpsests roadmap
 
 **Status:** working plan, revised with each release. Last revised for
-**0.13** (October 2026). What shipped is in the
+**0.15** (November 2026). What shipped is in the
 [CHANGELOG](../CHANGELOG.md); this page says where the project is going and
 why, and what is deliberately not scheduled.
 
@@ -14,7 +14,7 @@ weighed by that.
 
 ---
 
-## Where the project stands (0.13)
+## Where the project stands (0.15)
 
 - **The format is frozen and independently reproduced.** PALA-1 v1.0
   (August 2026), five independent verifier implementations on record, a
@@ -24,18 +24,34 @@ weighed by that.
   changed.
 - **The inference profile records the agent's tool loop** — calls,
   results, guard refusals, incidents and oversight — from the wire it
-  mediates and from the surfaces that report to it: the ingestion route, agent
-  hooks (Claude Code, Codex), the LiteLLM callback and the MCP proxy, and
-  OpenTelemetry GenAI traces. Each record says how it was observed, and
-  what its recorder could not see (profile r5 source marks, r6 outcome
-  `unobserved`).
+  mediates and from the surfaces that report to it: the ingestion route,
+  agent hooks (Claude Code, Codex), the LiteLLM callback, the MCP proxy
+  and OpenTelemetry GenAI traces. Each record says how it was observed
+  (source marks, r5 and r7) and what its recorder could not see (outcome
+  `unobserved`, r6). Its open issues are closed as of r7: the digests over
+  JSON values follow RFC 8785, and a `MERKLE` record is defined as a
+  checkpoint over the chain.
+- **A stop is on the record.** Since 0.15 every record is on stable
+  storage before the call that wrote it returns, and a writer marks where
+  it began and that it was closed (r8) — so a process killed, or a power
+  cut, shows once the chain goes on.
 - **Retention is bounded and declared in the chain.** Rotation with a
-  policy, segments that verify alone, and since r6 a continuation record at
-  every cut carrying the derived root of everything before it — so the
-  survivors of a deletion explain themselves.
-- **The trail can leave the island.** SCITT signed statements (construction
-  v3 carries the derived root), prefix-consistency proofs, evidence
-  bundles, a published report schema.
+  policy, segments that verify alone and as a set, and a continuation
+  record at every cut carrying the derived root of everything before it —
+  so the survivors of a deletion explain themselves.
+- **The trail can leave the island.** SCITT signed statements with a
+  public verification API and refusal vectors, prefix-consistency proofs,
+  evidence bundles, a report with a published schema.
+- **Three surfaces have a written contract**, each held by a test: reading
+  ([INTEGRATION-SURFACE.md](INTEGRATION-SURFACE.md)), writing
+  ([WRITER-SURFACE.md](WRITER-SURFACE.md)) and the serve's HTTP routes
+  ([SERVE-SURFACE.md](SERVE-SURFACE.md)). A consumer's own test suite runs
+  against every commit of this repository.
+- **The adapters have run records on real traffic** — Claude Code, Codex,
+  OpenCode, LiteLLM, MCP and OpenTelemetry, under
+  `docs/specs/pala-1/independent-runs/` — and a generated
+  [compatibility table](../integrations/COMPATIBILITY.md) from the surface
+  checker's dated reports.
 - **The level-3 engine is complete and measured** (0.3–0.6): continuous
   batching, server-side tool loop, shared-prefix KV, KV persistence and a
   content-addressed KV store behind the ADR-0002 seam, measured on 1.5B and
@@ -43,28 +59,27 @@ weighed by that.
 
 ---
 
-## Next: 0.14 — real traffic and testing
+## Next: 1.0
 
-0.13 shipped the adapters; 0.14 is about evidence that they hold on real
-traffic, outside our own test suite.
+0.15 made the changes that a 1.0 would have had to carry as breaks: the
+report format, the verdict set, the digest rules, the writer's own
+records, the stability classes. What is left before 1.0 is not new
+function:
 
-- **Run records on real traffic** for both adapter families (agent hooks,
-  OpenTelemetry), on maintainers' hardware and accounts, filed under
-  `docs/specs/pala-1/independent-runs/`.
-- **OpenCode, revisited** (O1–O6): the plugin surface changed under us
-  once; re-measured on a current release.
-- **`COMPATIBILITY.md`** — which client and framework versions are known to
-  work, from the surface checker's dated reports, not from memory.
-- **Listings** in the ecosystems the adapters target, once the run records
-  exist to point at.
-- **The reading surface, towards its 1.0 contract** — the U track in
-  [CONSUMER-SURFACE.md](CONSUMER-SURFACE.md): re-exports with a contract
-  test (U19, U20), violation codes (U24), `empty_container` (U26),
-  `container_check()` (U21), and `verify_segment_set()` (U18).
-- **Independent verification of what is new** — a from-the-spec run of the
-  inference profile r3–r6, and bridge run B3 reproducing SCITT statement
-  construction v3. These depend on people outside the project and are
-  planned, not promised for a date.
+- **Independent readings of what is new.** The inference profile as a
+  whole (through r8), the SCITT statement under COSE alg `-19`, and the
+  refusal vectors. These depend on people outside the project and are
+  planned, not promised for a date; until each exists, the documentation
+  says it does not.
+- **The provisional parts decided.** Live reading (`TailingReader`) and
+  the OpenTelemetry route are declared provisional in 0.15; each becomes
+  public, or says why not, before 1.0.
+- **The profile for 1.0 named.** One revision of the inference profile is
+  declared the one 1.0 ships; later revisions only add.
+- **A long run.** A serve left writing for days, with rotation and
+  retention, read back whole.
+- **The deprecated names removed** — the two listed in
+  [INTEGRATION-SURFACE.md](INTEGRATION-SURFACE.md#deprecations).
 
 ---
 
@@ -89,8 +104,9 @@ The criteria, agreed in October 2026:
   (`pala-verification-report/2`, open to added keys), the bundle (`pala-bundle/1`), the
   consistency proof (`pala-consistency-proof/1`) and the segments manifest
   (`pala-segments/1`) each have a specification and change only by
-  format-id bump; all but the consistency proof are open to added keys. SCITT statement construction v3
-  joins them after an independent reproduction.
+  format-id bump; all but the consistency proof are open to added keys. SCITT statement
+  construction v3 has been reproduced independently (bridge runs B3 and
+  B4); its extension to COSE alg `-19` has not been yet.
 - **Verification from our side, written down.** What is checked before
   every release — the suites on three platforms, the vectors, the surface
   checker, a reproducible build — as a checklist anyone can read, not a
