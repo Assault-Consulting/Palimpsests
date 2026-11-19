@@ -36,7 +36,7 @@ from __future__ import annotations
 import json
 import os
 import struct
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from hashlib import sha256
 from palimpsests.audit.pala.codec import (
     FIXED_HEADER_LEN,
@@ -64,6 +64,15 @@ class SegmentCheck:
     head_matches: bool | None  # its last record is the manifest's head; None if not checkable
     seam_ok: bool  # its declared predecessor is the previous entry's head
     detail: str | None = None  # why something did not hold, in words
+    # What the manifest's entry says the segment holds (since 0.15): its
+    # first and last seq and its head. Declared, never verified here — for
+    # a segment that is gone it is the only evidence left of it, and for
+    # one that is present ``verified`` and ``head_matches`` say whether the
+    # file agrees. ``None`` for a live tail the manifest does not list, and
+    # for a value the entry does not carry in the form the format gives it.
+    declared_first_seq: int | None = None
+    declared_last_seq: int | None = None
+    declared_head: bytes | None = None
 
 
 @dataclass(frozen=True)
@@ -105,22 +114,25 @@ def verify_segment_set(manifest_path: str | os.PathLike[str]) -> SegmentSetVerif
         name = str(entry.get("file", ""))
         seam_ok = prev_entry_head is None or entry.get("prev_head") == prev_entry_head
         prev_entry_head = entry.get("head")
+        declared = _declared(entry)
         if not _is_file_name(name):
             # A manifest is a file someone handed over. An entry that names a
             # path — a directory above, an absolute path — is not followed:
             # the set is the files beside the manifest, and nothing else.
             checks.append(SegmentCheck(
                 name, True, False, False, None, seam_ok,
-                "the manifest's entry does not name a file beside it; not read"))
+                "the manifest's entry does not name a file beside it; not read",
+                **declared))
             continue
         path = folder / name
         if not path.is_file():
             absent.append(name)
             checks.append(SegmentCheck(name, True, False, None, None, seam_ok,
                                        None if seam_ok else "seam: prev_head is not the "
-                                       "previous entry's head"))
+                                       "previous entry's head", **declared))
             continue
         check, head = _check_file(path, name, entry, seam_ok)
+        check = replace(check, **declared)
         checks.append(check)
         if check.verified:
             last_head = head
@@ -200,6 +212,31 @@ def _check_file(path: Path, name: str, entry: dict, seam_ok: bool,
     check = SegmentCheck(name, listed, True, verified, head_matches, seam_ok,
                          "; ".join(problems) or None)
     return check, (result.head if headers else None)
+
+
+def _declared(entry: dict) -> dict:
+    """The entry's own account of its segment, as declared.
+
+    A manifest is a file someone handed over: a seq that is not a
+    non-negative integer, or a head that is not 32 bytes of hex, is not
+    passed on as if it were one.
+    """
+    def seq(key: str) -> int | None:
+        value = entry.get(key)
+        ok = isinstance(value, int) and not isinstance(value, bool) and value >= 0
+        return value if ok else None
+
+    head: bytes | None = None
+    raw = entry.get("head")
+    if isinstance(raw, str):
+        try:
+            head = bytes.fromhex(raw)
+        except ValueError:
+            head = None
+        if head is not None and len(head) != 32:
+            head = None
+    return {"declared_first_seq": seq("first_seq"), "declared_last_seq": seq("last_seq"),
+            "declared_head": head}
 
 
 def _is_file_name(name: str) -> bool:

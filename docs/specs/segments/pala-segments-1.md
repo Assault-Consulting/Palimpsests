@@ -93,6 +93,16 @@ answers, kept apart:
 - **complete** — consistent, no listed segment is absent, and the first
   entry begins the chain (`prev_head` zero, `first_seq` 0).
 
+Each listed segment's check also carries what its entry declares
+(since 0.15): `declared_first_seq`, `declared_last_seq` and
+`declared_head`. For a segment that is gone this is the only evidence
+left of it — which records it held and where it ended — and it is
+reported as declared, not verified. For one that is present, `verified`
+and `head_matches` say whether the file agrees. A value the entry does
+not carry in the form above (a seq that is not a non-negative integer, a
+head that is not 32 bytes of hex) is `None`, as it is for a live tail
+the manifest does not list.
+
 A segment deleted under retention makes a set incomplete, never
 inconsistent. A segment that is present and damaged — a broken link, an
 altered body, a file cut in the middle of a record — makes it

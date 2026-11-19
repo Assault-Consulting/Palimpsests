@@ -235,3 +235,82 @@ def test_the_keys_of_pala_segments_1_are_kept(tmp_path):
         assert mf["source_head"] == mf["segments"][-1]["head"]
     assert "records_per_segment" in knife and "rotation" in rotating
     assert {"root", "frontier"} <= rotating["segments"][0].keys()
+
+
+# -- what the manifest declares of each segment (since 0.15) ------------------
+
+def test_every_listed_segment_carries_what_its_entry_declares(tmp_path):
+    res = _segmented(tmp_path)
+    entries = json.loads(res.manifest_path.read_text(encoding="utf-8"))["segments"]
+    v = verify_segment_set(res.manifest_path)
+    assert len(v.segments) == len(entries) > 1
+    for check, entry in zip(v.segments, entries, strict=True):
+        assert (check.declared_first_seq, check.declared_last_seq) == (
+            entry["first_seq"], entry["last_seq"])
+        assert check.declared_head.hex() == entry["head"]
+    # the ranges tile the chain, and the last declared head is the set's
+    assert [c.declared_first_seq for c in v.segments[1:]] == [
+        c.declared_last_seq + 1 for c in v.segments[:-1]]
+    assert v.segments[-1].declared_head == v.head
+
+
+def test_a_segment_that_is_gone_is_still_named_by_its_records(tmp_path):
+    """The manifest's entry is the only evidence left of it. The check said
+    that a file was missing and not which records it held."""
+    res = _segmented(tmp_path)
+    entry = json.loads(res.manifest_path.read_text(encoding="utf-8"))["segments"][0]
+    os.remove(res.manifest_path.parent / entry["file"])
+    gone = verify_segment_set(res.manifest_path).segments[0]
+    assert gone.present is False and gone.verified is None and gone.head_matches is None
+    assert (gone.declared_first_seq, gone.declared_last_seq) == (0, entry["last_seq"])
+    assert gone.declared_head == bytes.fromhex(entry["head"])
+
+
+def test_declared_is_not_verified(tmp_path):
+    """A manifest edited to declare another range and head: the check passes
+    on what the entry says and reports, separately, that the file disagrees."""
+    res = _segmented(tmp_path)
+    mf = json.loads(res.manifest_path.read_text(encoding="utf-8"))
+    mf["segments"][-1]["last_seq"] = 999
+    mf["segments"][-1]["head"] = "ab" * 32
+    res.manifest_path.write_text(json.dumps(mf), encoding="utf-8")
+    v = verify_segment_set(res.manifest_path)
+    last = v.segments[-1]
+    assert (last.declared_last_seq, last.declared_head) == (999, b"\xab" * 32)
+    assert last.present and last.head_matches is False and not v.consistent
+
+
+@pytest.mark.parametrize(("key", "value"), [
+    ("first_seq", "0"), ("first_seq", -1), ("first_seq", True), ("first_seq", 1.5),
+    ("last_seq", None), ("head", "zz"), ("head", "abcd"), ("head", 7), ("head", None),
+])
+def test_a_value_the_entry_does_not_carry_properly_is_not_passed_on(tmp_path, key, value):
+    res = _segmented(tmp_path)
+    mf = json.loads(res.manifest_path.read_text(encoding="utf-8"))
+    mf["segments"][0][key] = value
+    res.manifest_path.write_text(json.dumps(mf), encoding="utf-8")
+    first = verify_segment_set(res.manifest_path).segments[0]  # an answer, not an exception
+    assert getattr(first, "declared_" + key) is None
+    others = {"first_seq", "last_seq", "head"} - {key}
+    assert all(getattr(first, "declared_" + k) is not None for k in others)
+
+
+def test_a_live_tail_the_manifest_does_not_list_declares_nothing(tmp_path):
+    manifest, _head = _rotated(tmp_path)
+    v = verify_segment_set(manifest)
+    tail = [c for c in v.segments if not c.listed]
+    assert len(tail) == 1
+    assert (tail[0].declared_first_seq, tail[0].declared_last_seq,
+            tail[0].declared_head) == (None, None, None)
+    assert all(c.declared_head is not None for c in v.segments if c.listed)
+
+
+def test_an_entry_that_names_a_path_still_says_what_it_declares(tmp_path):
+    res = _segmented(tmp_path)
+    mf = json.loads(res.manifest_path.read_text(encoding="utf-8"))
+    declared = (mf["segments"][0]["first_seq"], mf["segments"][0]["last_seq"])
+    mf["segments"][0]["file"] = "../elsewhere.pala"
+    res.manifest_path.write_text(json.dumps(mf), encoding="utf-8")
+    first = verify_segment_set(res.manifest_path).segments[0]
+    assert first.present is False and first.verified is False
+    assert (first.declared_first_seq, first.declared_last_seq) == declared
