@@ -40,9 +40,9 @@ classifiers = [
 # part of the base package. No compiled dependency — the native pain
 # lives behind extras.
 dependencies = [
-    "httpx>=0.27",
-    "pydantic>=2.7",
-    "typer>=0.12",
+    "httpx>=0.28.1",
+    "pydantic>=2.14.3",
+    "typer>=0.29.1",
 ]
 
 [project.optional-dependencies]
@@ -50,18 +50,18 @@ dependencies = [
 # and CI don't depend on a Secret Service daemon being present; when
 # absent, the caller passes an explicit key (tests do exactly this).
 keyring = [
-    "keyring>=25.0",
+    "keyring>=25.7.0",
 ]
 # The OpenAI-compatible HTTP endpoint (`palimpsests-serve`). Optional so
 # the base install stays minimal; the server module is import-safe
 # without it and only `create_app` needs FastAPI.
 serve = [
-    "fastapi>=0.115",
-    "uvicorn>=0.30",
+    "fastapi>=0.163.1",
+    "uvicorn>=0.54.0",
     # OTLP/protobuf decoding for POST /v1/traces (family B). OTLP/JSON needs
     # nothing; without this, a protobuf export is refused with a sentence
     # naming the extra, never misread. Pulls only `protobuf`.
-    "opentelemetry-proto>=1.27",
+    "opentelemetry-proto>=1.45.2",
 ]
 # At-rest audit-log encryption. sqlcipher3-wheels ships prebuilt binaries
 # so it doesn't need a local SQLCipher/OpenSSL toolchain. Isolated behind
@@ -71,7 +71,7 @@ serve = [
 # PALIMPSESTS_ALLOW_UNENCRYPTED_AUDIT=1 or allow_unencrypted=True, which
 # is what CI does.
 encryption = [
-    "sqlcipher3-wheels>=0.5",
+    "sqlcipher3-wheels>=0.5.7",
 ]
 # Level 2 needs the `llama-server` binary from llama.cpp on PATH — the
 # adapter spawns and manages it as a subprocess (it does NOT use the
@@ -92,65 +92,65 @@ llamacpp = []
 # are tested with a fake backend, and the real LlamaCppBackend is
 # validated on hardware with a GGUF model.
 native = [
-    "llama-cpp-python>=0.3.0",
+    "llama-cpp-python>=0.3.37",
     # decode() wraps the C logits buffer as a numpy array and the sampler
     # argmaxes over it in C (bench Run 0.1 hot-path fix). numpy already
     # arrives transitively with llama-cpp-python; declared here so the
     # dependency is explicit rather than implied.
-    "numpy>=1.26",
+    "numpy>=2.4.6",
 ]
 # PALA-1 record-body encryption (AES-256-GCM). Header-only verification
 # is stdlib-only by design and does NOT need this extra.
 pala = [
-    "cryptography>=42.0",
+    "cryptography>=50.0.2",
 ]
 # The SCITT bridge (audit.pala.scitt): a chain head as a COSE_Sign1 Signed
 # Statement for registration with a transparency service (RFC 9943). Off the
 # write path by design; a bare install keeps full header-only verification.
 scitt = [
-    "cbor2>=5.6",
-    "cryptography>=42.0",
+    "cbor2>=6.3.0",
+    "cryptography>=50.0.2",
 ]
 # Tier-B anchor: the chain head as an object on a PKCS#11 token (ADR-0004).
 # Optional plumbing beside the format; every other anchor source works
 # without it. CI tests it against SoftHSM2 only — the mechanism, not the
 # tier claim.
 pkcs11 = [
-    "python-pkcs11>=0.7",
+    "python-pkcs11>=0.10.1",
 ]
 # Local vector math for block-memory retrieval (cosine over stored
 # embeddings). numpy is the only requirement; the embed source itself is
 # the active engine by default (no model dependency here).
 embeddings = [
-    "numpy>=1.26",
+    "numpy>=2.4.6",
 ]
 # Pinned ruff so local and CI agree on isort behavior exactly.
 dev = [
-    "pytest>=8.2",
-    "pytest-httpx>=0.30",
-    "pytest-cov>=5.0",
+    "pytest>=9.2.0",
+    "pytest-httpx>=0.36.2",
+    "pytest-cov>=7.1.0",
     "ruff==0.17.5",
     # numpy is the [embeddings] extra in production; dev pulls it so the
     # BlockMemory retrieval path (cosine over stored vectors) runs in CI.
-    "numpy>=1.26",
+    "numpy>=2.4.6",
     # cryptography so the PALA-1 body tests and the vector-regeneration CI
     # job run; the codec itself stays stdlib-only outside bodies.
-    "cryptography>=42.0",
+    "cryptography>=50.0.2",
     # cbor2 so the SCITT-bridge tests run in CI; the bridge itself stays
     # lazy behind [scitt] and a bare install needs neither.
-    "cbor2>=5.6",
+    "cbor2>=6.3.0",
     # fastapi so the OpenAI-endpoint tests run (and count for coverage) in
     # CI; uvicorn is runtime-only and stays out of dev.
-    "fastapi>=0.115",
+    "fastapi>=0.163.1",
     # opentelemetry-proto so the OTLP/protobuf path of /v1/traces is tested.
-    "opentelemetry-proto>=1.27",
+    "opentelemetry-proto>=1.45.2",
     # jsonschema so the report validates against its shipped schema in CI —
     # the machine seam between the package and Auditor's renderings.
-    "jsonschema>=4.21",
+    "jsonschema>=4.26.0",
     # build so the vectors sdist→wheel round-trip test (U9) runs in CI:
     # force-include from docs/ is exactly the shape that produces a good
     # wheel and a broken sdist-built wheel if docs/ ever leaves the sdist.
-    "build>=1.2",
+    "build>=1.6.1",
 ]
 
 [project.urls]
