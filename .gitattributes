@@ -20,6 +20,7 @@ docs/interop/scitt-statement-vector.json -text
 docs/interop/scitt-statement-vector-v3.json -text
 docs/interop/scitt-statement-vector-alg19.json -text
 docs/interop/scitt-statement-refusal-vectors.json -text
+docs/interop/scitt-statement-identity-vectors.json -text
 # Generated files the tests compare byte-for-byte with a fresh build: LF in
 # every checkout, so a Windows runner's autocrlf cannot make them stale.
 site/**/*.html eol=lf

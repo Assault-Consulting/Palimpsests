@@ -124,9 +124,9 @@ holds the API.
 | `outcome_name` | `ok`, `error`, `timeout`, `cancelled`, `unobserved` |
 | `source_name` | `parsed-from-wire`, `reported-by-client`, `derived-from-telemetry` (since 0.15) |
 | `ShredView.reason_name` | `unspecified`, `legal_erasure`, `retention_expiry`, `policy` |
-| `StatementRefused.code` | `not_cose_sign1`, `trailing_bytes`, `protected_header_malformed`, `detached_payload`, `payload_malformed`, `repeated_key`, `indefinite_length_map`, `unsupported_alg`, `key_type_mismatch`, `signature_invalid`, `head_mismatch`, `format_id_mismatch`, `range_invalid`, `content_type_unknown`, `payload_keys_mismatch`, `protected_labels_mismatch`, `root_malformed`, `chain_too_short`, `root_mismatch` |
+| `StatementRefused.code` | `not_cose_sign1`, `trailing_bytes`, `protected_header_malformed`, `detached_payload`, `payload_malformed`, `repeated_key`, `indefinite_length_map`, `unprotected_header_malformed` (since 0.15), `non_deterministic_encoding` (since 0.15), `unsupported_alg`, `key_type_mismatch`, `signature_invalid`, `head_mismatch`, `format_id_mismatch`, `range_invalid`, `content_type_unknown`, `payload_keys_mismatch`, `protected_labels_mismatch`, `root_malformed`, `chain_too_short`, `root_mismatch` |
 | `StatementCheck.root_status` | `absent`, `recomputed`, `carried, not recomputed` |
-| `StatementCheck.payload_encoding` | `deterministic`, `not deterministic` |
+| `StatementCheck.payload_encoding` | `deterministic` |
 | `disposition_name`, `kind_name`, `type_name`, tier and time-trust names | as the specification and the inference profile define them |
 
 An advisory never changes a verdict. Each new member ships with one
@@ -179,7 +179,8 @@ deployment may say on the strength of it).
   trusted is the caller's decision and the whole of the claim.
 - **One verifier: `verify_statement(message, public_key, expected_head,
   reader=None)`.** It returns a `StatementCheck` — `version` (`v2` /
-  `v3`), `payload`, `root`, `root_status`, `payload_encoding` — or raises.
+  `v3`), `payload`, `root`, `root_status`, `payload_encoding`,
+  `statement_id` — or raises.
   `check_statement_against_head` is deprecated since 0.15 and goes at
   1.0 ([Deprecations](#deprecations)); it returned the payload alone and could not say what was
   established about a root.
@@ -189,6 +190,20 @@ deployment may say on the strength of it).
   all: a verifier of someone else's bytes raises one thing. The code
   names the check that failed, never a cause — a statement for another
   chain, a corrupted download and a forgery are refused alike.
+- **One encoding is accepted, and `statement_id` names the statement**
+  (since 0.15). The envelope, the protected header and the payload must
+  be the RFC 8949 §4.2.1 deterministic encoding; any other writing of
+  the same signed content is refused (`non_deterministic_encoding`),
+  though its signature is valid. The unprotected header must be a
+  definite-length map with no label twice
+  (`unprotected_header_malformed`); what it holds is not judged.
+  `statement_id` is 32 bytes: the SHA-256 of the statement with the
+  unprotected header emptied — the hash of the bytes as built, and
+  unchanged when a receipt is attached. Refer to a statement by it, not
+  by a hash of whatever bytes arrived. It names the signed statement,
+  not its content. `payload_encoding` is therefore always
+  `deterministic`; the field stays until 1.0 and is then removed.
+  See [INTEROP-SCITT §11](INTEROP-SCITT.md#11-one-statement-one-encoding-one-name).
 - **A root is recomputed only with the chain.** Without `reader`, a v3
   root is `carried, not recomputed`: signed, and not verified against
   anything. A consumer says which.

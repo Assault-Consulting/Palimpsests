@@ -476,7 +476,7 @@ def test_the_scitt_channel_is_declared_and_its_vocabularies_are_the_documented_o
 
     assert set(scitt.__all__) == set(CHANNELS["palimpsests.audit.pala.scitt"])
     assert [f.name for f in dataclasses.fields(scitt.StatementCheck)] == [
-        "version", "payload", "root", "root_status", "payload_encoding"]
+        "version", "payload", "root", "root_status", "payload_encoding", "statement_id"]
     assert issubclass(scitt.StatementRefused, ValueError)
     assert list(inspect.signature(scitt.verify_statement).parameters) == [
         "message", "public_key", "expected_head", "reader"]
@@ -492,5 +492,6 @@ def test_the_scitt_channel_is_declared_and_its_vocabularies_are_the_documented_o
     statuses = set(re.findall(r'StatementCheck\(\s*"v[23]", decoded, (?:None|root), "([^"]+)"',
                               source))
     assert statuses == _table_row(surface_doc, "`StatementCheck.root_status`")
-    assert _table_row(surface_doc, "`StatementCheck.payload_encoding`") == {
-        "deterministic", "not deterministic"}
+    # always "deterministic" since 0.15: any other encoding is refused
+    assert _table_row(surface_doc, "`StatementCheck.payload_encoding`") == {"deterministic"}
+    assert '"not deterministic"' not in source

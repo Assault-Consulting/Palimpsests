@@ -1,0 +1,112 @@
+{
+  "format": "pala-1 scitt-bridge statement identity vectors",
+  "purpose": "What to refer to a PALA-1 SCITT statement by. statement_id is the SHA-256 of the statement with an empty unprotected header, in the one encoding a verifier accepts. Real crypto, fake entropy - never use this key outside a test vector.",
+  "rule": [
+    "A verifier accepts one encoding of a statement: tag 18 as the byte d2, a definite array of four (84), each byte string with its shortest definite length, and the protected header and the payload in the deterministic encoding of RFC 8949 section 4.2.1.",
+    "The unprotected header is a map of a definite length with no label twice. What it holds, and how that is written, is not restricted: it is not signed, and a transparency service writes its receipts there with its own encoder.",
+    "statement_id = SHA-256( d2 84 || bstr(protected) || a0 || bstr(payload) || bstr(signature) ): the statement with the unprotected header emptied.",
+    "A statement whose unprotected header is the one byte a0 has statement_id equal to the SHA-256 of its bytes. A receipt attached later (RFC 9943, label 394, in the unprotected header) changes the bytes and their hash and leaves statement_id as it was.",
+    "statement_id names the signed statement, not its content: the same payload signed twice with a non-deterministic algorithm is two statements."
+  ],
+  "key": {
+    "public_key_hex": "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a",
+    "source": "RFC 8032, section 7.1, TEST 1 - a published test key, chosen so nothing about it is ours"
+  },
+  "published": [
+    {
+      "base": "v2",
+      "source": "scitt-statement-vector.json, expected.statement_hex",
+      "statement_sha256": "ce47efa9883090d4d6328e74f934e5dbabcf3a046d1098e768c53d92b661f941",
+      "statement_id": "ce47efa9883090d4d6328e74f934e5dbabcf3a046d1098e768c53d92b661f941",
+      "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813"
+    },
+    {
+      "base": "v3",
+      "source": "scitt-statement-vector-v3.json, statements.later.expected.statement_hex",
+      "statement_sha256": "32945e9309ad4deb432715cec7d0ef54c2ecc5624cb7a32dbfa39cbf270cd3fc",
+      "statement_id": "32945e9309ad4deb432715cec7d0ef54c2ecc5624cb7a32dbfa39cbf270cd3fc",
+      "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813"
+    },
+    {
+      "base": "v2-alg19",
+      "source": "scitt-statement-vector-alg19.json, statements.v2.expected.statement_hex",
+      "statement_sha256": "3f033311e41abcbb45bfd4382a45018af1aaf28f7cd4da4fff6d7e58d35bc093",
+      "statement_id": "3f033311e41abcbb45bfd4382a45018af1aaf28f7cd4da4fff6d7e58d35bc093",
+      "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813"
+    }
+  ],
+  "carrying_an_unprotected_header": [
+    {
+      "id": "carrying-01",
+      "base": "v2",
+      "change": "the unprotected header holds a receipt placeholder under label 394: {394: [h'6e6f74206120726563656970742e2e2e']}",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a119018a81506e6f74206120726563656970742e2e2e5835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "91a80cffe1a3153e3594980dbc048ea72c64ffcf986445aeb168914b121088c2",
+      "statement_id": "ce47efa9883090d4d6328e74f934e5dbabcf3a046d1098e768c53d92b661f941",
+      "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+      "verifies": true
+    },
+    {
+      "id": "carrying-02",
+      "base": "v3",
+      "change": "the same, on the v3 statement",
+      "statement_hex": "d28458d0a4012703782e6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642d76332b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a119018a81506e6f74206120726563656970742e2e2e5858a50158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130208030b046b70616c612d312f76312e3005582084f1e4f5c4bc75ff5edc304b35b122c3263366ed7e7ca399706a4128e7ecd7d75840eb3f3a1d272fd6dbc2111ceb4642daacf329515999dfd772f6462e35557b9344c5addb6336856f42ac81171a4203cf03797d8fe82b7041d13a5b44dc880b1a09",
+      "statement_sha256": "bea9749d51dd831b598fa7214461a0ce26ee82a668ae1148fd7f5ae8854bfd5c",
+      "statement_id": "32945e9309ad4deb432715cec7d0ef54c2ecc5624cb7a32dbfa39cbf270cd3fc",
+      "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+      "verifies": true
+    },
+    {
+      "id": "carrying-03",
+      "base": "v2",
+      "change": "two placeholders under label 394",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a119018a82506e6f74206120726563656970742e2e2e502e2e2e74706965636572206120746f6e5835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "69cb45deee8ac9f6c7cc66a051819e1703b2a156abcb192f7f563a5c79ec67cf",
+      "statement_id": "ce47efa9883090d4d6328e74f934e5dbabcf3a046d1098e768c53d92b661f941",
+      "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+      "verifies": true
+    },
+    {
+      "id": "carrying-04",
+      "base": "v2-alg19",
+      "change": "the unprotected header repeats the key id under label 4",
+      "statement_hex": "d28458cda4013203782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a1045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157435835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840cb4b5041fe422c7b5509c1f53c2b127dc967b0ad84398559dd7b29853f1e6a050d3b1d85ae15ff6e055fb22d78dac5a353662a4731122bc5cc6d6c67cdbdf809",
+      "statement_sha256": "d3bc2eeb99943da8ce94cfbf38a3df51d7204c88d8d127e1cd23537314ef6758",
+      "statement_id": "3f033311e41abcbb45bfd4382a45018af1aaf28f7cd4da4fff6d7e58d35bc093",
+      "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+      "verifies": true
+    },
+    {
+      "id": "carrying-05",
+      "base": "v2",
+      "change": "the unprotected header holds a private label: {99: 'note'}",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a11863646e6f74655835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "a96ebdb8947cf28b171a27ae6473cde1e2129aa4f4f4bc35940da943058e71f2",
+      "statement_id": "ce47efa9883090d4d6328e74f934e5dbabcf3a046d1098e768c53d92b661f941",
+      "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+      "verifies": true
+    },
+    {
+      "id": "carrying-06",
+      "base": "v2",
+      "change": "the unprotected header is empty, its count written in two bytes (b8 00): the header's own encoding is not judged",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133b8005835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "31df132acd2600a92d4fd9dfe4e17ce77ea325a3185fbc697741eef436473d14",
+      "statement_id": "ce47efa9883090d4d6328e74f934e5dbabcf3a046d1098e768c53d92b661f941",
+      "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+      "verifies": true
+    },
+    {
+      "id": "carrying-07",
+      "base": "v2",
+      "change": "labels 99 and 4 in that order, and the placeholder array of label 394 with an indefinite length: another party's encoder, not judged",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a31863617804416b19018a9f506e6f74206120726563656970742e2e2eff5835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "bd8a89442d95a54c66c5ed98f3221b678812ab6cbfe1112a457a57751acb8a11",
+      "statement_id": "ce47efa9883090d4d6328e74f934e5dbabcf3a046d1098e768c53d92b661f941",
+      "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+      "verifies": true
+    }
+  ],
+  "receipt_placeholder": "The 16 bytes under label 394 are the text 'not a receipt...'. They stand where a receipt would be; nothing here is a receipt and none is verified.",
+  "refused": "Other writings of the signed parts and the envelope - a longer tag or length, an indefinite length - and an unprotected header that is not such a map are refused, and are in scitt-statement-refusal-vectors.json under non_deterministic_encoding and unprotected_header_malformed."
+}

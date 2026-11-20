@@ -91,6 +91,7 @@ header-only verification; only the bridge needs the packages.
 """
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
@@ -175,6 +176,10 @@ STATEMENT_REFUSAL_CODES = frozenset({
     "payload_malformed",  # the signed payload is not an encoded CBOR map
     "repeated_key",  # a map that repeats a key reads two ways
     "indefinite_length_map",  # its keys cannot be counted
+    # the bytes are one of many encodings of this message (since 0.15)
+    "unprotected_header_malformed",  # not a definite-length map of distinct labels
+    "non_deterministic_encoding",  # the envelope, protected header or payload is not
+    #                                the RFC 8949 §4.2.1 encoding of what it holds
     # the signature
     "unsupported_alg",  # not ES256 (-7), EdDSA (-8) or Ed25519 (-19)
     "key_type_mismatch",  # not a key of the one type the alg means here
@@ -243,6 +248,218 @@ def _decode_one(raw: Any, code: str, what: str) -> Any:
             f"{what} is followed by {rest} byte(s) that are not part of it",
         )
     return item
+
+
+class _NotScannable(Exception):
+    """An item nested deeper than any statement has reason to be."""
+
+
+_SCAN_DEPTH = 32
+
+
+def _head(raw: bytes, pos: int) -> tuple[int, int, int | None, int, bool]:
+    """(major, additional info, argument, position after the head, minimal).
+
+    The argument is ``None`` for an indefinite length (additional info 31)
+    and for the simple values and floats of major type 7. ``minimal`` is
+    whether the argument is in its shortest form (RFC 8949 §4.2.1).
+    """
+    first = raw[pos]
+    major, ai = first >> 5, first & 0x1F
+    if ai < 24:
+        return major, ai, ai, pos + 1, True
+    if ai == 31 or ai > 27:
+        return major, ai, None, pos + 1, True
+    width = 1 << (ai - 24)
+    arg = int.from_bytes(raw[pos + 1 : pos + 1 + width], "big")
+    floor = (24, 0x100, 0x1_0000, 0x1_0000_0000)[ai - 24]
+    if major == 7:
+        return major, ai, None, pos + 1 + width, True
+    return major, ai, arg, pos + 1 + width, arg >= floor
+
+
+def _float_is_shortest(raw: bytes, pos: int, ai: int) -> bool:
+    """Whether a float at ``pos`` is the shortest encoding of its value."""
+    import math
+    import struct
+
+    width = 1 << (ai - 24)
+    body = raw[pos + 1 : pos + 1 + width]
+    if ai == 25:
+        value = struct.unpack(">e", body)[0]
+        return not math.isnan(value) or body == b"\x7e\x00"
+    value = struct.unpack(">f" if ai == 26 else ">d", body)[0]
+    if math.isnan(value):
+        return False  # the one deterministic NaN is the half-precision f97e00
+    for narrower in (">e", ">f") if ai == 27 else (">e",):
+        try:
+            if struct.unpack(narrower, struct.pack(narrower, value))[0] == value:
+                return False
+        except (OverflowError, struct.error):
+            pass
+    return True
+
+
+def _scan(raw: bytes, pos: int = 0, depth: int = 0) -> tuple[int, bool]:
+    """Walk one well-formed CBOR item: (where it ends, whether its bytes are
+    the deterministic encoding of RFC 8949 §4.2.1).
+
+    Deterministic here: every length and integer in its shortest form, no
+    indefinite length, map keys in bytewise order of their encodings and
+    none repeated, floats in their shortest form. The walk reads bytes and
+    never builds values, so it does not depend on what a decoder would make
+    of a tag or how an encoder would write it back.
+
+    The caller has already had the item decoded, so it is well-formed;
+    this only finds its extent and judges its encoding.
+    """
+    if depth > _SCAN_DEPTH:
+        raise _NotScannable
+    major, ai, arg, pos, ok = _head(raw, pos)
+    if major in (0, 1):
+        return pos, ok
+    if major in (2, 3):
+        if arg is not None:
+            return pos + arg, ok
+        while raw[pos] != 0xFF:  # chunks
+            pos, _ = _scan(raw, pos, depth + 1)
+        return pos + 1, False
+    if major == 4:
+        if arg is None:
+            while raw[pos] != 0xFF:
+                pos, _ = _scan(raw, pos, depth + 1)
+            return pos + 1, False
+        for _ in range(arg):
+            pos, item_ok = _scan(raw, pos, depth + 1)
+            ok = ok and item_ok
+        return pos, ok
+    if major == 5:
+        previous: bytes | None = None
+        count = 0
+        while (arg is None and raw[pos] != 0xFF) or (arg is not None and count < arg):
+            key_end, key_ok = _scan(raw, pos, depth + 1)
+            key = raw[pos:key_end]
+            if previous is not None and not previous < key:
+                ok = False  # out of order, or the same key again
+            previous = key
+            pos, value_ok = _scan(raw, key_end, depth + 1)
+            ok = ok and key_ok and value_ok
+            count += 1
+        return (pos + 1, False) if arg is None else (pos, ok)
+    if major == 6:
+        end, inner_ok = _scan(raw, pos, depth + 1)
+        return end, ok and inner_ok
+    # major 7: simple values and floats
+    if ai in (25, 26, 27):
+        return pos, _float_is_shortest(raw, pos - (1 << (ai - 24)) - 1, ai)
+    return pos, True
+
+
+def _is_deterministic(raw: bytes) -> bool:
+    try:
+        end, ok = _scan(raw)
+    except (_NotScannable, IndexError):
+        return False
+    return ok and end == len(raw)
+
+
+def _bstr(data: bytes) -> bytes:
+    """``data`` as a definite-length byte string with its shortest head."""
+    n = len(data)
+    if n < 24:
+        head = bytes([0x40 | n])
+    elif n < 0x100:
+        head = bytes([0x58, n])
+    elif n < 0x1_0000:
+        head = b"\x59" + n.to_bytes(2, "big")
+    elif n < 0x1_0000_0000:
+        head = b"\x5a" + n.to_bytes(4, "big")
+    else:
+        head = b"\x5b" + n.to_bytes(8, "big")
+    return head + data
+
+
+def _check_envelope(
+    message: bytes, protected: bytes, unprotected: Any, payload: bytes, sig: Any
+) -> None:
+    """Refuse a statement whose bytes are not the one encoding of it.
+
+    A COSE_Sign1 can be written many ways without touching what is signed:
+    the tag, the array head and the three byte-string heads each have
+    longer forms, and the unprotected header is not signed at all. Every
+    one of those verifies under the same signature and has another hash.
+    A verifier that accepts them all says "the signature is valid" and
+    lets the reader hear "this is that statement" — which holds only if
+    the bytes are pinned.
+
+    The unprotected header is not judged that way. It must be what
+    RFC 9052 says it is — a map — of a definite length and with no label
+    twice, so that it reads one way. What it holds, and how that is
+    written, is another party's business: a transparency service puts its
+    receipts there (RFC 9943, label 394) with its own encoder, nothing in
+    it is signed, and it is not part of the statement's identity — see
+    ``statement_id``. Refusing a validly signed statement over the
+    encoding of a receipt someone attached would be this verifier's
+    preference, not a property of the statement.
+
+    The fourth member is judged only if it is a byte string; anything else
+    there is left to the signature check, as before.
+    """
+    # The message decoded as one tag-18 item holding four members, so the
+    # two heads are there; find the four members where they actually lie.
+    _m, _ai, _tag, pos, tag_ok = _head(message, 0)
+    _m, _ai, count, pos, array_ok = _head(message, pos)
+    envelope_ok = tag_ok and array_ok and count is not None
+    spans = []
+    try:
+        for _ in range(4):
+            end, item_ok = _scan(message, pos)
+            spans.append((pos, end, item_ok))
+            pos = end
+    except (_NotScannable, IndexError):
+        spans = []
+    if len(spans) != 4:
+        # Only a member nested past any reason to be can stop the walk, and
+        # only the unsigned one can be: the others are byte strings.
+        raise StatementRefused(
+            "unprotected_header_malformed",
+            f"the unprotected header is nested deeper than {_SCAN_DEPTH} levels")
+    major, _ai, entries, _pos, _minimal = _head(message, spans[1][0])
+    if major != 5 or not isinstance(unprotected, Mapping):
+        raise StatementRefused(
+            "unprotected_header_malformed",
+            "the unprotected header is not a CBOR map (RFC 9052 §3: a header_map)")
+    if entries is None:
+        raise StatementRefused(
+            "unprotected_header_malformed",
+            "the unprotected header is an indefinite-length map; its labels cannot "
+            "be counted")
+    if entries != len(unprotected):
+        raise StatementRefused(
+            "unprotected_header_malformed",
+            f"the unprotected header repeats a label ({entries} entries, "
+            f"{len(unprotected)} distinct labels)")
+    members_ok = spans[0][2] and spans[2][2] and (
+        not isinstance(sig, bytes) or spans[3][2])
+    if not (envelope_ok and members_ok):
+        raise StatementRefused(
+            "non_deterministic_encoding",
+            "the COSE_Sign1 envelope is not in the deterministic encoding: tag 18 "
+            "as one byte, a definite array of four, each byte string with its "
+            "shortest definite length (RFC 8949 §4.2.1)")
+    if not _is_deterministic(protected):
+        raise StatementRefused(
+            "non_deterministic_encoding",
+            "the protected header's bytes are not the deterministic encoding of "
+            "the map they hold (RFC 8949 §4.2.1)")
+
+
+def _statement_id(protected: bytes, payload: bytes, sig: bytes) -> bytes:
+    """SHA-256 of the statement with an empty unprotected header."""
+    import hashlib
+
+    return hashlib.sha256(
+        b"\xd2\x84" + _bstr(protected) + b"\xa0" + _bstr(payload) + _bstr(sig)).digest()
 
 
 def _cbor2():
@@ -381,7 +598,7 @@ def _cose_parts(message: Any) -> tuple[bytes, dict, bytes, Any]:
         or len(tag.value) != 4
     ):
         raise StatementRefused("not_cose_sign1", "not a COSE_Sign1 message")
-    protected, _unprotected, payload, sig = tag.value
+    protected, unprotected, payload, sig = tag.value
     if not isinstance(protected, bytes):
         raise StatementRefused(
             "protected_header_malformed", "the protected header is not a byte string")
@@ -396,6 +613,7 @@ def _cose_parts(message: Any) -> tuple[bytes, dict, bytes, Any]:
             "the payload is detached (nil); this construction always carries it")
     if not isinstance(payload, bytes):
         raise StatementRefused("payload_malformed", "the payload is not a byte string")
+    _check_envelope(bytes(message), protected, unprotected, payload, sig)
     return protected, phdr, payload, sig
 
 
@@ -534,19 +752,29 @@ class StatementCheck:
     and no chain was at hand to recompute it — so it is reported, never
     called verified).
 
-    ``payload_encoding`` is reported apart from the values:
-    ``"deterministic"`` when the signed payload bytes are the RFC 8949
-    §4.2.1 deterministic encoding of the map they decode to, ``"not
-    deterministic"`` otherwise. The construction requires deterministic
-    encoding; a signed map with correct values in another encoding is a
-    finding about the bytes, not a refusal of the values.
+    ``statement_id`` is what to refer to this statement by: the SHA-256
+    of the statement with an **empty unprotected header**. The verifier
+    accepts one encoding of the envelope, the protected header and the
+    payload, so for a statement as its issuer published it this is the
+    hash of the bytes; and it does not move when a receipt is attached,
+    because a receipt goes in the unprotected header (RFC 9943), which the
+    signature does not cover. It names the *signed statement*, not its
+    content: an issuer that signs the same payload twice with a
+    non-deterministic algorithm (ES256) has made two statements, with two
+    ids. A valid signature alone is not an identity — these 32 bytes are.
+
+    ``payload_encoding`` is always ``"deterministic"`` since 0.15: a
+    payload in any other encoding is refused
+    (``non_deterministic_encoding``), no longer reported. The field stays
+    until 1.0 so that code reading it keeps working.
     """
 
     version: str  # "v2" | "v3"
     payload: dict
     root: bytes | None
     root_status: str
-    payload_encoding: str  # "deterministic" | "not deterministic"
+    payload_encoding: str  # always "deterministic" since 0.15; removed in 1.0
+    statement_id: bytes = b""  # SHA-256, 32 bytes
 
 
 def _distinct_keys(raw: bytes, decoded: dict, what: str, malformed: str) -> None:
@@ -596,6 +824,14 @@ def _decode_payload(payload: bytes) -> dict:
     if not isinstance(decoded, dict):
         raise StatementRefused("payload_malformed", "statement payload is not a CBOR map")
     _distinct_keys(payload, decoded, "the statement payload", "payload_malformed")
+    if not _is_deterministic(payload):
+        # Only the issuer can write the payload another way — it is signed —
+        # but two encodings of the same map are two statements with two
+        # hashes, and the construction promises one.
+        raise StatementRefused(
+            "non_deterministic_encoding",
+            "the payload's bytes are not the deterministic encoding of the map "
+            "they hold (RFC 8949 §4.2.1)")
     return decoded
 
 
@@ -611,9 +847,17 @@ def verify_statement(
     disagrees with its own signed description is not read either way.
     The protected header must carry exactly labels 1, 3, 4 and 15 (alg,
     content type, kid, CWT claims); any other label is refused, and so is
-    a repeated key in either map. A payload whose bytes are otherwise not
-    the deterministic encoding is reported in ``payload_encoding``, not
-    refused.
+    a repeated key in either map.
+
+    **One encoding is accepted** (since 0.15). The envelope, the protected
+    header and the payload must be the RFC 8949 §4.2.1 deterministic
+    encoding of what they hold. Any other writing of the same signed
+    content verifies under the same signature and has another hash; it is
+    refused, so that "the signature is valid" and "this is that statement"
+    are the same answer. The unprotected header must be a definite-length
+    map with no label twice; what it holds is not judged and not part of
+    the statement. The result's ``statement_id`` is the hash to refer to
+    the statement by.
 
     ``reader`` (an ``AuditReader`` over the chain) lets the v3 root be
     *recomputed* — the derived root over records ``0..last_seq`` — and
@@ -645,13 +889,10 @@ def verify_statement(
         # verify with a root correct for its last_seq (bridge run B3, F4).
         raise StatementRefused(
             "range_invalid", "a statement's range must satisfy 0 <= first_seq <= last_seq")
-    _protected, phdr, _payload, _sig = _cose_parts(message)
+    protected, phdr, _payload, sig = _cose_parts(message)
     ctype = phdr.get(_HDR_CONTENT_TYPE)
-    encoding = (
-        "deterministic"
-        if _cbor2().dumps(decoded, canonical=True) == payload
-        else "not deterministic"
-    )
+    encoding = "deterministic"  # anything else was refused above
+    sid = _statement_id(protected, payload, sig)
     v2_keys = {_PAYLOAD_HEAD, _PAYLOAD_FIRST_SEQ, _PAYLOAD_LAST_SEQ, _PAYLOAD_FORMAT}
     if ctype == CONTENT_TYPE:
         if set(decoded) != v2_keys:
@@ -661,7 +902,7 @@ def verify_statement(
                 f"{_keys(decoded)} (a root under the v2 content type is not read)"
             )
         _check_protected_labels(phdr)
-        return StatementCheck("v2", decoded, None, "absent", encoding)
+        return StatementCheck("v2", decoded, None, "absent", encoding, sid)
     if ctype != CONTENT_TYPE_V3:
         raise StatementRefused(
             "content_type_unknown", f"unknown statement content type {ctype!r}")
@@ -675,7 +916,7 @@ def verify_statement(
         raise StatementRefused("root_malformed", f"a v3 root is {_HEAD_LEN} bytes")
     _check_protected_labels(phdr)
     if reader is None:
-        return StatementCheck("v3", decoded, root, "carried, not recomputed", encoding)
+        return StatementCheck("v3", decoded, root, "carried, not recomputed", encoding, sid)
     from palimpsests.audit.pala.proofs import chain_root
 
     last_seq = decoded[_PAYLOAD_LAST_SEQ]
@@ -693,7 +934,7 @@ def verify_statement(
             "the statement's root is not the derived root over records "
             f"0..{last_seq} of this chain"
         )
-    return StatementCheck("v3", decoded, root, "recomputed", encoding)
+    return StatementCheck("v3", decoded, root, "recomputed", encoding, sid)
 
 
 def check_statement_against_head(

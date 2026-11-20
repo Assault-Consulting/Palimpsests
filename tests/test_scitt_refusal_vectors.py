@@ -29,6 +29,8 @@ from palimpsests.audit.pala import scitt, vectors  # noqa: E402
 REPO = Path(__file__).resolve().parent.parent
 INTEROP = REPO / "docs" / "interop"
 VECTOR = INTEROP / "scitt-statement-refusal-vectors.json"
+#: The 64 cases published before the one-encoding rule, as canonical JSON.
+FIRST_64_SHA256 = "7b93c2106a7b2aa2dcba8f6f670ce793ad3a815ef27d023960a0040df2c97c21"
 INPUTS = ("scitt-statement-vector.json", "scitt-statement-vector-v3.json",
           "scitt-statement-vector-alg19.json")
 
@@ -112,6 +114,25 @@ def test_every_algorithm_reaches_the_signature_check(doc):
 def test_a_case_without_a_base_is_not_a_statement(doc):
     no_base = [c for c in doc["cases"] if c["base"] is None]
     assert len(no_base) == 4 and {c["code"] for c in no_base} == {"not_cose_sign1"}
+
+
+def test_the_cases_published_before_the_encoding_rule_are_as_they_were(doc):
+    """The one-encoding rule (0.15) added two codes and nineteen cases at
+    the end. The 64 cases another verifier may already have been run
+    against keep their ids, their bytes and their codes: a check that
+    names what is wrong is reached before the general one."""
+    assert len(doc["cases"]) == 83
+    first = doc["cases"][:64]
+    assert not {c["code"] for c in first} & {
+        "non_deterministic_encoding", "unprotected_header_malformed"}
+    digest = hashlib.sha256(json.dumps(first, sort_keys=True).encode()).hexdigest()
+    assert digest == FIRST_64_SHA256
+    added = doc["cases"][64:]
+    assert {c["code"] for c in added} == {
+        "non_deterministic_encoding", "unprotected_header_malformed"}
+    assert doc["counts"]["non_deterministic_encoding"] == 12
+    assert doc["counts"]["unprotected_header_malformed"] == 7
+    assert doc["counts"]["cases"] == 83
     assert all(c["base"] in doc["bases"] for c in doc["cases"] if c["base"] is not None)
 
 
