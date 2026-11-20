@@ -249,7 +249,12 @@ def canonical_tool_args_digest(arguments: object) -> bytes:
 #: What ``WRITER_OPEN`` says about the writer: metadata, never content. It
 #: lets a reader tell which release wrote a boot — and so which rules its
 #: digests follow.
-_WRITER_ID = f"palimpsests {__version__}; inference r8"
+#: The revision of the inference profile this writer writes. Stated once;
+#: a test holds it to the profile document and to the packaged vectors, so
+#: it cannot fall behind them — it did: the writer went on naming r8 after
+#: it had begun writing r9's records.
+_PROFILE_REVISION = "r9"
+_WRITER_ID = f"palimpsests {__version__}; inference {_PROFILE_REVISION}"
 
 
 def _tool_payload_digest(value: object) -> bytes | None:
