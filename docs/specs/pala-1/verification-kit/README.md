@@ -5,8 +5,10 @@ PALA-1 is frozen at v1.0 on the strength of one sentence:
 > **An independent party must be able to write a verifier from the
 > specification alone, without our code.**
 
-Four independent implementations — two of them by external, unaffiliated
-implementers — have passed that test (`../INDEPENDENT-VERIFICATION.md`).
+Five independent implementations — three of them by people outside the
+project at the time of their runs — have passed that test
+(`../INDEPENDENT-VERIFICATION.md`; how they are counted, and when each
+count held, is in `../CLARIFICATIONS.md`).
 This kit exists so that **anyone** can run the same exercise, on the same
 terms, at any time. Every submitted run becomes part of the permanent
 verification record.

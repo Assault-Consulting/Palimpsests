@@ -1,0 +1,52 @@
+# Static analysis with CodeQL, beside Bandit (sast.yml).
+#
+# Bandit matches patterns in the package source. CodeQL follows data
+# through it: a value that arrives in a request and reaches a file path, a
+# subprocess or a deserializer several calls later is the kind of defect a
+# pattern does not see. The serve reads requests from other programs, so
+# both are run. The workflows themselves are analysed too ("actions"):
+# an injection through an untrusted input in a workflow is a supply-chain
+# defect of this repository.
+#
+# On every pull request and every push to main, so that each merged commit
+# has been analysed, and weekly, so that a new query finds an old defect.
+name: codeql
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "23 4 * * 2"
+
+# Read-only by default; the job adds only what uploading results needs.
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: codeql (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python, actions]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066  # v4.39.3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066  # v4.39.3
+        with:
+          category: "/language:${{ matrix.language }}"
