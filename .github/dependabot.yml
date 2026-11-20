@@ -19,6 +19,19 @@ updates:
     commit-message:
       prefix: "deps"
 
+  # The hash-locked tools the workflows install (.github/requirements/).
+  - package-ecosystem: "pip"
+    directory: "/.github/requirements"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      workflow-tools:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "ci"
+
   # The GitHub Actions pinned in .github/workflows/*. Keeping actions current
   # is itself a supply-chain concern Scorecard weighs (pinned + up to date).
   - package-ecosystem: "github-actions"

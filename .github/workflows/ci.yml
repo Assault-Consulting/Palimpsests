@@ -33,8 +33,7 @@ jobs:
       # first-party by the src heuristic, deterministically.
       - name: Install ruff only
         run: |
-          python -m pip install --upgrade pip
-          pip install ruff==0.15.20
+          pip install --require-hashes -r .github/requirements/lint.txt
 
       - name: Lint (ruff)
         run: |
@@ -66,9 +65,12 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      # Not hash-locked, on purpose. The tools that build, lint and release
+      # are locked (.github/requirements/); the libraries the tests run
+      # against are not, so that a new release of a dependency that breaks
+      # the package is seen here, on the day it appears, and not by a user.
       - name: Install (base + dev)
         run: |
-          python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
       - name: Test (pytest)
@@ -99,7 +101,6 @@ jobs:
 
       - name: Install (base + dev + pkcs11)
         run: |
-          python -m pip install --upgrade pip
           pip install -e ".[dev]" python-pkcs11
 
       - name: Coverage (statement + branch)
@@ -126,7 +127,6 @@ jobs:
 
       - name: Install (base + dev + encryption)
         run: |
-          python -m pip install --upgrade pip
           pip install -e ".[dev]" sqlcipher3-binary
 
       - name: The encryption extra is actually present
@@ -153,8 +153,7 @@ jobs:
 
       - name: Install build
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install build
+          pip install --require-hashes -r .github/requirements/build.txt
 
       - name: Verify reproducible build (build twice, diff hashes)
         run: bash scripts/check_reproducible_build.sh
@@ -177,8 +176,7 @@ jobs:
       # cannot lose.
       - name: Regenerate and compare
         run: |
-          python -m pip install --upgrade pip
-          pip install cryptography
+          pip install --require-hashes -r .github/requirements/vectors.txt
           cd docs/specs/pala-1
           cp test-vectors.json /tmp/committed.json
           python gen_vectors.py
@@ -216,7 +214,7 @@ jobs:
 
       - name: Build the wheel
         run: |
-          python -m pip install --upgrade pip build
+          pip install --require-hashes -r .github/requirements/build.txt
           python -m build --wheel -o /tmp/dist .
 
       - name: Install into an empty environment and run the quickstart
