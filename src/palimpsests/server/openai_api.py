@@ -233,6 +233,14 @@ def create_app(
     stats_lock = threading.Lock()
     # Routes whose first refusal of this run is already on the chain (r9).
     refusal_on_chain: set[str] = set()
+    rejection_on_chain: set[str] = set()
+    # Rejected reports, per route. Apart from the status's "rejected", which
+    # counts requests and so includes a rejected dry run: a dry run is a
+    # check, not a report, and nothing about it is ever written.
+    rejected_reports: dict[str, int] = {}
+    # route -> the counts its last record carried, so the stop says more
+    # only where there is more to say
+    last_recorded: dict[str, tuple[int, int, int, int]] = {}
 
     def _record_refusals(route: str) -> None:
         """Put a route's refusal counts on the chain (profile r9, kind 14).
@@ -240,17 +248,21 @@ def create_app(
         The counters above live in this process's memory: a serve that is
         stopped takes them with it, and a client that was turned away for
         the whole run leaves a chain that looks merely quiet. Metadata
-        only: the route and three counts, nothing of a refused request.
+        only: the route and four counts, nothing of a request that did not
+        get in.
         """
         if audit is None:
             return
         with stats_lock:
             entry = ingest_stats[route]
             empty, wrong = entry["refused"]["empty_bearer"], entry["refused"]["wrong_bearer"]
-            accepted = entry["accepted"]
-        if empty + wrong:
+            accepted, rejected = entry["accepted"], rejected_reports.get(route, 0)
+        if empty + wrong + rejected:
             try:
-                audit.reports_refused(route, empty=empty, wrong=wrong, accepted=accepted)
+                audit.reports_refused(
+                    route, empty=empty, wrong=wrong, accepted=accepted, rejected=rejected
+                )
+                last_recorded[route] = (empty, wrong, accepted, rejected)
             except (ValueError, OSError):
                 # The chain is closed (a request that arrived as the serve
                 # stopped) or the disk refused the write. The refusal has
@@ -260,12 +272,28 @@ def create_app(
 
     @app.middleware("http")
     async def _count_ingest(request, call_next):
-        response = await call_next(request)
         entry = ingest_stats.get(request.url.path)
         if entry is None or request.method != "POST":
-            return response
+            return await call_next(request)
+        try:
+            response = await call_next(request)
+        except Exception:
+            # A report that broke the handler did not get in either. It is
+            # counted and noted like any other rejection, and the error
+            # goes on to be answered as the 500 it is.
+            with stats_lock:
+                entry["rejected"] += 1
+                first = False
+                if not is_dry_run(request):
+                    rejected_reports[request.url.path] = (
+                        rejected_reports.get(request.url.path, 0) + 1)
+                    first = request.url.path not in rejection_on_chain
+                    rejection_on_chain.add(request.url.path)
+            if first:
+                _record_refusals(request.url.path)
+            raise
         now = time.time_ns()
-        first_refusal = False
+        first_refusal = first_rejection = False
         with stats_lock:
             if response.status_code == 401:
                 supplied = request.headers.get("authorization", "").strip()
@@ -274,9 +302,9 @@ def create_app(
                 entry["last_refused_ns"] = now
                 # The first refusal on a route goes onto the chain at once,
                 # so it is there even if this process is then killed; the
-                # rest are summed up when the serve stops. At most two
-                # records per route per run: a stranger hammering the port
-                # cannot grow the chain.
+                # rest are summed up when the serve stops. A bounded
+                # number of records per route per run: a stranger hammering
+                # the port cannot grow the chain.
                 if request.url.path not in refusal_on_chain:
                     refusal_on_chain.add(request.url.path)
                     first_refusal = True
@@ -288,6 +316,25 @@ def create_app(
                     entry["last_accepted_ns"] = now
             else:
                 entry["rejected"] += 1
+                # Like the first refusal: on the chain at once, the rest at
+                # the stop. A report that was read and rejected is a report
+                # whose events are not on the chain.
+                if not is_dry_run(request):
+                    rejected_reports[request.url.path] = (
+                        rejected_reports.get(request.url.path, 0) + 1)
+                    if request.url.path not in rejection_on_chain:
+                        rejection_on_chain.add(request.url.path)
+                        first_rejection = True
+        if first_rejection and audit is not None:
+            import logging
+
+            _record_refusals(request.url.path)
+            logging.getLogger("palimpsests.serve").warning(
+                "a report to %s was read and rejected (HTTP %s) — recorded on the "
+                "audit chain; further rejections on this route are counted and "
+                "summed up when the serve stops (GET /v1/pala/status shows them now)",
+                request.url.path, response.status_code,
+            )
         if first_refusal and audit is not None:
             import logging
 
@@ -330,7 +377,7 @@ def create_app(
         refusals_summed = False
 
         def _sum_up_refusals() -> None:
-            """One closing record per route that refused more than it has
+            """One closing record per route that turned away more than it has
             already said — the counts as they stand when the serve stops."""
             nonlocal refusals_summed
             if refusals_summed:
@@ -338,11 +385,14 @@ def create_app(
             refusals_summed = True
             for route in ingest_routes:
                 with stats_lock:
-                    refused = sum(ingest_stats[route]["refused"].values())
-                    accepted = ingest_stats[route]["accepted"]
-                # the first record said "1 refused, n accepted"; say more only
-                # if there is more to say
-                if route in refusal_on_chain and (refused > 1 or accepted):
+                    entry = ingest_stats[route]
+                    now = (entry["refused"]["empty_bearer"], entry["refused"]["wrong_bearer"],
+                           entry["accepted"], rejected_reports.get(route, 0))
+                # say more only if there is more to say than the last record
+                # this route got
+                if (route in refusal_on_chain or route in rejection_on_chain) and (
+                    now != last_recorded.get(route)
+                ):
                     _record_refusals(route)
 
         def _on_stop() -> None:

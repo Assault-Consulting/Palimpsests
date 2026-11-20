@@ -92,6 +92,7 @@ own type namespace:
 | 0x0017 | `EVT_REFUSED_EMPTY` | u32 — reports on the route refused for an absent or empty credential, so far in this run (kind 14). *(r9)* |
 | 0x0018 | `EVT_REFUSED_WRONG` | u32 — reports on the route refused for a credential that is not the serving layer's, so far in this run (kind 14). *(r9)* |
 | 0x0019 | `EVT_ACCEPTED` | u32 — reports accepted on the same route, so far in this run (kind 14). *(r9)* |
+| 0x001A | `EVT_REJECTED` | u32 — reports to the route that were read and rejected, so far in this run (kind 14). *(r9)* |
 
 | `EVT_KIND` | Meaning |
 |---|---|
@@ -334,7 +335,8 @@ at shutdown anchors after the close.
 
 A client that reports its tool events to the serving layer can be turned
 away before the report is read — it sends no credential, or the wrong
-one. From its own side nothing looks wrong: an agent's hook never blocks
+one — or after: the body is not a report the route takes, cannot be read
+at all, or breaks the handler. From its own side nothing looks wrong: an agent's hook never blocks
 the agent, and a plugin logs the failure and lets the tool run. From the
 chain's side nothing looked wrong either: the calls that were not
 reported are simply not there, and a chain with a hole in it and a quiet
@@ -350,24 +352,27 @@ one.
 | `EVT_REFUSED_EMPTY` | reports refused for an absent or empty credential |
 | `EVT_REFUSED_WRONG` | reports refused for a credential that is not the serving layer's |
 | `EVT_ACCEPTED` | reports accepted on the same route |
+| `EVT_REJECTED` | reports that were read and rejected: answered with an error other than the credential's |
 
-The three counts are as they stood when the record was written, since the
-serving layer started. All four tags MUST be present. The record is
+The four counts are as they stood when the record was written, since the
+serving layer started. All five tags MUST be present, and at least one of
+the two refused counts and the rejected count is not zero. The record is
 cleartext (`key_id = 0`) and carries no span: a refused request belongs
 to no session the serving layer could name.
 
 **When it is written.** The first refusal on a route in a run is recorded
 at once — so it is on the chain even if the process is then stopped — and
-the counts as they stand are recorded once more when the serving layer
-stops, if there is more to say. **At most two records per route per run.**
+so is the first rejection. The counts as they stand are recorded once
+more when the serving layer stops, if they have moved since the route's
+last record. **At most three records per route per run.**
 The bound is part of the rule, not a tuning: the record is caused by a
-request that failed authentication, and anyone who can reach the port
-can cause one. It must not be possible to grow the chain that way.
+request that failed — authentication, or being a report at all — and
+anyone who can reach the port can cause one. It must not be possible to grow the chain that way.
 
 **What it says, and what it does not.** That a party tried to report on
-that route and was turned away, and how often. Not who: the serving layer
-did not learn that. Not what the reports held: nothing of a refused
-request is recorded, and no count of tool events can be derived from a
+that route and did not get in, and how often. Not who: the serving layer
+did not learn that. Not what the reports held: nothing of a refused or
+rejected request is recorded, and no count of tool events can be derived from a
 count of requests. A reader takes it as: *for this run, the absence of
 reported events is not evidence that nothing happened.*
 
@@ -521,7 +526,7 @@ and the note must outlive every key by design. Whether
 | r6 | 2026-10-10 | Additive only: `EVT_OUTCOME` value 4 (`unobserved`, §3.1) — a return whose failure the recording vantage could not observe; `EVENT` kind 11 (`SEGMENT_CONTINUATION`, §3.2); `EVT` tags 0x0012–0x0015 (`SEG_PREDECESSOR_HEAD`, `SEG_INDEX`, `SEG_RETENTION_S`, `SEG_PRIOR_ROOT`) — the retention-continuation design (`retention-continuation.md`) adopted. No envelope byte, no core text, no byte of `test-vectors.json` changed; `inference-vectors.json` gains four records (21 in all, every earlier record byte-identical), and the prefix-consistency vectors stay pinned to the 17-record r5 prefix and unchanged. |
 | r7 | 2026-11-19 | Additive only, and the open issues closed (§6). `EVT_SOURCE` value 2 (`derived-from-telemetry`, §3.1) — a pair written from an exported telemetry span. `MERKLE` records defined for this profile as chain checkpoints whose leaves are record hashes (§10), which is what the writer has emitted since 0.10; the r1 "SHOULD NOT emit" is withdrawn. The digests over JSON values — `ORIGIN_CONFIG_DIGEST` and `EVT_PAYLOAD_DIGEST` — are taken over the RFC 8785 canonical form (§11): a new rule for the first, and for the second the r3 rule pinned to a standard, with the same bytes wherever r3 was unambiguous. Issues 3 and 5 recorded as closed without a change of bytes or meaning. No envelope byte, no core text, no byte of `test-vectors.json` changed; `inference-vectors.json` gains three records (24 in all, every earlier record byte-identical), and the prefix-consistency vectors stay pinned to the 17-record r5 prefix and unchanged. |
 | r8 | 2026-11-19 | Additive only: `EVENT` kinds 12 (`WRITER_CLOSE`) and 13 (`WRITER_OPEN`), §3.3 — a writer marks where it began and that it was closed, so a boot stopped without a close is visible once the chain goes on. No new tag. No envelope byte, no core text, no byte of `test-vectors.json` changed; `inference-vectors.json` gains three records (27 in all, every earlier record byte-identical), and the prefix-consistency vectors stay pinned to the 17-record r5 prefix and unchanged. |
-| r9 | 2026-11-19 | Additive only: `EVENT` kind 14 (`REPORTS_REFUSED`, §3.4) and `EVT` tags 0x0016–0x0019 (`EVT_ROUTE`, `EVT_REFUSED_EMPTY`, `EVT_REFUSED_WRONG`, `EVT_ACCEPTED`) — reports to a reporting route that were refused before being read are on the chain, at most two records per route per run. No envelope byte, no core text, no byte of `test-vectors.json` changed; `inference-vectors.json` gains five records (32 in all, every earlier record byte-identical), and the prefix-consistency vectors stay pinned to the 17-record r5 prefix and unchanged. |
+| r9 | 2026-11-19 | Additive only: `EVENT` kind 14 (`REPORTS_REFUSED`, §3.4) and `EVT` tags 0x0016–0x001A (`EVT_ROUTE`, `EVT_REFUSED_EMPTY`, `EVT_REFUSED_WRONG`, `EVT_ACCEPTED`, `EVT_REJECTED`) — reports to a reporting route that were refused before being read, or read and rejected, are on the chain, at most three records per route per run. No envelope byte, no core text, no byte of `test-vectors.json` changed; `inference-vectors.json` gains five records (32 in all, every earlier record byte-identical), and the prefix-consistency vectors stay pinned to the 17-record r5 prefix and unchanged. |
 
 ## 10. `MERKLE` — chain checkpoints *(r7)*
 

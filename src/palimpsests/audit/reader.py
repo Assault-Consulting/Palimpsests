@@ -117,6 +117,7 @@ from palimpsests.audit.profiles.inference import (
     EVT_REF_SEQ,
     EVT_REFUSED_EMPTY,
     EVT_REFUSED_WRONG,
+    EVT_REJECTED,
     EVT_ROUTE,
     EVT_SOURCE,
     KIND_GUARD_PREFIX_RELEASE,
@@ -1162,10 +1163,11 @@ class AuditReader:
                     items.append(AdvisoryItem(
                         "reports_refused", dr.seq,
                         dr.header.boot_id if dr.header is not None else None,
-                        f"{view.refused_empty + view.refused_wrong} report(s) to "
-                        f"{view.route} had been refused when this was written "
-                        f"({view.refused_empty} with an empty credential, "
-                        f"{view.refused_wrong} with a wrong one; {view.accepted} accepted): "
+                        f"{view.refused_empty + view.refused_wrong + view.rejected} "
+                        f"report(s) to {view.route} had not got in when this was written "
+                        f"({view.refused_empty} refused with an empty credential, "
+                        f"{view.refused_wrong} with a wrong one, {view.rejected} read "
+                        f"and rejected; {view.accepted} accepted): "
                         "tool events a client tried to report may be missing from this chain",
                     ))
                 continue
@@ -2511,8 +2513,9 @@ class ReportsRefusedView:
 
     What the serving layer had counted on one reporting route when it wrote
     the record: reports refused before they were read, by kind of refusal,
-    and reports accepted. It says that someone tried to report and was
-    turned away — not who, and not what the reports held.
+    reports read and rejected, and reports accepted. It says that someone
+    tried to report and did not get in — not who, and not what the reports
+    held.
     """
 
     seq: int
@@ -2520,13 +2523,14 @@ class ReportsRefusedView:
     refused_empty: int  # refused: no credential, or an empty one
     refused_wrong: int  # refused: a credential that is not the serve's
     accepted: int  # accepted on the same route so far
+    rejected: int  # read and rejected: a body that was not a report this route takes
 
 
 def decode_reports_refused(dr: DecodedRecord) -> ReportsRefusedView | None:
     """The counts ``dr`` carries, or None if it carries no usable ones.
 
     Usable means: an EVENT of kind 14 with a cleartext body holding
-    ``EVT_ROUTE`` and the three counts at their profile width (4 bytes).
+    ``EVT_ROUTE`` and the four counts at their profile width (4 bytes).
     """
     if dr.kind != KIND_REPORTS_REFUSED or dr.body_tlvs is None:
         return None
@@ -2534,16 +2538,18 @@ def decode_reports_refused(dr: DecodedRecord) -> ReportsRefusedView | None:
     for t, v in dr.body_tlvs:
         tags.setdefault(t, v)
     route = tags.get(EVT_ROUTE)
-    counts = [tags.get(t) for t in (EVT_REFUSED_EMPTY, EVT_REFUSED_WRONG, EVT_ACCEPTED)]
+    counts = [tags.get(t) for t in (EVT_REFUSED_EMPTY, EVT_REFUSED_WRONG, EVT_ACCEPTED,
+                                    EVT_REJECTED)]
     if not route or any(c is None or len(c) != 4 for c in counts):
         return None
-    empty, wrong, accepted = (struct.unpack("<I", c)[0] for c in counts)
+    empty, wrong, accepted, rejected = (struct.unpack("<I", c)[0] for c in counts)
     return ReportsRefusedView(
         seq=dr.seq,
         route=route.decode("utf-8", "replace"),
         refused_empty=empty,
         refused_wrong=wrong,
         accepted=accepted,
+        rejected=rejected,
     )
 
 

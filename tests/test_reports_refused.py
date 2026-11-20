@@ -77,13 +77,16 @@ def test_the_record_carries_the_route_and_the_three_counts(tmp_path):
         view = decode_reports_refused(rec)
         assert decode_reports_refused(reader.record_at(0)) is None
     assert view == ReportsRefusedView(seq=2, route=CLAUDE, refused_empty=4,
-                                      refused_wrong=1, accepted=22)
+                                      refused_wrong=1, accepted=22, rejected=0)
 
 
 @pytest.mark.parametrize("kwargs", [
     {"route": "", "empty": 1, "wrong": 0},
     {"route": "x" * 65, "empty": 1, "wrong": 0},
     {"route": EVENTS, "empty": 0, "wrong": 0},  # nothing was refused
+    {"route": EVENTS, "empty": 0, "wrong": 0, "accepted": 9, "rejected": 0},
+    {"route": EVENTS, "empty": 1, "wrong": 0, "rejected": -1},
+    {"route": EVENTS, "empty": 1, "wrong": 0, "rejected": 2 ** 32},
     {"route": EVENTS, "empty": -1, "wrong": 1},
     {"route": EVENTS, "empty": 2 ** 32, "wrong": 0},
     {"route": EVENTS, "empty": True, "wrong": 0},
@@ -117,14 +120,15 @@ def test_the_export_line_states_the_counts(tmp_path):
     log = tmp_path / "w.pala"
     with PalaWriter(log) as w:
         w.genesis()
-        w.reports_refused(TRACES, empty=2, wrong=5, accepted=9)
+        w.reports_refused(TRACES, empty=2, wrong=5, accepted=9, rejected=3)
     out = io.StringIO()
     export_jsonl(log.read_bytes(), out)
     lines = [json.loads(x) for x in out.getvalue().splitlines()]
     with_counts = [x for x in lines if "reports_refused" in x]
     assert len(with_counts) == 1 and with_counts[0]["kind_name"] == "REPORTS_REFUSED"
     assert with_counts[0]["reports_refused"] == {
-        "route": TRACES, "empty_credential": 2, "wrong_credential": 5, "accepted": 9}
+        "route": TRACES, "empty_credential": 2, "wrong_credential": 5, "accepted": 9,
+        "rejected": 3}
 
 
 # -- the serve -----------------------------------------------------------------
@@ -139,7 +143,7 @@ def test_the_first_refusal_on_a_route_is_on_the_chain_at_once(served):
     audit.writer._xlock.release()
     views, _ = _refused(log)
     assert views == [ReportsRefusedView(seq=before, route=CLAUDE, refused_empty=1,
-                                        refused_wrong=0, accepted=0)]
+                                        refused_wrong=0, accepted=0, rejected=0)]
 
 
 def test_an_empty_key_and_a_wrong_key_are_counted_apart(served):
@@ -183,12 +187,100 @@ def test_a_single_refusal_is_said_once(served):
     assert [(v.route, v.refused_empty) for v in views] == [(CODEX, 1)]
 
 
-def test_a_run_with_no_refusal_writes_no_such_record(served):
+def test_a_run_with_nothing_turned_away_writes_no_such_record(served):
     client, app, audit, log = served
     assert client.post(EVENTS, json=CALL, headers=AUTH).status_code == 200
-    assert client.post(EVENTS, json=[], headers=AUTH).status_code == 422  # rejected, not refused
+    assert client.post(EVENTS + "?dry_run=1", json=CALL, headers=AUTH).status_code == 200
     _stop(app, audit)
     assert _refused(log) == ([], [])
+
+
+# -- read and rejected ---------------------------------------------------------
+
+def test_the_first_rejected_report_on_a_route_is_on_the_chain_at_once(served):
+    """A report that passed the key check and was then rejected is a report
+    whose events are not on the chain, exactly like a refused one."""
+    client, app, audit, log = served
+    before = audit.writer.seq
+    assert client.post(EVENTS, json=CALL, headers=AUTH).status_code == 200
+    seq = audit.writer.seq
+    r = client.post(EVENTS, json=[], headers=AUTH)  # not a report this route takes
+    assert 400 <= r.status_code < 500 and r.status_code != 401
+    assert audit.writer.seq == seq + 1
+    client.post(EVENTS, json=[], headers=AUTH)
+    client.post(EVENTS, json=[], headers=AUTH)
+    assert audit.writer.seq == seq + 1  # only the first, until the stop
+    _stop(app, audit)
+    views, advisories = _refused(log)
+    assert [(v.refused_empty, v.refused_wrong, v.accepted, v.rejected) for v in views] == [
+        (0, 0, 1, 1), (0, 0, 1, 3)]
+    assert len(advisories) == 2 and "3 read and rejected" in advisories[1].detail
+    assert before < views[0].seq
+
+
+def test_a_body_that_cannot_be_read_is_a_rejection_on_the_chain(served):
+    client, app, audit, log = served
+    deep = "[" * 60_000 + "]" * 60_000  # past the JSON parser's own stack
+    for route in (EVENTS, CLAUDE, CODEX):
+        r = client.post(route, content=deep,
+                        headers={**AUTH, "Content-Type": "application/json"})
+        assert 400 <= r.status_code < 500, (route, r.status_code)
+    r = client.post(TRACES, content=b"{", headers={**AUTH, "Content-Type": "application/json"})
+    assert r.status_code == 400
+    r = client.post(CLAUDE, content=b"\xff not json",
+                    headers={**AUTH, "Content-Type": "application/json"})
+    assert 400 <= r.status_code < 500
+    _stop(app, audit)
+    views, _ = _refused(log)
+    assert {(v.route, v.rejected) for v in views} == {
+        (EVENTS, 1), (CODEX, 1), (TRACES, 1), (CLAUDE, 1), (CLAUDE, 2)}
+    assert b"not json" not in log.read_bytes()
+
+
+def test_a_report_that_breaks_the_handler_is_counted_and_recorded(tmp_path):
+    log = tmp_path / "boom.pala"
+    audit = NativeAudit(PalaWriter(log))
+    app = create_app(chat_fn=lambda **k: iter(()), models_fn=lambda: [], audit=audit,
+                     api_key=KEY)
+    client = TestClient(app, raise_server_exceptions=False)
+    real = audit.tool_called
+
+    def boom(*a, **k):
+        raise RuntimeError("a defect in the handler")
+
+    audit.tool_called = boom
+    hook = {"hook_event_name": "PreToolUse", "tool_name": "T", "tool_use_id": "x",
+            "tool_input": {}}
+    assert client.post(CLAUDE, json=hook, headers=AUTH).status_code == 500
+    audit.tool_called = real
+    assert client.get("/v1/pala/status", headers=AUTH).json()["ingest"][CLAUDE][
+        "rejected"] == 1
+    _stop(app, audit)
+    views, _ = _refused(log)
+    assert [(v.route, v.rejected) for v in views] == [(CLAUDE, 1)]
+
+
+def test_at_most_three_records_per_route_whatever_is_sent(served):
+    client, app, audit, log = served
+    for _ in range(50):
+        client.post(EVENTS, json=CALL)                # refused
+        client.post(EVENTS, json=[], headers=AUTH)    # rejected
+        client.post(EVENTS, json=CALL, headers=AUTH)  # accepted
+    _stop(app, audit)
+    views, _ = _refused(log)
+    assert [(v.refused_empty, v.accepted, v.rejected) for v in views] == [
+        (1, 0, 0), (1, 0, 1), (50, 50, 50)]
+    app.state.cancel_pending()
+
+
+def test_the_stop_says_nothing_when_the_counts_have_not_moved(served):
+    client, app, audit, log = served
+    for _ in range(3):
+        client.post(EVENTS, json=CALL, headers=AUTH)
+    client.post(EVENTS, json=CALL)  # one refusal, after three accepted, then nothing
+    _stop(app, audit)
+    views, _ = _refused(log)
+    assert [(v.refused_empty, v.accepted) for v in views] == [(1, 3)]
 
 
 def test_only_reporting_routes_are_recorded(served):
@@ -250,6 +342,7 @@ def test_the_vectors_hold_a_first_refusal_and_the_counts_at_the_stop(tmp_path):
         assert (view.route, view.refused_empty, view.refused_wrong, view.accepted) == (
             expected["route"], expected["refused_empty"], expected["refused_wrong"],
             expected["accepted"])
+        assert view.rejected == expected["rejected"]
     assert [v.seq for v in views] == [29, 30]
     with AuditReader.open(path) as reader:
         assert len(reader.boots()) == 3

@@ -669,6 +669,7 @@ EVT_ROUTE = 0x0016
 EVT_REFUSED_EMPTY = 0x0017
 EVT_REFUSED_WRONG = 0x0018
 EVT_ACCEPTED = 0x0019
+EVT_REJECTED = 0x001A
 REFUSED_ROUTE = b"/v1/pala/hooks/claude"
 
 
@@ -676,13 +677,14 @@ def third_boot(**kw) -> R.Header:
     return dataclasses.replace(header(**kw), boot_id=BOOT_ID_3)
 
 
-def refused_body(empty: int, wrong: int, accepted: int) -> bytes:
+def refused_body(empty: int, wrong: int, accepted: int, rejected: int = 0) -> bytes:
     return R.encode_tlvs([
         R.tlv(EVT_KIND, u16(KIND_REPORTS_REFUSED)),
         R.tlv(EVT_ROUTE, REFUSED_ROUTE),
         R.tlv(EVT_REFUSED_EMPTY, u32(empty)),
         R.tlv(EVT_REFUSED_WRONG, u32(wrong)),
         R.tlv(EVT_ACCEPTED, u32(accepted)),
+        R.tlv(EVT_REJECTED, u32(rejected)),
     ])
 
 
@@ -877,17 +879,18 @@ out = {
         "29": {
             "kind": 14, "kind_name": "REPORTS_REFUSED",
             "route": "/v1/pala/hooks/claude",
-            "refused_empty": 1, "refused_wrong": 0, "accepted": 0,
+            "refused_empty": 1, "refused_wrong": 0, "accepted": 0, "rejected": 0,
         },
         "30": {
             "kind": 14, "kind_name": "REPORTS_REFUSED",
             "route": "/v1/pala/hooks/claude",
-            "refused_empty": 4, "refused_wrong": 0, "accepted": 22,
+            "refused_empty": 4, "refused_wrong": 0, "accepted": 22, "rejected": 0,
         },
         "reports_refused_rule": (
             "r9: counts are as they stood when the record was written, since "
-            "the serving layer started. At most two records per route per run: "
-            "the first refusal at once, and the counts once more at the stop."
+            "the serving layer started. At most three records per route per run: "
+            "the first refusal at once, the first rejection at once, and the "
+            "counts once more at the stop if they have moved."
         ),
         "source_rule": (
             "EVT_SOURCE (0x0011) is present only for a non-default value: 1 "
