@@ -118,8 +118,9 @@ def test_a_value_at_the_limit_is_still_digested():
 # -- the hook routes -----------------------------------------------------------
 
 def _hook_body(event, call_id, field, depth):
-    return ('{"hook_event_name":"%s","tool_name":"WebFetch","tool_use_id":"%s",'
-            '"session_id":"s","%s":{"page":%s}}' % (event, call_id, field, _text(depth)))
+    head = json.dumps({"hook_event_name": event, "tool_name": "WebFetch",
+                       "tool_use_id": call_id, "session_id": "s"})
+    return head[:-1] + ', "' + field + '": {"page": ' + _text(depth) + "}}"
 
 
 @pytest.mark.parametrize("route", ["/v1/pala/hooks/claude", "/v1/pala/hooks/codex"])
@@ -144,7 +145,7 @@ def test_a_deep_hook_payload_leaves_the_pair_on_the_chain(tmp_path, route, depth
                        **post).status_code == 200
     # a result whose call was never seen, deep on both sides
     both = _hook_body("PostToolUse", "c", "tool_input", depth)[:-1] + (
-        ',"tool_response":%s}' % _text(depth))
+        ', "tool_response": ' + _text(depth) + "}")
     assert client.post(route, content=both, **post).status_code == 200
     app.state.cancel_pending()
     audit.writer.close()
@@ -193,9 +194,9 @@ def test_a_deep_argument_on_the_events_route_is_recorded_without_a_digest(tmp_pa
     audit = NativeAudit(PalaWriter(log))
     app = create_app(chat_fn=lambda **k: iter(()), models_fn=lambda: [], audit=audit)
     client = TestClient(app)
-    body = ('{"events":[{"type":"tool_call","id":"c","name":"t","arguments":{"a":%s}},'
-            '{"type":"tool_result","call_id":"c","outcome":"ok","content":"r"}]}'
-            % _text(depth))
+    body = ('{"events":[{"type":"tool_call","id":"c","name":"t","arguments":{"a":'
+            + _text(depth)
+            + '}},{"type":"tool_result","call_id":"c","outcome":"ok","content":"r"}]}')
     r = client.post("/v1/pala/events", content=body,
                     headers={"Content-Type": "application/json"})
     assert r.status_code == 200 and not [x for x in r.json()["results"] if "error" in x]
@@ -282,7 +283,7 @@ def test_an_otlp_body_too_deep_to_read_is_a_400_not_a_500(tmp_path):
 
 @pytest.mark.parametrize("depth", (*DEPTHS, 60_000))
 def test_a_deep_tool_call_in_the_models_text_does_not_break_the_parser(depth):
-    text = '<tool_call>{"name": "t", "arguments": {"a": %s}}</tool_call>' % _text(depth)
+    text = '<tool_call>{"name": "t", "arguments": {"a": ' + _text(depth) + "}}</tool_call>"
     calls, _remaining = parse_tool_calls(text)  # no exception is the point
     for call in calls:
         assert _tool_payload_digest(call.arguments) is None
@@ -305,7 +306,7 @@ def test_a_body_too_deep_for_the_parser_is_rejected_and_counted(tmp_path, route,
     audit = NativeAudit(PalaWriter(tmp_path / "p.pala"))
     app = create_app(chat_fn=lambda **k: iter(()), models_fn=lambda: [], audit=audit)
     client = TestClient(app, raise_server_exceptions=False)
-    r = client.post(route, content=body % _text(60_000),
+    r = client.post(route, content=body.replace("%s", _text(60_000)),
                     headers={"Content-Type": "application/json"})
     assert 400 <= r.status_code < 500
     assert client.get("/v1/pala/status").json()["ingest"][route]["rejected"] == 1
