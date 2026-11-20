@@ -154,10 +154,10 @@ carries exactly labels 1, 3, 4 and 15; a statement with any other label,
 or without one of them, is not this construction and is refused, though
 RFC 9052 permits further labels in general. A map that repeats a key —
 payload or protected header — is refused: the same signed bytes would
-read two ways. A payload whose keys are distinct but not in deterministic
-encoding is reported, not refused: `verify_statement` says so in
-`payload_encoding`, and the verdict on the values is reached apart from
-it. A message, a protected header or a payload that is one CBOR item
+read two ways. A payload or a protected header whose keys are distinct
+but not in the deterministic encoding is refused (since 0.15; before, a
+payload was reported in `payload_encoding` and accepted): see
+[section 11](#11-one-statement-one-encoding-one-name). A message, a protected header or a payload that is one CBOR item
 *followed by further bytes* is refused (since 0.15): an artifact that is a
 statement plus something else is not the statement, and a strict decoder
 — the independent verifier of bridge runs B2 and B3 is one — already
@@ -215,15 +215,18 @@ does, `-19` rests on this implementation and its vector alone.
 ## 10. Refusals
 
 A statement `verify_statement` does not accept is refused with one of
-19 codes (`STATEMENT_REFUSAL_CODES`). The code names the check that
+21 codes (`STATEMENT_REFUSAL_CODES`). The code names the check that
 failed, never a cause; the vocabulary is open, so a release may add a
 code but never rename one or give it another meaning.
 
 `docs/interop/scitt-statement-refusal-vectors.json` gives a refused
 statement for every code, so that another verifier can compare its
-refusals with these: 64 cases. Sixty are a published statement with one
-change, signed again with the same test key so that it fails on the
-check it is about; four are inputs that are not a statement at all.
+refusals with these: 83 cases. Seventy-nine are a published statement
+with one change — signed again with the same test key where the change
+touches what is signed, so that it fails on the check it is about; four
+are inputs that are not a statement at all. The first 64 are the cases
+published before the encoding rule of section 11 and are unchanged, ids
+and bytes; the 19 after them are that rule's.
 Each of the three algorithms has a case that reaches the signature
 check and fails there. The file states the order of the checks, which
 decides the code when a change could break more than one, the keys
@@ -236,3 +239,71 @@ Not in the file: inputs that depend on a language's types (a message
 that is not bytes, a key that is not a public key) and ES256 statements
 that verify, whose signatures do not reproduce. Those stay in this
 package's test suite.
+
+## 11. One statement, one encoding, one name
+
+**A valid signature is not an identity.** A COSE_Sign1 signature covers
+the protected header and the payload. It does not cover how the envelope
+around them is written — the tag, the array head, the length of each
+byte string — nor the unprotected header at all. Each of those can be
+written several ways, and every combination verifies under the same
+signature and has another SHA-256. Measured on the three published
+statements before 0.15: 34 375 such writings of each, all accepted, all
+with different hashes; the unprotected header could be an integer. None
+is a forgery — the signed content is the same — but a reference to a
+statement by its digest, a deduplication, or a log leaf computed over
+the statement's bytes then depends on who last touched them.
+
+**The rule (since 0.15).** A verifier accepts one encoding:
+
+- the envelope: tag 18 as the one byte `d2`, a definite array of four
+  (`84`), each of the three byte strings with its shortest definite
+  length;
+- the protected header and the payload: the deterministic encoding of
+  RFC 8949 §4.2.1 — shortest integers and lengths, no indefinite
+  length, keys in bytewise order;
+- the unprotected header: a map (RFC 9052 §3), of a definite length,
+  with no label twice. **What it holds, and how that is written, is not
+  judged.** A transparency service puts its receipts there (RFC 9943,
+  label 394) with its own encoder; nothing in it is signed.
+
+Anything else is refused: `non_deterministic_encoding` for the envelope,
+the protected header or the payload, `unprotected_header_malformed` for
+the header. A check that names what is wrong more exactly — a repeated
+key, an indefinite-length map in a signed part, trailing bytes — is
+reached first, so no case published earlier changes its code. The
+encoding of the envelope and of the protected header is judged before
+the signature, so that code depends on the bytes alone; the payload's
+after it, with the payload's other checks.
+
+**The name.** `StatementCheck.statement_id` is the SHA-256 of the
+statement with its unprotected header emptied:
+
+    SHA-256( d2 84 || bstr(protected) || a0 || bstr(payload) || bstr(signature) )
+
+For a statement whose unprotected header is the one byte `a0` — as
+`build_signed_statement` writes it, and as every published vector is —
+that is the hash of its bytes. Attaching a receipt changes the bytes and
+their hash and leaves the id as it was. This is the id to use for a
+reference, a deduplication or a comparison between two parties' copies.
+
+What the id is not: a name for the *content*. It includes the signature,
+so the same payload signed twice with a non-deterministic algorithm
+(ES256) is two statements with two ids; under `-8` and `-19` the
+signature reproduces and so does the id. Nor does it say the statement
+was registered anywhere — a receipt says that, and this package verifies
+no receipt.
+
+**Vectors.** `docs/interop/scitt-statement-identity-vectors.json` gives
+the id of each published statement and seven statements that verify with
+something in the unprotected header — a receipt placeholder under 394, a
+repeated key id, a private label, and two written the way another
+encoder might — each with other bytes and the same id. It is generated
+by `gen_scitt_statement_identity_vectors.py` and regenerates byte for
+byte. The refused writings are in the refusal vectors of section 10.
+
+**What this does not settle.** Which bytes a transparency service hashes
+into its log is that service's rule, not this construction's: one may
+hash the statement as registered, another its `Sig_structure`. The id
+defined here is this construction's name for a statement and is computed
+by its holder; it is not claimed to equal any service's leaf.

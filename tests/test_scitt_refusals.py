@@ -83,6 +83,7 @@ def _chain(tmp_path, records=6):
 
 V3 = _statement(root=ROOT)
 P, U, PL, SIG = _parts(_statement())
+GOOD = _message(P, U, PL, SIG)
 
 #: code -> a statement refused with it (verified against HEAD under PUB).
 CASES = {
@@ -106,6 +107,16 @@ CASES = {
         _signed(b"\xa5" + P[1:] + cbor2.dumps(1) + cbor2.dumps(-8), PL),
     ],
     "indefinite_length_map": [_signed(P, b"\xbf" + PL[1:] + b"\xff")],
+    # one encoding (0.15): the same statement written another way
+    "non_deterministic_encoding": [
+        b"\xd8\x12" + GOOD[1:],  # tag 18 in two bytes
+        GOOD[:1] + b"\x98\x04" + GOOD[2:],  # the array head in two bytes
+        _signed(cbor2.dumps(dict(reversed(list(cbor2.loads(P).items())))), PL),
+        _signed(P, cbor2.dumps(dict(reversed(list(cbor2.loads(PL).items()))))),
+    ],
+    "unprotected_header_malformed": [
+        _message(P, 7, PL, SIG), _message(P, [], PL, SIG), _message(P, b"", PL, SIG),
+    ],
     "unsupported_alg": [
         _with_protected(lambda h: h.__setitem__(1, -35)),
         _with_protected(lambda h: h.__setitem__(1, "EdDSA")),

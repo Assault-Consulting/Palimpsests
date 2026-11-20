@@ -10,6 +10,7 @@
     "head_mismatch",
     "indefinite_length_map",
     "key_type_mismatch",
+    "non_deterministic_encoding",
     "not_cose_sign1",
     "payload_keys_mismatch",
     "payload_malformed",
@@ -21,15 +22,17 @@
     "root_mismatch",
     "signature_invalid",
     "trailing_bytes",
+    "unprotected_header_malformed",
     "unsupported_alg"
   ],
   "codes_note": "An open vocabulary: a release may add a code, never rename one or give it another meaning. The code names the check that failed, never a cause.",
   "check_order": [
     "message structure: not_cose_sign1, trailing_bytes, protected_header_malformed (with repeated_key in the protected header), detached_payload, payload_malformed for a payload that is not a byte string",
+    "one encoding: unprotected_header_malformed (the unprotected header is a definite-length map with no label twice; what it holds and how that is written is not judged), then non_deterministic_encoding for the envelope (tag 18 as d2, the array as 84, each byte string with its shortest definite length) and for the bytes of the protected header. A check above that names what is wrong - a repeated key, an indefinite-length map - is reached first",
     "unsupported_alg (label 1 is -7, -8 or -19)",
     "key_type_mismatch (-8 and -19 mean Ed25519, -7 means P-256), before any signature",
-    "signature_invalid - also for a signature that is not a byte string or has the wrong length: the fourth member is not looked at before this check",
-    "the payload as CBOR: payload_malformed, repeated_key, indefinite_length_map",
+    "signature_invalid - also for a signature that is not a byte string or has the wrong length: what the fourth member is, is not looked at before this check (only how its length is written, when it is a byte string)",
+    "the payload as CBOR: payload_malformed, repeated_key, indefinite_length_map, then non_deterministic_encoding for the bytes of the payload",
     "head_mismatch",
     "format_id_mismatch",
     "range_invalid (0 <= first_seq <= last_seq, both integers)",
@@ -101,7 +104,7 @@
     "use": "a case with verify_with.chain set is verified against this chain: the v3 root is recomputed as the PALA-1 section 4.3 tree over the record hashes of records 0..last_seq"
   },
   "counts": {
-    "cases": 64,
+    "cases": 83,
     "chain_too_short": 1,
     "content_type_unknown": 2,
     "detached_payload": 1,
@@ -109,6 +112,7 @@
     "head_mismatch": 1,
     "indefinite_length_map": 1,
     "key_type_mismatch": 9,
+    "non_deterministic_encoding": 12,
     "not_cose_sign1": 8,
     "payload_keys_mismatch": 3,
     "payload_malformed": 5,
@@ -120,8 +124,10 @@
     "root_mismatch": 2,
     "signature_invalid": 7,
     "trailing_bytes": 2,
+    "unprotected_header_malformed": 7,
     "unsupported_alg": 4
   },
+  "one_encoding": "Since 0.15 the verifier accepts one encoding of a statement: RFC 8949 section 4.2.1 for the envelope, the protected header and the payload. The non_deterministic_encoding and unprotected_header_malformed cases are the published statement written another way; the first eight and all of the second need no key. The unprotected header is not held to that encoding: it is another party's to write. Statements that verify with something in it are in scitt-statement-identity-vectors.json.",
   "not_in_this_file": [
     "inputs that are not bytes (a text string or nil handed to the verifier as the message) and keys that are not public keys (a private key, nil, a string): they depend on a language's types and stay in this package's test suite",
     "an expected head of the wrong kind (text, nil, an empty byte string): refused as head_mismatch in the test suite",
@@ -958,6 +964,253 @@
         "key": "ed25519-test",
         "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
         "chain": "subject_chain"
+      }
+    },
+    {
+      "id": "non_deterministic_encoding-01",
+      "code": "non_deterministic_encoding",
+      "base": "v2",
+      "change": "tag 18 written in two bytes (d8 12) instead of one (d2)",
+      "statement_hex": "d8128458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "860c96befaf863da0d6c55d0303e2555e7e626d985905d96a0fad9f207510a77",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "non_deterministic_encoding-02",
+      "code": "non_deterministic_encoding",
+      "base": "v2",
+      "change": "the array head written as 98 04 instead of 84",
+      "statement_hex": "d2980458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "5ec0ec6867610c59c9246e7a777a8fa400a141e7982b3de01a36ec30648994f2",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "non_deterministic_encoding-03",
+      "code": "non_deterministic_encoding",
+      "base": "v2",
+      "change": "the array written with an indefinite length (9f ... ff)",
+      "statement_hex": "d29f58cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703ff",
+      "statement_sha256": "2c79a1747f42cd368cfdcd025fba5aece683e121aa4a4c3dd007299a3950c41e",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "non_deterministic_encoding-04",
+      "code": "non_deterministic_encoding",
+      "base": "v2",
+      "change": "the protected header's byte string with a two-byte length (59 00 nn) where one byte is enough",
+      "statement_hex": "d2845900cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "e58c691ecb5d0a1ea5e9f1161b4e2d1498be4285ae250ed34e7b6f24036f4742",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "non_deterministic_encoding-05",
+      "code": "non_deterministic_encoding",
+      "base": "v2",
+      "change": "the payload's byte string in two chunks (5f ... ff)",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05f4aa40158203a1a3673f504582b98eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e30ff5840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "53b11e4296362d2fd678b78a12fcc844f3046b04cfaf12f8d9fbc77d5793b22c",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "non_deterministic_encoding-06",
+      "code": "non_deterministic_encoding",
+      "base": "v2",
+      "change": "the signature's byte string with a two-byte length (59 00 40)",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e30590040923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "a863af26412eb3cad33775be24bdbe09bf5a528f50735095f165be00e3472f97",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "non_deterministic_encoding-07",
+      "code": "non_deterministic_encoding",
+      "base": "v3",
+      "change": "the v3 statement with tag 18 written in two bytes (d8 12)",
+      "statement_hex": "d8128458d0a4012703782e6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642d76332b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05858a50158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130208030b046b70616c612d312f76312e3005582084f1e4f5c4bc75ff5edc304b35b122c3263366ed7e7ca399706a4128e7ecd7d75840eb3f3a1d272fd6dbc2111ceb4642daacf329515999dfd772f6462e35557b9344c5addb6336856f42ac81171a4203cf03797d8fe82b7041d13a5b44dc880b1a09",
+      "statement_sha256": "bc28dd8d1e82f8a2d283e6e17cfecdf05741cafd81c2bb3666b2ef286fee5470",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "non_deterministic_encoding-08",
+      "code": "non_deterministic_encoding",
+      "base": "v2-alg19",
+      "change": "the alg -19 statement with the array head written as 98 04",
+      "statement_hex": "d2980458cda4013203782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840cb4b5041fe422c7b5509c1f53c2b127dc967b0ad84398559dd7b29853f1e6a050d3b1d85ae15ff6e055fb22d78dac5a353662a4731122bc5cc6d6c67cdbdf809",
+      "statement_sha256": "dcb6563639bdcca3eb5eb7dfcaf1a87659c1cb369e2c92bb387b93f9377d7787",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "non_deterministic_encoding-09",
+      "code": "non_deterministic_encoding",
+      "base": "v2",
+      "change": "the protected header's labels in the order 15, 4, 3, 1, signed",
+      "statement_hex": "d28458cda40fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a41574303782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f720127a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e3058400dfbb8220f902359cf91566fb9918219a7c7b94302411e0f316c3dede7dc2490d3eceaa70fc21041fbc8a9b4a931911c5c9ded12aea4aebb29cb7fe63ce17706",
+      "statement_sha256": "1e38d6c07acef4812d69c3b6319679d98901d34a6717dc09583045b0022cf35b",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "non_deterministic_encoding-10",
+      "code": "non_deterministic_encoding",
+      "base": "v2",
+      "change": "the protected header's label 1 written as 18 01, signed",
+      "statement_hex": "d28458cea418012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840aa0ec939e42a4eef268a2a4e9a4783e3d63eb088f37cf23e2a1242ac090ebe6a020b93af8fc6b7587f1409fea16a4ae670c6f5c5b43d883dd8be3ee496788805",
+      "statement_sha256": "cf2da6343d0092b83aef8515663b3bb980933707a66f8700fcd4d534a0d5955c",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "non_deterministic_encoding-11",
+      "code": "non_deterministic_encoding",
+      "base": "v2",
+      "change": "the payload's keys in the order 4, 3, 2, 1, signed",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05835a4046b70616c612d312f76312e30030b02000158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8135840a6ebdbd37ae9e4cc40014b56a740b699ab8e30ba2c8714ab32e267281edaee9dd7c145e4cda6f60a6ae41b99d31c327d63b00d317c360fb3ac9c814e728dff05",
+      "statement_sha256": "2bee615c8740e28196d74d7b39029ad03e19f6ecd48e0fe34fffab7170109477",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "non_deterministic_encoding-12",
+      "code": "non_deterministic_encoding",
+      "base": "v2",
+      "change": "the payload's key 1 written as 18 01, signed",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a05836a4180158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840e8c38bd5b68e5cad6e65798ba394885f9678a1a089f1f64c2511622aed26666d794745f87f27eb6d0fb38afc8abe0893942d418b9aeb7ba02847d4547a843e02",
+      "statement_sha256": "79b4ff51cf576b4f8afac55a6fae3a01e1582e70620ac93e30efff8c18c9b9e5",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "unprotected_header_malformed-01",
+      "code": "unprotected_header_malformed",
+      "base": "v2",
+      "change": "the unprotected header is the integer 7",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133075835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "96c27bf3de635013e4001d9f8aedf9618803a17981482765be10af6ac9837031",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "unprotected_header_malformed-02",
+      "code": "unprotected_header_malformed",
+      "base": "v2",
+      "change": "the unprotected header is an empty array",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133805835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "d885c7304f68617f0c51f35fd59fcfa6e1c1701c4a8f8fdbad7642509100d9db",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "unprotected_header_malformed-03",
+      "code": "unprotected_header_malformed",
+      "base": "v2",
+      "change": "the unprotected header is an empty byte string",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133405835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "e39e376fa95ec9bfeb2c82efcc84746e546639c95a2e659dfe16a759eec42281",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "unprotected_header_malformed-04",
+      "code": "unprotected_header_malformed",
+      "base": "v2",
+      "change": "the unprotected header is an empty map of indefinite length (bf ff)",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133bfff5835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "91a6d49c38edad79cf45951c1736521aa2490be23dc0ac33050dfecdcb402eb8",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "unprotected_header_malformed-05",
+      "code": "unprotected_header_malformed",
+      "base": "v2",
+      "change": "the unprotected header is a map of indefinite length holding label 4 (bf 04 41 6b ff)",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133bf04416bff5835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "2674d7e1c2a314562211a28d077b3134322181e77bae5a9e1d6314649b2f80cb",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "unprotected_header_malformed-06",
+      "code": "unprotected_header_malformed",
+      "base": "v2",
+      "change": "the unprotected header is the text 'header'",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133666865616465725835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "902990fea568bdcc78c9ab9ec02d56aae57f113f00678cb68311ff152e205ace",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "unprotected_header_malformed-07",
+      "code": "unprotected_header_malformed",
+      "base": "v2",
+      "change": "the unprotected header holds label 99 twice",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a218636178186361795835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "f6a133d8838f9b778ee394c68f69474d42f86cb153c69d63c148df9a34b1decf",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
       }
     }
   ]
