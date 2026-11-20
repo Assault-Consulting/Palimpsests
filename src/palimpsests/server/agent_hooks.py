@@ -136,7 +136,10 @@ class HookIngest:
             # the call and then the result, so the result is never orphaned;
             # the call's record time is then the time the result arrived.
             self._open(key, name, payload)
-        seq, call_hash, source = self._pending.pop(key)
+        # The call leaves `pending` only once its result is on the chain:
+        # whatever goes wrong before that, the call is still closed as
+        # cancelled when the serve stops, never left without an end.
+        seq, call_hash, source = self._pending[key]
         if event == "PostToolUse":
             # Claude Code: 0, not r6's "unobserved" — it sends a separate
             # PostToolUseFailure for a failure (measured, PROBE-RESULTS.md),
@@ -155,6 +158,7 @@ class HookIngest:
             digest = _tool_payload_digest(payload["error"]) if "error" in payload else None
 
         self._audit.tool_result(seq, call_hash, outcome, digest, None, source=source)
+        del self._pending[key]
         self._remember_closed(key)
         return 200, {}
 

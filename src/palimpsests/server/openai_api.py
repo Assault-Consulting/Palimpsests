@@ -183,7 +183,7 @@ def create_app(
                         hook = json.loads(await request.body())
                         event = str(hook.get("hook_event_name", "?"))
                         tool = str(hook.get("tool_name", "?"))
-                    except (ValueError, AttributeError):
+                    except (ValueError, AttributeError, RecursionError):
                         pass
                     logging.getLogger("palimpsests.serve").warning(
                         "hook report refused: empty bearer on %s (event %s, tool %s, "
@@ -801,7 +801,11 @@ def create_app(
                     )
                 elif etype == "tool_result":
                     call_id = str(ev["call_id"])
-                    ref = pending_.pop(call_id, None)
+                    # Read, not taken: the call leaves `pending` only once
+                    # its result is written, so an event refused below
+                    # (an unknown outcome, a digest that is not hex) leaves
+                    # the call open for a corrected report.
+                    ref = pending_.get(call_id)
                     if ref is None:
                         results.append({"id": call_id, "error": "unknown call_id"})
                         continue
@@ -810,7 +814,6 @@ def create_app(
                     # not "ok".
                     outcome = outcomes.get(str(ev.get("outcome", "unobserved")))
                     if outcome is None:
-                        pending_[call_id] = ref  # not consumed
                         results.append({"id": call_id, "error": "unknown outcome"})
                         continue
                     if "result_digest" in ev:
@@ -822,6 +825,7 @@ def create_app(
                     rh = audit_.tool_result(
                         ref[0], ref[1], outcome, digest, None, source=ref[2],
                     )
+                    del pending_[call_id]
                     results.append({"id": call_id, "record_hash": rh.hex()})
                 else:
                     results.append({"error": f"unknown event type: {etype!r}"})

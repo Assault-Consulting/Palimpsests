@@ -256,13 +256,19 @@ def _tool_payload_digest(value: object) -> bytes | None:
     """The payload digest for a value that came from a client, or ``None``.
 
     A payload with no canonical form — NaN, an infinity, a lone surrogate,
-    which a lenient JSON parser lets through — is not a reason to lose the
-    record of the call: the event is recorded without a digest, as the
-    profile says (§11), never with a form of this package's own.
+    which a lenient JSON parser lets through, or nesting deeper than the
+    profile allows — is not a reason to lose the record of the call: the
+    event is recorded without a digest, as the profile says (§11), never
+    with a form of this package's own.
+
+    ``RecursionError`` is caught as well. The depth limit keeps the
+    canonicalizer far from the interpreter's stack limit, so it should not
+    happen; but what a tool returns comes from outside, and the record of a
+    call must not depend on that reasoning holding.
     """
     try:
         return canonical_tool_args_digest(value)
-    except ValueError:
+    except (ValueError, RecursionError):
         return None
 
 

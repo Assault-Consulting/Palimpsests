@@ -1,0 +1,348 @@
+# SPDX-FileCopyrightText: Assault Consulting
+# SPDX-License-Identifier: Apache-2.0
+
+"""A deeply nested payload costs the digest, never the record of the call.
+
+The defect: the canonicalizer recursed once per level, so a tool argument
+or result nested past about a thousand levels raised ``RecursionError``.
+The digest helper caught ``ValueError`` only. On the hook route a deep
+``tool_input`` left nothing on the chain; a deep ``tool_response`` left a
+call without its result, and one no longer closed as cancelled at the stop.
+What a tool returns comes from outside — a page, an API, a file — so the
+party controlling it could remove the record of the call that fetched it.
+
+The rule (inference profile §11): a value nested deeper than 128 arrays and
+objects has no canonical form; the event is recorded without a digest.
+"""
+from __future__ import annotations
+
+import json
+import pytest
+from palimpsests.audit.canonical_json import MAX_DEPTH, canonical_json
+from palimpsests.audit.pala_writer import (
+    PalaWriter,
+    _tool_payload_digest,
+    canonical_config_digest,
+    canonical_tool_args_digest,
+)
+from palimpsests.audit.reader import AuditReader
+
+fastapi = pytest.importorskip("fastapi")
+from fastapi.testclient import TestClient  # noqa: E402
+from palimpsests.providers.native.audit import NativeAudit  # noqa: E402
+from palimpsests.server.agent_hooks import HookIngest  # noqa: E402
+from palimpsests.server.openai_api import create_app  # noqa: E402
+from palimpsests.server.tool_calls import parse_tool_calls  # noqa: E402
+
+DIGEST = 0x000D  # EVT_PAYLOAD_DIGEST
+DEPTHS = (MAX_DEPTH + 1, 1200, 3000)  # one past the rule; past the old stack; well past
+#: Depths every supported interpreter's JSON parser reads. Past about a
+#: thousand levels the parser itself gives up on Python 3.11 and 3.12 (it
+#: reads tens of thousands on 3.13), and the report is then rejected as
+#: unreadable rather than recorded without a digest.
+READABLE = (MAX_DEPTH + 1, 500)
+
+
+def _text(depth: int, *, array: bool = True) -> str:
+    """JSON text nested ``depth`` containers deep, built without recursion."""
+    if array:
+        return "[" * depth + "]" * depth
+    return '{"k":' * depth + "0" + "}" * depth
+
+
+def _value(depth: int, *, array: bool = True):
+    """The same value as a Python object, built without the JSON parser:
+    the parser's own depth limit differs between interpreters."""
+    value: object = [] if array else 0
+    for _ in range(depth - 1 if array else depth):
+        value = [value] if array else {"k": value}
+    return value
+
+
+def _tools(log):
+    with AuditReader.open(log) as reader:
+        ver = reader.verify()
+        assert ver.chain.chain_ok and reader.is_consistent()
+        codes = {i.code for i in ver.advisory.items}
+        recs = [d for d in reader.records() if d.kind_name in ("TOOL_CALL", "TOOL_RESULT")]
+    assert not codes & {"reference_hash_mismatch", "reference_unresolved",
+                        "tool_call_without_result"}, codes
+    return recs
+
+
+def _has_digest(record) -> bool:
+    return DIGEST in dict(record.body_tlvs)
+
+
+# -- the rule ------------------------------------------------------------------
+
+def test_the_limit_is_128_containers_and_one_more_has_no_form():
+    assert MAX_DEPTH == 128
+    for array in (True, False):
+        assert canonical_json(_value(MAX_DEPTH, array=array)) == _text(
+            MAX_DEPTH, array=array).encode()
+        with pytest.raises(ValueError, match="nested deeper than 128"):
+            canonical_json(_value(MAX_DEPTH + 1, array=array))
+    # a scalar is not a level: 128 containers around a number is still 128
+    inner: object = 1
+    for _ in range(128):
+        inner = [inner]
+    assert canonical_json(inner) == b"[" * 128 + b"1" + b"]" * 128
+    # mixed nesting counts both kinds
+    mixed: object = 1
+    for _ in range(64):
+        mixed = [{"k": mixed}]
+    assert canonical_json(mixed)
+    with pytest.raises(ValueError):
+        canonical_json([mixed])
+    # width is not depth
+    assert canonical_json([[i] for i in range(10_000)])
+
+
+@pytest.mark.parametrize("depth", DEPTHS)
+@pytest.mark.parametrize("array", [True, False])
+def test_a_deep_value_is_refused_by_name_never_by_the_stack(depth, array):
+    value = _value(depth, array=array)
+    with pytest.raises(ValueError):
+        canonical_json(value)
+    with pytest.raises(ValueError):
+        canonical_tool_args_digest(value)
+    with pytest.raises(ValueError):
+        canonical_config_digest({"sampling": value})
+    assert _tool_payload_digest(value) is None
+    assert _tool_payload_digest({"q": value}) is None
+
+
+def test_the_helper_survives_a_stack_error_whatever_raised_it(monkeypatch):
+    import palimpsests.audit.pala_writer as pw
+
+    def boom(_value):
+        raise RecursionError("maximum recursion depth exceeded")
+
+    monkeypatch.setattr(pw, "canonical_tool_args_digest", boom)
+    assert pw._tool_payload_digest({"a": 1}) is None
+
+
+def test_a_value_at_the_limit_is_still_digested():
+    assert len(_tool_payload_digest(_value(MAX_DEPTH))) == 32
+    # one level is spent on the arguments object itself
+    assert _tool_payload_digest({"q": _value(MAX_DEPTH - 1)}) is not None
+    assert _tool_payload_digest({"q": _value(MAX_DEPTH)}) is None
+
+
+# -- the hook routes -----------------------------------------------------------
+
+def _hook_body(event, call_id, field, depth):
+    head = json.dumps({"hook_event_name": event, "tool_name": "WebFetch",
+                       "tool_use_id": call_id, "session_id": "s"})
+    return head[:-1] + ', "' + field + '": {"page": ' + _text(depth) + "}}"
+
+
+@pytest.mark.parametrize("route", ["/v1/pala/hooks/claude", "/v1/pala/hooks/codex"])
+@pytest.mark.parametrize("depth", READABLE)
+def test_a_deep_hook_payload_leaves_the_pair_on_the_chain(tmp_path, route, depth):
+    log = tmp_path / "h.pala"
+    audit = NativeAudit(PalaWriter(log))
+    app = create_app(chat_fn=lambda **k: iter(()), models_fn=lambda: [], audit=audit)
+    client = TestClient(app)
+    post = {"headers": {"Content-Type": "application/json"}}
+    # deep arguments, plain result
+    assert client.post(route, content=_hook_body("PreToolUse", "a", "tool_input", depth),
+                       **post).status_code == 200
+    assert client.post(route, content=json.dumps({
+        "hook_event_name": "PostToolUse", "tool_name": "WebFetch", "tool_use_id": "a",
+        "session_id": "s", "tool_response": "ok"}), **post).status_code == 200
+    # plain arguments, deep result — what a fetched page can do
+    assert client.post(route, content=json.dumps({
+        "hook_event_name": "PreToolUse", "tool_name": "WebFetch", "tool_use_id": "b",
+        "session_id": "s", "tool_input": {"url": "u"}}), **post).status_code == 200
+    assert client.post(route, content=_hook_body("PostToolUse", "b", "tool_response", depth),
+                       **post).status_code == 200
+    # a result whose call was never seen, deep on both sides
+    both = _hook_body("PostToolUse", "c", "tool_input", depth)[:-1] + (
+        ', "tool_response": ' + _text(depth) + "}")
+    assert client.post(route, content=both, **post).status_code == 200
+    app.state.cancel_pending()
+    audit.writer.close()
+    recs = _tools(log)
+    assert [d.kind_name for d in recs] == ["TOOL_CALL", "TOOL_RESULT"] * 3
+    assert [_has_digest(d) for d in recs] == [False, True, True, False, False, False]
+    assert all(d.outcome_name != "cancelled" for d in recs if d.kind_name == "TOOL_RESULT")
+
+
+def test_a_call_leaves_pending_only_when_its_result_is_written(tmp_path):
+    """Whatever fails between reading the call and writing its result, the
+    call is still there to be closed as cancelled at the stop."""
+    log = tmp_path / "h.pala"
+    audit = NativeAudit(PalaWriter(log))
+    pending: dict = {}
+    ingest = HookIngest(audit, pending, client="claude")
+    ingest.handle({"hook_event_name": "PreToolUse", "tool_name": "T", "tool_use_id": "x",
+                   "tool_input": {}})
+    real = audit.tool_result
+    calls = []
+
+    def failing(*a, **k):
+        calls.append(1)
+        if len(calls) == 1:
+            raise OSError("disk refused the write")
+        return real(*a, **k)
+
+    audit.tool_result = failing
+    with pytest.raises(OSError):
+        ingest.handle({"hook_event_name": "PostToolUse", "tool_name": "T",
+                       "tool_use_id": "x", "tool_response": "r"})
+    assert len(pending) == 1  # not lost
+    # the client's retry lands
+    assert ingest.handle({"hook_event_name": "PostToolUse", "tool_name": "T",
+                          "tool_use_id": "x", "tool_response": "r"})[0] == 200
+    assert not pending
+    audit.writer.close()
+    assert [d.kind_name for d in _tools(log)] == ["TOOL_CALL", "TOOL_RESULT"]
+
+
+# -- the events route ----------------------------------------------------------
+
+@pytest.mark.parametrize("depth", READABLE)
+def test_a_deep_argument_on_the_events_route_is_recorded_without_a_digest(tmp_path, depth):
+    log = tmp_path / "e.pala"
+    audit = NativeAudit(PalaWriter(log))
+    app = create_app(chat_fn=lambda **k: iter(()), models_fn=lambda: [], audit=audit)
+    client = TestClient(app)
+    body = ('{"events":[{"type":"tool_call","id":"c","name":"t","arguments":{"a":'
+            + _text(depth)
+            + '}},{"type":"tool_result","call_id":"c","outcome":"ok","content":"r"}]}')
+    r = client.post("/v1/pala/events", content=body,
+                    headers={"Content-Type": "application/json"})
+    assert r.status_code == 200 and not [x for x in r.json()["results"] if "error" in x]
+    audit.writer.close()
+    recs = _tools(log)
+    assert [(d.kind_name, _has_digest(d)) for d in recs] == [
+        ("TOOL_CALL", False), ("TOOL_RESULT", True)]
+
+
+def test_a_result_event_refused_for_its_digest_leaves_the_call_open(tmp_path):
+    log = tmp_path / "e.pala"
+    audit = NativeAudit(PalaWriter(log))
+    app = create_app(chat_fn=lambda **k: iter(()), models_fn=lambda: [], audit=audit)
+    client = TestClient(app)
+    client.post("/v1/pala/events", json={"events": [
+        {"type": "tool_call", "id": "c", "name": "t"}]})
+    bad = client.post("/v1/pala/events", json={"events": [
+        {"type": "tool_result", "call_id": "c", "outcome": "ok", "result_digest": "zz"}]})
+    assert "invalid event" in bad.json()["results"][0]["error"]
+    good = client.post("/v1/pala/events", json={"events": [
+        {"type": "tool_result", "call_id": "c", "outcome": "ok",
+         "result_digest": "ab" * 32}]})
+    assert "record_hash" in good.json()["results"][0]  # the corrected report lands
+    audit.writer.close()
+    recs = _tools(log)
+    assert [d.kind_name for d in recs] == ["TOOL_CALL", "TOOL_RESULT"]
+    assert recs[1].outcome_name == "ok"
+
+
+# -- telemetry -----------------------------------------------------------------
+
+def _otlp(args: str, result: str) -> str:
+    def attr(key, value):
+        return {"key": key, "value": {"stringValue": value}}
+
+    span = {"traceId": "0af7651916cd43dd8448eb211c80319c", "spanId": "0000000000000001",
+            "name": "execute_tool t", "startTimeUnixNano": "100",
+            "endTimeUnixNano": "200", "status": {"code": 0},
+            "attributes": [attr("gen_ai.operation.name", "execute_tool"),
+                           attr("gen_ai.tool.name", "t"),
+                           attr("gen_ai.tool.call.arguments", args),
+                           attr("gen_ai.tool.call.result", result)]}
+    return json.dumps({"resourceSpans": [{"scopeSpans": [{"spans": [span]}]}]})
+
+
+@pytest.mark.parametrize("depth", (*DEPTHS, 60_000))  # the last: past the parser's own stack
+def test_a_deep_span_attribute_is_recorded_without_a_digest(tmp_path, depth):
+    log = tmp_path / "t.pala"
+    audit = NativeAudit(PalaWriter(log))
+    app = create_app(chat_fn=lambda **k: iter(()), models_fn=lambda: [], audit=audit)
+    r = TestClient(app).post("/v1/traces", content=_otlp(_text(depth), _text(depth)),
+                             headers={"Content-Type": "application/json"})
+    assert r.status_code == 200, r.text
+    audit.writer.close()
+    recs = _tools(log)
+    assert [(d.kind_name, _has_digest(d)) for d in recs] == [
+        ("TOOL_CALL", False), ("TOOL_RESULT", False)]
+    assert _text(depth).encode()[:300] not in log.read_bytes()
+
+
+def test_a_span_attribute_that_is_not_json_is_still_digested_as_the_string(tmp_path):
+    log = tmp_path / "t.pala"
+    audit = NativeAudit(PalaWriter(log))
+    app = create_app(chat_fn=lambda **k: iter(()), models_fn=lambda: [], audit=audit)
+    TestClient(app).post("/v1/traces", content=_otlp("not json [", '{"n": 1}'),
+                         headers={"Content-Type": "application/json"})
+    audit.writer.close()
+    call, result = _tools(log)
+    assert dict(call.body_tlvs)[DIGEST] == canonical_tool_args_digest("not json [")
+    assert dict(result.body_tlvs)[DIGEST] == canonical_tool_args_digest({"n": 1})
+
+
+def test_an_otlp_body_too_deep_to_read_is_a_400_not_a_500(tmp_path):
+    audit = NativeAudit(PalaWriter(tmp_path / "t.pala"))
+    app = create_app(chat_fn=lambda **k: iter(()), models_fn=lambda: [], audit=audit)
+    r = TestClient(app, raise_server_exceptions=False).post(
+        "/v1/traces", content=_text(60_000),
+        headers={"Content-Type": "application/json"})
+    assert r.status_code == 400 and "nested too deeply" in r.text
+    audit.writer.close()
+
+
+# -- the model's own tool calls ------------------------------------------------
+
+@pytest.mark.parametrize("depth", (*DEPTHS, 60_000))
+def test_a_deep_tool_call_in_the_models_text_does_not_break_the_parser(depth):
+    text = '<tool_call>{"name": "t", "arguments": {"a": ' + _text(depth) + "}}</tool_call>"
+    calls, _remaining = parse_tool_calls(text)  # no exception is the point
+    for call in calls:
+        assert _tool_payload_digest(call.arguments) is None
+
+
+# -- past the parser -----------------------------------------------------------
+
+_BODIES = [
+    ("/v1/pala/hooks/claude", '{"hook_event_name":"PreToolUse","tool_name":"T",'
+                              '"tool_use_id":"x","tool_input":DEEP}'),
+    ("/v1/pala/hooks/claude", '{"hook_event_name":"PostToolUse","tool_name":"T",'
+                              '"tool_use_id":"x","tool_response":DEEP}'),
+    ("/v1/pala/hooks/codex", '{"hook_event_name":"PreToolUse","tool_name":"T",'
+                             '"tool_use_id":"x","tool_input":DEEP}'),
+    ("/v1/pala/events", '{"events":[{"type":"tool_call","id":"c","name":"t",'
+                        '"arguments":DEEP}]}'),
+]
+
+
+@pytest.mark.parametrize("route, body", _BODIES)
+@pytest.mark.parametrize("depth", (1200, 3000, 60_000))
+def test_at_any_depth_a_report_is_recorded_or_rejected_never_a_500(tmp_path, route, body,
+                                                                    depth):
+    """Where the interpreter's JSON parser stops reading differs: about a
+    thousand levels on Python 3.11 and 3.12, tens of thousands on 3.13.
+    Below it the event is recorded without a digest; past it the body
+    cannot be read, the report is answered 4xx and the status counts it as
+    rejected. On neither side is there a 500 or a call left half-written."""
+    log = tmp_path / "p.pala"
+    audit = NativeAudit(PalaWriter(log))
+    app = create_app(chat_fn=lambda **k: iter(()), models_fn=lambda: [], audit=audit)
+    client = TestClient(app, raise_server_exceptions=False)
+    r = client.post(route, content=body.replace("DEEP", _text(depth)),
+                    headers={"Content-Type": "application/json"})
+    rejected = client.get("/v1/pala/status").json()["ingest"][route]["rejected"]
+    app.state.cancel_pending()
+    audit.writer.close()
+    with AuditReader.open(log) as reader:
+        assert reader.verify().chain.chain_ok
+        recs = [d for d in reader.records() if d.kind_name in ("TOOL_CALL", "TOOL_RESULT")]
+    if r.status_code == 200:
+        assert rejected == 0 and recs and recs[0].kind_name == "TOOL_CALL"
+        assert not _has_digest(recs[-1] if "tool_response" in body else recs[0])
+        # an open call was closed at the stop, never left without an end
+        assert len(recs) % 2 == 0
+    else:
+        assert 400 <= r.status_code < 500 and rejected == 1 and not recs
