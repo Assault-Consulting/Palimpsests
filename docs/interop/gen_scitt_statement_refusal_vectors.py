@@ -428,6 +428,9 @@ CASES += [
     ("unprotected_header_malformed", "v2", "ed25519-test", False,
      "the unprotected header holds label 99 twice",
      raw(unprotected=b"\xa2\x18\x63\x61x\x18\x63\x61y")),
+    ("non_deterministic_encoding", "v2", "ed25519-test", False,
+     "the unprotected header is an empty map with its count written in two bytes (b8 00) "
+     "instead of one (a0)", raw(unprotected=b"\xb8\x00")),
 ]
 
 
@@ -501,7 +504,8 @@ doc = {
         "definite-length map with no label twice; what it holds and how that is "
         "written is not judged), then "
         "non_deterministic_encoding for the envelope (tag 18 as d2, the array as 84, "
-        "each byte string with its shortest definite length) and for the bytes of the "
+        "each byte string with its shortest definite length, the unprotected header's "
+        "count in its shortest form) and for the bytes of the "
         "protected header. A check above that names what is wrong - a repeated key, an "
         "indefinite-length map - is reached first",
         "unsupported_alg (label 1 is -7, -8 or -19)",
