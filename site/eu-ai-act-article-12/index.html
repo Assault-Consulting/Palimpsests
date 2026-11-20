@@ -3,22 +3,29 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>EU AI Act Article 12 logging for self-hosted LLMs — Palimpsests (PALA-1)</title>
-<meta name="description" content="What Article 12, Article 26(6) and Article 99 of the EU AI Act ask of high-risk AI systems, when they apply, and what a tamper-evident local log does and does not cover." />
+<title>EU AI Act Article 12 logging for self-hosted AI systems</title>
+<meta name="description" content="What Article 12 of the EU AI Act asks of high-risk AI systems, from when, the fines, and the record-keeping Palimpsests supplies on your own hardware." />
 <link rel="canonical" href="https://palimpsests.dev/eu-ai-act-article-12/" />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 <meta name="author" content="Assault Consulting" />
 <meta name="theme-color" content="#15151f" />
 <meta property="og:type" content="article" />
 <meta property="og:site_name" content="Palimpsests" />
-<meta property="og:title" content="EU AI Act Article 12 logging for self-hosted LLMs — Palimpsests (PALA-1)" />
-<meta property="og:description" content="What Article 12, Article 26(6) and Article 99 of the EU AI Act ask of high-risk AI systems, when they apply, and what a tamper-evident local log does and does not cover." />
+<meta property="og:title" content="EU AI Act Article 12 logging for self-hosted AI systems" />
+<meta property="og:description" content="What Article 12 of the EU AI Act asks of high-risk AI systems, from when, the fines, and the record-keeping Palimpsests supplies on your own hardware." />
 <meta property="og:url" content="https://palimpsests.dev/eu-ai-act-article-12/" />
 <meta property="og:locale" content="en" />
-<meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="EU AI Act Article 12 logging for self-hosted LLMs — Palimpsests (PALA-1)" />
-<meta name="twitter:description" content="What Article 12, Article 26(6) and Article 99 of the EU AI Act ask of high-risk AI systems, when they apply, and what a tamper-evident local log does and does not cover." />
+<meta property="og:image" content="https://palimpsests.dev/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Palimpsests: a tamper-evident audit log for AI agents, verifiable without the key" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://palimpsests.dev/og.png" />
+<meta name="twitter:title" content="EU AI Act Article 12 logging for self-hosted AI systems" />
+<meta name="twitter:description" content="What Article 12 of the EU AI Act asks of high-risk AI systems, from when, the fines, and the record-keeping Palimpsests supplies on your own hardware." />
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 <link rel="manifest" href="/site.webmanifest" />
 <script type="application/ld+json">
 {
@@ -27,11 +34,11 @@
     {
       "@type": "TechArticle",
       "@id": "https://palimpsests.dev/eu-ai-act-article-12/#article",
-      "headline": "EU AI Act Article 12 logging for self-hosted LLMs — Palimpsests (PALA-1)",
-      "description": "What Article 12, Article 26(6) and Article 99 of the EU AI Act ask of high-risk AI systems, when they apply, and what a tamper-evident local log does and does not cover.",
+      "headline": "EU AI Act Article 12 logging for self-hosted AI systems",
+      "description": "What Article 12 of the EU AI Act asks of high-risk AI systems, from when, the fines, and the record-keeping Palimpsests supplies on your own hardware.",
       "url": "https://palimpsests.dev/eu-ai-act-article-12/",
       "inLanguage": "en",
-      "dateModified": "2026-09-30",
+      "dateModified": "2026-11-20",
       "author": {
         "@id": "https://palimpsests.dev/#org"
       },
@@ -97,6 +104,7 @@
 <link rel="stylesheet" href="/site.css" />
 </head>
 <body>
+<a class="skip" href="#main">Skip to content</a>
 
 <nav>
   <div class="wrap nav">
@@ -122,18 +130,20 @@
       <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
       <a class="hide-sm" href="/integrations/">Integrations</a>
       <a class="hide-sm" href="/runbook/">Runbook</a>
+      <a class="hide-sm" href="/notes/">Notes</a>
       <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
     </div>
   </div>
 </nav>
 
-<main class="doc">
+<main class="doc" id="main">
   <div class="wrap">
     <div class="doc__in">
       <p class="crumbs"><a href="/">Palimpsests</a> / EU AI Act Article 12</p>
       <span class="eyebrow">EU AI Act · Art. 12, 19, 26(6), 99</span>
       <h1 class="display">EU AI Act Article 12: automatic logging for high-risk AI systems</h1>
-      <p class="lede">High-risk AI systems must record events automatically over their lifetime, and those logs must be kept. Palimpsests supplies that record-keeping as a tamper-evident log on your own hardware; the rest of the Act stays with you.</p>
+      <p class="lede">Under Article 12 of the EU AI Act, high-risk AI systems must record events automatically over their lifetime, and those logs must be kept for at least six months; for the systems listed in Annex III this applies from 2 December 2027. Palimpsests supplies that record-keeping as a tamper-evident log on your own hardware; the rest of the Act stays with you.</p>
+      <p class="updated">Updated <time datetime="2026-11-20">20 November 2026</time></p>
 
       <h2 id="asks">What the Act asks</h2>
       <ul>
@@ -178,6 +188,16 @@
       <p>That classification is yours to make, against Article 6 and Annex III. Palimpsests cannot answer it for you.</p>
       <h3>Is this page legal advice?</h3>
       <p>No. It summarises the text of the Regulation as amended; the source text on EUR-Lex governs.</p>
+
+      <!-- read-more:start -->
+      <div class="readmore">
+        <h2 id="read-more">Read more</h2>
+        <ul>
+          <li><a href="/notes/ai-logging-standards-24970-18229/">AI logging standards in draft: ISO/IEC 24970, prEN 18229-1 and how we map them</a> — Where the AI logging standards stood in October 2026, why they matter for the EU AI Act, and how Palimpsests maps their requirements to code.</li>
+          <li><a href="/notes/eu-ai-act-article-12-self-hosted-ai/">EU AI Act Article 12: what it asks of AI you run yourself</a> — Which systems the logging rules cover, what the articles require, when they start and how the fines work, in plain language.</li>
+        </ul>
+      </div>
+      <!-- read-more:end -->
 
       <aside class="evidence">
         <h2>Evidence in the repository</h2>

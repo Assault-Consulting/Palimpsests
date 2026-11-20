@@ -98,3 +98,138 @@ def test_every_runbook_page_is_listed_and_in_the_sitemap():
     for r in recipes:
         assert f'href="/runbook/{r.slug}/"' in listing
         assert f"<loc>{r.url}</loc>" in sitemap
+
+
+# -- what a search result, a link preview and an assistant see ------------------
+
+def _pages():
+    return sorted((ROOT / "site").rglob("*.html"))
+
+
+def test_no_head_is_longer_than_a_search_result_shows():
+    """A title is cut near 60 characters and a description near 155. A page
+    whose own title is longer gives a shorter one for its head."""
+    import html
+    import re
+
+    build = _load()
+    for path in _pages():
+        text = path.read_text(encoding="utf-8")
+        title = html.unescape(re.search(r"<title>(.*?)</title>", text, re.S).group(1))
+        description = html.unescape(
+            re.search(r'<meta name="description" content="(.*?)" />', text, re.S).group(1))
+        assert len(title) <= build.TITLE_MAX, (path, len(title), title)
+        assert len(description) <= build.DESCRIPTION_MAX, (path, len(description))
+        assert text.count("<h1") == 1, path
+
+
+def test_the_build_stops_on_a_head_that_is_too_long():
+    build = _load()
+    with pytest.raises(ValueError, match="seo_title"):
+        build.page("/x/", "t" * 61, "d", [], "")
+    with pytest.raises(ValueError, match="seo_description"):
+        build.page("/x/", "t", "d" * 156, [], "")
+
+
+def test_every_page_carries_valid_structured_data_a_preview_image_and_the_menu():
+    import json
+    import re
+
+    for path in _pages():
+        text = path.read_text(encoding="utf-8")
+        blocks = re.findall(r'<script type="application/ld\+json">\n(.*?)\n</script>',
+                            text, re.S)
+        assert len(blocks) == 1, path
+        graph = json.loads(blocks[0])["@graph"]
+        assert all("@type" in node for node in graph), path
+        types = [node["@type"] for node in graph]
+        assert types.count("FAQPage") <= 1, path  # one per page, or readers take neither
+        assert '<meta property="og:image" content="https://palimpsests.dev/og.png" />' in text
+        assert '<meta name="twitter:card" content="summary_large_image" />' in text
+        assert '<link rel="apple-touch-icon" href="/apple-touch-icon.png" />' in text
+        assert '<a class="hide-sm" href="/notes/">Notes</a>' in text, path
+        assert text.count("<main") == 1 and 'id="main"' in text, path
+        assert '<a class="skip" href="#main">' in text, path
+    for name in ("og.png", "apple-touch-icon.png", "favicon.ico", "favicon.svg"):
+        assert (ROOT / "site" / name).stat().st_size > 0
+
+
+def test_the_questions_a_page_marks_up_are_the_questions_it_shows():
+    """Structured data that says what the page does not is worse than none."""
+    import html
+    import json
+    import re
+
+    seen = 0
+    for path in _pages():
+        text = path.read_text(encoding="utf-8")
+        graph = json.loads(re.search(
+            r'<script type="application/ld\+json">\n(.*?)\n</script>', text, re.S).group(1))
+        visible = html.unescape(re.sub(r"<[^>]+>", " ", text.split("</head>", 1)[1]))
+        visible = re.sub(r"\s+", " ", visible)
+        for node in graph["@graph"]:
+            if node["@type"] != "FAQPage":
+                continue
+            seen += 1
+            for q in node["mainEntity"]:
+                assert q["name"] in visible, (path, q["name"])
+                assert q["acceptedAnswer"]["text"][:60] in visible, (path, q["name"])
+    assert seen >= 6
+
+
+def test_headings_do_not_skip_a_level():
+    import re
+
+    for path in _pages():
+        levels = [int(n) for n in re.findall(r"<h([1-6])[\s>]", path.read_text(encoding="utf-8"))]
+        for before, after in zip(levels, levels[1:], strict=False):
+            assert after <= before + 1, (path, before, after)
+
+
+def test_a_note_names_where_to_read_next_and_its_page_lists_it():
+    build = _load()
+    notes = build.load_notes(ROOT / "notes")
+    by_slug = {n.slug: n for n in notes}
+    for n in notes:
+        assert n.related, n.slug
+        text = (ROOT / "site" / "notes" / n.slug / "index.html").read_text(encoding="utf-8")
+        assert '<h2 id="read-next">Read next</h2>' in text
+        for slug in n.related:
+            assert slug in by_slug and f'href="/notes/{slug}/"' in text
+        if n.page:
+            page = (ROOT / "site" / n.page.strip("/") / "index.html").read_text(encoding="utf-8")
+            assert f'href="/notes/{n.slug}/"' in page.split("read-more:start")[1].split(
+                "read-more:end")[0], (n.slug, n.page)
+            assert f'href="{n.page}"' in text
+
+
+def test_the_home_page_states_the_release_the_changelog_states():
+    import json
+    import re
+
+    build = _load()
+    version, when = build.latest_release(ROOT / "CHANGELOG.md")
+    text = (ROOT / "site" / "index.html").read_text(encoding="utf-8")
+    graph = json.loads(re.search(
+        r'<script type="application/ld\+json">\n(.*?)\n</script>', text, re.S).group(1))
+    software = next(n for n in graph["@graph"] if n["@type"] == "SoftwareApplication")
+    assert (software["softwareVersion"], software["dateModified"]) == (version, when)
+
+
+def test_the_site_answers_for_robots_security_and_a_missing_page():
+    site = ROOT / "site"
+    robots = (site / "robots.txt").read_text(encoding="utf-8")
+    for agent in ("Claude-SearchBot", "Claude-User", "ClaudeBot", "OAI-SearchBot", "GPTBot",
+                  "PerplexityBot", "Googlebot", "Bingbot"):
+        assert f"User-agent: {agent}\nAllow: /" in robots
+    assert "Disallow" not in robots and "your-domain" not in robots
+    assert robots.rstrip().endswith("Sitemap: https://palimpsests.dev/sitemap.xml")
+    security = (site / ".well-known" / "security.txt").read_text(encoding="utf-8")
+    assert "Contact: mailto:as@assault.consulting" in security and "Expires: 20" in security
+    contact = (ROOT / "SECURITY.md").read_text(encoding="utf-8")
+    assert "as@assault.consulting" in contact and "security/advisories/new" in contact
+    missing = (site / "404.html").read_text(encoding="utf-8")
+    assert '<meta name="robots" content="noindex" />' in missing and "canonical" not in missing
+    assert "/404.html" not in (site / "sitemap.xml").read_text(encoding="utf-8")
+    manifest = (site / "site.webmanifest").read_text(encoding="utf-8")
+    assert "audit log for AI agents" in manifest and "/apple-touch-icon.png" in manifest

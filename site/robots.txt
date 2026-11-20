@@ -1,12 +1,12 @@
-# robots.txt — Palimpsests
-# Replace https://palimpsests.dev with your production domain.
-# Must be served from the DOMAIN ROOT (https://your-domain/robots.txt).
+# palimpsests.dev
+# Everything here is public and may be crawled, indexed, quoted and used
+# to answer questions. The agents below are named so that the answer is
+# explicit for each of them, not inferred from the wildcard.
 
-# Default: everything is crawlable.
 User-agent: *
 Allow: /
 
-# --- Search engines ---
+# Search engines
 User-agent: Googlebot
 Allow: /
 
@@ -19,29 +19,23 @@ Allow: /
 User-agent: DuckDuckBot
 Allow: /
 
-# --- AI answer engines / agents (opt-in) ---
-# These are welcomed so the project can be discovered and cited by
-# AI assistants. Switch any "Allow: /" to "Disallow: /" to opt a
-# given crawler out of training and/or answering.
-User-agent: Google-Extended
-Allow: /
-
-User-agent: GPTBot
-Allow: /
-
+# AI assistants: search, answering on a user's request, and training
 User-agent: OAI-SearchBot
 Allow: /
 
 User-agent: ChatGPT-User
 Allow: /
 
+User-agent: GPTBot
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
 User-agent: ClaudeBot
-Allow: /
-
-User-agent: Claude-Web
-Allow: /
-
-User-agent: anthropic-ai
 Allow: /
 
 User-agent: PerplexityBot
@@ -50,13 +44,16 @@ Allow: /
 User-agent: Perplexity-User
 Allow: /
 
+User-agent: Google-Extended
+Allow: /
+
 User-agent: Applebot-Extended
 Allow: /
 
-User-agent: CCBot
+User-agent: Meta-ExternalAgent
 Allow: /
 
-User-agent: Meta-ExternalAgent
+User-agent: CCBot
 Allow: /
 
 Sitemap: https://palimpsests.dev/sitemap.xml

@@ -4,6 +4,10 @@ slug: can-a-coding-agent-implement-a-spec
 date: 2026-10-27
 description: A small, strict test for coding agents. Give one a frozen specification and its test vectors, no reference code, and ask it to reproduce eleven values byte for byte in a language it chooses.
 tags: verification, specification, coding-agents
+seo_title: Can a coding agent implement a format from its spec alone?
+seo_description: A strict test for coding agents: a frozen specification and its test vectors, no reference code, and eleven values to reproduce byte for byte.
+page: /pala-1/
+related: pala-1-three-design-principles, anatomy-of-a-tamper-evident-audit-log
 ---
 
 Coding agents now write whole programs from a short description. Most of the tasks they are tested on are forgiving, though. A web page that looks roughly right is fine. A function that passes the tests someone wrote for it is fine.

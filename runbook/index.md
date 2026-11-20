@@ -2,6 +2,8 @@
 title: Runbook: self-hosted LLM setup and AI agent logging, step by step
 updated: 2026-11-16
 description: Short recipes you can copy for running language models on your own machine and recording what AI agents do, each with what it needs, how to check it worked and what it does not do.
+seo_title: Runbook: self-hosted LLM setup and AI agent logging
+seo_description: Short recipes for running language models on your own machine and recording what AI agents do: what each needs, how to check it, what it does not do.
 ---
 
 Palimpsests is one open-source Python package that does three kinds of jobs. It runs language models on your own computer, through Ollama or llama.cpp. It writes down what an AI agent did, which tools it called and what came back, in a log that cannot be changed without the change showing. And it lets anyone check that log later, without having to trust you or us.

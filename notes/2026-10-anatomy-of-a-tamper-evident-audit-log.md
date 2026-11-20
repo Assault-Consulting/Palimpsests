@@ -4,6 +4,10 @@ slug: anatomy-of-a-tamper-evident-audit-log
 date: 2026-10-23
 description: The three layers of a Palimpsests audit log taken apart: the PALA-1 hash chain, the chain head on a PKCS#11 token and SCITT receipts. What each one proves alone, and what they prove together.
 tags: tamper-evident, pkcs11, scitt
+seo_title: Anatomy of a tamper-evident audit log: PALA-1 and SCITT
+seo_description: A Palimpsests audit log in three layers: the PALA-1 hash chain, the chain head on a PKCS#11 token and SCITT receipts. What each proves, alone and together.
+page: /pala-1/
+related: what-makes-an-audit-log-tamper-evident, protecting-an-audit-log-from-being-rewritten, pala-1-three-design-principles
 ---
 
 A tamper-evident audit log has to answer three separate questions. Was any record changed, removed or reordered? Is this the whole log, or was the end cut off? Did this history exist before a given time?

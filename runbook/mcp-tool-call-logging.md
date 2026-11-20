@@ -6,6 +6,8 @@ order: 3
 updated: 2026-11-16
 description: Put a small proxy in front of any MCP server that speaks stdio, and every tools/call lands in a tamper-evident log on your machine, with whether it came back ok, as an error or not at all.
 next: claude-code-hooks-not-working, log-claude-code-tool-calls
+seo_title: Log MCP tool calls with a one-file proxy
+seo_description: Put a small proxy in front of any stdio MCP server and every tools/call lands in a tamper-evident log on your machine: ok, an error, or not at all.
 ---
 
 An MCP server gives an AI agent tools: files, a database, a browser. The agent's client starts the server as a local program and talks to it over standard input and output. A proxy placed on that line sees both halves of every tool call, what was asked and what came back. It reports each pair to Palimpsests, which writes it into a log that cannot be changed without the change showing.

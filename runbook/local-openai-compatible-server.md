@@ -6,6 +6,8 @@ order: 1
 updated: 2026-11-16
 description: Start an OpenAI-compatible server on your own machine in front of Ollama or llama.cpp, point any OpenAI client at it, and keep a tamper-evident record of the tool calls that pass through.
 next: opencode-with-a-local-model, chat-longer-than-context-window
+seo_title: Run a local LLM behind an OpenAI-compatible API
+seo_description: Start an OpenAI-compatible server on your machine in front of Ollama or llama.cpp, point any OpenAI client at it, and keep a record of its tool calls.
 ---
 
 Chat apps, editor plugins and agent frameworks mostly speak the OpenAI API. If the model runs on your own machine, you can offer them that same API locally. `palimpsests serve` does it with one command.

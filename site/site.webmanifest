@@ -1,7 +1,7 @@
 {
   "name": "Palimpsests",
   "short_name": "Palimpsests",
-  "description": "Local-first LLM inference with a tamper-evident record.",
+  "description": "Open-source, tamper-evident audit log for AI agents and local LLMs, verifiable without the decryption key.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

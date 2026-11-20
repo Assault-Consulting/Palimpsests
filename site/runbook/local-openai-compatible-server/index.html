@@ -3,22 +3,29 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Run a local LLM behind an OpenAI-compatible API — Palimpsests runbook</title>
-<meta name="description" content="Start an OpenAI-compatible server on your own machine in front of Ollama or llama.cpp, point any OpenAI client at it, and keep a tamper-evident record of the tool calls that pass through." />
+<title>Run a local LLM behind an OpenAI-compatible API</title>
+<meta name="description" content="Start an OpenAI-compatible server on your machine in front of Ollama or llama.cpp, point any OpenAI client at it, and keep a record of its tool calls." />
 <link rel="canonical" href="https://palimpsests.dev/runbook/local-openai-compatible-server/" />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 <meta name="author" content="Andrii Sparysh" />
 <meta name="theme-color" content="#15151f" />
 <meta property="og:type" content="article" />
 <meta property="og:site_name" content="Palimpsests" />
-<meta property="og:title" content="Run a local LLM behind an OpenAI-compatible API — Palimpsests runbook" />
-<meta property="og:description" content="Start an OpenAI-compatible server on your own machine in front of Ollama or llama.cpp, point any OpenAI client at it, and keep a tamper-evident record of the tool calls that pass through." />
+<meta property="og:title" content="Run a local LLM behind an OpenAI-compatible API" />
+<meta property="og:description" content="Start an OpenAI-compatible server on your machine in front of Ollama or llama.cpp, point any OpenAI client at it, and keep a record of its tool calls." />
 <meta property="og:url" content="https://palimpsests.dev/runbook/local-openai-compatible-server/" />
 <meta property="og:locale" content="en" />
-<meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="Run a local LLM behind an OpenAI-compatible API — Palimpsests runbook" />
-<meta name="twitter:description" content="Start an OpenAI-compatible server on your own machine in front of Ollama or llama.cpp, point any OpenAI client at it, and keep a tamper-evident record of the tool calls that pass through." />
+<meta property="og:image" content="https://palimpsests.dev/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Palimpsests: a tamper-evident audit log for AI agents, verifiable without the key" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://palimpsests.dev/og.png" />
+<meta name="twitter:title" content="Run a local LLM behind an OpenAI-compatible API" />
+<meta name="twitter:description" content="Start an OpenAI-compatible server on your machine in front of Ollama or llama.cpp, point any OpenAI client at it, and keep a record of its tool calls." />
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 <link rel="manifest" href="/site.webmanifest" />
 <link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
 <script type="application/ld+json">
@@ -36,9 +43,19 @@
       "dateModified": "2026-11-16",
       "inLanguage": "en",
       "proficiencyLevel": "Beginner",
+      "image": "https://palimpsests.dev/og.png",
       "author": {
         "@type": "Person",
-        "name": "Andrii Sparysh"
+        "@id": "https://palimpsests.dev/#andrii-sparysh",
+        "name": "Andrii Sparysh",
+        "url": "https://palimpsests.dev/",
+        "jobTitle": "Co-founder, Assault Consulting",
+        "worksFor": {
+          "@id": "https://palimpsests.dev/#org"
+        },
+        "sameAs": [
+          "https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/"
+        ]
       },
       "publisher": {
         "@id": "https://palimpsests.dev/#org"
@@ -79,6 +96,7 @@
 <link rel="stylesheet" href="/site.css" />
 </head>
 <body>
+<a class="skip" href="#main">Skip to content</a>
 
 <nav>
   <div class="wrap nav">
@@ -104,16 +122,17 @@
       <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
       <a class="hide-sm" href="/integrations/">Integrations</a>
       <a class="hide-sm" href="/runbook/">Runbook</a>
+      <a class="hide-sm" href="/notes/">Notes</a>
       <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
     </div>
   </div>
 </nav>
 
-<main class="doc">
+<main class="doc" id="main">
   <div class="wrap">
     <div class="doc__in">
 <p class="crumbs"><a href="/">Palimpsests</a> / <a href="/runbook/">Runbook</a></p>
-<span class="eyebrow">Runbook · Run a model on your own machine · updated 16 November 2026</span>
+<span class="eyebrow">Runbook · Run a model on your own machine · updated <time datetime="2026-11-16">16 November 2026</time></span>
 <h1 class="display">Run a local LLM behind an OpenAI-compatible API</h1>
 <p class="lede">Start an OpenAI-compatible server on your own machine in front of Ollama or llama.cpp, point any OpenAI client at it, and keep a tamper-evident record of the tool calls that pass through.</p>
 <p>Chat apps, editor plugins and agent frameworks mostly speak the OpenAI API. If the model runs on your own machine, you can offer them that same API locally. <code>palimpsests serve</code> does it with one command.</p>

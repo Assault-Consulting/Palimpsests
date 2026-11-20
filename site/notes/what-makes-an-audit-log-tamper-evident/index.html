@@ -3,22 +3,31 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Tamper-evident audit logs: how they work and how to build one — Palimpsests notes</title>
-<meta name="description" content="What makes an audit log tamper-evident: hash chains, anchors and witnesses, what each one proves, how to build such a log, and what to ask before trusting the claim." />
+<title>Tamper-evident audit logs: how they work, how to build one</title>
+<meta name="description" content="What makes an audit log tamper-evident: hash chains, anchors and witnesses, what each proves, how to build such a log, and what to ask before trusting it." />
 <link rel="canonical" href="https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/" />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 <meta name="author" content="Andrii Sparysh" />
 <meta name="theme-color" content="#15151f" />
 <meta property="og:type" content="article" />
 <meta property="og:site_name" content="Palimpsests" />
-<meta property="og:title" content="Tamper-evident audit logs: how they work and how to build one — Palimpsests notes" />
-<meta property="og:description" content="What makes an audit log tamper-evident: hash chains, anchors and witnesses, what each one proves, how to build such a log, and what to ask before trusting the claim." />
+<meta property="og:title" content="Tamper-evident audit logs: how they work, how to build one" />
+<meta property="og:description" content="What makes an audit log tamper-evident: hash chains, anchors and witnesses, what each proves, how to build such a log, and what to ask before trusting it." />
 <meta property="og:url" content="https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/" />
 <meta property="og:locale" content="en" />
-<meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="Tamper-evident audit logs: how they work and how to build one — Palimpsests notes" />
-<meta name="twitter:description" content="What makes an audit log tamper-evident: hash chains, anchors and witnesses, what each one proves, how to build such a log, and what to ask before trusting the claim." />
+<meta property="og:image" content="https://palimpsests.dev/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Palimpsests: a tamper-evident audit log for AI agents, verifiable without the key" />
+<meta property="article:published_time" content="2026-10-20" />
+<meta property="article:author" content="Andrii Sparysh" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://palimpsests.dev/og.png" />
+<meta name="twitter:title" content="Tamper-evident audit logs: how they work, how to build one" />
+<meta name="twitter:description" content="What makes an audit log tamper-evident: hash chains, anchors and witnesses, what each proves, how to build such a log, and what to ask before trusting it." />
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 <link rel="manifest" href="/site.webmanifest" />
 <link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
 <script type="application/ld+json">
@@ -40,9 +49,19 @@
         "tamper-evident",
         "security"
       ],
+      "image": "https://palimpsests.dev/og.png",
       "author": {
         "@type": "Person",
-        "name": "Andrii Sparysh"
+        "@id": "https://palimpsests.dev/#andrii-sparysh",
+        "name": "Andrii Sparysh",
+        "url": "https://palimpsests.dev/",
+        "jobTitle": "Co-founder, Assault Consulting",
+        "worksFor": {
+          "@id": "https://palimpsests.dev/#org"
+        },
+        "sameAs": [
+          "https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/"
+        ]
       },
       "publisher": {
         "@id": "https://palimpsests.dev/#org"
@@ -83,6 +102,7 @@
 <link rel="stylesheet" href="/site.css" />
 </head>
 <body>
+<a class="skip" href="#main">Skip to content</a>
 
 <nav>
   <div class="wrap nav">
@@ -108,17 +128,22 @@
       <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
       <a class="hide-sm" href="/integrations/">Integrations</a>
       <a class="hide-sm" href="/runbook/">Runbook</a>
+      <a class="hide-sm" href="/notes/">Notes</a>
       <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
     </div>
   </div>
 </nav>
 
-<main class="doc">
+<main class="doc" id="main">
   <div class="wrap">
     <div class="doc__in">
 <p class="crumbs"><a href="/">Palimpsests</a> / <a href="/notes/">Notes</a></p>
-<span class="eyebrow">Note · 20 October 2026 · Andrii Sparysh</span>
+<article>
+<span class="eyebrow">Note · <time datetime="2026-10-20">20 October 2026</time> · Andrii Sparysh</span>
 <h1 class="display">Tamper-evident audit logs: how they work and how to build one</h1>
+<h2 id="what-is-a-tamper-evident-audit-log">What is a tamper-evident audit log?</h2>
+<p>A tamper-evident audit log is a record in which any later change — an edited, removed or reordered entry — can be detected by someone who did not make it. It does not make the change impossible. It makes it visible, and says where.</p>
+<h2 id="what-the-word-should-mean">What the word should mean</h2>
 <p>"Tamper-evident" appears on a lot of logging products. For an audit log it should mean something specific: if someone changes the log, a person who didn't make the change can detect it later. It doesn't mean the change is impossible. That would be tamper-proof, and no log stored on a computer someone controls can promise that.</p>
 <p>Detection relies on several separate mechanisms. Each one answers its own question, and a log can have one without the others.</p>
 <h2 id="the-hash-chain">The hash chain</h2>
@@ -174,6 +199,16 @@ def verify(records):
 <h2 id="further-reading">Further reading</h2>
 <p>The ideas here are older than AI agents. Bruce Schneier and John Kelsey described hash-chained audit logs on untrusted machines in "Secure Audit Logs to Support Computer Forensics" (ACM Transactions on Information and System Security, 1999). Scott Crosby and Dan Wallach showed how to make such logs efficient to audit in "Efficient Data Structures for Tamper-Evident Logging" (USENIX Security, 2009). Certificate Transparency put Merkle-tree logs into wide use, specified in <a href="https://www.rfc-editor.org/rfc/rfc6962">RFC 6962</a> and <a href="https://www.rfc-editor.org/rfc/rfc9162">RFC 9162</a>. Signed syslog is <a href="https://www.rfc-editor.org/rfc/rfc5848">RFC 5848</a>.</p>
 <p>The format behind all of this is <a href="https://palimpsests.dev/pala-1/">PALA-1</a>. The reasoning behind its design is in <a href="https://palimpsests.dev/notes/pala-1-three-design-principles/">three design principles for verifiable audit logs</a>.</p>
+</article>
+<div class="readmore">
+<h2 id="read-next">Read next</h2>
+<ul>
+  <li><a href="/verify-without-reading/">Verify a log without reading it</a> — the page this note belongs to</li>
+  <li><a href="/notes/protecting-an-audit-log-from-being-rewritten/">Protecting an audit log from being rewritten from scratch</a></li>
+  <li><a href="/notes/anatomy-of-a-tamper-evident-audit-log/">Anatomy of a tamper-evident audit log: PALA-1, a PKCS#11 anchor and SCITT</a></li>
+  <li><a href="/notes/checking-an-ai-log-without-reading-it/">How to check an AI log without reading it</a></li>
+</ul>
+</div>
 <div class="related">
   <a class="btn" href="/notes/">All notes →</a>
   <a class="btn" href="/">Palimpsests →</a>
