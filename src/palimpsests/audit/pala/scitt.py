@@ -392,17 +392,17 @@ def _check_envelope(
     lets the reader hear "this is that statement" — which holds only if
     the bytes are pinned.
 
-    The unprotected header is not judged that way. It must be what
-    RFC 9052 says it is — a map — of a definite length and with no label
-    twice, so that it reads one way; and its count of entries is written
-    in its shortest form, like every other head of the envelope, so that a
+    The unprotected header is not judged that way. It must be what RFC 9052
+    says it is — a map — of a definite length and with no label twice, so
+    that it reads one way; and its count of entries is written in its
+    shortest form, like every other head of the envelope, so that a
     statement with an empty header is one sequence of bytes and not three.
-    What it holds, and how that is written, is another party's business:
-    a transparency service puts its receipts there (RFC 9943, label 394) with its own encoder, nothing in
-    it is signed, and it is not part of the statement's identity — see
-    ``statement_id``. Refusing a validly signed statement over the
-    encoding of a receipt someone attached would be this verifier's
-    preference, not a property of the statement.
+    What it holds, and how that is written, is another party's business: a
+    transparency service puts its receipts there (RFC 9943, label 394) with
+    its own encoder, nothing in it is signed, and it is not part of the
+    statement's identity — see ``statement_id``. Refusing a validly signed
+    statement over the encoding of a receipt someone attached would be this
+    verifier's preference, not a property of the statement.
 
     The fourth member is judged only if it is a byte string; anything else
     there is left to the signature check, as before.
