@@ -15,9 +15,9 @@ transparency log's leaf held only until the next party touched the bytes.
 Since 0.15 one encoding of the signed parts and of the envelope is
 accepted, and ``StatementCheck.statement_id`` is the hash to refer to a
 statement by. The unprotected header is held only to what RFC 9052 says
-it is — a map — with a definite length and no label twice: a transparency
-service writes its receipts there with its own encoder, nothing in it is
-signed, and it is outside the id.
+it is — a map — with a definite length, no label twice and its count in
+the shortest form: a transparency service writes its receipts there with
+its own encoder, nothing in it is signed, and it is outside the id.
 """
 from __future__ import annotations
 
@@ -84,9 +84,9 @@ TAGS = [b"\xd2", b"\xd8\x12", b"\xd9\x00\x12", b"\xda\x00\x00\x00\x12",
         b"\xdb" + (18).to_bytes(8, "big")]
 ARRAYS = [(b"\x84", b""), (b"\x98\x04", b""), (b"\x99\x00\x04", b""),
           (b"\x9a\x00\x00\x00\x04", b""), (b"\x9f", b"\xff")]
-#: An empty map written four ways. The first three are definite-length
-#: maps and are accepted as a header; only the first makes the bytes the
-#: published ones.
+#: An empty map written four ways. Only the first is accepted as a
+#: header: the next two write its count longer than it needs, the last
+#: gives it no count at all.
 EMPTY_MAPS = [b"\xa0", b"\xb8\x00", b"\xb9\x00\x00", b"\xbf\xff"]
 NOT_MAPS = [b"\x07", b"\x80", b"\x40", b"\x60", b"\xf6", b"\xf5", b"\xc1\x00"]
 HEADERS = EMPTY_MAPS + NOT_MAPS
@@ -134,9 +134,8 @@ def test_the_id_names_the_signed_statement_not_its_content():
 def test_every_re_encoding_that_needs_no_key_is_refused(name):
     """The product of the freedoms a relay has: the tag, the array head,
     each of the three byte-string heads, and the unprotected header. All
-    34 375 were accepted before the rule. Three are now: the published
-    statement, and it with its empty header's count written longer — the
-    header is not the statement's, and all three have the published id."""
+    34 375 were accepted before the rule. One is now: the published
+    statement."""
     statement, head = PUBLISHED[name]
     protected, _u, payload, sig = cbor2.loads(statement).value
     forms = [_bstr_forms(x) for x in (protected, payload, sig)]
@@ -154,11 +153,10 @@ def test_every_re_encoding_that_needs_no_key_is_refused(name):
     total = 5 * 5 * 5 * len(HEADERS) * 5 * 5
     assert len(hashes) == total == 34_375  # every one a different byte string
     prefix, suffix = statement[:2 + len(forms[0][0])], statement[3 + len(forms[0][0]):]
-    assert [m for m, _ in accepted] == [prefix + u + suffix for u in EMPTY_MAPS[:3]]
-    assert accepted[0][0] == statement
-    assert {i for _, i in accepted} == {hashlib.sha256(statement).digest()}
+    assert prefix + EMPTY_MAPS[0] + suffix == statement
+    assert accepted == [(statement, hashlib.sha256(statement).digest())]
     assert set(refused) == {"non_deterministic_encoding", "unprotected_header_malformed"}
-    assert sum(refused.values()) == total - 3
+    assert sum(refused.values()) == total - 1
     # the header is judged first: 8 of its 11 forms are refused by name
     assert refused["unprotected_header_malformed"] == total // 11 * 8
 
@@ -254,7 +252,6 @@ def _carrying(statement: bytes, header) -> bytes:
     b"\xa1\x04\x5f\x41k\xff",  # its value in chunks
     b"\xa1\x19\x01\x8a\x9f\x41r\xff",  # receipts in an indefinite array
     b"\xa1\x04\xfb\x3f\xf8\x00\x00\x00\x00\x00\x00",  # 1.5 as a double
-    b"\xb8\x01\x04\x41k",  # the map's own count in two bytes
 ])
 def test_anything_may_ride_in_the_unprotected_header_and_the_id_does_not_move(header):
     for statement, head in PUBLISHED.values():
@@ -280,6 +277,35 @@ def test_an_unprotected_header_that_is_not_one_map_read_one_way_is_refused(raw_h
                + cbor2.dumps(sig))
     cbor2.loads(message)  # well-formed: a lenient decoder reads it
     assert _code(message, head) == "unprotected_header_malformed"
+
+
+@pytest.mark.parametrize("raw_header", [
+    b"\xb8\x00",  # empty, its count in two bytes
+    b"\xb9\x00\x00",  # ... in three
+    b"\xb8\x01\x04\x41k",  # one entry, its count in two bytes
+    b"\xba\x00\x00\x00\x01\x19\x01\x8a\x81\x41r",  # a receipt under 394, count in five
+])
+def test_the_headers_own_count_is_part_of_the_envelope(raw_header):
+    """The one byte of the header this construction holds to a form. What
+    is inside is another party's; how many entries there are is written
+    once, the short way — so a statement with an empty header is one
+    sequence of bytes, and its hash is its id."""
+    for statement, head in PUBLISHED.values():
+        protected, _u, payload, sig = cbor2.loads(statement).value
+        message = (b"\xd2\x84" + cbor2.dumps(protected) + raw_header + cbor2.dumps(payload)
+                   + cbor2.dumps(sig))
+        assert cbor2.loads(message).tag == 18  # a decoder reads it without a word
+        assert _code(message, head) == "non_deterministic_encoding"
+
+
+def test_a_statement_with_an_empty_header_has_one_sequence_of_bytes():
+    for statement, head in PUBLISHED.values():
+        check = scitt.verify_statement(statement, PUB, head)
+        assert check.statement_id == hashlib.sha256(statement).digest()
+        protected, unprotected, payload, sig = cbor2.loads(statement).value
+        assert not unprotected
+        assert statement == (b"\xd2\x84" + cbor2.dumps(protected) + b"\xa0"
+                             + cbor2.dumps(payload) + cbor2.dumps(sig))
 
 
 def test_an_unprotected_header_nested_past_reason_is_refused_not_a_crash():
@@ -385,7 +411,7 @@ def test_the_identity_vectors_hold_and_regenerate(tmp_path):
             statement).hexdigest()
         assert bytes.fromhex(p["expected_head_hex"]) == head
     ids = {p["base"]: p["statement_id"] for p in doc["published"]}
-    assert len(doc["carrying_an_unprotected_header"]) == 7
+    assert len(doc["carrying_an_unprotected_header"]) == 6
     for c in doc["carrying_an_unprotected_header"]:
         message = bytes.fromhex(c["statement_hex"])
         assert hashlib.sha256(message).hexdigest() == c["statement_sha256"]

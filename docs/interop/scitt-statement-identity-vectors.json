@@ -3,7 +3,7 @@
   "purpose": "What to refer to a PALA-1 SCITT statement by. statement_id is the SHA-256 of the statement with an empty unprotected header, in the one encoding a verifier accepts. Real crypto, fake entropy - never use this key outside a test vector.",
   "rule": [
     "A verifier accepts one encoding of a statement: tag 18 as the byte d2, a definite array of four (84), each byte string with its shortest definite length, and the protected header and the payload in the deterministic encoding of RFC 8949 section 4.2.1.",
-    "The unprotected header is a map of a definite length with no label twice. What it holds, and how that is written, is not restricted: it is not signed, and a transparency service writes its receipts there with its own encoder.",
+    "The unprotected header is a map of a definite length with no label twice, its count of entries written in the shortest form. What it holds, and how that is written, is not restricted: it is not signed, and a transparency service writes its receipts there with its own encoder.",
     "statement_id = SHA-256( d2 84 || bstr(protected) || a0 || bstr(payload) || bstr(signature) ): the statement with the unprotected header emptied.",
     "A statement whose unprotected header is the one byte a0 has statement_id equal to the SHA-256 of its bytes. A receipt attached later (RFC 9943, label 394, in the unprotected header) changes the bytes and their hash and leaves statement_id as it was.",
     "statement_id names the signed statement, not its content: the same payload signed twice with a non-deterministic algorithm is two statements."
@@ -88,16 +88,6 @@
     },
     {
       "id": "carrying-06",
-      "base": "v2",
-      "change": "the unprotected header is empty, its count written in two bytes (b8 00): the header's own encoding is not judged",
-      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133b8005835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
-      "statement_sha256": "31df132acd2600a92d4fd9dfe4e17ce77ea325a3185fbc697741eef436473d14",
-      "statement_id": "ce47efa9883090d4d6328e74f934e5dbabcf3a046d1098e768c53d92b661f941",
-      "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
-      "verifies": true
-    },
-    {
-      "id": "carrying-07",
       "base": "v2",
       "change": "labels 99 and 4 in that order, and the placeholder array of label 394 with an indefinite length: another party's encoder, not judged",
       "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a31863617804416b19018a9f506e6f74206120726563656970742e2e2eff5835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",

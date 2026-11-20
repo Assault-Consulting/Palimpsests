@@ -9,8 +9,9 @@
   by digest, a deduplication or a comparison of two copies depended on who
   last touched the bytes. Now the envelope, the protected header and the
   payload must be the RFC 8949 §4.2.1 deterministic encoding, and the
-  unprotected header a definite-length map with no label twice; anything
-  else is refused. What the unprotected header holds is not judged: a
+  unprotected header a definite-length map with no label twice, its count
+  of entries in the shortest form; anything else is refused. A statement
+  with an empty unprotected header then has exactly one sequence of bytes. What the unprotected header holds is not judged: a
   transparency service writes its receipts there.
 
 ### Added
@@ -21,10 +22,10 @@
 - Two refusal codes: `non_deterministic_encoding` and
   `unprotected_header_malformed` (21 in all).
 - `docs/interop/scitt-statement-identity-vectors.json`: the id of each
-  published statement, and seven statements that verify with something in
+  published statement, and six statements that verify with something in
   the unprotected header and keep the same id.
-- 19 cases in `scitt-statement-refusal-vectors.json` for the two codes
-  (83 in all). The 64 cases published before keep their ids, bytes and codes.
+- 20 cases in `scitt-statement-refusal-vectors.json` for the two codes
+  (84 in all). The 64 cases published before keep their ids, bytes and codes.
 
 ### Changed
 
