@@ -55,6 +55,7 @@ EVT_ROUTE = 0x0016  # UTF-8 <= 64 bytes — the reporting route a count is about
 EVT_REFUSED_EMPTY = 0x0017  # u32 — reports refused for an empty credential (kind 14, r9)
 EVT_REFUSED_WRONG = 0x0018  # u32 — reports refused for a wrong credential (kind 14, r9)
 EVT_ACCEPTED = 0x0019  # u32 — reports accepted on the route so far (kind 14, r9)
+EVT_REJECTED = 0x001A  # u32 — reports read and rejected, so far (kind 14, r9)
 
 # EVT_KIND values — operations (profile §3)
 KIND_MODEL_LOAD = 1
@@ -151,6 +152,7 @@ __all__ = [
     "EVT_REFUSED_EMPTY",
     "EVT_REFUSED_WRONG",
     "EVT_ACCEPTED",
+    "EVT_REJECTED",
     "SEG_PREDECESSOR_HEAD",
     "SEG_INDEX",
     "SEG_RETENTION_S",

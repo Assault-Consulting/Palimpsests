@@ -100,6 +100,7 @@ from palimpsests.audit.profiles.inference import (  # noqa: F401
     DISP_DISMISSED,
     DISP_ESCALATED,
     EVT_ACCEPTED,
+    EVT_REJECTED,
     EVT_BLOB_DIGEST,
     EVT_CATEGORY,
     EVT_DETAIL,
@@ -1249,30 +1250,34 @@ class PalaWriter:
         empty: int,
         wrong: int,
         accepted: int = 0,
+        rejected: int = 0,
         role: str = ROLE_NATIVE,
     ) -> bytes:
-        """Record that reports to ``route`` were refused (EVENT kind 14, r9).
+        """Record that reports to ``route`` did not get in (EVENT kind 14, r9).
 
-        A client whose reports are refused looks normal from its own side,
-        and the refusals lived only in the serving process's memory. The
-        counts are what the serving layer saw so far on that route: refused
-        for an empty credential, refused for a wrong one, and accepted.
-        Metadata only — nothing of a refused request is recorded.
+        A client whose reports are turned away looks normal from its own
+        side, and the counts lived only in the serving process's memory.
+        They are what the serving layer saw so far on that route: refused
+        before being read (for an empty credential, for a wrong one), read
+        and rejected, and accepted. Metadata only — nothing of a request
+        that did not get in is recorded.
         """
         encoded = route.encode("utf-8")
         if not encoded or len(encoded) > 64:
             raise ValueError("route must be 1..64 UTF-8 bytes")
-        for name, value in (("empty", empty), ("wrong", wrong), ("accepted", accepted)):
+        for name, value in (("empty", empty), ("wrong", wrong), ("accepted", accepted),
+                            ("rejected", rejected)):
             if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value < 2**32:
                 raise ValueError(f"{name} must be an integer in 0..2**32-1")
-        if empty + wrong == 0:
-            raise ValueError("no report was refused: there is nothing to record")
+        if empty + wrong + rejected == 0:
+            raise ValueError("no report was refused or rejected: there is nothing to record")
         body = encode_tlvs([
             (EVT_KIND, struct.pack("<H", KIND_REPORTS_REFUSED)),
             (EVT_ROUTE, encoded),
             (EVT_REFUSED_EMPTY, struct.pack("<I", empty)),
             (EVT_REFUSED_WRONG, struct.pack("<I", wrong)),
             (EVT_ACCEPTED, struct.pack("<I", accepted)),
+            (EVT_REJECTED, struct.pack("<I", rejected)),
         ])
         return self._emit(RT_EVENT, tlvs=self._origin(role), body=body)
 

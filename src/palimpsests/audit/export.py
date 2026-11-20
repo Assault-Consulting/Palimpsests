@@ -129,6 +129,7 @@ def _line(dr, hb: bytes, body_len: int, body_matches: bool) -> dict[str, object]
             "empty_credential": refused.refused_empty,
             "wrong_credential": refused.refused_wrong,
             "accepted": refused.accepted,
+            "rejected": refused.rejected,
         }
     if dr.disposition is not None:
         line["disposition"] = dr.disposition

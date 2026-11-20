@@ -127,9 +127,13 @@ class NativeAudit:
     ) -> None:
         self._writer.tools_offered_no_call(count, tools_digest, span_id=span_id or ZERO16)
 
-    def reports_refused(self, route: str, *, empty: int, wrong: int, accepted: int) -> None:
-        """Reports to ``route`` were refused before being read (kind 14, r9)."""
-        self._writer.reports_refused(route, empty=empty, wrong=wrong, accepted=accepted)
+    def reports_refused(
+        self, route: str, *, empty: int, wrong: int, accepted: int, rejected: int = 0
+    ) -> None:
+        """Reports to ``route`` were refused unread, or read and rejected (kind 14, r9)."""
+        self._writer.reports_refused(
+            route, empty=empty, wrong=wrong, accepted=accepted, rejected=rejected
+        )
 
     def tool_result(
         self,

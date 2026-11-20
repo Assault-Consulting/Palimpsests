@@ -171,7 +171,10 @@ def test_events_that_are_not_a_non_empty_list_are_400(served, body):
     before = audit.writer.seq
     r = _post(client, "/v1/pala/events", body)
     assert r.status_code == 400 and "message" in r.json()["error"]
-    assert audit.writer.seq == before
+    # no tool event; the rejection itself is noted once per route (profile r9)
+    assert audit.writer.seq == before + 1
+    assert _post(client, "/v1/pala/events", body).status_code == 400
+    assert audit.writer.seq == before + 1
 
 
 def test_a_digest_given_is_used_as_given_and_nothing_else_is_stored(served):
@@ -222,7 +225,8 @@ def test_what_the_hook_routes_refuse(served):
                  {**PRE, "hook_event_name": "PostToolUseFailure"}).status_code == 400
     assert client.post("/v1/pala/hooks/claude", content=b"[1]", headers={
         **AUTH, "content-type": "application/json"}).status_code in (400, 422)
-    assert audit.writer.seq == before
+    # no tool event; one REPORTS_REFUSED per route for its first rejection (r9)
+    assert audit.writer.seq == before + 2
 
 
 # -- the dry run --------------------------------------------------------------

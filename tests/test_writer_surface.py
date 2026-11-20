@@ -57,7 +57,7 @@ METHODS = {
     "tool_result": ["call_seq", "call_hash", "outcome", "result_digest", "span_id"],
     "tools_offered_no_call": ["count", "tools_digest", "span_id", "role"],
     "recovery_truncated_tail": ["role"],
-    "reports_refused": ["route", "empty", "wrong", "accepted", "role"],
+    "reports_refused": ["route", "empty", "wrong", "accepted", "rejected", "role"],
     "guard_prefix_release": ["holder_seq", "consumer_count", "span_id", "return_seq"],
     "guard_state_reject": ["detail", "span_id", "return_seq"],
     "guard_tool_loop_limit": ["iterations", "call_seq", "call_hash", "span_id"],
