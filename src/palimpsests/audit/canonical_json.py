@@ -25,6 +25,12 @@ What the standard fixes, and where a serializer's defaults differ:
   the other control characters. A lone surrogate is refused.
 - No whitespace; UTF-8.
 
+One limit the standard leaves to its users, set here: **a value nested
+deeper than** :data:`MAX_DEPTH` **containers has no canonical form.**
+Canonicalizers disagree past their own limits, and a digest only one
+implementation can compute is not evidence; and a value from outside —
+a tool's output — must not be able to exhaust the interpreter's stack.
+
 Stdlib only.
 """
 from __future__ import annotations
@@ -33,7 +39,11 @@ import math
 from collections.abc import Mapping
 from decimal import Decimal
 
-__all__ = ["canonical_json"]
+__all__ = ["MAX_DEPTH", "canonical_json"]
+
+#: The deepest nesting of arrays and objects that has a canonical form
+#: here: a value inside 128 containers is digested, one inside 129 is not.
+MAX_DEPTH = 128
 
 _SHORT = {0x08: "\\b", 0x09: "\\t", 0x0A: "\\n", 0x0C: "\\f", 0x0D: "\\r",
           0x22: '\\"', 0x5C: "\\\\"}
@@ -87,7 +97,7 @@ def _number(value: int | float) -> str:
     return sign + body
 
 
-def _write(value: object, out: list[str]) -> None:
+def _write(value: object, out: list[str], depth: int = 0) -> None:
     if value is None:
         out.append("null")
     elif value is True:
@@ -98,6 +108,9 @@ def _write(value: object, out: list[str]) -> None:
         out.append(_string(value))
     elif isinstance(value, (int, float)):
         out.append(_number(value))
+    elif isinstance(value, (Mapping, list, tuple)) and depth >= MAX_DEPTH:
+        raise ValueError(f"a value nested deeper than {MAX_DEPTH} arrays and objects "
+                         "has no canonical JSON form here")
     elif isinstance(value, Mapping):
         for key in value:
             if not isinstance(key, str):
@@ -109,14 +122,14 @@ def _write(value: object, out: list[str]) -> None:
                 out.append(",")
             out.append(_string(key))
             out.append(":")
-            _write(value[key], out)
+            _write(value[key], out, depth + 1)
         out.append("}")
     elif isinstance(value, (list, tuple)):
         out.append("[")
         for i, item in enumerate(value):
             if i:
                 out.append(",")
-            _write(item, out)
+            _write(item, out, depth + 1)
         out.append("]")
     else:
         raise TypeError(f"{type(value).__name__} is not a JSON value")
@@ -128,8 +141,8 @@ def canonical_json(value: object) -> bytes:
     ``value`` is a JSON value as Python holds one: ``None``, ``bool``,
     ``int``, ``float``, ``str``, a list or tuple, or a mapping with
     string keys. Anything else raises ``TypeError``; a value that has no
-    canonical form (NaN, an infinity, a lone surrogate) raises
-    ``ValueError``.
+    canonical form (NaN, an infinity, a lone surrogate, nesting deeper
+    than :data:`MAX_DEPTH`) raises ``ValueError``.
     """
     out: list[str] = []
     _write(value, out)

@@ -585,7 +585,7 @@ In short, and the RFC governs:
 - numbers as ECMAScript writes them: `1.0` is `1`, `1e21` is `1e+21`,
   `0.000001` stays as it is and `1e-7` is exponential.
 
-Three consequences an emitter should know:
+Four consequences an emitter should know:
 
 - **A number is an IEEE 754 double.** An integer beyond 2^53 is digested
   as the double nearest to it. An identifier that large belongs in a
@@ -594,6 +594,13 @@ Three consequences an emitter should know:
   value holding one cannot be digested; the emitter records the event
   without a digest, or refuses it — it does not substitute a form of its
   own.
+- **A value nested deeper than 128 arrays and objects has no canonical
+  form.** A value inside 128 containers is digested; one inside 129 is
+  not, and the event is recorded without a digest, as for NaN. RFC 8785
+  sets no limit and canonicalizers differ past their own; a digest that
+  only one implementation can compute is not evidence. The limit also
+  keeps a value that came from outside — a tool's output — from deciding
+  whether the record of the call is written.
 - **A value handed over as bytes is digested as those bytes.** That is
   for an emitter whose protocol already has a canonical encoding, and it
   is what the tool-loop vectors of r3–r6 do.

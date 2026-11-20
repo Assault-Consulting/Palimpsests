@@ -62,7 +62,7 @@ def parse_tool_calls(text: str) -> tuple[list[ParsedToolCall], str]:
     def _try(obj_text: str) -> ParsedToolCall | None:
         try:
             obj = json.loads(obj_text)
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, RecursionError):
             return None
         if not isinstance(obj, dict) or "name" not in obj:
             return None
@@ -70,7 +70,7 @@ def parse_tool_calls(text: str) -> tuple[list[ParsedToolCall], str]:
         if isinstance(args, str):
             try:
                 args = json.loads(args)
-            except json.JSONDecodeError:
+            except (json.JSONDecodeError, RecursionError):
                 return None
         if not isinstance(args, dict):
             return None
