@@ -241,3 +241,24 @@ def test_the_machine_line_names_the_commit_in_a_checkout(cs):
     if not (REPO / ".git").exists():
         pytest.skip("not a git checkout")
     assert "(git " in cs._machine()
+
+
+def test_a_probes_client_does_not_inherit_the_session_the_checker_runs_in(cs, tmp_path,
+                                                                          monkeypatch):
+    """Measured on 2026-11-20: the checker was run from inside a Claude Code
+    session, whose variables reached the probe's own Claude Code. It took
+    itself for part of that managed session and held every hook — zero hook
+    posts, and a RED for a surface that was intact."""
+    for name in ("CLAUDECODE", "CLAUDE_CODE_REMOTE", "CLAUDE_CODE_ORGANIZATION_UUID",
+                 "CLAUDE_CODE_SESSION_ID", "CCR_AGENT_PROXY_ENABLED", "AI_AGENT"):
+        monkeypatch.setenv(name, "host")
+    monkeypatch.setenv("ANTHROPIC_BASE_URL", "https://host.example")
+    monkeypatch.setenv("PATH_LIKE_UNRELATED", "kept")
+    env = cs._isolated_env(tmp_path, ANTHROPIC_BASE_URL="http://127.0.0.1:1",
+                           CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC="1")
+    assert not [k for k in env if k.startswith(("CLAUDECODE", "CCR_", "AI_AGENT"))]
+    # what the probe sets for its client is passed, the host's value is not
+    assert [k for k in env if k.startswith("CLAUDE_")] == [
+        "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC"]
+    assert env["ANTHROPIC_BASE_URL"] == "http://127.0.0.1:1"
+    assert env["PATH_LIKE_UNRELATED"] == "kept" and env["HOME"] == str(tmp_path)

@@ -190,14 +190,30 @@ def _verdict(
 _WINDOWS = os.name == "nt"
 
 
+#: Variables a client's own session hands to its children. A probe's client
+#: must not inherit them: see ``_isolated_env``.
+_HOST_CLIENT_ENV = ("CLAUDECODE", "CLAUDE_", "CCR_", "AI_AGENT")
+
+
 def _isolated_env(home: Path, **extra: str) -> dict:
     """The environment a client probe runs in: its own home directory.
 
     On Windows, Node and Claude Code find the user's home through
     ``USERPROFILE``, not ``HOME``; setting ``HOME`` alone left OpenCode and
     Claude Code reading the user's real configuration while the probe's
-    lay in an ignored directory (2026-11-02 surface check)."""
-    env = dict(os.environ, HOME=str(home), **extra)
+    lay in an ignored directory (2026-11-02 surface check).
+
+    Its own home is not enough when the checker is itself started from
+    inside a client's session. A Claude Code session exports its state to
+    every child — which session this is, whose organization, that it is
+    remote — and a Claude Code started by the probe inherits it, takes
+    itself for part of that managed session and holds every hook: the
+    probe went red with zero hook posts while the surface was intact
+    (2026-11-20 surface check). So the host client's variables are not
+    passed on. What a probe sets itself, in ``extra``, is.
+    """
+    env = {k: v for k, v in os.environ.items() if not k.startswith(_HOST_CLIENT_ENV)}
+    env.update(HOME=str(home), **extra)
     if _WINDOWS:
         env["USERPROFILE"] = str(home)
     return env
