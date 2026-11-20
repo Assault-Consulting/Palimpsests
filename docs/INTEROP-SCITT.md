@@ -221,12 +221,12 @@ code but never rename one or give it another meaning.
 
 `docs/interop/scitt-statement-refusal-vectors.json` gives a refused
 statement for every code, so that another verifier can compare its
-refusals with these: 83 cases. Seventy-nine are a published statement
+refusals with these: 84 cases. Eighty are a published statement
 with one change — signed again with the same test key where the change
 touches what is signed, so that it fails on the check it is about; four
 are inputs that are not a statement at all. The first 64 are the cases
 published before the encoding rule of section 11 and are unchanged, ids
-and bytes; the 19 after them are that rule's.
+and bytes; the 20 after them are that rule's.
 Each of the three algorithms has a case that reaches the signature
 check and fails there. The file states the order of the checks, which
 decides the code when a change could break more than one, the keys
@@ -263,9 +263,12 @@ the statement's bytes then depends on who last touched them.
   RFC 8949 §4.2.1 — shortest integers and lengths, no indefinite
   length, keys in bytewise order;
 - the unprotected header: a map (RFC 9052 §3), of a definite length,
-  with no label twice. **What it holds, and how that is written, is not
-  judged.** A transparency service puts its receipts there (RFC 9943,
-  label 394) with its own encoder; nothing in it is signed.
+  with no label twice, and its count of entries written in the shortest
+  form — the count is a head of the envelope like the others, so an empty
+  header is the one byte `a0` and not `b8 00`. **What it holds, and how
+  that is written, is not judged.** A transparency service puts its
+  receipts there (RFC 9943, label 394) with its own encoder; nothing in
+  it is signed.
 
 Anything else is refused: `non_deterministic_encoding` for the envelope,
 the protected header or the payload, `unprotected_header_malformed` for
@@ -281,9 +284,10 @@ statement with its unprotected header emptied:
 
     SHA-256( d2 84 || bstr(protected) || a0 || bstr(payload) || bstr(signature) )
 
-For a statement whose unprotected header is the one byte `a0` — as
+For a statement with an empty unprotected header — as
 `build_signed_statement` writes it, and as every published vector is —
-that is the hash of its bytes. Attaching a receipt changes the bytes and
+that is the hash of its bytes, and those bytes are the only ones a
+verifier accepts for it: of the 34 375 writings measured, one. Attaching a receipt changes the bytes and
 their hash and leaves the id as it was. This is the id to use for a
 reference, a deduplication or a comparison between two parties' copies.
 
@@ -295,9 +299,9 @@ was registered anywhere — a receipt says that, and this package verifies
 no receipt.
 
 **Vectors.** `docs/interop/scitt-statement-identity-vectors.json` gives
-the id of each published statement and seven statements that verify with
+the id of each published statement and six statements that verify with
 something in the unprotected header — a receipt placeholder under 394, a
-repeated key id, a private label, and two written the way another
+repeated key id, a private label, and one written the way another
 encoder might — each with other bytes and the same id. It is generated
 by `gen_scitt_statement_identity_vectors.py` and regenerates byte for
 byte. The refused writings are in the refusal vectors of section 10.

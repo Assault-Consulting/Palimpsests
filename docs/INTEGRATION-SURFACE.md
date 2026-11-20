@@ -196,7 +196,8 @@ deployment may say on the strength of it).
   the same signed content is refused (`non_deterministic_encoding`),
   though its signature is valid. The unprotected header must be a
   definite-length map with no label twice
-  (`unprotected_header_malformed`); what it holds is not judged.
+  (`unprotected_header_malformed`) and its count in the shortest form;
+  what it holds is not judged.
   `statement_id` is 32 bytes: the SHA-256 of the statement with the
   unprotected header emptied — the hash of the bytes as built, and
   unchanged when a receipt is attached. Refer to a statement by it, not
