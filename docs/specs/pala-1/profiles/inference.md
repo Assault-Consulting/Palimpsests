@@ -14,7 +14,7 @@ questions.
 | **Profile of** | PALA-1, version 1 |
 | **Status** | **Frozen — v1.0** (2026-08-09, with the core). Existing tag and kind allocations are permanent; the `EVT_KIND` and `AGG_*` spaces grow **additively** in profile revisions (§6.3) — additions never renumber and never touch the envelope. The profile is emitted by the Palimpsests writer (Phase 3, wired). |
 | **Date** | 2026-08-09 (frozen; first draft 2026-08-03) |
-| **Revision** | **r9** (2026-11-19) — additive only; see §9 for the revision history. r1 is the freeze. |
+| **Revision** | **r9** (2026-11-19) — additive only; see §9 for the revision history. r1 is the freeze. **r9 is the revision Palimpsests 1.0 implements** (§9.1). |
 | **Licence** | CC0-1.0, like the core specification and its test vectors. |
 
 **Metadata-only discipline.** The emitting library's existing audit log
@@ -527,6 +527,37 @@ and the note must outlive every key by design. Whether
 | r7 | 2026-11-19 | Additive only, and the open issues closed (§6). `EVT_SOURCE` value 2 (`derived-from-telemetry`, §3.1) — a pair written from an exported telemetry span. `MERKLE` records defined for this profile as chain checkpoints whose leaves are record hashes (§10), which is what the writer has emitted since 0.10; the r1 "SHOULD NOT emit" is withdrawn. The digests over JSON values — `ORIGIN_CONFIG_DIGEST` and `EVT_PAYLOAD_DIGEST` — are taken over the RFC 8785 canonical form (§11): a new rule for the first, and for the second the r3 rule pinned to a standard, with the same bytes wherever r3 was unambiguous. Issues 3 and 5 recorded as closed without a change of bytes or meaning. No envelope byte, no core text, no byte of `test-vectors.json` changed; `inference-vectors.json` gains three records (24 in all, every earlier record byte-identical), and the prefix-consistency vectors stay pinned to the 17-record r5 prefix and unchanged. A value with no canonical form — NaN, an infinity, a lone surrogate, an integer beyond ±(2^53 − 1), an object that repeats a key, nesting deeper than 128 — is recorded without a digest (§11). |
 | r8 | 2026-11-19 | Additive only: `EVENT` kinds 12 (`WRITER_CLOSE`) and 13 (`WRITER_OPEN`), §3.3 — a writer marks where it began and that it was closed, so a boot stopped without a close is visible once the chain goes on. No new tag. No envelope byte, no core text, no byte of `test-vectors.json` changed; `inference-vectors.json` gains three records (27 in all, every earlier record byte-identical), and the prefix-consistency vectors stay pinned to the 17-record r5 prefix and unchanged. |
 | r9 | 2026-11-19 | Additive only: `EVENT` kind 14 (`REPORTS_REFUSED`, §3.4) and `EVT` tags 0x0016–0x001A (`EVT_ROUTE`, `EVT_REFUSED_EMPTY`, `EVT_REFUSED_WRONG`, `EVT_ACCEPTED`, `EVT_REJECTED`) — reports to a reporting route that were refused before being read, or read and rejected, are on the chain, at most three records per route per run. No envelope byte, no core text, no byte of `test-vectors.json` changed; `inference-vectors.json` gains five records (32 in all, every earlier record byte-identical), and the prefix-consistency vectors stay pinned to the 17-record r5 prefix and unchanged. |
+
+### 9.1 The revision for Palimpsests 1.0
+
+**r9 is the revision Palimpsests 1.0 implements.** It is named so that
+"the profile" in a 1.0 promise means one text and one set of vectors, not
+whatever the document says on the day.
+
+What that fixes:
+
+- **r1–r9 are not edited in place.** r7, r8 and r9 were written, and r7
+  and r9 corrected, before any release carried them; that ends with
+  Palimpsests 0.15, the first release that does. From there a correction
+  to their meaning is a new revision that says what it corrects, and the
+  vectors of r9 — `inference-vectors.json` at 32 records, and
+  `payload-digest-vectors.json` — keep their bytes.
+- **A later revision only adds**, as §6 issue 3 already rules: a kind, a
+  tag, a vocabulary value. A reader written for r9 meets what it does not
+  know and says so; it does not fail, and nothing it does know changes
+  meaning.
+- **No open issue is carried into 1.0** (§6). What the profile cannot say
+  is stated where it applies, as a limit and not as a question: a writer
+  stopped for good looks like one still running (§3.3); a client that
+  reports nothing at all leaves no trace (§3.4); outcome `ok` is a return,
+  not a confirmed effect (§6 issue 5); a value with no canonical form
+  carries no digest and no reason (§11).
+
+What it does not fix: that 1.0 will be the *last* revision — additions
+follow instrumentation — or that every part of r9 has been read
+independently. The independent readings on record cover the frozen core;
+one of the profile as a whole is planned, and until it exists this
+document does not say it does.
 
 ## 10. `MERKLE` — chain checkpoints *(r7)*
 

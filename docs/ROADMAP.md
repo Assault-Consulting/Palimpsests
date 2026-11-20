@@ -67,15 +67,16 @@ records, the stability classes. What is left before 1.0 is not new
 function:
 
 - **Independent readings of what is new.** The inference profile as a
-  whole (through r8), the SCITT statement under COSE alg `-19`, and the
+  whole (through r9), the SCITT statement under COSE alg `-19`, and the
   refusal vectors. These depend on people outside the project and are
   planned, not promised for a date; until each exists, the documentation
   says it does not.
 - **The provisional parts decided.** Live reading (`TailingReader`) and
   the OpenTelemetry route are declared provisional in 0.15; each becomes
   public, or says why not, before 1.0.
-- **The profile for 1.0 named.** One revision of the inference profile is
-  declared the one 1.0 ships; later revisions only add.
+- ~~**The profile for 1.0 named.**~~ Done in 0.15: inference profile **r9**
+  is the revision 1.0 implements; it is no longer edited in place, and
+  later revisions only add (profile §9.1).
 - **A long run.** A serve left writing for days, with rotation and
   retention, read back whole.
 - **The deprecated names removed** — the two listed in
