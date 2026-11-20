@@ -69,7 +69,7 @@ def test_refusals_are_counted_by_kind_and_route(served):
 def test_accepted_and_rejected_reports_are_counted(served):
     client, _ = served
     assert client.post("/v1/pala/events", json=CALL, headers=AUTH).status_code == 200
-    assert client.post("/v1/pala/events", json=[], headers=AUTH).status_code == 422
+    assert client.post("/v1/pala/events", json=[], headers=AUTH).status_code == 400
     events = _status(client)["ingest"]["/v1/pala/events"]
     assert events["accepted"] == 1 and events["rejected"] == 1
     assert events["last_accepted_ns"] is not None

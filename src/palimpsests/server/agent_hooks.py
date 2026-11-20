@@ -46,6 +46,7 @@ from __future__ import annotations
 
 import threading
 from collections import OrderedDict
+from palimpsests.audit.canonical_json import DuplicateKeys
 from palimpsests.audit.pala_writer import (
     OUTCOME_ERROR,
     OUTCOME_OK,
@@ -105,6 +106,11 @@ class HookIngest:
     def _handle(self, payload: object) -> tuple[int, dict]:
         if not isinstance(payload, dict):
             return 400, {"error": "hook body must be a JSON object"}
+        if isinstance(payload, DuplicateKeys):
+            # Two "tool_name" or two "tool_use_id": which call this is
+            # depends on the reader. Inside tool_input or tool_response a
+            # repeated key costs only the digest; here it costs the report.
+            return 400, {"error": "hook body repeats a key; it reads two ways"}
         event = payload.get("hook_event_name")
         if event not in TOOL_EVENTS:
             # Other hook events (prompts, sessions, compaction) carry no

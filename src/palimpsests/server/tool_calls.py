@@ -19,6 +19,7 @@ import json
 import re
 import uuid
 from dataclasses import dataclass
+from palimpsests.audit.canonical_json import loads as _json_loads
 
 _TOOL_CALL_RE = re.compile(r"<tool_call>\s*(\{.*?\})\s*</tool_call>", re.DOTALL)
 
@@ -61,7 +62,7 @@ def parse_tool_calls(text: str) -> tuple[list[ParsedToolCall], str]:
 
     def _try(obj_text: str) -> ParsedToolCall | None:
         try:
-            obj = json.loads(obj_text)
+            obj = _json_loads(obj_text)
         except (json.JSONDecodeError, RecursionError):
             return None
         if not isinstance(obj, dict) or "name" not in obj:
@@ -69,7 +70,7 @@ def parse_tool_calls(text: str) -> tuple[list[ParsedToolCall], str]:
         args = obj.get("arguments", {})
         if isinstance(args, str):
             try:
-                args = json.loads(args)
+                args = _json_loads(args)
             except (json.JSONDecodeError, RecursionError):
                 return None
         if not isinstance(args, dict):

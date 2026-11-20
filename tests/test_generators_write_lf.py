@@ -24,6 +24,7 @@ GENERATORS = [
     "docs/interop/gen_scitt_statement_identity_vectors.py",
     "docs/specs/pala-1/gen_vectors.py",
     "docs/specs/pala-1/profiles/gen_inference_vectors.py",
+    "docs/specs/pala-1/profiles/gen_payload_digest_vectors.py",
     "docs/specs/pala-1/gen_consistency_vectors.py",
     "scripts/build_notes.py",
     "scripts/build_compatibility.py",
@@ -81,6 +82,7 @@ def test_every_text_write_names_its_newline(path):
 ARTIFACTS = [
     "docs/specs/pala-1/test-vectors.json",
     "docs/specs/pala-1/profiles/inference-vectors.json",
+    "docs/specs/pala-1/profiles/payload-digest-vectors.json",
     "docs/specs/pala-1/consistency-vectors.json",
     "docs/interop/scitt-statement-vector.json",
     "docs/interop/scitt-statement-vector-v3.json",

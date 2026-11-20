@@ -97,13 +97,25 @@ all the same: the chain is append-only, so a batch is not all-or-nothing
 and there is no unwriting. A result whose `call_id` is unknown, or whose
 `outcome` is not one of the five, is such an entry; the call stays open.
 
-`400` when `events` is not a non-empty list. `503` when the serve has no
-audit chain.
+`400` when the body is not JSON, is not one object, repeats a key, or
+when `events` is not a non-empty list. `503` when the serve has no audit
+chain.
+
+**A value that has no digest.** `arguments` are digested as RFC 8785
+canonical JSON, and some values have no such form: NaN or an infinity, a
+string with an unpaired surrogate, an integer beyond ±(2^53 − 1), an
+object that gives a key more than once, nesting deeper than 128
+(inference profile §11). The event is then recorded **without a digest**
+— it is not refused, and the reply does not differ. This holds on every
+reporting route. Where the repeated key is in an event itself rather
+than in its `arguments` — two `id`, two `name` — that event is refused
+with an `error` entry, and its neighbours land.
 
 ## Agent hooks — `POST /v1/pala/hooks/claude`, `POST /v1/pala/hooks/codex`
 
 The body is the hook event as the agent sends it (the Claude Code hook
-schema, which Codex shares). Read from it: `hook_event_name`, `tool_name`,
+schema, which Codex shares). A body that is not JSON, is not an object,
+or repeats one of its own keys is answered `400`. Read from it: `hook_event_name`, `tool_name`,
 `tool_use_id`, and — digested, never stored — `tool_input` and the tool's
 response.
 

@@ -524,7 +524,7 @@ and the note must outlive every key by design. Whether
 | r4 | 2026-09-02 | Additive only: `EVENT` kind 10 (`TOOLS_OFFERED_NO_CALL`, §3.1); `EVT` tags 0x000F (`EVT_TOOLS_OFFERED`) and 0x0010 (`EVT_TOOLS_DIGEST`); the canonical offered-name digest (writer-owned, the §6.2 discipline applied to sorted names). No envelope byte, no core text, no byte of `test-vectors.json` changed; companion vectors for kind 10 extend `inference-vectors.json` in the implementing PR chain. |
 | r5 | 2026-09-03 | Additive only: `EVT` tag 0x0011 (`EVT_SOURCE`) — the wire-parsed / client-reported evidence mark for kinds 8/9; absent means wire-parsed, so every prior record's meaning and bytes are unchanged. No envelope byte, no core text, no byte of `test-vectors.json` changed; companion vectors extend `inference-vectors.json` in the implementing PR chain. |
 | r6 | 2026-10-10 | Additive only: `EVT_OUTCOME` value 4 (`unobserved`, §3.1) — a return whose failure the recording vantage could not observe; `EVENT` kind 11 (`SEGMENT_CONTINUATION`, §3.2); `EVT` tags 0x0012–0x0015 (`SEG_PREDECESSOR_HEAD`, `SEG_INDEX`, `SEG_RETENTION_S`, `SEG_PRIOR_ROOT`) — the retention-continuation design (`retention-continuation.md`) adopted. No envelope byte, no core text, no byte of `test-vectors.json` changed; `inference-vectors.json` gains four records (21 in all, every earlier record byte-identical), and the prefix-consistency vectors stay pinned to the 17-record r5 prefix and unchanged. |
-| r7 | 2026-11-19 | Additive only, and the open issues closed (§6). `EVT_SOURCE` value 2 (`derived-from-telemetry`, §3.1) — a pair written from an exported telemetry span. `MERKLE` records defined for this profile as chain checkpoints whose leaves are record hashes (§10), which is what the writer has emitted since 0.10; the r1 "SHOULD NOT emit" is withdrawn. The digests over JSON values — `ORIGIN_CONFIG_DIGEST` and `EVT_PAYLOAD_DIGEST` — are taken over the RFC 8785 canonical form (§11): a new rule for the first, and for the second the r3 rule pinned to a standard, with the same bytes wherever r3 was unambiguous. Issues 3 and 5 recorded as closed without a change of bytes or meaning. No envelope byte, no core text, no byte of `test-vectors.json` changed; `inference-vectors.json` gains three records (24 in all, every earlier record byte-identical), and the prefix-consistency vectors stay pinned to the 17-record r5 prefix and unchanged. |
+| r7 | 2026-11-19 | Additive only, and the open issues closed (§6). `EVT_SOURCE` value 2 (`derived-from-telemetry`, §3.1) — a pair written from an exported telemetry span. `MERKLE` records defined for this profile as chain checkpoints whose leaves are record hashes (§10), which is what the writer has emitted since 0.10; the r1 "SHOULD NOT emit" is withdrawn. The digests over JSON values — `ORIGIN_CONFIG_DIGEST` and `EVT_PAYLOAD_DIGEST` — are taken over the RFC 8785 canonical form (§11): a new rule for the first, and for the second the r3 rule pinned to a standard, with the same bytes wherever r3 was unambiguous. Issues 3 and 5 recorded as closed without a change of bytes or meaning. No envelope byte, no core text, no byte of `test-vectors.json` changed; `inference-vectors.json` gains three records (24 in all, every earlier record byte-identical), and the prefix-consistency vectors stay pinned to the 17-record r5 prefix and unchanged. A value with no canonical form — NaN, an infinity, a lone surrogate, an integer beyond ±(2^53 − 1), an object that repeats a key, nesting deeper than 128 — is recorded without a digest (§11). |
 | r8 | 2026-11-19 | Additive only: `EVENT` kinds 12 (`WRITER_CLOSE`) and 13 (`WRITER_OPEN`), §3.3 — a writer marks where it began and that it was closed, so a boot stopped without a close is visible once the chain goes on. No new tag. No envelope byte, no core text, no byte of `test-vectors.json` changed; `inference-vectors.json` gains three records (27 in all, every earlier record byte-identical), and the prefix-consistency vectors stay pinned to the 17-record r5 prefix and unchanged. |
 | r9 | 2026-11-19 | Additive only: `EVENT` kind 14 (`REPORTS_REFUSED`, §3.4) and `EVT` tags 0x0016–0x001A (`EVT_ROUTE`, `EVT_REFUSED_EMPTY`, `EVT_REFUSED_WRONG`, `EVT_ACCEPTED`, `EVT_REJECTED`) — reports to a reporting route that were refused before being read, or read and rejected, are on the chain, at most three records per route per run. No envelope byte, no core text, no byte of `test-vectors.json` changed; `inference-vectors.json` gains five records (32 in all, every earlier record byte-identical), and the prefix-consistency vectors stay pinned to the 17-record r5 prefix and unchanged. |
 
@@ -590,11 +590,25 @@ In short, and the RFC governs:
 - numbers as ECMAScript writes them: `1.0` is `1`, `1e21` is `1e+21`,
   `0.000001` stays as it is and `1e-7` is exponential.
 
-Four consequences an emitter should know:
+Six consequences an emitter should know:
 
-- **A number is an IEEE 754 double.** An integer beyond 2^53 is digested
-  as the double nearest to it. An identifier that large belongs in a
-  string.
+- **A number is an IEEE 754 double, and an integer beyond ±(2^53 − 1)
+  has no canonical form.** As a double it is also its neighbours:
+  `9007199254740992` and `9007199254740993` would be the same bytes, and
+  a digest that stands for two values binds neither. RFC 8785 takes its
+  input from I-JSON (RFC 7493 §2.2), which says not to send such a
+  number; an emitter does not choose what a model or a tool sends, so the
+  event is recorded without a digest, as for NaN. An identifier that
+  large belongs in a string. A number written with a fraction or an
+  exponent is a double as it stands and is digested as one.
+- **An object that gives a key more than once has no canonical form**
+  (RFC 7493 §2.3). Readers disagree on which value it has, so the text is
+  two values. A repeated key exists only in the text: an emitter that
+  digests JSON it received reads it with a parser that keeps repetitions
+  in sight, and records the event without a digest. Where the repetition
+  is in the report itself rather than in the tool's arguments or result
+  — two tool names, two call ids — there is no one event to record, and
+  the report is rejected.
 - **NaN, the infinities and a lone surrogate have no canonical form.** A
   value holding one cannot be digested; the emitter records the event
   without a digest, or refuses it — it does not substitute a form of its
@@ -609,6 +623,11 @@ Four consequences an emitter should know:
 - **A value handed over as bytes is digested as those bytes.** That is
   for an emitter whose protocol already has a canonical encoding, and it
   is what the tool-loop vectors of r3–r6 do.
+
+Vectors: [`payload-digest-vectors.json`](payload-digest-vectors.json)
+gives values as JSON text with their canonical bytes and digest, and
+values that have none with the reason — for an implementation in another
+language to check itself against, in both directions.
 
 `EVT_TOOLS_DIGEST` (r4) is unchanged: the sorted names as a JSON array
 of strings is already the same bytes under RFC 8785.

@@ -14,10 +14,13 @@ What the standard fixes, and where a serializer's defaults differ:
 
 - **Numbers** are written as ECMAScript writes them (ECMA-262 7.1.12.1):
   ``1.0`` is ``1``, ``1e21`` is ``1e+21``, ``0.000001`` stays, ``1e-7``
-  is exponential. A number is an IEEE 754 double — an integer beyond
-  2**53 is written as the double nearest to it, as every JSON reader
-  built on doubles would have read it. NaN and the infinities have no
-  form and are refused.
+  is exponential. A number is an IEEE 754 double. NaN and the
+  infinities have no form and are refused — and so is an integer beyond
+  ±(2**53 - 1): as a double it is also its neighbours, and a digest that
+  stands for two values binds neither (RFC 7493 §2.2).
+- **An object that repeats a key** has no form: it reads two ways
+  (RFC 7493 §2.3). A repeated key exists only in the text, so it is
+  :func:`loads` that keeps it in sight.
 - **Object keys** are sorted by UTF-16 code unit, not by code point: the
   two orders differ for a key outside the Basic Multilingual Plane.
 - **Strings** are written as they are, with ``"`` and ``\\`` escaped, the
@@ -35,15 +38,70 @@ Stdlib only.
 """
 from __future__ import annotations
 
+import json
 import math
 from collections.abc import Mapping
 from decimal import Decimal
 
-__all__ = ["MAX_DEPTH", "canonical_json"]
+__all__ = ["MAX_DEPTH", "MAX_SAFE_INTEGER", "DuplicateKeys", "canonical_json",
+           "has_duplicate_keys", "loads"]
+
+#: The largest integer whose neighbours are also doubles: 2**53 - 1. An
+#: integer beyond it, either way, has no canonical form here.
+MAX_SAFE_INTEGER = 2**53 - 1
 
 #: The deepest nesting of arrays and objects that has a canonical form
 #: here: a value inside 128 containers is digested, one inside 129 is not.
 MAX_DEPTH = 128
+
+class DuplicateKeys(dict):
+    """An object whose JSON text gave some key more than once.
+
+    Which value such an object has depends on the reader: most parsers
+    keep the last, some the first, some refuse. So the same text is two
+    values, and a digest of either would claim more than anyone can check.
+    :func:`loads` marks the object instead of silently choosing; it still
+    holds the last value for each key, as ``json.loads`` would give, so
+    code that only *uses* the object behaves as before — and
+    :func:`canonical_json` refuses to give it a form.
+    """
+
+    __slots__ = ()
+
+
+def _pairs(pairs: list[tuple[str, object]]) -> dict:
+    obj = dict(pairs)
+    return DuplicateKeys(obj) if len(obj) != len(pairs) else obj
+
+
+def loads(text: str | bytes | bytearray) -> object:
+    """``json.loads`` that does not lose a repeated key.
+
+    An object that repeats a key comes back as a :class:`DuplicateKeys`.
+    Everything else is as ``json.loads`` gives it, the exceptions included
+    (``ValueError`` for text that is not JSON; ``RecursionError`` for text
+    nested past the parser's own limit, which differs between interpreters).
+
+    Use it wherever JSON from outside is read and may be digested: a
+    repeated key is visible only in the text, and is gone once an ordinary
+    parser has returned.
+    """
+    return json.loads(text, object_pairs_hook=_pairs)
+
+
+def has_duplicate_keys(value: object) -> bool:
+    """Whether a value read by :func:`loads` holds a repeated key anywhere."""
+    todo = [value]
+    while todo:
+        item = todo.pop()
+        if isinstance(item, DuplicateKeys):
+            return True
+        if isinstance(item, Mapping):
+            todo.extend(item.values())
+        elif isinstance(item, (list, tuple)):
+            todo.extend(item)
+    return False
+
 
 _SHORT = {0x08: "\\b", 0x09: "\\t", 0x0A: "\\n", 0x0C: "\\f", 0x0D: "\\r",
           0x22: '\\"', 0x5C: "\\\\"}
@@ -67,6 +125,14 @@ def _string(value: str) -> str:
 
 def _number(value: int | float) -> str:
     """ECMA-262 Number::toString of the double nearest to ``value``."""
+    if isinstance(value, int) and not -MAX_SAFE_INTEGER <= value <= MAX_SAFE_INTEGER:
+        # RFC 8785 writes every number as a double, so 2**53 and 2**53 + 1
+        # would be the same bytes and the digest would no longer say which
+        # was meant. RFC 7493 (I-JSON), which RFC 8785 takes its input
+        # from, says not to send such a number; a digest of one is refused
+        # rather than made to stand for its neighbours too.
+        raise ValueError("an integer beyond ±(2**53 - 1) has no canonical JSON form "
+                         "here: as a double it is also its neighbours (RFC 7493 §2.2)")
     try:
         x = float(value)
     except OverflowError as e:
@@ -108,6 +174,9 @@ def _write(value: object, out: list[str], depth: int = 0) -> None:
         out.append(_string(value))
     elif isinstance(value, (int, float)):
         out.append(_number(value))
+    elif isinstance(value, DuplicateKeys):
+        raise ValueError("an object whose JSON text gave a key more than once has no "
+                         "canonical JSON form: it reads two ways (RFC 7493 §2.3)")
     elif isinstance(value, (Mapping, list, tuple)) and depth >= MAX_DEPTH:
         raise ValueError(f"a value nested deeper than {MAX_DEPTH} arrays and objects "
                          "has no canonical JSON form here")

@@ -48,8 +48,9 @@ the chain is when the export arrived, not when the call was made.
 from __future__ import annotations
 
 import gzip
-import json
 from dataclasses import dataclass, field
+from palimpsests.audit.canonical_json import has_duplicate_keys
+from palimpsests.audit.canonical_json import loads as _json_loads
 
 __all__ = [
     "OtlpUnavailable",
@@ -121,11 +122,15 @@ def decode_otlp(body: bytes, content_type: str, content_encoding: str | None = N
     ctype = (content_type or "").split(";")[0].strip().lower()
     if ctype == "application/json":
         try:
-            doc = json.loads(body)
+            doc = _json_loads(body)
         except ValueError as e:
             raise ValueError(f"OTLP/JSON body is not JSON: {e}") from e
         except RecursionError as e:
             raise ValueError("OTLP/JSON body is nested too deeply to read") from e
+        if has_duplicate_keys(doc):
+            # Which of two "spans" a reader takes is the reader's choice;
+            # an export that reads two ways is not recorded either way.
+            raise ValueError("OTLP/JSON body repeats a key in an object")
         spans = _spans_from_json(doc)
     elif ctype == "application/x-protobuf":
         spans = _spans_from_protobuf(body)
@@ -300,7 +305,7 @@ def canonical_payload(value: str | None):
     if value is None:
         return None
     try:
-        return json.loads(value)
+        return _json_loads(value)
     except ValueError:
         return value
 
