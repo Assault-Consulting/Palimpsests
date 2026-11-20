@@ -28,7 +28,7 @@
   "codes_note": "An open vocabulary: a release may add a code, never rename one or give it another meaning. The code names the check that failed, never a cause.",
   "check_order": [
     "message structure: not_cose_sign1, trailing_bytes, protected_header_malformed (with repeated_key in the protected header), detached_payload, payload_malformed for a payload that is not a byte string",
-    "one encoding: unprotected_header_malformed (the unprotected header is a definite-length map with no label twice; what it holds and how that is written is not judged), then non_deterministic_encoding for the envelope (tag 18 as d2, the array as 84, each byte string with its shortest definite length) and for the bytes of the protected header. A check above that names what is wrong - a repeated key, an indefinite-length map - is reached first",
+    "one encoding: unprotected_header_malformed (the unprotected header is a definite-length map with no label twice; what it holds and how that is written is not judged), then non_deterministic_encoding for the envelope (tag 18 as d2, the array as 84, each byte string with its shortest definite length, the unprotected header's count in its shortest form) and for the bytes of the protected header. A check above that names what is wrong - a repeated key, an indefinite-length map - is reached first",
     "unsupported_alg (label 1 is -7, -8 or -19)",
     "key_type_mismatch (-8 and -19 mean Ed25519, -7 means P-256), before any signature",
     "signature_invalid - also for a signature that is not a byte string or has the wrong length: what the fourth member is, is not looked at before this check (only how its length is written, when it is a byte string)",
@@ -104,7 +104,7 @@
     "use": "a case with verify_with.chain set is verified against this chain: the v3 root is recomputed as the PALA-1 section 4.3 tree over the record hashes of records 0..last_seq"
   },
   "counts": {
-    "cases": 83,
+    "cases": 84,
     "chain_too_short": 1,
     "content_type_unknown": 2,
     "detached_payload": 1,
@@ -112,7 +112,7 @@
     "head_mismatch": 1,
     "indefinite_length_map": 1,
     "key_type_mismatch": 9,
-    "non_deterministic_encoding": 12,
+    "non_deterministic_encoding": 13,
     "not_cose_sign1": 8,
     "payload_keys_mismatch": 3,
     "payload_malformed": 5,
@@ -1207,6 +1207,19 @@
       "change": "the unprotected header holds label 99 twice",
       "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133a218636178186361795835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
       "statement_sha256": "f6a133d8838f9b778ee394c68f69474d42f86cb153c69d63c148df9a34b1decf",
+      "verify_with": {
+        "key": "ed25519-test",
+        "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",
+        "chain": null
+      }
+    },
+    {
+      "id": "non_deterministic_encoding-13",
+      "code": "non_deterministic_encoding",
+      "base": "v2",
+      "change": "the unprotected header is an empty map with its count written in two bytes (b8 00) instead of one (a0)",
+      "statement_hex": "d28458cda4012703782b6170706c69636174696f6e2f766e642e70616c696d7073657374732e70616c61312d686561642b63626f72045820866eefbd6718c8846cd7ddfe43fc74ab1daac4538ff8514ea2ec2d410a4157430fa201782475726e3a6578616d706c653a70616c612d313a7265666572656e63652d656d697474657202784d70616c612d313a636861696e3a33613161333637336635303439386562316431633666393462393833643663363036636438356564353336323762346534666665353531353363376166383133b8005835a40158203a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af8130200030b046b70616c612d312f76312e305840923b6e501dee8849809ea57abcd309ca73eb6c0499ca503106395f7c785c0b9dde5afb78d5a0a02661d66112ddab0ceab07bb5808ea4edb3bb13ad8c04d5a703",
+      "statement_sha256": "31df132acd2600a92d4fd9dfe4e17ce77ea325a3185fbc697741eef436473d14",
       "verify_with": {
         "key": "ed25519-test",
         "expected_head_hex": "3a1a3673f50498eb1d1c6f94b983d6c606cd85ed53627b4e4ffe55153c7af813",

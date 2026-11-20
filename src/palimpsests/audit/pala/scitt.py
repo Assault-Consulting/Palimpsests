@@ -392,15 +392,17 @@ def _check_envelope(
     lets the reader hear "this is that statement" — which holds only if
     the bytes are pinned.
 
-    The unprotected header is not judged that way. It must be what
-    RFC 9052 says it is — a map — of a definite length and with no label
-    twice, so that it reads one way. What it holds, and how that is
-    written, is another party's business: a transparency service puts its
-    receipts there (RFC 9943, label 394) with its own encoder, nothing in
-    it is signed, and it is not part of the statement's identity — see
-    ``statement_id``. Refusing a validly signed statement over the
-    encoding of a receipt someone attached would be this verifier's
-    preference, not a property of the statement.
+    The unprotected header is not judged that way. It must be what RFC 9052
+    says it is — a map — of a definite length and with no label twice, so
+    that it reads one way; and its count of entries is written in its
+    shortest form, like every other head of the envelope, so that a
+    statement with an empty header is one sequence of bytes and not three.
+    What it holds, and how that is written, is another party's business: a
+    transparency service puts its receipts there (RFC 9943, label 394) with
+    its own encoder, nothing in it is signed, and it is not part of the
+    statement's identity — see ``statement_id``. Refusing a validly signed
+    statement over the encoding of a receipt someone attached would be this
+    verifier's preference, not a property of the statement.
 
     The fourth member is judged only if it is a byte string; anything else
     there is left to the signature check, as before.
@@ -424,7 +426,7 @@ def _check_envelope(
         raise StatementRefused(
             "unprotected_header_malformed",
             f"the unprotected header is nested deeper than {_SCAN_DEPTH} levels")
-    major, _ai, entries, _pos, _minimal = _head(message, spans[1][0])
+    major, _ai, entries, _pos, count_minimal = _head(message, spans[1][0])
     if major != 5 or not isinstance(unprotected, Mapping):
         raise StatementRefused(
             "unprotected_header_malformed",
@@ -441,12 +443,17 @@ def _check_envelope(
             f"{len(unprotected)} distinct labels)")
     members_ok = spans[0][2] and spans[2][2] and (
         not isinstance(sig, bytes) or spans[3][2])
-    if not (envelope_ok and members_ok):
+    # The header's own count belongs to the envelope: it is the one byte
+    # of the header this construction can hold to a form without judging
+    # what another party wrote inside. With it, a statement with an empty
+    # header has exactly one sequence of bytes.
+    if not (envelope_ok and members_ok and count_minimal):
         raise StatementRefused(
             "non_deterministic_encoding",
             "the COSE_Sign1 envelope is not in the deterministic encoding: tag 18 "
             "as one byte, a definite array of four, each byte string with its "
-            "shortest definite length (RFC 8949 §4.2.1)")
+            "shortest definite length, and the unprotected header's count in its "
+            "shortest form (RFC 8949 §4.2.1)")
     if not _is_deterministic(protected):
         raise StatementRefused(
             "non_deterministic_encoding",
@@ -855,9 +862,9 @@ def verify_statement(
     content verifies under the same signature and has another hash; it is
     refused, so that "the signature is valid" and "this is that statement"
     are the same answer. The unprotected header must be a definite-length
-    map with no label twice; what it holds is not judged and not part of
-    the statement. The result's ``statement_id`` is the hash to refer to
-    the statement by.
+    map with no label twice and its count in the shortest form; what it
+    holds is not judged and not part of the statement. The result's
+    ``statement_id`` is the hash to refer to the statement by.
 
     ``reader`` (an ``AuditReader`` over the chain) lets the v3 root be
     *recomputed* — the derived root over records ``0..last_seq`` — and

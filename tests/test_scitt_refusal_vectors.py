@@ -117,11 +117,11 @@ def test_a_case_without_a_base_is_not_a_statement(doc):
 
 
 def test_the_cases_published_before_the_encoding_rule_are_as_they_were(doc):
-    """The one-encoding rule (0.15) added two codes and nineteen cases at
+    """The one-encoding rule (0.15) added two codes and twenty cases at
     the end. The 64 cases another verifier may already have been run
     against keep their ids, their bytes and their codes: a check that
     names what is wrong is reached before the general one."""
-    assert len(doc["cases"]) == 83
+    assert len(doc["cases"]) == 84
     first = doc["cases"][:64]
     assert not {c["code"] for c in first} & {
         "non_deterministic_encoding", "unprotected_header_malformed"}
@@ -130,9 +130,9 @@ def test_the_cases_published_before_the_encoding_rule_are_as_they_were(doc):
     added = doc["cases"][64:]
     assert {c["code"] for c in added} == {
         "non_deterministic_encoding", "unprotected_header_malformed"}
-    assert doc["counts"]["non_deterministic_encoding"] == 12
+    assert doc["counts"]["non_deterministic_encoding"] == 13
     assert doc["counts"]["unprotected_header_malformed"] == 7
-    assert doc["counts"]["cases"] == 83
+    assert doc["counts"]["cases"] == 84
     assert all(c["base"] in doc["bases"] for c in doc["cases"] if c["base"] is not None)
 
 

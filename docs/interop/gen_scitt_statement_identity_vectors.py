@@ -84,8 +84,6 @@ for name, change, header in [
     ("v2", "two placeholders under label 394", {394: [RECEIPT, RECEIPT[::-1]]}),
     ("v2-alg19", "the unprotected header repeats the key id under label 4", {4: kid}),
     ("v2", "the unprotected header holds a private label: {99: 'note'}", {99: "note"}),
-    ("v2", "the unprotected header is empty, its count written in two bytes (b8 00): "
-           "the header's own encoding is not judged", b"\xb8\x00"),
     ("v2", "labels 99 and 4 in that order, and the placeholder array of label 394 with "
            "an indefinite length: another party's encoder, not judged",
      b"\xa3\x18\x63\x61x\x04\x41k\x19\x01\x8a\x9f\x50" + RECEIPT + b"\xff"),
@@ -116,7 +114,8 @@ doc = {
         "definite array of four (84), each byte string with its shortest definite "
         "length, and the protected header and the payload in the deterministic "
         "encoding of RFC 8949 section 4.2.1.",
-        "The unprotected header is a map of a definite length with no label twice. "
+        "The unprotected header is a map of a definite length with no label twice, its "
+        "count of entries written in the shortest form. "
         "What it holds, and how that is written, is not restricted: it is not signed, "
         "and a transparency service writes its receipts there with its own encoder.",
         "statement_id = SHA-256( d2 84 || bstr(protected) || a0 || bstr(payload) || "
