@@ -9,6 +9,7 @@ docs/specs/pala-1/profiles/robotics.md -text
 docs/specs/pala-1/profiles/inference.md -text
 docs/specs/pala-1/test-vectors.json -text
 docs/specs/pala-1/profiles/inference-vectors.json -text
+docs/specs/pala-1/profiles/payload-digest-vectors.json -text
 # POSIX shell must stay LF to execute at all.
 docs/specs/pala-1/verification-kit/fetch-inputs.sh -text
 # Generated alongside the core vectors and compared byte-for-byte by the

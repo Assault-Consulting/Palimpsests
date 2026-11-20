@@ -67,8 +67,9 @@ def test_nan_and_the_infinities_are_refused(ieee):
 @pytest.mark.parametrize(("value", "expected"), [
     (1.0, "1"), (-1.0, "-1"), (1.5, "1.5"), (100.0, "100"), (1e20, "100000000000000000000"),
     (1e21, "1e+21"), (1e-6, "0.000001"), (1e-7, "1e-7"), (123e-20, "1.23e-18"),
-    (0.1, "0.1"), (4.5, "4.5"), (2 ** 53, "9007199254740992"), (7, "7"), (-0.0, "0"),
-    (2 ** 63, "9223372036854776000"),  # an integer beyond 2**53 is its nearest double
+    (0.1, "0.1"), (4.5, "4.5"), (2.0 ** 53, "9007199254740992"), (7, "7"), (-0.0, "0"),
+    (2.0 ** 63, "9223372036854776000"),  # a double that large is written as it is
+    (2 ** 53 - 1, "9007199254740991"), (-(2 ** 53 - 1), "-9007199254740991"),
 ])
 def test_the_layout_rules_of_ecmascript(value, expected):
     assert canonical_json(value) == expected.encode()

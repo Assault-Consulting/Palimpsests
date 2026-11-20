@@ -58,6 +58,8 @@ import time
 import uuid
 from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass
+from palimpsests.audit.canonical_json import DuplicateKeys
+from palimpsests.audit.canonical_json import loads as _json_loads
 from palimpsests.engine.messages import ChatChunk
 from palimpsests.server.tool_calls import parse_tool_calls, tools_system_message
 
@@ -180,7 +182,7 @@ def create_app(
 
                     event = tool = "?"
                     try:  # metadata only — never the tool's input or output
-                        hook = json.loads(await request.body())
+                        hook = _json_loads(await request.body())
                         event = str(hook.get("hook_event_name", "?"))
                         tool = str(hook.get("tool_name", "?"))
                     except (ValueError, AttributeError, RecursionError):
@@ -213,7 +215,7 @@ def create_app(
     # Registered after the bearer check, so it is the outer middleware and
     # sees that check's refusals too. Counts requests, not records.
     import threading
-    from fastapi import Request
+    from fastapi import Depends, Request
     from palimpsests.server.dry_run import DryAudit, is_dry_run
 
     ingest_routes = (
@@ -588,6 +590,29 @@ def create_app(
             "chain": chain,
         }
 
+    async def _report_body(request):
+        """The body of a report, read here rather than by the framework.
+
+        A framework's parser returns one value for an object that repeats
+        a key, and the repetition is gone. Read with ``loads``, such an
+        object stays marked: at the level of the report itself it is
+        refused, and inside a tool's arguments or result it is recorded
+        without a digest (inference profile §11).
+        """
+        try:
+            return _json_loads(await request.body())
+        except RecursionError:
+            message = "the body is nested too deeply to read"
+        except ValueError as e:  # not JSON, or not UTF-8
+            message = f"the body is not JSON: {e}"
+        return JSONResponse(
+            status_code=400,
+            content={"error": {"message": message, "type": "invalid_request_error"}},
+        )
+
+    _report_body.__annotations__["request"] = Request
+    report_body = Depends(_report_body)
+
     def _dry_hook(body: dict, client: str):
         """The hook route's real handling, against nothing: see dry_run."""
         from palimpsests.server.agent_hooks import HookIngest
@@ -599,7 +624,7 @@ def create_app(
             content={"dry_run": True, "would_record": dry.would_record, "reply": reply},
         )
 
-    def claude_hook(request, body: dict):
+    def claude_hook(request, body=report_body):
         """Agent tool hooks in the Claude schema (Claude Code HTTP hooks).
 
         See ``palimpsests.server.agent_hooks``. Every reply the agent sees
@@ -615,12 +640,14 @@ def create_app(
                     }
                 },
             )
+        if isinstance(body, JSONResponse):
+            return body
         if is_dry_run(request):
             return _dry_hook(body, "claude")
         status, reply = hooks.handle(body)
         return JSONResponse(status_code=status, content=reply)
 
-    def codex_hook(request, body: dict):
+    def codex_hook(request, body=report_body):
         """Agent tool hooks from Codex, forwarded by its command hook.
 
         Same schema as Claude Code; different outcome rule — Codex has no
@@ -638,6 +665,8 @@ def create_app(
                     }
                 },
             )
+        if isinstance(body, JSONResponse):
+            return body
         if is_dry_run(request):
             return _dry_hook(body, "codex")
         status, reply = codex_hooks.handle(body)
@@ -720,7 +749,7 @@ def create_app(
     otlp_traces.__annotations__["request"] = Request
     app.post("/v1/traces")(otlp_traces)
 
-    def ingest_events(request, body: dict):
+    def ingest_events(request, body=report_body):
         """Client-reported tool events, onto the same chain (r5).
 
         The constructive half of the visibility limit: each reported
@@ -741,6 +770,18 @@ def create_app(
                     "error": {
                         "message": "no audit chain configured on this server",
                         "type": "server_error",
+                    }
+                },
+            )
+        if isinstance(body, JSONResponse):
+            return body
+        if not isinstance(body, dict) or isinstance(body, DuplicateKeys):
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "error": {
+                        "message": "the body must be one JSON object with no key twice",
+                        "type": "invalid_request_error",
                     }
                 },
             )
@@ -780,6 +821,10 @@ def create_app(
         for ev in events:
             if not isinstance(ev, dict):
                 results.append({"error": "event must be an object"})
+                continue
+            if isinstance(ev, DuplicateKeys):
+                # two "id" or two "name": which call this is depends on the reader
+                results.append({"error": "invalid event: it repeats a key and reads two ways"})
                 continue
             etype = ev.get("type")
             try:
