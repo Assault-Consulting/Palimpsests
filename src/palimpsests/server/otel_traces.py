@@ -124,6 +124,8 @@ def decode_otlp(body: bytes, content_type: str, content_encoding: str | None = N
             doc = json.loads(body)
         except ValueError as e:
             raise ValueError(f"OTLP/JSON body is not JSON: {e}") from e
+        except RecursionError as e:
+            raise ValueError("OTLP/JSON body is nested too deeply to read") from e
         spans = _spans_from_json(doc)
     elif ctype == "application/x-protobuf":
         spans = _spans_from_protobuf(body)
@@ -289,13 +291,29 @@ def _select(spans: list[_Span]) -> TraceBatch:
 
 
 def canonical_payload(value: str | None):
-    """What D4 digests: the parsed JSON when the string is JSON, else the string."""
+    """What D4 digests: the parsed JSON when the string is JSON, else the string.
+
+    A string that is JSON nested too deeply for the parser raises
+    ``RecursionError``: it is JSON, so it is not digested as a string, and
+    it has no canonical form — :func:`_span_digest` records no digest.
+    """
     if value is None:
         return None
     try:
         return json.loads(value)
     except ValueError:
         return value
+
+
+def _span_digest(value: str | None) -> bytes | None:
+    """The payload digest of a span attribute, or ``None`` where it has none."""
+    from palimpsests.audit.pala_writer import _tool_payload_digest
+
+    try:
+        payload = canonical_payload(value)
+    except RecursionError:
+        return None
+    return _tool_payload_digest(payload) if payload is not None else None
 
 
 # ── recording ────────────────────────────────────────────────────────────
@@ -322,7 +340,6 @@ class TraceIngest:
             OUTCOME_ERROR,
             OUTCOME_OK,
             SOURCE_DERIVED_FROM_TELEMETRY,
-            _tool_payload_digest,
         )
 
         recorded = duplicates = 0
@@ -332,14 +349,12 @@ class TraceIngest:
                 if key in self._seen:
                     duplicates += 1
                     continue
-                args = canonical_payload(span.arguments)
-                result = canonical_payload(span.result)
                 detail = f"otel execute_tool; semconv {span.semconv}"
                 if span.failed and span.error_type:
                     detail += f"; error.type {span.error_type}"
                 seq, call_hash = self._audit.tool_called(
                     span.tool_name,
-                    _tool_payload_digest(args) if args is not None else None,
+                    _span_digest(span.arguments),
                     None,
                     source=SOURCE_DERIVED_FROM_TELEMETRY,
                     detail=detail,
@@ -348,7 +363,7 @@ class TraceIngest:
                     seq,
                     call_hash,
                     OUTCOME_ERROR if span.failed else OUTCOME_OK,
-                    _tool_payload_digest(result) if result is not None else None,
+                    _span_digest(span.result),
                     None,
                     source=SOURCE_DERIVED_FROM_TELEMETRY,
                 )
