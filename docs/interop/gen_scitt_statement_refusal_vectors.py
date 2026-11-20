@@ -344,6 +344,92 @@ CASES = [
      v3_with(len(HASHES) - 1, MerkleFrontier.from_record_hashes(HASHES[8:]).root())),
 ]
 
+# ── one encoding (since 0.15) ──────────────────────────────────────────────
+#
+# Appended, so that every earlier case keeps its id. Each is the published
+# statement written another way: the same signed content, the same
+# signature, another hash. The first group needs no key - anyone who relays
+# the statement can make them. The second can only be made by the issuer,
+# and is signed again.
+
+
+def bstr(data: bytes) -> bytes:
+    return cbor2.dumps(data)
+
+
+def raw(*, tag=b"\xd2", array=b"\x84", protected=None, unprotected=b"\xa0",
+        payload=None, sig=None, end=b"", base=(P, PL, SIG)) -> bytes:
+    """A COSE_Sign1 assembled byte by byte, each part as given."""
+    p, pl, s = base
+    return (tag + array + (bstr(p) if protected is None else protected) + unprotected
+            + (bstr(pl) if payload is None else payload)
+            + (bstr(s) if sig is None else sig) + end)
+
+
+assert raw() == S2  # the assembly reproduces the published statement
+
+NON_MINIMAL_LABEL = P[:1] + b"\x18\x01" + P[2:]  # label 1 written as 18 01
+assert cbor2.loads(NON_MINIMAL_LABEL) == cbor2.loads(P)
+REVERSED_LABELS = cbor2.dumps(dict(reversed(list(cbor2.loads(P).items()))))
+assert REVERSED_LABELS != P and cbor2.loads(REVERSED_LABELS) == cbor2.loads(P)
+REVERSED_KEYS = cbor2.dumps(dict(reversed(list(cbor2.loads(PL).items()))))
+assert REVERSED_KEYS != PL and cbor2.loads(REVERSED_KEYS) == cbor2.loads(PL)
+NON_MINIMAL_KEY = PL[:1] + b"\x18\x01" + PL[2:]  # payload key 1 written as 18 01
+assert cbor2.loads(NON_MINIMAL_KEY) == cbor2.loads(PL)
+
+CASES += [
+    ("non_deterministic_encoding", "v2", "ed25519-test", False,
+     "tag 18 written in two bytes (d8 12) instead of one (d2)", raw(tag=b"\xd8\x12")),
+    ("non_deterministic_encoding", "v2", "ed25519-test", False,
+     "the array head written as 98 04 instead of 84", raw(array=b"\x98\x04")),
+    ("non_deterministic_encoding", "v2", "ed25519-test", False,
+     "the array written with an indefinite length (9f ... ff)",
+     raw(array=b"\x9f", end=b"\xff")),
+    ("non_deterministic_encoding", "v2", "ed25519-test", False,
+     "the protected header's byte string with a two-byte length (59 00 nn) "
+     "where one byte is enough",
+     raw(protected=b"\x59" + len(P).to_bytes(2, "big") + P)),
+    ("non_deterministic_encoding", "v2", "ed25519-test", False,
+     "the payload's byte string in two chunks (5f ... ff)",
+     raw(payload=b"\x5f" + bstr(PL[:10]) + bstr(PL[10:]) + b"\xff")),
+    ("non_deterministic_encoding", "v2", "ed25519-test", False,
+     "the signature's byte string with a two-byte length (59 00 40)",
+     raw(sig=b"\x59\x00\x40" + SIG)),
+    ("non_deterministic_encoding", "v3", "ed25519-test", False,
+     "the v3 statement with tag 18 written in two bytes (d8 12)",
+     b"\xd8\x12" + BASES["v3"]["statement"][1:]),
+    ("non_deterministic_encoding", "v2-alg19", "ed25519-test", False,
+     "the alg -19 statement with the array head written as 98 04",
+     BASES["v2-alg19"]["statement"][:1] + b"\x98\x04" + BASES["v2-alg19"]["statement"][2:]),
+    ("non_deterministic_encoding", "v2", "ed25519-test", False,
+     "the protected header's labels in the order 15, 4, 3, 1, signed",
+     signed(REVERSED_LABELS, PL)),
+    ("non_deterministic_encoding", "v2", "ed25519-test", False,
+     "the protected header's label 1 written as 18 01, signed",
+     signed(NON_MINIMAL_LABEL, PL)),
+    ("non_deterministic_encoding", "v2", "ed25519-test", False,
+     "the payload's keys in the order 4, 3, 2, 1, signed", signed(P, REVERSED_KEYS)),
+    ("non_deterministic_encoding", "v2", "ed25519-test", False,
+     "the payload's key 1 written as 18 01, signed", signed(P, NON_MINIMAL_KEY)),
+    ("unprotected_header_malformed", "v2", "ed25519-test", False,
+     "the unprotected header is the integer 7", raw(unprotected=b"\x07")),
+    ("unprotected_header_malformed", "v2", "ed25519-test", False,
+     "the unprotected header is an empty array", raw(unprotected=b"\x80")),
+    ("unprotected_header_malformed", "v2", "ed25519-test", False,
+     "the unprotected header is an empty byte string", raw(unprotected=b"\x40")),
+    ("unprotected_header_malformed", "v2", "ed25519-test", False,
+     "the unprotected header is an empty map of indefinite length (bf ff)",
+     raw(unprotected=b"\xbf\xff")),
+    ("unprotected_header_malformed", "v2", "ed25519-test", False,
+     "the unprotected header is a map of indefinite length holding label 4 (bf 04 41 6b ff)",
+     raw(unprotected=b"\xbf\x04\x41k\xff")),
+    ("unprotected_header_malformed", "v2", "ed25519-test", False,
+     "the unprotected header is the text 'header'", raw(unprotected=b"\x66header")),
+    ("unprotected_header_malformed", "v2", "ed25519-test", False,
+     "the unprotected header holds label 99 twice",
+     raw(unprotected=b"\xa2\x18\x63\x61x\x18\x63\x61y")),
+]
+
 
 class _Chain:
     """The subject chain as the verifier reads one: its record headers, in
@@ -411,11 +497,20 @@ doc = {
         "message structure: not_cose_sign1, trailing_bytes, protected_header_malformed "
         "(with repeated_key in the protected header), detached_payload, payload_malformed "
         "for a payload that is not a byte string",
+        "one encoding: unprotected_header_malformed (the unprotected header is a "
+        "definite-length map with no label twice; what it holds and how that is "
+        "written is not judged), then "
+        "non_deterministic_encoding for the envelope (tag 18 as d2, the array as 84, "
+        "each byte string with its shortest definite length) and for the bytes of the "
+        "protected header. A check above that names what is wrong - a repeated key, an "
+        "indefinite-length map - is reached first",
         "unsupported_alg (label 1 is -7, -8 or -19)",
         "key_type_mismatch (-8 and -19 mean Ed25519, -7 means P-256), before any signature",
         "signature_invalid - also for a signature that is not a byte string or has the "
-        "wrong length: the fourth member is not looked at before this check",
-        "the payload as CBOR: payload_malformed, repeated_key, indefinite_length_map",
+        "wrong length: what the fourth member is, is not looked at before this check "
+        "(only how its length is written, when it is a byte string)",
+        "the payload as CBOR: payload_malformed, repeated_key, indefinite_length_map, "
+        "then non_deterministic_encoding for the bytes of the payload",
         "head_mismatch",
         "format_id_mismatch",
         "range_invalid (0 <= first_seq <= last_seq, both integers)",
@@ -442,6 +537,14 @@ doc = {
             "records 0..last_seq"),
     },
     "counts": {"cases": len(cases), **dict(sorted(numbers.items()))},
+    "one_encoding": (
+        "Since 0.15 the verifier accepts one encoding of a statement: RFC 8949 "
+        "section 4.2.1 for the envelope, the protected header and the payload. The "
+        "non_deterministic_encoding and unprotected_header_malformed cases are the "
+        "published statement written another way; the first eight and all of the "
+        "second need no key. The unprotected header is not held to that encoding: it "
+        "is another party's to write. Statements that verify with something in it are "
+        "in scitt-statement-identity-vectors.json."),
     "not_in_this_file": [
         "inputs that are not bytes (a text string or nil handed to the verifier as the "
         "message) and keys that are not public keys (a private key, nil, a string): "

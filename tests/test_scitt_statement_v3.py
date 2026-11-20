@@ -217,7 +217,7 @@ def test_the_protected_header_is_exactly_this_constructions(doc):
             scitt.verify_statement(_resign(stmt, key, **edit), key.public_key(), head)
 
 
-def test_a_non_deterministic_payload_is_reported_not_refused(doc):
+def test_a_non_deterministic_payload_is_refused(doc):
     import cbor2
 
     stmt, head = _later(doc)
@@ -225,9 +225,13 @@ def test_a_non_deterministic_payload_is_reported_not_refused(doc):
     values = cbor2.loads(cbor2.loads(stmt).value[2])
     reordered = cbor2.dumps(dict(reversed(list(values.items()))))  # keys 5..1
     assert reordered != cbor2.dumps(values, canonical=True)
-    c = scitt.verify_statement(_resign(stmt, key, payload=reordered), key.public_key(), head)
-    assert c.payload == values and c.payload_encoding == "not deterministic"
-    assert c.root_status == "carried, not recomputed"
+    # Reported, not refused, before 0.15. Two encodings of one map are two
+    # statements with two hashes; the construction promises one.
+    with pytest.raises(scitt.StatementRefused) as info:
+        scitt.verify_statement(_resign(stmt, key, payload=reordered), key.public_key(), head)
+    assert info.value.code == "non_deterministic_encoding"
+    c = scitt.verify_statement(stmt, key.public_key(), head)
+    assert c.payload == values and c.payload_encoding == "deterministic"
 
 
 def test_a_repeated_key_is_refused_in_either_map(doc):
