@@ -169,7 +169,8 @@ that nobody made.
                                "last_accepted_ns": 1790000000000000000,
                                "last_refused_ns": null}},
  "pending_calls": 1,
- "chain": {"records": 41, "head": "…", "durability": "record"}}
+ "chain": {"records": 41, "head": "…", "durability": "record",
+           "segment": "serve.pala", "rotation": null}}
 ```
 
 - `ingest` has one entry per reporting route. `accepted`, `rejected`
@@ -183,7 +184,10 @@ that nobody made.
   ([WRITER-SURFACE.md](WRITER-SURFACE.md) §4). The head is the head *now*:
   stopping the serve writes one more record (`WRITER_CLOSE`), and the
   serve prints the closing head as it stops. That one is the head to
-  anchor.
+  anchor. `segment` is the file being written and `rotation` the policy
+  the chain is cut by — `{"max_bytes": 16777216, "retention_s": 15552000}`,
+  the thresholds that are set — or `null` when it is not cut
+  (since 0.15; [RETENTION.md](RETENTION.md) §3).
 
 Behind the same bearer as every route. It reads state and writes
 nothing. `pala-serve-status/1` is open to added keys and added routes.

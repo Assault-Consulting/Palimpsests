@@ -997,6 +997,102 @@ def pala_segment_cmd(
         )
 
 
+@pala_app.command("segment-verify")
+def pala_segment_verify_cmd(
+    manifest: str = typer.Argument(
+        ..., help="A pala-segments/1 manifest — <chain>.segments.json, beside its segments."
+    ),
+    as_json: bool = typer.Option(False, "--json", help="Emit the result as JSON."),
+) -> None:
+    """Verify a chain that was cut into segments, as one set.
+
+    A segment verified alone reports a missing prefix: its first record is
+    not a GENESIS. This reads the manifest and verifies every segment still
+    on disk from the head the manifest declares for it, checks that each
+    segment continues the one before, and includes the segment a running
+    writer has not closed yet. A segment deleted under a retention policy
+    leaves the set incomplete, not inconsistent.
+
+    \b
+    Exit codes:
+      0  COMPLETE     — every segment is present and verifies, from a GENESIS
+      2  CONSISTENT   — what is present verifies; segments are missing, or
+                        the set does not start at a GENESIS
+      1  INCONSISTENT — a segment does not verify or does not continue its
+                        predecessor
+      3  UNREADABLE   — not a manifest
+    """
+    import json as _json
+    from palimpsests.audit.segment_set import verify_segment_set
+
+    try:
+        result = verify_segment_set(manifest)
+    except (OSError, ValueError) as e:
+        typer.echo(f"UNREADABLE: {e}", err=True)
+        raise typer.Exit(EXIT_UNREADABLE) from e
+    if result.complete:
+        verdict, code = "complete", EXIT_VERIFIED
+    elif result.consistent:
+        verdict, code = "consistent", EXIT_PARTIAL
+    else:
+        verdict, code = "inconsistent", EXIT_VIOLATION
+    if as_json:
+        typer.echo(_json.dumps({
+            "format": "pala-segment-set-verification/1",
+            "verdict": verdict,
+            "consistent": result.consistent,
+            "complete": result.complete,
+            "manifest": result.manifest_path,
+            "manifest_sha256": result.manifest_sha256.hex(),
+            "head": result.head.hex() if result.head is not None else None,
+            "absent": result.absent,
+            "segments": [
+                {
+                    "file": c.file,
+                    "listed": c.listed,
+                    "present": c.present,
+                    "verified": c.verified,
+                    "head_matches": c.head_matches,
+                    "seam_ok": c.seam_ok,
+                    "detail": c.detail,
+                    "declared_first_seq": c.declared_first_seq,
+                    "declared_last_seq": c.declared_last_seq,
+                    "declared_head": (c.declared_head.hex()
+                                      if c.declared_head is not None else None),
+                }
+                for c in result.segments
+            ],
+        }, indent=2))
+        raise typer.Exit(code)
+    for c in result.segments:
+        if not c.present:
+            state = "absent"
+        elif c.verified and c.seam_ok and c.head_matches is not False:
+            state = "ok"
+        else:
+            state = "FAILS"
+        where = (f"seq {c.declared_first_seq}..{c.declared_last_seq}"
+                 if c.declared_first_seq is not None and c.declared_last_seq is not None
+                 else "being written" if not c.listed else "range not declared")
+        line = f"  {state:<6} {c.file}  ({where})"
+        typer.echo(line + (f" — {c.detail}" if c.detail else ""))
+    head = result.head.hex() if result.head is not None else "none"
+    if result.complete:
+        typer.secho(
+            f"COMPLETE: {len(result.segments)} segment(s), all present, from a GENESIS. "
+            f"Head {head}", fg=typer.colors.GREEN)
+    elif result.consistent:
+        typer.secho(
+            f"CONSISTENT, NOT COMPLETE: what is present verifies; {len(result.absent)} "
+            f"listed segment(s) are not on disk, or the set does not start at a GENESIS. "
+            f"Head {head}", fg=typer.colors.YELLOW)
+    else:
+        typer.secho(
+            "INCONSISTENT: a segment does not verify, or does not continue the one "
+            "before it", fg=typer.colors.RED, err=True)
+    raise typer.Exit(code)
+
+
 @pala_app.command("consistency")
 def pala_consistency_cmd(
     file: str = typer.Argument(
