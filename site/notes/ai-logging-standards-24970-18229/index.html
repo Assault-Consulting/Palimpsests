@@ -3,22 +3,31 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>AI logging standards in draft: ISO/IEC 24970, prEN 18229-1 and how we map them — Palimpsests notes</title>
-<meta name="description" content="Where the AI logging standards stand in October 2026, why they matter for the EU AI Act, and how Palimpsests maps their requirements to code while the text is still moving." />
+<title>AI logging standards: ISO/IEC 24970 and prEN 18229-1</title>
+<meta name="description" content="Where the AI logging standards stood in October 2026, why they matter for the EU AI Act, and how Palimpsests maps their requirements to code." />
 <link rel="canonical" href="https://palimpsests.dev/notes/ai-logging-standards-24970-18229/" />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 <meta name="author" content="Andrii Sparysh" />
 <meta name="theme-color" content="#15151f" />
 <meta property="og:type" content="article" />
 <meta property="og:site_name" content="Palimpsests" />
-<meta property="og:title" content="AI logging standards in draft: ISO/IEC 24970, prEN 18229-1 and how we map them — Palimpsests notes" />
-<meta property="og:description" content="Where the AI logging standards stand in October 2026, why they matter for the EU AI Act, and how Palimpsests maps their requirements to code while the text is still moving." />
+<meta property="og:title" content="AI logging standards: ISO/IEC 24970 and prEN 18229-1" />
+<meta property="og:description" content="Where the AI logging standards stood in October 2026, why they matter for the EU AI Act, and how Palimpsests maps their requirements to code." />
 <meta property="og:url" content="https://palimpsests.dev/notes/ai-logging-standards-24970-18229/" />
 <meta property="og:locale" content="en" />
-<meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="AI logging standards in draft: ISO/IEC 24970, prEN 18229-1 and how we map them — Palimpsests notes" />
-<meta name="twitter:description" content="Where the AI logging standards stand in October 2026, why they matter for the EU AI Act, and how Palimpsests maps their requirements to code while the text is still moving." />
+<meta property="og:image" content="https://palimpsests.dev/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Palimpsests: a tamper-evident audit log for AI agents, verifiable without the key" />
+<meta property="article:published_time" content="2026-10-20" />
+<meta property="article:author" content="Andrii Sparysh" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://palimpsests.dev/og.png" />
+<meta name="twitter:title" content="AI logging standards: ISO/IEC 24970 and prEN 18229-1" />
+<meta name="twitter:description" content="Where the AI logging standards stood in October 2026, why they matter for the EU AI Act, and how Palimpsests maps their requirements to code." />
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 <link rel="manifest" href="/site.webmanifest" />
 <link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
 <script type="application/ld+json">
@@ -40,9 +49,19 @@
         "iso-iec-24970",
         "eu-ai-act"
       ],
+      "image": "https://palimpsests.dev/og.png",
       "author": {
         "@type": "Person",
-        "name": "Andrii Sparysh"
+        "@id": "https://palimpsests.dev/#andrii-sparysh",
+        "name": "Andrii Sparysh",
+        "url": "https://palimpsests.dev/",
+        "jobTitle": "Co-founder, Assault Consulting",
+        "worksFor": {
+          "@id": "https://palimpsests.dev/#org"
+        },
+        "sameAs": [
+          "https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/"
+        ]
       },
       "publisher": {
         "@id": "https://palimpsests.dev/#org"
@@ -83,6 +102,7 @@
 <link rel="stylesheet" href="/site.css" />
 </head>
 <body>
+<a class="skip" href="#main">Skip to content</a>
 
 <nav>
   <div class="wrap nav">
@@ -108,16 +128,18 @@
       <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
       <a class="hide-sm" href="/integrations/">Integrations</a>
       <a class="hide-sm" href="/runbook/">Runbook</a>
+      <a class="hide-sm" href="/notes/">Notes</a>
       <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
     </div>
   </div>
 </nav>
 
-<main class="doc">
+<main class="doc" id="main">
   <div class="wrap">
     <div class="doc__in">
 <p class="crumbs"><a href="/">Palimpsests</a> / <a href="/notes/">Notes</a></p>
-<span class="eyebrow">Note · 20 October 2026 · Andrii Sparysh</span>
+<article>
+<span class="eyebrow">Note · <time datetime="2026-10-20">20 October 2026</time> · Andrii Sparysh</span>
 <h1 class="display">AI logging standards in draft: ISO/IEC 24970, prEN 18229-1 and how we map them</h1>
 <p>Article 12 of the EU AI Act says high-risk AI systems must record events automatically. It doesn't say which events, in what format, or how a record should be protected. That level of detail is meant to come from harmonised standards. Once a standard is harmonised and its reference is published in the Official Journal, following it gives a presumption of conformity with the parts of the Act it covers.</p>
 <p>In October 2026, the two documents that matter most for logging are both still drafts.</p>
@@ -145,6 +167,15 @@
 <h2 id="what-happens-next">What happens next</h2>
 <p>When ISO/IEC 24970 is published, every row will be checked against the final text and its references updated. The same will happen for prEN 18229-1 once it moves past the enquiry stage. Until then, read the mapping as our reading of a draft.</p>
 <p>The legal side of Article 12 is summarised in <a href="https://palimpsests.dev/notes/eu-ai-act-article-12-self-hosted-ai/">EU AI Act Article 12: what it asks of AI you run yourself</a>. What makes the log itself trustworthy is in <a href="https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/">what makes an audit log tamper-evident</a>.</p>
+</article>
+<div class="readmore">
+<h2 id="read-next">Read next</h2>
+<ul>
+  <li><a href="/eu-ai-act-article-12/">EU AI Act Article 12 logging</a> — the page this note belongs to</li>
+  <li><a href="/notes/eu-ai-act-article-12-self-hosted-ai/">EU AI Act Article 12: what it asks of AI you run yourself</a></li>
+  <li><a href="/notes/openssf-gold-cyber-resilience-act/">OpenSSF Gold software and the Cyber Resilience Act</a></li>
+</ul>
+</div>
 <div class="related">
   <a class="btn" href="/notes/">All notes →</a>
   <a class="btn" href="/">Palimpsests →</a>

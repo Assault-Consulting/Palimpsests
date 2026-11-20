@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>EU AI Act Article 12: what it asks of AI you run yourself — Palimpsests notes</title>
+<title>EU AI Act Article 12 for AI you run yourself</title>
 <meta name="description" content="Which systems the logging rules cover, what the articles require, when they start and how the fines work, in plain language." />
 <link rel="canonical" href="https://palimpsests.dev/notes/eu-ai-act-article-12-self-hosted-ai/" />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
@@ -11,14 +11,23 @@
 <meta name="theme-color" content="#15151f" />
 <meta property="og:type" content="article" />
 <meta property="og:site_name" content="Palimpsests" />
-<meta property="og:title" content="EU AI Act Article 12: what it asks of AI you run yourself — Palimpsests notes" />
+<meta property="og:title" content="EU AI Act Article 12 for AI you run yourself" />
 <meta property="og:description" content="Which systems the logging rules cover, what the articles require, when they start and how the fines work, in plain language." />
 <meta property="og:url" content="https://palimpsests.dev/notes/eu-ai-act-article-12-self-hosted-ai/" />
 <meta property="og:locale" content="en" />
-<meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="EU AI Act Article 12: what it asks of AI you run yourself — Palimpsests notes" />
+<meta property="og:image" content="https://palimpsests.dev/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Palimpsests: a tamper-evident audit log for AI agents, verifiable without the key" />
+<meta property="article:published_time" content="2026-10-04" />
+<meta property="article:author" content="Andrii Sparysh" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://palimpsests.dev/og.png" />
+<meta name="twitter:title" content="EU AI Act Article 12 for AI you run yourself" />
 <meta name="twitter:description" content="Which systems the logging rules cover, what the articles require, when they start and how the fines work, in plain language." />
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 <link rel="manifest" href="/site.webmanifest" />
 <link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
 <script type="application/ld+json">
@@ -40,9 +49,19 @@
         "logging",
         "compliance"
       ],
+      "image": "https://palimpsests.dev/og.png",
       "author": {
         "@type": "Person",
-        "name": "Andrii Sparysh"
+        "@id": "https://palimpsests.dev/#andrii-sparysh",
+        "name": "Andrii Sparysh",
+        "url": "https://palimpsests.dev/",
+        "jobTitle": "Co-founder, Assault Consulting",
+        "worksFor": {
+          "@id": "https://palimpsests.dev/#org"
+        },
+        "sameAs": [
+          "https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/"
+        ]
       },
       "publisher": {
         "@id": "https://palimpsests.dev/#org"
@@ -83,6 +102,7 @@
 <link rel="stylesheet" href="/site.css" />
 </head>
 <body>
+<a class="skip" href="#main">Skip to content</a>
 
 <nav>
   <div class="wrap nav">
@@ -108,16 +128,18 @@
       <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
       <a class="hide-sm" href="/integrations/">Integrations</a>
       <a class="hide-sm" href="/runbook/">Runbook</a>
+      <a class="hide-sm" href="/notes/">Notes</a>
       <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
     </div>
   </div>
 </nav>
 
-<main class="doc">
+<main class="doc" id="main">
   <div class="wrap">
     <div class="doc__in">
 <p class="crumbs"><a href="/">Palimpsests</a> / <a href="/notes/">Notes</a></p>
-<span class="eyebrow">Note · 4 October 2026 · Andrii Sparysh</span>
+<article>
+<span class="eyebrow">Note · <time datetime="2026-10-04">4 October 2026</time> · Andrii Sparysh</span>
 <h1 class="display">EU AI Act Article 12: what it asks of AI you run yourself</h1>
 <p>Running a language model on your own servers keeps the data at home. It doesn't change what the EU AI Act asks of the system itself. If the system is classed as high-risk, it has to keep logs, and those logs have to last.</p>
 <p>This note goes through the parts of the Act that matter for logging. It's a summary, not legal advice.</p>
@@ -145,6 +167,15 @@
 </ul>
 <p>Logging is a single obligation. Risk management, human oversight, data governance and technical documentation are separate ones, and no logging tool covers them for you.</p>
 <p>The articles, dates and fine levels are collected on one page: <a href="https://palimpsests.dev/eu-ai-act-article-12/">EU AI Act Article 12</a>. Our own runtime handles the logging part for models running on your hardware: <a href="https://palimpsests.dev/">palimpsests.dev</a>.</p>
+</article>
+<div class="readmore">
+<h2 id="read-next">Read next</h2>
+<ul>
+  <li><a href="/eu-ai-act-article-12/">EU AI Act Article 12 logging</a> — the page this note belongs to</li>
+  <li><a href="/notes/ai-logging-standards-24970-18229/">AI logging standards in draft: ISO/IEC 24970, prEN 18229-1 and how we map them</a></li>
+  <li><a href="/notes/llm-on-an-isolated-network/">Running a language model on an isolated network, with a log you can prove</a></li>
+</ul>
+</div>
 <div class="related">
   <a class="btn" href="/notes/">All notes →</a>
   <a class="btn" href="/">Palimpsests →</a>

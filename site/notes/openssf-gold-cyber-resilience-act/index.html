@@ -3,22 +3,31 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>OpenSSF Gold software and the Cyber Resilience Act — Palimpsests notes</title>
-<meta name="description" content="What the EU Cyber Resilience Act asks of products built from open-source components, what an OpenSSF Gold badge shows about a component, and what it doesn&#x27;t." />
+<title>OpenSSF Gold software and the Cyber Resilience Act</title>
+<meta name="description" content="What the EU Cyber Resilience Act asks of products built from open-source components, and what an OpenSSF Gold badge shows about one and what it doesn&#x27;t." />
 <link rel="canonical" href="https://palimpsests.dev/notes/openssf-gold-cyber-resilience-act/" />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 <meta name="author" content="Andrii Sparysh" />
 <meta name="theme-color" content="#15151f" />
 <meta property="og:type" content="article" />
 <meta property="og:site_name" content="Palimpsests" />
-<meta property="og:title" content="OpenSSF Gold software and the Cyber Resilience Act — Palimpsests notes" />
-<meta property="og:description" content="What the EU Cyber Resilience Act asks of products built from open-source components, what an OpenSSF Gold badge shows about a component, and what it doesn&#x27;t." />
+<meta property="og:title" content="OpenSSF Gold software and the Cyber Resilience Act" />
+<meta property="og:description" content="What the EU Cyber Resilience Act asks of products built from open-source components, and what an OpenSSF Gold badge shows about one and what it doesn&#x27;t." />
 <meta property="og:url" content="https://palimpsests.dev/notes/openssf-gold-cyber-resilience-act/" />
 <meta property="og:locale" content="en" />
-<meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="OpenSSF Gold software and the Cyber Resilience Act — Palimpsests notes" />
-<meta name="twitter:description" content="What the EU Cyber Resilience Act asks of products built from open-source components, what an OpenSSF Gold badge shows about a component, and what it doesn&#x27;t." />
+<meta property="og:image" content="https://palimpsests.dev/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Palimpsests: a tamper-evident audit log for AI agents, verifiable without the key" />
+<meta property="article:published_time" content="2026-10-20" />
+<meta property="article:author" content="Andrii Sparysh" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://palimpsests.dev/og.png" />
+<meta name="twitter:title" content="OpenSSF Gold software and the Cyber Resilience Act" />
+<meta name="twitter:description" content="What the EU Cyber Resilience Act asks of products built from open-source components, and what an OpenSSF Gold badge shows about one and what it doesn&#x27;t." />
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 <link rel="manifest" href="/site.webmanifest" />
 <link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
 <script type="application/ld+json">
@@ -40,9 +49,19 @@
         "openssf",
         "supply-chain"
       ],
+      "image": "https://palimpsests.dev/og.png",
       "author": {
         "@type": "Person",
-        "name": "Andrii Sparysh"
+        "@id": "https://palimpsests.dev/#andrii-sparysh",
+        "name": "Andrii Sparysh",
+        "url": "https://palimpsests.dev/",
+        "jobTitle": "Co-founder, Assault Consulting",
+        "worksFor": {
+          "@id": "https://palimpsests.dev/#org"
+        },
+        "sameAs": [
+          "https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/"
+        ]
       },
       "publisher": {
         "@id": "https://palimpsests.dev/#org"
@@ -83,6 +102,7 @@
 <link rel="stylesheet" href="/site.css" />
 </head>
 <body>
+<a class="skip" href="#main">Skip to content</a>
 
 <nav>
   <div class="wrap nav">
@@ -108,16 +128,18 @@
       <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
       <a class="hide-sm" href="/integrations/">Integrations</a>
       <a class="hide-sm" href="/runbook/">Runbook</a>
+      <a class="hide-sm" href="/notes/">Notes</a>
       <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
     </div>
   </div>
 </nav>
 
-<main class="doc">
+<main class="doc" id="main">
   <div class="wrap">
     <div class="doc__in">
 <p class="crumbs"><a href="/">Palimpsests</a> / <a href="/notes/">Notes</a></p>
-<span class="eyebrow">Note · 20 October 2026 · Andrii Sparysh</span>
+<article>
+<span class="eyebrow">Note · <time datetime="2026-10-20">20 October 2026</time> · Andrii Sparysh</span>
 <h1 class="display">OpenSSF Gold software and the Cyber Resilience Act</h1>
 <p>If you sell software or connected hardware in the EU, the Cyber Resilience Act now applies to you in stages. Regulation (EU) 2024/2847 entered into force in December 2024. Since 11 September 2026, manufacturers have had to report actively exploited vulnerabilities and severe incidents. Most of the rest arrives on 11 December 2027, when the essential requirements, technical documentation and CE marking become mandatory.</p>
 <p>Products today are built largely from open-source components. The CRA puts the responsibility for those components on the manufacturer that ships them, not on the people who wrote them. So when you choose a library, you're also choosing the evidence you'll need about it later. This note looks at what an OpenSSF Best Practices Gold badge tells you about a component, using our own project as the example.</p>
@@ -157,6 +179,14 @@
   <li>the <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/RELEASING.md">release process</a>, which explains how to verify the attestations yourself.</li>
 </ul>
 <p>The same reasoning works for any open-source component. Ask whether its claims point to evidence you can open, and whether its known weaknesses are written down somewhere. The logging side of the AI rules is covered in <a href="https://palimpsests.dev/notes/ai-logging-standards-24970-18229/">AI logging standards in draft</a>.</p>
+</article>
+<div class="readmore">
+<h2 id="read-next">Read next</h2>
+<ul>
+  <li><a href="/notes/ai-logging-standards-24970-18229/">AI logging standards in draft: ISO/IEC 24970, prEN 18229-1 and how we map them</a></li>
+  <li><a href="/notes/eu-ai-act-article-12-self-hosted-ai/">EU AI Act Article 12: what it asks of AI you run yourself</a></li>
+</ul>
+</div>
 <div class="related">
   <a class="btn" href="/notes/">All notes →</a>
   <a class="btn" href="/">Palimpsests →</a>

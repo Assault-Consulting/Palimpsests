@@ -3,22 +3,29 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Air-gapped LLM inference with a verifiable audit trail — Palimpsests (PALA-1)</title>
-<meta name="description" content="Run LLM inference and keep a tamper-evident audit log on hardware you control, with no network egress — verifiable offline, anchored without a network." />
+<title>Air-gapped LLM inference with a verifiable audit log</title>
+<meta name="description" content="Run a language model with no network egress and keep a tamper-evident log on the same machine: local inference, time without a clock, anchors offline." />
 <link rel="canonical" href="https://palimpsests.dev/air-gapped/" />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 <meta name="author" content="Assault Consulting" />
 <meta name="theme-color" content="#15151f" />
 <meta property="og:type" content="article" />
 <meta property="og:site_name" content="Palimpsests" />
-<meta property="og:title" content="Air-gapped LLM inference with a verifiable audit trail — Palimpsests (PALA-1)" />
-<meta property="og:description" content="Run LLM inference and keep a tamper-evident audit log on hardware you control, with no network egress — verifiable offline, anchored without a network." />
+<meta property="og:title" content="Air-gapped LLM inference with a verifiable audit log" />
+<meta property="og:description" content="Run a language model with no network egress and keep a tamper-evident log on the same machine: local inference, time without a clock, anchors offline." />
 <meta property="og:url" content="https://palimpsests.dev/air-gapped/" />
 <meta property="og:locale" content="en" />
-<meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="Air-gapped LLM inference with a verifiable audit trail — Palimpsests (PALA-1)" />
-<meta name="twitter:description" content="Run LLM inference and keep a tamper-evident audit log on hardware you control, with no network egress — verifiable offline, anchored without a network." />
+<meta property="og:image" content="https://palimpsests.dev/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Palimpsests: a tamper-evident audit log for AI agents, verifiable without the key" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://palimpsests.dev/og.png" />
+<meta name="twitter:title" content="Air-gapped LLM inference with a verifiable audit log" />
+<meta name="twitter:description" content="Run a language model with no network egress and keep a tamper-evident log on the same machine: local inference, time without a clock, anchors offline." />
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 <link rel="manifest" href="/site.webmanifest" />
 <script type="application/ld+json">
 {
@@ -27,11 +34,11 @@
     {
       "@type": "TechArticle",
       "@id": "https://palimpsests.dev/air-gapped/#article",
-      "headline": "Air-gapped LLM inference with a verifiable audit trail — Palimpsests (PALA-1)",
-      "description": "Run LLM inference and keep a tamper-evident audit log on hardware you control, with no network egress — verifiable offline, anchored without a network.",
+      "headline": "Air-gapped LLM inference with a verifiable audit log",
+      "description": "Run a language model with no network egress and keep a tamper-evident log on the same machine: local inference, time without a clock, anchors offline.",
       "url": "https://palimpsests.dev/air-gapped/",
       "inLanguage": "en",
-      "dateModified": "2026-11-16",
+      "dateModified": "2026-11-20",
       "author": {
         "@id": "https://palimpsests.dev/#org"
       },
@@ -58,6 +65,44 @@
           "item": "https://palimpsests.dev/air-gapped/"
         }
       ]
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://palimpsests.dev/air-gapped/#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Can Palimpsests run with no network connection at all?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. The model runs through llama.cpp or a local Ollama daemon, attention state is held in the same process, and every request lands in a hash-chained log on the same host. Nothing is uploaded, and the log is verified offline."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How are records timestamped without a trusted clock?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Every timestamp carries a trust level: UNKNOWN, UNSYNCED, HW_RTC or NTP_SYNCED. A device that does not know the time says so, and an UNKNOWN record carries no wall-clock value at all. The order of records never depends on the clock; it is carried by sequence numbers in the chain."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do you prove nothing was cut off the end of the log without a network?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "With an anchor: the latest chain head kept somewhere outside the log. Offline that is a file you control or, since 0.11, a data object on a PKCS#11 hardware token that the host can read but cannot silently rewrite."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What hardware has it been measured on?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "On an Intel Arc integrated GPU with 1.5B and 7B models, where the tool loop runs at parity with a hand-tuned llama-server. There is no discrete-GPU run yet, and the page says so."
+          }
+        }
+      ]
     }
   ]
 }
@@ -68,6 +113,7 @@
 <link rel="stylesheet" href="/site.css" />
 </head>
 <body>
+<a class="skip" href="#main">Skip to content</a>
 
 <nav>
   <div class="wrap nav">
@@ -93,18 +139,20 @@
       <a class="hide-sm" href="/air-gapped/" aria-current="page">Air-gapped</a>
       <a class="hide-sm" href="/integrations/">Integrations</a>
       <a class="hide-sm" href="/runbook/">Runbook</a>
+      <a class="hide-sm" href="/notes/">Notes</a>
       <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
     </div>
   </div>
 </nav>
 
-<main class="doc">
+<main class="doc" id="main">
   <div class="wrap">
     <div class="doc__in">
       <p class="crumbs"><a href="/">Palimpsests</a> / Air-gapped</p>
       <span class="eyebrow">Air-gapped · on-prem · no network egress</span>
       <h1 class="display">Air-gapped LLM inference with a verifiable audit trail</h1>
-      <p class="lede">Palimpsests runs the model, its attention state and its log on the machine where the data already sits. No network egress is needed to answer a request — or to verify the record.</p>
+      <p class="lede">Palimpsests runs the model, its attention state and its audit log on the machine where the data already sits. No network egress is needed to answer a request — or to verify the record afterwards — and since version 0.11 the log’s latest head can be anchored on a hardware token instead of a remote service.</p>
+      <p class="updated">Updated <time datetime="2026-11-20">20 November 2026</time></p>
 
       <h2 id="local">What stays local</h2>
       <p>The model runs through llama.cpp (or a local Ollama daemon); attention state is held and restored in-process; every request lands in a hash-chained log on the same host. Nothing is uploaded and nothing is phoned home. What you export is a record that can be verified without exposing what it recorded.</p>
@@ -133,6 +181,27 @@
 
       <h2 id="not-claimed">What we don't claim</h2>
       <p>There is no discrete-GPU run yet: an integrated GPU flatters every mechanism that saves prefill, so these ratios compress where prefill is fast. The audit log's implementation has not been independently pen-tested.</p>
+
+      <section class="faq">
+        <h2 id="faq">Questions</h2>
+        <h3>Can Palimpsests run with no network connection at all?</h3>
+        <p>Yes. The model runs through llama.cpp or a local Ollama daemon, attention state is held in the same process, and every request lands in a hash-chained log on the same host. Nothing is uploaded, and the log is verified offline.</p>
+        <h3>How are records timestamped without a trusted clock?</h3>
+        <p>Every timestamp carries a trust level: UNKNOWN, UNSYNCED, HW_RTC or NTP_SYNCED. A device that does not know the time says so, and an UNKNOWN record carries no wall-clock value at all. The order of records never depends on the clock; it is carried by sequence numbers in the chain.</p>
+        <h3>How do you prove nothing was cut off the end of the log without a network?</h3>
+        <p>With an anchor: the latest chain head kept somewhere outside the log. Offline that is a file you control or, since 0.11, a data object on a PKCS#11 hardware token that the host can read but cannot silently rewrite.</p>
+        <h3>What hardware has it been measured on?</h3>
+        <p>On an Intel Arc integrated GPU with 1.5B and 7B models, where the tool loop runs at parity with a hand-tuned llama-server. There is no discrete-GPU run yet, and the page says so.</p>
+      </section>
+
+      <!-- read-more:start -->
+      <div class="readmore">
+        <h2 id="read-more">Read more</h2>
+        <ul>
+          <li><a href="/notes/llm-on-an-isolated-network/">Running a language model on an isolated network, with a log you can prove</a> — What changes when an LLM runs with no network at all: installing it, timestamps, anchors and checking the log offline.</li>
+        </ul>
+      </div>
+      <!-- read-more:end -->
 
       <aside class="evidence">
         <h2>Evidence in the repository</h2>

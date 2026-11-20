@@ -4,6 +4,9 @@ slug: protecting-an-audit-log-from-being-rewritten
 date: 2026-11-05
 description: A hash chain catches an edited record but not a log rebuilt from the first record. What closes that gap, from which record on, and what stays open.
 tags: audit-log, tamper-evident, security, anchors
+seo_title: Protecting an audit log from being rewritten from scratch
+page: /verify-without-reading/
+related: what-makes-an-audit-log-tamper-evident, anatomy-of-a-tamper-evident-audit-log
 ---
 
 A hash-chained audit log catches the obvious attack. Change one record and every record after it stops matching, and the check points at the first broken link. That makes it easy to forget the attack the chain can't see on its own: throwing the log away and writing a new one.

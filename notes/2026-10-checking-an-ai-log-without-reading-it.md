@@ -4,6 +4,9 @@ slug: checking-an-ai-log-without-reading-it
 date: 2026-10-04
 description: Why the person who checks an AI system's log often shouldn't read it, and how a hash-chained format makes that possible.
 tags: audit-log, security, verification
+seo_title: How to check an AI log without reading it
+page: /verify-without-reading/
+related: what-makes-an-audit-log-tamper-evident, pala-1-three-design-principles
 ---
 
 Prompts sent to a language model often contain things people would rather keep private, such as names or medical details. When someone later needs to confirm that the log of those prompts is intact, they usually don't need to see any of it. Most of the time they shouldn't.

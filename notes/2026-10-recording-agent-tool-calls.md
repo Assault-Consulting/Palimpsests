@@ -4,6 +4,9 @@ slug: recording-agent-tool-calls
 date: 2026-10-04
 description: Adapters for LiteLLM, MCP servers and OpenCode that put tool calls on a tamper-evident log, and what such a record proves.
 tags: ai-agents, litellm, mcp
+seo_title: Recording the tool calls your agent already makes
+page: /integrations/
+related: audit-log-for-agents-on-cloud-models, what-makes-an-audit-log-tamper-evident
 ---
 
 When an agent calls a tool, it does something real. It might read a file or send a message on someone's behalf. Those calls are what people look at first when something goes wrong, and they're often the worst-recorded part of the system.

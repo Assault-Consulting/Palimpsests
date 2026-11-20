@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Protecting an audit log from being rewritten from scratch — Palimpsests notes</title>
+<title>Protecting an audit log from being rewritten from scratch</title>
 <meta name="description" content="A hash chain catches an edited record but not a log rebuilt from the first record. What closes that gap, from which record on, and what stays open." />
 <link rel="canonical" href="https://palimpsests.dev/notes/protecting-an-audit-log-from-being-rewritten/" />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
@@ -11,14 +11,23 @@
 <meta name="theme-color" content="#15151f" />
 <meta property="og:type" content="article" />
 <meta property="og:site_name" content="Palimpsests" />
-<meta property="og:title" content="Protecting an audit log from being rewritten from scratch — Palimpsests notes" />
+<meta property="og:title" content="Protecting an audit log from being rewritten from scratch" />
 <meta property="og:description" content="A hash chain catches an edited record but not a log rebuilt from the first record. What closes that gap, from which record on, and what stays open." />
 <meta property="og:url" content="https://palimpsests.dev/notes/protecting-an-audit-log-from-being-rewritten/" />
 <meta property="og:locale" content="en" />
-<meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="Protecting an audit log from being rewritten from scratch — Palimpsests notes" />
+<meta property="og:image" content="https://palimpsests.dev/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Palimpsests: a tamper-evident audit log for AI agents, verifiable without the key" />
+<meta property="article:published_time" content="2026-11-05" />
+<meta property="article:author" content="Andrii Sparysh" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://palimpsests.dev/og.png" />
+<meta name="twitter:title" content="Protecting an audit log from being rewritten from scratch" />
 <meta name="twitter:description" content="A hash chain catches an edited record but not a log rebuilt from the first record. What closes that gap, from which record on, and what stays open." />
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 <link rel="manifest" href="/site.webmanifest" />
 <link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
 <script type="application/ld+json">
@@ -41,9 +50,19 @@
         "security",
         "anchors"
       ],
+      "image": "https://palimpsests.dev/og.png",
       "author": {
         "@type": "Person",
-        "name": "Andrii Sparysh"
+        "@id": "https://palimpsests.dev/#andrii-sparysh",
+        "name": "Andrii Sparysh",
+        "url": "https://palimpsests.dev/",
+        "jobTitle": "Co-founder, Assault Consulting",
+        "worksFor": {
+          "@id": "https://palimpsests.dev/#org"
+        },
+        "sameAs": [
+          "https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/"
+        ]
       },
       "publisher": {
         "@id": "https://palimpsests.dev/#org"
@@ -84,6 +103,7 @@
 <link rel="stylesheet" href="/site.css" />
 </head>
 <body>
+<a class="skip" href="#main">Skip to content</a>
 
 <nav>
   <div class="wrap nav">
@@ -109,16 +129,18 @@
       <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
       <a class="hide-sm" href="/integrations/">Integrations</a>
       <a class="hide-sm" href="/runbook/">Runbook</a>
+      <a class="hide-sm" href="/notes/">Notes</a>
       <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
     </div>
   </div>
 </nav>
 
-<main class="doc">
+<main class="doc" id="main">
   <div class="wrap">
     <div class="doc__in">
 <p class="crumbs"><a href="/">Palimpsests</a> / <a href="/notes/">Notes</a></p>
-<span class="eyebrow">Note · 5 November 2026 · Andrii Sparysh</span>
+<article>
+<span class="eyebrow">Note · <time datetime="2026-11-05">5 November 2026</time> · Andrii Sparysh</span>
 <h1 class="display">Protecting an audit log from being rewritten from scratch</h1>
 <p>A hash-chained audit log catches the obvious attack. Change one record and every record after it stops matching, and the check points at the first broken link. That makes it easy to forget the attack the chain can't see on its own: throwing the log away and writing a new one.</p>
 <p>This note is about that attack. It explains why the chain alone doesn't catch it, what does, from which record on, and what remains possible however the log is set up.</p>
@@ -167,6 +189,15 @@ an unanchored tail, not a replacement</code></pre>
   <li><a href="https://palimpsests.dev/pala-1/">The PALA-1 format</a></li>
   <li><a href="https://palimpsests.dev/verify-without-reading/">Verifying a log without reading it</a></li>
 </ul>
+</article>
+<div class="readmore">
+<h2 id="read-next">Read next</h2>
+<ul>
+  <li><a href="/verify-without-reading/">Verify a log without reading it</a> — the page this note belongs to</li>
+  <li><a href="/notes/what-makes-an-audit-log-tamper-evident/">Tamper-evident audit logs: how they work and how to build one</a></li>
+  <li><a href="/notes/anatomy-of-a-tamper-evident-audit-log/">Anatomy of a tamper-evident audit log: PALA-1, a PKCS#11 anchor and SCITT</a></li>
+</ul>
+</div>
 <div class="related">
   <a class="btn" href="/notes/">All notes →</a>
   <a class="btn" href="/">Palimpsests →</a>

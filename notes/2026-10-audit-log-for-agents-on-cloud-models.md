@@ -4,6 +4,10 @@ slug: audit-log-for-agents-on-cloud-models
 date: 2026-10-20
 description: Agents that call hosted models can still keep their tool-call record locally. How Palimpsests records Claude Code, Codex, OpenTelemetry and LiteLLM tool calls, and what that record proves.
 tags: ai-agents, integrations, audit-log
+seo_title: A local audit log for agents that use cloud models
+seo_description: Agents that call hosted models can keep their tool-call record locally: how Claude Code, Codex, OpenTelemetry and LiteLLM calls are recorded.
+page: /integrations/
+related: recording-agent-tool-calls, checking-an-ai-log-without-reading-it
 ---
 
 [Palimpsests](https://palimpsests.dev/) started as a runtime for models that run on your own hardware, often on networks with no internet at all. Many teams work differently. Their agents run on their own servers or laptops, while the model behind them is a hosted one reached through an API. The prompts leave the building. The question is whether the record of what the agent did has to leave with them.

@@ -6,6 +6,8 @@ order: 3
 updated: 2026-11-16
 description: Point OpenCode at a model on your own machine through Palimpsests' OpenAI-compatible server, with the configuration printed for you, and know which of its tool calls reach the record.
 next: local-openai-compatible-server, mcp-tool-call-logging
+seo_title: Use a local model in OpenCode
+seo_description: Point OpenCode at a model on your own machine through Palimpsests' OpenAI-compatible server, and know which of its tool calls reach the record.
 ---
 
 OpenCode is a coding agent for the terminal. It can use any model behind an OpenAI-compatible API, including one on your own machine. This recipe puts the Palimpsests server between OpenCode and Ollama, so the model stays local and the server keeps a record.

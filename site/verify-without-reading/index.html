@@ -3,22 +3,29 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Verify an AI audit log without reading it — Palimpsests (PALA-1)</title>
-<meta name="description" content="PALA-1 separates the right to verify a log from the right to read it: anyone can check that no record was altered, removed or reordered, with no decryption key." />
+<title>Verify an AI audit log without reading it — Palimpsests</title>
+<meta name="description" content="Palimpsests writes PALA-1 logs that anyone can check for altered, removed or reordered records with no decryption key and without opening a record body." />
 <link rel="canonical" href="https://palimpsests.dev/verify-without-reading/" />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 <meta name="author" content="Assault Consulting" />
 <meta name="theme-color" content="#15151f" />
 <meta property="og:type" content="article" />
 <meta property="og:site_name" content="Palimpsests" />
-<meta property="og:title" content="Verify an AI audit log without reading it — Palimpsests (PALA-1)" />
-<meta property="og:description" content="PALA-1 separates the right to verify a log from the right to read it: anyone can check that no record was altered, removed or reordered, with no decryption key." />
+<meta property="og:title" content="Verify an AI audit log without reading it — Palimpsests" />
+<meta property="og:description" content="Palimpsests writes PALA-1 logs that anyone can check for altered, removed or reordered records with no decryption key and without opening a record body." />
 <meta property="og:url" content="https://palimpsests.dev/verify-without-reading/" />
 <meta property="og:locale" content="en" />
-<meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="Verify an AI audit log without reading it — Palimpsests (PALA-1)" />
-<meta name="twitter:description" content="PALA-1 separates the right to verify a log from the right to read it: anyone can check that no record was altered, removed or reordered, with no decryption key." />
+<meta property="og:image" content="https://palimpsests.dev/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Palimpsests: a tamper-evident audit log for AI agents, verifiable without the key" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://palimpsests.dev/og.png" />
+<meta name="twitter:title" content="Verify an AI audit log without reading it — Palimpsests" />
+<meta name="twitter:description" content="Palimpsests writes PALA-1 logs that anyone can check for altered, removed or reordered records with no decryption key and without opening a record body." />
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 <link rel="manifest" href="/site.webmanifest" />
 <script type="application/ld+json">
 {
@@ -27,11 +34,11 @@
     {
       "@type": "TechArticle",
       "@id": "https://palimpsests.dev/verify-without-reading/#article",
-      "headline": "Verify an AI audit log without reading it — Palimpsests (PALA-1)",
-      "description": "PALA-1 separates the right to verify a log from the right to read it: anyone can check that no record was altered, removed or reordered, with no decryption key.",
+      "headline": "Verify an AI audit log without reading it — Palimpsests",
+      "description": "Palimpsests writes PALA-1 logs that anyone can check for altered, removed or reordered records with no decryption key and without opening a record body.",
       "url": "https://palimpsests.dev/verify-without-reading/",
       "inLanguage": "en",
-      "dateModified": "2026-09-30",
+      "dateModified": "2026-11-20",
       "author": {
         "@id": "https://palimpsests.dev/#org"
       },
@@ -58,6 +65,44 @@
           "item": "https://palimpsests.dev/verify-without-reading/"
         }
       ]
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://palimpsests.dev/verify-without-reading/#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What does tamper-evident mean for an audit log?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "It means a change to the log is detectable by someone who did not make it, not that a change is impossible. In a PALA-1 log every record names the hash of the record before it, so an altered, removed or reordered record breaks the chain at a point the verifier names."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can an auditor verify the log without the decryption key?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Verification walks the record headers and checks each body against the digest in its header. Bodies are never decrypted, so the key that protects their content is never needed and never handed over."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What can the file alone not prove?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Two things. That nothing was cut off the end needs an anchor: the latest chain head, kept outside the file. That the history existed before a certain time needs a witness: a signed statement from someone else. A question that was not checked is reported as not checked, never as passed."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does verification need a network connection?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. A PALA-1 log is verified offline, on any machine, from the published specification. Nothing is sent anywhere."
+          }
+        }
+      ]
     }
   ]
 }
@@ -68,6 +113,7 @@
 <link rel="stylesheet" href="/site.css" />
 </head>
 <body>
+<a class="skip" href="#main">Skip to content</a>
 
 <nav>
   <div class="wrap nav">
@@ -93,18 +139,20 @@
       <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
       <a class="hide-sm" href="/integrations/">Integrations</a>
       <a class="hide-sm" href="/runbook/">Runbook</a>
+      <a class="hide-sm" href="/notes/">Notes</a>
       <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
     </div>
   </div>
 </nav>
 
-<main class="doc">
+<main class="doc" id="main">
   <div class="wrap">
     <div class="doc__in">
       <p class="crumbs"><a href="/">Palimpsests</a> / Verify without reading</p>
       <span class="eyebrow">Key-free verification · PALA-1</span>
       <h1 class="display">Verify an AI audit log without reading it</h1>
-      <p class="lede">PALA-1 separates the right to verify a log from the right to read it. Anyone can check that no record was altered, removed or reordered — with no decryption key, and without opening a single record body.</p>
+      <p class="lede">Palimpsests writes its audit log in PALA-1, a format that separates the right to verify a log from the right to read it. Anyone can check that no record was altered, removed or reordered — with no decryption key, and without opening a single record body — because the chain hash covers only each record’s 156-byte header.</p>
+      <p class="updated">Updated <time datetime="2026-11-20">20 November 2026</time></p>
 
       <h2 id="how">How it works</h2>
       <p>Every record's header carries a SHA-256 digest of its body, and names the hash of the record before it. Verification walks the headers — one hash per record — and checks each body against the digest bound into its header. Bodies are never decrypted, so the key that protects their content is never needed, and never handed over.</p>
@@ -128,6 +176,29 @@ palimpsests pala verify palimpsests-demo.pala   # the auditor's check — no key
 
       <h2 id="limits">Limits, stated</h2>
       <p>Tamper-evident means a change is detectable, not impossible. An attacker who holds both the encryption key and write access to wherever the anchor is kept can forge the chain and its anchor together. Catching that needs a commitment outside the host — a hardware token or an external transparency service; see <a href="/air-gapped/#anchors">anchors without a network</a>. How each of these pieces fits into a <a href="/notes/what-makes-an-audit-log-tamper-evident/">tamper-evident audit log</a> is explained in a separate note.</p>
+
+      <section class="faq">
+        <h2 id="faq">Questions</h2>
+        <h3>What does tamper-evident mean for an audit log?</h3>
+        <p>It means a change to the log is detectable by someone who did not make it, not that a change is impossible. In a PALA-1 log every record names the hash of the record before it, so an altered, removed or reordered record breaks the chain at a point the verifier names.</p>
+        <h3>Can an auditor verify the log without the decryption key?</h3>
+        <p>Yes. Verification walks the record headers and checks each body against the digest in its header. Bodies are never decrypted, so the key that protects their content is never needed and never handed over.</p>
+        <h3>What can the file alone not prove?</h3>
+        <p>Two things. That nothing was cut off the end needs an anchor: the latest chain head, kept outside the file. That the history existed before a certain time needs a witness: a signed statement from someone else. A question that was not checked is reported as not checked, never as passed.</p>
+        <h3>Does verification need a network connection?</h3>
+        <p>No. A PALA-1 log is verified offline, on any machine, from the published specification. Nothing is sent anywhere.</p>
+      </section>
+
+      <!-- read-more:start -->
+      <div class="readmore">
+        <h2 id="read-more">Read more</h2>
+        <ul>
+          <li><a href="/notes/protecting-an-audit-log-from-being-rewritten/">Protecting an audit log from being rewritten from scratch</a> — A hash chain catches an edited record but not a log rebuilt from the first record. What closes that gap, from which record on, and what stays open.</li>
+          <li><a href="/notes/what-makes-an-audit-log-tamper-evident/">Tamper-evident audit logs: how they work and how to build one</a> — What makes an audit log tamper-evident: hash chains, anchors and witnesses, what each proves, how to build such a log, and what to ask before trusting it.</li>
+          <li><a href="/notes/checking-an-ai-log-without-reading-it/">How to check an AI log without reading it</a> — Why the person who checks an AI system&#x27;s log often shouldn&#x27;t read it, and how a hash-chained format makes that possible.</li>
+        </ul>
+      </div>
+      <!-- read-more:end -->
 
       <aside class="evidence">
         <h2>Evidence in the repository</h2>

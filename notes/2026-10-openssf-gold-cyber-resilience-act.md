@@ -4,6 +4,9 @@ slug: openssf-gold-cyber-resilience-act
 date: 2026-10-20
 description: What the EU Cyber Resilience Act asks of products built from open-source components, what an OpenSSF Gold badge shows about a component, and what it doesn't.
 tags: cyber-resilience-act, openssf, supply-chain
+seo_title: OpenSSF Gold software and the Cyber Resilience Act
+seo_description: What the EU Cyber Resilience Act asks of products built from open-source components, and what an OpenSSF Gold badge shows about one and what it doesn't.
+related: ai-logging-standards-24970-18229, eu-ai-act-article-12-self-hosted-ai
 ---
 
 If you sell software or connected hardware in the EU, the Cyber Resilience Act now applies to you in stages. Regulation (EU) 2024/2847 entered into force in December 2024. Since 11 September 2026, manufacturers have had to report actively exploited vulnerabilities and severe incidents. Most of the rest arrives on 11 December 2027, when the essential requirements, technical documentation and CE marking become mandatory.

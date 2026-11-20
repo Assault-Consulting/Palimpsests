@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Running a language model on an isolated network, with a log you can prove — Palimpsests notes</title>
+<title>Running an LLM on an isolated network, with a provable log</title>
 <meta name="description" content="What changes when an LLM runs with no network at all: installing it, timestamps, anchors and checking the log offline." />
 <link rel="canonical" href="https://palimpsests.dev/notes/llm-on-an-isolated-network/" />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
@@ -11,14 +11,23 @@
 <meta name="theme-color" content="#15151f" />
 <meta property="og:type" content="article" />
 <meta property="og:site_name" content="Palimpsests" />
-<meta property="og:title" content="Running a language model on an isolated network, with a log you can prove — Palimpsests notes" />
+<meta property="og:title" content="Running an LLM on an isolated network, with a provable log" />
 <meta property="og:description" content="What changes when an LLM runs with no network at all: installing it, timestamps, anchors and checking the log offline." />
 <meta property="og:url" content="https://palimpsests.dev/notes/llm-on-an-isolated-network/" />
 <meta property="og:locale" content="en" />
-<meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="Running a language model on an isolated network, with a log you can prove — Palimpsests notes" />
+<meta property="og:image" content="https://palimpsests.dev/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Palimpsests: a tamper-evident audit log for AI agents, verifiable without the key" />
+<meta property="article:published_time" content="2026-10-04" />
+<meta property="article:author" content="Andrii Sparysh" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://palimpsests.dev/og.png" />
+<meta name="twitter:title" content="Running an LLM on an isolated network, with a provable log" />
 <meta name="twitter:description" content="What changes when an LLM runs with no network at all: installing it, timestamps, anchors and checking the log offline." />
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 <link rel="manifest" href="/site.webmanifest" />
 <link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
 <script type="application/ld+json">
@@ -40,9 +49,19 @@
         "llm",
         "audit-log"
       ],
+      "image": "https://palimpsests.dev/og.png",
       "author": {
         "@type": "Person",
-        "name": "Andrii Sparysh"
+        "@id": "https://palimpsests.dev/#andrii-sparysh",
+        "name": "Andrii Sparysh",
+        "url": "https://palimpsests.dev/",
+        "jobTitle": "Co-founder, Assault Consulting",
+        "worksFor": {
+          "@id": "https://palimpsests.dev/#org"
+        },
+        "sameAs": [
+          "https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/"
+        ]
       },
       "publisher": {
         "@id": "https://palimpsests.dev/#org"
@@ -83,6 +102,7 @@
 <link rel="stylesheet" href="/site.css" />
 </head>
 <body>
+<a class="skip" href="#main">Skip to content</a>
 
 <nav>
   <div class="wrap nav">
@@ -108,16 +128,18 @@
       <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
       <a class="hide-sm" href="/integrations/">Integrations</a>
       <a class="hide-sm" href="/runbook/">Runbook</a>
+      <a class="hide-sm" href="/notes/">Notes</a>
       <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
     </div>
   </div>
 </nav>
 
-<main class="doc">
+<main class="doc" id="main">
   <div class="wrap">
     <div class="doc__in">
 <p class="crumbs"><a href="/">Palimpsests</a> / <a href="/notes/">Notes</a></p>
-<span class="eyebrow">Note · 4 October 2026 · Andrii Sparysh</span>
+<article>
+<span class="eyebrow">Note · <time datetime="2026-10-04">4 October 2026</time> · Andrii Sparysh</span>
 <h1 class="display">Running a language model on an isolated network, with a log you can prove</h1>
 <p>Some networks are cut off from the internet on purpose. Hospitals and defence sites are the usual examples. If a language model has to work inside one, it can't call a hosted API, and the services that normally back up a log aren't there either. You lose cloud logging, public time servers and any online way to timestamp a record.</p>
 <p>Palimpsests was built for exactly this. The model, its working state and the log all stay on the machine that holds the data. Here's what that looks like in practice.</p>
@@ -139,6 +161,15 @@ pip install --no-index --find-links ./wheels palimpsests</code></pre>
 <p>There's no measurement on a discrete GPU yet. The log implementation also hasn't had an independent penetration test.</p>
 <p>More detail, including what we don't claim, is on <a href="https://palimpsests.dev/air-gapped/">air-gapped</a>. The project itself is at <a href="https://palimpsests.dev/">palimpsests.dev</a>.</p>
 <p>Step by step: <a href="https://palimpsests.dev/runbook/local-openai-compatible-server/">run a local LLM behind an OpenAI-compatible API</a> and <a href="https://palimpsests.dev/runbook/chat-longer-than-context-window/">keep a long chat going on a small local model</a>.</p>
+</article>
+<div class="readmore">
+<h2 id="read-next">Read next</h2>
+<ul>
+  <li><a href="/air-gapped/">Air-gapped LLM inference</a> — the page this note belongs to</li>
+  <li><a href="/notes/protecting-an-audit-log-from-being-rewritten/">Protecting an audit log from being rewritten from scratch</a></li>
+  <li><a href="/notes/checking-an-ai-log-without-reading-it/">How to check an AI log without reading it</a></li>
+</ul>
+</div>
 <div class="related">
   <a class="btn" href="/notes/">All notes →</a>
   <a class="btn" href="/">Palimpsests →</a>

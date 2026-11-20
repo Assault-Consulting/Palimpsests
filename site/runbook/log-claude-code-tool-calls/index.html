@@ -3,22 +3,29 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Log Claude Code tool calls on your own machine — Palimpsests runbook</title>
-<meta name="description" content="Record every tool call Claude Code makes in a tamper-evident log on your own machine, with three hook entries and a local server. Fingerprints instead of content, and failures marked as failures." />
+<title>Log Claude Code tool calls on your own machine</title>
+<meta name="description" content="Record every tool call Claude Code makes in a tamper-evident log on your own machine, with three hook entries and a local server. Digests, not content." />
 <link rel="canonical" href="https://palimpsests.dev/runbook/log-claude-code-tool-calls/" />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 <meta name="author" content="Andrii Sparysh" />
 <meta name="theme-color" content="#15151f" />
 <meta property="og:type" content="article" />
 <meta property="og:site_name" content="Palimpsests" />
-<meta property="og:title" content="Log Claude Code tool calls on your own machine — Palimpsests runbook" />
-<meta property="og:description" content="Record every tool call Claude Code makes in a tamper-evident log on your own machine, with three hook entries and a local server. Fingerprints instead of content, and failures marked as failures." />
+<meta property="og:title" content="Log Claude Code tool calls on your own machine" />
+<meta property="og:description" content="Record every tool call Claude Code makes in a tamper-evident log on your own machine, with three hook entries and a local server. Digests, not content." />
 <meta property="og:url" content="https://palimpsests.dev/runbook/log-claude-code-tool-calls/" />
 <meta property="og:locale" content="en" />
-<meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="Log Claude Code tool calls on your own machine — Palimpsests runbook" />
-<meta name="twitter:description" content="Record every tool call Claude Code makes in a tamper-evident log on your own machine, with three hook entries and a local server. Fingerprints instead of content, and failures marked as failures." />
+<meta property="og:image" content="https://palimpsests.dev/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Palimpsests: a tamper-evident audit log for AI agents, verifiable without the key" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://palimpsests.dev/og.png" />
+<meta name="twitter:title" content="Log Claude Code tool calls on your own machine" />
+<meta name="twitter:description" content="Record every tool call Claude Code makes in a tamper-evident log on your own machine, with three hook entries and a local server. Digests, not content." />
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 <link rel="manifest" href="/site.webmanifest" />
 <link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
 <script type="application/ld+json">
@@ -36,9 +43,19 @@
       "dateModified": "2026-11-16",
       "inLanguage": "en",
       "proficiencyLevel": "Beginner",
+      "image": "https://palimpsests.dev/og.png",
       "author": {
         "@type": "Person",
-        "name": "Andrii Sparysh"
+        "@id": "https://palimpsests.dev/#andrii-sparysh",
+        "name": "Andrii Sparysh",
+        "url": "https://palimpsests.dev/",
+        "jobTitle": "Co-founder, Assault Consulting",
+        "worksFor": {
+          "@id": "https://palimpsests.dev/#org"
+        },
+        "sameAs": [
+          "https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/"
+        ]
       },
       "publisher": {
         "@id": "https://palimpsests.dev/#org"
@@ -79,6 +96,7 @@
 <link rel="stylesheet" href="/site.css" />
 </head>
 <body>
+<a class="skip" href="#main">Skip to content</a>
 
 <nav>
   <div class="wrap nav">
@@ -104,16 +122,17 @@
       <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
       <a class="hide-sm" href="/integrations/">Integrations</a>
       <a class="hide-sm" href="/runbook/">Runbook</a>
+      <a class="hide-sm" href="/notes/">Notes</a>
       <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
     </div>
   </div>
 </nav>
 
-<main class="doc">
+<main class="doc" id="main">
   <div class="wrap">
     <div class="doc__in">
 <p class="crumbs"><a href="/">Palimpsests</a> / <a href="/runbook/">Runbook</a></p>
-<span class="eyebrow">Runbook · Record what an AI agent does · updated 16 November 2026</span>
+<span class="eyebrow">Runbook · Record what an AI agent does · updated <time datetime="2026-11-16">16 November 2026</time></span>
 <h1 class="display">Log Claude Code tool calls on your own machine</h1>
 <p class="lede">Record every tool call Claude Code makes in a tamper-evident log on your own machine, with three hook entries and a local server. Fingerprints instead of content, and failures marked as failures.</p>
 <p>Claude Code thinks on a hosted model, but it acts on your machine: it reads files, edits them and runs commands. Its hooks can report each of those actions as it happens. Palimpsests receives the reports and writes them into a log that cannot be changed without the change showing. The log stays on your machine, and you do not need a local model for this.</p>

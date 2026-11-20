@@ -6,6 +6,8 @@ order: 2
 updated: 2026-11-16
 description: Keep a long conversation going on a model with a small context window. Palimpsests keeps the start and the latest turns, moves the middle to disk, and brings back the parts that matter.
 next: local-openai-compatible-server
+seo_title: Chat longer than the context window on a local model
+seo_description: Keep a long conversation going on a model with a small context window: the start and latest turns stay, the middle moves to disk and returns when needed.
 ---
 
 A model can read only so much text at once. That limit is its context window, and a small model on modest hardware may have 8,000 tokens or fewer. A long chat outgrows it, and something has to go. Drop the oldest messages and the model forgets what the task was. Drop messages at random and it forgets facts.
