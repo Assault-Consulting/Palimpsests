@@ -60,7 +60,7 @@ def test_a_writer_opens_behind_its_first_record_and_closes_last(tmp_path):
     with AuditReader.open(log) as reader:
         opened = reader.record_at(1)
         closed = reader.record_at(4)
-    assert opened.detail == f"palimpsests {__version__}; inference r8"
+    assert opened.detail == f"palimpsests {__version__}; inference r9"
     assert closed.detail is None and closed.header.key_id == 0
     assert _unclosed(log) == []
 
@@ -292,3 +292,25 @@ def test_the_lock_is_released_even_if_the_close_cannot_be_written(tmp_path):
     assert w._fh.closed
     PalaWriter.open_existing(log).close()  # not ChainLocked
     assert os.path.getsize(log) > 0
+
+
+def test_the_writer_names_the_revision_the_profile_and_its_vectors_are_at():
+    """One fact stated in four places: the profile document, the packaged
+    vectors, what `palimpsests --version` prints (read from the vectors)
+    and what a writer says of itself in WRITER_OPEN. The last one had
+    fallen behind — r8, while the writer wrote r9's records."""
+    import re
+    from palimpsests.audit import pala_writer
+    from palimpsests.audit.pala import vectors
+    from pathlib import Path
+
+    profile = (Path(__file__).resolve().parent.parent / "docs" / "specs" / "pala-1"
+               / "profiles" / "inference.md").read_text(encoding="utf-8")
+    stated = re.search(r"\| \*\*Revision\*\* \| \*\*(r\d+)\*\*", profile).group(1)
+    assert stated == vectors.load("inference")["profile_revision"]
+    assert stated == pala_writer._PROFILE_REVISION
+    assert pala_writer._WRITER_ID.endswith(f"; inference {stated}")
+    # and the newest row of the revision history is that revision
+    rows = re.findall(r"^\| (r\d+) \| \d{4}-\d{2}-\d{2} \|", profile, re.M)
+    assert rows[-1] == stated and rows == [f"r{i}" for i in range(1, len(rows) + 1)]
+    assert f"**{stated} is the revision Palimpsests 1.0 implements**" in profile
