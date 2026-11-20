@@ -4,6 +4,9 @@ slug: eu-ai-act-article-12-self-hosted-ai
 date: 2026-10-04
 description: Which systems the logging rules cover, what the articles require, when they start and how the fines work, in plain language.
 tags: eu-ai-act, logging, compliance
+seo_title: EU AI Act Article 12 for AI you run yourself
+page: /eu-ai-act-article-12/
+related: ai-logging-standards-24970-18229, llm-on-an-isolated-network
 ---
 
 Running a language model on your own servers keeps the data at home. It doesn't change what the EU AI Act asks of the system itself. If the system is classed as high-risk, it has to keep logs, and those logs have to last.

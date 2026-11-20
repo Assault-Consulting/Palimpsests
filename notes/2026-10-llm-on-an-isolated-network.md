@@ -4,6 +4,9 @@ slug: llm-on-an-isolated-network
 date: 2026-10-04
 description: What changes when an LLM runs with no network at all: installing it, timestamps, anchors and checking the log offline.
 tags: air-gapped, llm, audit-log
+seo_title: Running an LLM on an isolated network, with a provable log
+page: /air-gapped/
+related: protecting-an-audit-log-from-being-rewritten, checking-an-ai-log-without-reading-it
 ---
 
 Some networks are cut off from the internet on purpose. Hospitals and defence sites are the usual examples. If a language model has to work inside one, it can't call a hosted API, and the services that normally back up a log aren't there either. You lose cloud logging, public time servers and any online way to timestamp a record.

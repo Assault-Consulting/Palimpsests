@@ -6,6 +6,8 @@ order: 1
 updated: 2026-11-16
 description: Record every tool call Claude Code makes in a tamper-evident log on your own machine, with three hook entries and a local server. Fingerprints instead of content, and failures marked as failures.
 next: claude-code-hooks-not-working, mcp-tool-call-logging
+seo_title: Log Claude Code tool calls on your own machine
+seo_description: Record every tool call Claude Code makes in a tamper-evident log on your own machine, with three hook entries and a local server. Digests, not content.
 ---
 
 Claude Code thinks on a hosted model, but it acts on your machine: it reads files, edits them and runs commands. Its hooks can report each of those actions as it happens. Palimpsests receives the reports and writes them into a log that cannot be changed without the change showing. The log stays on your machine, and you do not need a local model for this.

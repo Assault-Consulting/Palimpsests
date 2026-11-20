@@ -283,7 +283,10 @@ export OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=http/protobuf</code></pre>
     <category>tamper-evident</category>
     <category>security</category>
     <description>What makes an audit log tamper-evident: hash chains, anchors and witnesses, what each one proves, how to build such a log, and what to ask before trusting the claim.</description>
-    <content:encoded><![CDATA[<p>"Tamper-evident" appears on a lot of logging products. For an audit log it should mean something specific: if someone changes the log, a person who didn't make the change can detect it later. It doesn't mean the change is impossible. That would be tamper-proof, and no log stored on a computer someone controls can promise that.</p>
+    <content:encoded><![CDATA[<h2 id="what-is-a-tamper-evident-audit-log">What is a tamper-evident audit log?</h2>
+<p>A tamper-evident audit log is a record in which any later change — an edited, removed or reordered entry — can be detected by someone who did not make it. It does not make the change impossible. It makes it visible, and says where.</p>
+<h2 id="what-the-word-should-mean">What the word should mean</h2>
+<p>"Tamper-evident" appears on a lot of logging products. For an audit log it should mean something specific: if someone changes the log, a person who didn't make the change can detect it later. It doesn't mean the change is impossible. That would be tamper-proof, and no log stored on a computer someone controls can promise that.</p>
 <p>Detection relies on several separate mechanisms. Each one answers its own question, and a log can have one without the others.</p>
 <h2 id="the-hash-chain">The hash chain</h2>
 <p>Each record stores the hash of the record before it. Change a record and its hash changes, so the next record's link stops matching. Remove a record from the middle and the link to the next one breaks. Reorder records and both the links and the sequence numbers go wrong.</p>

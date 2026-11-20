@@ -4,6 +4,10 @@ slug: ai-logging-standards-24970-18229
 date: 2026-10-20
 description: Where the AI logging standards stand in October 2026, why they matter for the EU AI Act, and how Palimpsests maps their requirements to code while the text is still moving.
 tags: ai-logging, iso-iec-24970, eu-ai-act
+seo_title: AI logging standards: ISO/IEC 24970 and prEN 18229-1
+seo_description: Where the AI logging standards stood in October 2026, why they matter for the EU AI Act, and how Palimpsests maps their requirements to code.
+page: /eu-ai-act-article-12/
+related: eu-ai-act-article-12-self-hosted-ai, openssf-gold-cyber-resilience-act
 ---
 
 Article 12 of the EU AI Act says high-risk AI systems must record events automatically. It doesn't say which events, in what format, or how a record should be protected. That level of detail is meant to come from harmonised standards. Once a standard is harmonised and its reference is published in the Official Journal, following it gives a presumption of conformity with the parts of the Act it covers.

@@ -3,22 +3,29 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Audit logging for Claude Code, Codex, OpenTelemetry, LiteLLM and MCP tool calls — Palimpsests (PALA-1)</title>
-<meta name="description" content="Put the tool calls of AI agents on a tamper-evident log on your own machine, whether the model is local or hosted: Claude Code, Codex, OpenTelemetry, LiteLLM, MCP and OpenCode, with each adapter's status and limits." />
+<title>Audit logging for Claude Code, Codex, OpenTelemetry and MCP</title>
+<meta name="description" content="Record the tool calls of Claude Code, Codex, OpenTelemetry frameworks, LiteLLM and MCP servers in a tamper-evident log that stays on your own machine." />
 <link rel="canonical" href="https://palimpsests.dev/integrations/" />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 <meta name="author" content="Assault Consulting" />
 <meta name="theme-color" content="#15151f" />
 <meta property="og:type" content="article" />
 <meta property="og:site_name" content="Palimpsests" />
-<meta property="og:title" content="Audit logging for Claude Code, Codex, OpenTelemetry, LiteLLM and MCP tool calls — Palimpsests (PALA-1)" />
-<meta property="og:description" content="Put the tool calls of AI agents on a tamper-evident log on your own machine, whether the model is local or hosted: Claude Code, Codex, OpenTelemetry, LiteLLM, MCP and OpenCode, with each adapter's status and limits." />
+<meta property="og:title" content="Audit logging for Claude Code, Codex, OpenTelemetry and MCP" />
+<meta property="og:description" content="Record the tool calls of Claude Code, Codex, OpenTelemetry frameworks, LiteLLM and MCP servers in a tamper-evident log that stays on your own machine." />
 <meta property="og:url" content="https://palimpsests.dev/integrations/" />
 <meta property="og:locale" content="en" />
-<meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="Audit logging for Claude Code, Codex, OpenTelemetry, LiteLLM and MCP tool calls — Palimpsests (PALA-1)" />
-<meta name="twitter:description" content="Put the tool calls of AI agents on a tamper-evident log on your own machine, whether the model is local or hosted: Claude Code, Codex, OpenTelemetry, LiteLLM, MCP and OpenCode, with each adapter's status and limits." />
+<meta property="og:image" content="https://palimpsests.dev/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Palimpsests: a tamper-evident audit log for AI agents, verifiable without the key" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://palimpsests.dev/og.png" />
+<meta name="twitter:title" content="Audit logging for Claude Code, Codex, OpenTelemetry and MCP" />
+<meta name="twitter:description" content="Record the tool calls of Claude Code, Codex, OpenTelemetry frameworks, LiteLLM and MCP servers in a tamper-evident log that stays on your own machine." />
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 <link rel="manifest" href="/site.webmanifest" />
 <script type="application/ld+json">
 {
@@ -27,11 +34,11 @@
     {
       "@type": "TechArticle",
       "@id": "https://palimpsests.dev/integrations/#article",
-      "headline": "Audit logging for Claude Code, Codex, OpenTelemetry, LiteLLM and MCP tool calls — Palimpsests (PALA-1)",
-      "description": "Put the tool calls of AI agents on a tamper-evident log on your own machine, whether the model is local or hosted: Claude Code, Codex, OpenTelemetry, LiteLLM, MCP and OpenCode, with each adapter's status and limits.",
+      "headline": "Audit logging for Claude Code, Codex, OpenTelemetry and MCP",
+      "description": "Record the tool calls of Claude Code, Codex, OpenTelemetry frameworks, LiteLLM and MCP servers in a tamper-evident log that stays on your own machine.",
       "url": "https://palimpsests.dev/integrations/",
       "inLanguage": "en",
-      "dateModified": "2026-11-16",
+      "dateModified": "2026-11-20",
       "author": {
         "@id": "https://palimpsests.dev/#org"
       },
@@ -58,6 +65,52 @@
           "item": "https://palimpsests.dev/integrations/"
         }
       ]
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://palimpsests.dev/integrations/#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Which AI agents can Palimpsests record?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Claude Code through its HTTP hooks, Codex through a one-file command hook, any framework that emits OpenTelemetry GenAI execute_tool spans, LiteLLM through a callback, MCP servers that speak stdio through a proxy, and OpenCode through a plugin. Each has a recorded run on real traffic."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is the content of a tool call stored in the log?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Arguments and results are stored as SHA-256 digests of a canonical form. Their content never enters the chain."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does a recorded tool call prove the tool ran?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. A record marked reported-by-client proves that a client reported a call and a result, and when. A result of ok means a result came back, never that the action succeeded; where the recorder cannot tell a failure from a success the result is marked unobserved."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does it work when the model runs in the cloud?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. What is recorded is the agent's tool calls on your machine, not the model. The log stays on your own hardware whether the model is local or behind a hosted API."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What happens if an agent's hook fails?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A failing hook never stops the agent, so a broken hook looks like a working one and nothing is recorded. The command palimpsests doctor checks that an integration's reports reach the server, and the runbook has a page on finding where reports go missing."
+          }
+        }
+      ]
     }
   ]
 }
@@ -68,6 +121,7 @@
 <link rel="stylesheet" href="/site.css" />
 </head>
 <body>
+<a class="skip" href="#main">Skip to content</a>
 
 <nav>
   <div class="wrap nav">
@@ -93,18 +147,20 @@
       <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
       <a class="hide-sm" href="/integrations/" aria-current="page">Integrations</a>
       <a class="hide-sm" href="/runbook/">Runbook</a>
+      <a class="hide-sm" href="/notes/">Notes</a>
       <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
     </div>
   </div>
 </nav>
 
-<main class="doc">
+<main class="doc" id="main">
   <div class="wrap">
     <div class="doc__in">
       <p class="crumbs"><a href="/">Palimpsests</a> / Integrations</p>
       <span class="eyebrow">Integrations · Claude Code · Codex · OpenTelemetry · LiteLLM · MCP</span>
       <h1 class="display">Audit logging for the tool calls your agents already make</h1>
-      <p class="lede">Your agents may run a local model or call a hosted one. Either way, their tool calls can be recorded on a tamper-evident log that stays on your own machine. The audit record stays on your machine, even when the model doesn't.</p>
+      <p class="lede">Palimpsests records the tool calls your AI agents already make — from Claude Code, Codex, frameworks instrumented with OpenTelemetry, LiteLLM and MCP servers — in a tamper-evident log on your own machine, whether the model is local or hosted. Each integration below has a recorded run on real traffic. The audit record stays on your machine, even when the model doesn’t.</p>
+      <p class="updated">Updated <time datetime="2026-11-20">20 November 2026</time></p>
 
       <h2 id="start">Before you start</h2>
       <pre><code>pip install 'palimpsests[serve]'
@@ -164,6 +220,30 @@ litellm.callbacks = [PalimpsestsAudit()]</code></pre>
         <li>Hook interfaces change between client versions. Each adapter's README states the version its behaviour was measured on.</li>
         <li>The record is only as trustworthy as the chain it sits in; see <a href="/notes/what-makes-an-audit-log-tamper-evident/">what makes an audit log tamper-evident</a>.</li>
       </ul>
+
+      <section class="faq">
+        <h2 id="faq">Questions</h2>
+        <h3>Which AI agents can Palimpsests record?</h3>
+        <p>Claude Code through its HTTP hooks, Codex through a one-file command hook, any framework that emits OpenTelemetry GenAI execute_tool spans, LiteLLM through a callback, MCP servers that speak stdio through a proxy, and OpenCode through a plugin. Each has a recorded run on real traffic.</p>
+        <h3>Is the content of a tool call stored in the log?</h3>
+        <p>No. Arguments and results are stored as SHA-256 digests of a canonical form. Their content never enters the chain.</p>
+        <h3>Does a recorded tool call prove the tool ran?</h3>
+        <p>No. A record marked reported-by-client proves that a client reported a call and a result, and when. A result of ok means a result came back, never that the action succeeded; where the recorder cannot tell a failure from a success the result is marked unobserved.</p>
+        <h3>Does it work when the model runs in the cloud?</h3>
+        <p>Yes. What is recorded is the agent&#x27;s tool calls on your machine, not the model. The log stays on your own hardware whether the model is local or behind a hosted API.</p>
+        <h3>What happens if an agent&#x27;s hook fails?</h3>
+        <p>A failing hook never stops the agent, so a broken hook looks like a working one and nothing is recorded. The command palimpsests doctor checks that an integration&#x27;s reports reach the server, and the runbook has a page on finding where reports go missing.</p>
+      </section>
+
+      <!-- read-more:start -->
+      <div class="readmore">
+        <h2 id="read-more">Read more</h2>
+        <ul>
+          <li><a href="/notes/audit-log-for-agents-on-cloud-models/">Keeping the audit log on your own machine when your agents use cloud models</a> — Agents that call hosted models can keep their tool-call record locally: how Claude Code, Codex, OpenTelemetry and LiteLLM calls are recorded.</li>
+          <li><a href="/notes/recording-agent-tool-calls/">Recording the tool calls your agent already makes</a> — Adapters for LiteLLM, MCP servers and OpenCode that put tool calls on a tamper-evident log, and what such a record proves.</li>
+        </ul>
+      </div>
+      <!-- read-more:end -->
 
       <aside class="evidence">
         <h2>Evidence in the repository</h2>

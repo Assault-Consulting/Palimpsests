@@ -6,6 +6,8 @@ order: 2
 updated: 2026-11-16
 description: A failing hook never stops the agent, so a broken hook looks exactly like a working one. The silent failures we measured, how to spot each, and one command that names them.
 next: log-claude-code-tool-calls, mcp-tool-call-logging
+seo_title: Claude Code hooks not working? Find where reports are lost
+seo_description: A failing hook never stops the agent, so a broken hook looks like a working one. The silent failures we measured, and one command that names them.
 ---
 
 A hook is built never to block the agent. That is good for your work and bad for your record: when a hook fails, the agent carries on and nothing tells you. The tools run, and the log stays empty.

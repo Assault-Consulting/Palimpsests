@@ -4,6 +4,10 @@ slug: pala-1-three-design-principles
 date: 2026-10-09
 description: Verification without disclosure, integrity through a hash chain, and checking a log with no remote service: the ideas behind the PALA-1 format and where each one stops.
 tags: pala-1, audit-log, design
+seo_title: PALA-1: three design principles for verifiable audit logs
+seo_description: Verification without disclosure, integrity through a hash chain, and checking a log with no remote service: the ideas behind PALA-1 and where each stops.
+page: /pala-1/
+related: anatomy-of-a-tamper-evident-audit-log, checking-an-ai-log-without-reading-it
 ---
 
 An audit trail should stay verifiable when the system is offline, when the hardware is limited, and when the records hold information an auditor must not read. [PALA-1](https://palimpsests.dev/pala-1/), the Portable Append-only Log for Audit, is designed around those conditions.

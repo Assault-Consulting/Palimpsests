@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Recording the tool calls your agent already makes — Palimpsests notes</title>
+<title>Recording the tool calls your agent already makes</title>
 <meta name="description" content="Adapters for LiteLLM, MCP servers and OpenCode that put tool calls on a tamper-evident log, and what such a record proves." />
 <link rel="canonical" href="https://palimpsests.dev/notes/recording-agent-tool-calls/" />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
@@ -11,14 +11,23 @@
 <meta name="theme-color" content="#15151f" />
 <meta property="og:type" content="article" />
 <meta property="og:site_name" content="Palimpsests" />
-<meta property="og:title" content="Recording the tool calls your agent already makes — Palimpsests notes" />
+<meta property="og:title" content="Recording the tool calls your agent already makes" />
 <meta property="og:description" content="Adapters for LiteLLM, MCP servers and OpenCode that put tool calls on a tamper-evident log, and what such a record proves." />
 <meta property="og:url" content="https://palimpsests.dev/notes/recording-agent-tool-calls/" />
 <meta property="og:locale" content="en" />
-<meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="Recording the tool calls your agent already makes — Palimpsests notes" />
+<meta property="og:image" content="https://palimpsests.dev/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Palimpsests: a tamper-evident audit log for AI agents, verifiable without the key" />
+<meta property="article:published_time" content="2026-10-04" />
+<meta property="article:author" content="Andrii Sparysh" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://palimpsests.dev/og.png" />
+<meta name="twitter:title" content="Recording the tool calls your agent already makes" />
 <meta name="twitter:description" content="Adapters for LiteLLM, MCP servers and OpenCode that put tool calls on a tamper-evident log, and what such a record proves." />
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 <link rel="manifest" href="/site.webmanifest" />
 <link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
 <script type="application/ld+json">
@@ -40,9 +49,19 @@
         "litellm",
         "mcp"
       ],
+      "image": "https://palimpsests.dev/og.png",
       "author": {
         "@type": "Person",
-        "name": "Andrii Sparysh"
+        "@id": "https://palimpsests.dev/#andrii-sparysh",
+        "name": "Andrii Sparysh",
+        "url": "https://palimpsests.dev/",
+        "jobTitle": "Co-founder, Assault Consulting",
+        "worksFor": {
+          "@id": "https://palimpsests.dev/#org"
+        },
+        "sameAs": [
+          "https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/"
+        ]
       },
       "publisher": {
         "@id": "https://palimpsests.dev/#org"
@@ -83,6 +102,7 @@
 <link rel="stylesheet" href="/site.css" />
 </head>
 <body>
+<a class="skip" href="#main">Skip to content</a>
 
 <nav>
   <div class="wrap nav">
@@ -108,16 +128,18 @@
       <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
       <a class="hide-sm" href="/integrations/">Integrations</a>
       <a class="hide-sm" href="/runbook/">Runbook</a>
+      <a class="hide-sm" href="/notes/">Notes</a>
       <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
     </div>
   </div>
 </nav>
 
-<main class="doc">
+<main class="doc" id="main">
   <div class="wrap">
     <div class="doc__in">
 <p class="crumbs"><a href="/">Palimpsests</a> / <a href="/notes/">Notes</a></p>
-<span class="eyebrow">Note · 4 October 2026 · Andrii Sparysh</span>
+<article>
+<span class="eyebrow">Note · <time datetime="2026-10-04">4 October 2026</time> · Andrii Sparysh</span>
 <h1 class="display">Recording the tool calls your agent already makes</h1>
 <p>When an agent calls a tool, it does something real. It might read a file or send a message on someone's behalf. Those calls are what people look at first when something goes wrong, and they're often the worst-recorded part of the system.</p>
 <p>Most agents already send their tool calls through something you run. That might be a gateway like LiteLLM, an MCP server or a coding agent like OpenCode. Version 0.12 of Palimpsests added small adapters for these. Each one passes the tool calls it sees to a local Palimpsests server, which writes them into a hash-chained log.</p>
@@ -142,6 +164,15 @@ litellm.callbacks = [PalimpsestsAudit()]</code></pre>
 <p>Client hook interfaces change between versions, so each adapter's README says which version its behaviour was checked on.</p>
 <p>Setup details and limits for all three are on <a href="https://palimpsests.dev/integrations/">integrations</a>. How to check the resulting log without the key is on <a href="https://palimpsests.dev/verify-without-reading/">verify without reading</a>.</p>
 <p>Step by step: <a href="https://palimpsests.dev/runbook/mcp-tool-call-logging/">log MCP tool calls with a one-file proxy</a> and <a href="https://palimpsests.dev/runbook/log-claude-code-tool-calls/">log Claude Code tool calls</a>.</p>
+</article>
+<div class="readmore">
+<h2 id="read-next">Read next</h2>
+<ul>
+  <li><a href="/integrations/">Integrations: recording agent tool calls</a> — the page this note belongs to</li>
+  <li><a href="/notes/audit-log-for-agents-on-cloud-models/">Keeping the audit log on your own machine when your agents use cloud models</a></li>
+  <li><a href="/notes/what-makes-an-audit-log-tamper-evident/">Tamper-evident audit logs: how they work and how to build one</a></li>
+</ul>
+</div>
 <div class="related">
   <a class="btn" href="/notes/">All notes →</a>
   <a class="btn" href="/">Palimpsests →</a>

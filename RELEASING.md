@@ -179,6 +179,12 @@ Two people: whoever opens the release pull request does not merge it.
    `git log vPREVIOUS..main` before running it, and add what is missing.
 5. **Status banners** (README, docs) for a minor release. A patch release
    leaves them alone.
+
+   **The site's stated version**, for every release: after the changelog
+   has its new section, run `python scripts/build_notes.py`. It writes the
+   version and its date into the home page's structured data from
+   `CHANGELOG.md`; a test fails until it has been run. Add `site/index.html`
+   to the files staged in step 7.
 6. **Check locally:**
    ```
    python -m pytest -q

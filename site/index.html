@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Palimpsests (PALA-1): tamper-evident audit log for AI agents and local LLMs</title>
-<meta name="description" content="Open-source, tamper-evident audit log for AI agents. Records tool calls from Claude Code, Codex, OpenTelemetry, LiteLLM and MCP on your own machine, and anyone can verify it without the decryption key." />
+<title>Palimpsests: a tamper-evident audit log for AI agents</title>
+<meta name="description" content="Open-source, tamper-evident audit log for AI agents and local LLMs. It records tool calls on your own machine and is verifiable without the decryption key." />
 
 <!-- Discoverability / indexing (Google, Bing, AI agents). -->
 <link rel="canonical" href="https://palimpsests.dev/" />
@@ -15,18 +15,25 @@
 <!-- Open Graph -->
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Palimpsests" />
-<meta property="og:title" content="Palimpsests (PALA-1): tamper-evident audit log for AI agents and local LLMs" />
-<meta property="og:description" content="Open-source, tamper-evident audit log for AI agents. Records tool calls from Claude Code, Codex, OpenTelemetry, LiteLLM and MCP on your own machine, and anyone can verify it without the decryption key." />
+<meta property="og:title" content="Palimpsests: a tamper-evident audit log for AI agents" />
+<meta property="og:description" content="Open-source, tamper-evident audit log for AI agents and local LLMs. It records tool calls on your own machine and is verifiable without the decryption key." />
 <meta property="og:url" content="https://palimpsests.dev/" />
 <meta property="og:locale" content="en" />
+<meta property="og:image" content="https://palimpsests.dev/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Palimpsests: a tamper-evident audit log for AI agents, verifiable without the key" />
 
 <!-- Twitter / X -->
-<meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="Palimpsests (PALA-1): tamper-evident audit log for AI agents and local LLMs" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://palimpsests.dev/og.png" />
+<meta name="twitter:title" content="Palimpsests: a tamper-evident audit log for AI agents" />
 <meta name="twitter:description" content="Tamper-evident audit log for AI agents and local LLMs, verifiable without the key. Apache-2.0." />
 
 <!-- Icons / manifest -->
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 <link rel="manifest" href="/site.webmanifest" />
 <link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
 
@@ -40,8 +47,11 @@
       "@id": "https://palimpsests.dev/#org",
       "name": "Assault Consulting",
       "url": "https://palimpsests.dev/",
+      "description": "The company that develops Palimpsests, an open-source, tamper-evident audit log for AI agents and local LLMs, and its record format PALA-1.",
+      "logo": {"@type": "ImageObject", "url": "https://palimpsests.dev/apple-touch-icon.png", "width": 180, "height": 180},
       "location": {"@type": "Place", "address": {"@type": "PostalAddress", "addressLocality": "Kyiv", "addressCountry": "UA"}},
-      "sameAs": ["https://github.com/Assault-Consulting"]
+      "contactPoint": {"@type": "ContactPoint", "contactType": "security", "email": "as@assault.consulting", "url": "https://github.com/Assault-Consulting/Palimpsests/security/advisories/new", "availableLanguage": ["en", "uk"]},
+      "sameAs": ["https://github.com/Assault-Consulting", "https://github.com/Assault-Consulting/Palimpsests", "https://pypi.org/project/palimpsests/", "https://www.bestpractices.dev/projects/13534", "https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/", "https://doi.org/10.5281/zenodo.21978107"]
     },
     {
       "@type": "WebSite",
@@ -62,7 +72,12 @@
       "downloadUrl": "https://pypi.org/project/palimpsests/",
       "installUrl": "https://pypi.org/project/palimpsests/",
       "codeRepository": "https://github.com/Assault-Consulting/Palimpsests",
-      "sameAs": ["https://github.com/Assault-Consulting/Palimpsests", "https://pypi.org/project/palimpsests/"],
+      "sameAs": ["https://github.com/Assault-Consulting/Palimpsests", "https://pypi.org/project/palimpsests/", "https://www.bestpractices.dev/projects/13534"],
+      "softwareVersion": "0.14.1",
+      "datePublished": "2026-07-06",
+      "dateModified": "2026-11-14",
+      "releaseNotes": "https://github.com/Assault-Consulting/Palimpsests/blob/main/CHANGELOG.md",
+      "featureList": ["Records AI agent tool calls from Claude Code, Codex, OpenTelemetry, LiteLLM and MCP on your own machine", "Hash-chained audit records in the frozen PALA-1 format", "Verification of integrity and completeness without the decryption key", "Erasure of personal data by destroying a key, with the chain still verifying", "Works on isolated networks with no connection to a cloud service", "Signed statements about a chain for a SCITT transparency service", "Local LLM inference behind an OpenAI-compatible API"],
       "citation": {"@type": "CreativeWork", "name": "draft-sparysh-pala-audit — PALA-1: A Tamper-Evident Audit Record Format for Constrained and Disconnected Deployments (Internet-Draft, individual submission)", "url": "https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/"},
       "programmingLanguage": "Python",
       "license": "https://www.apache.org/licenses/LICENSE-2.0",
@@ -70,6 +85,20 @@
       "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
       "author": {"@id": "https://palimpsests.dev/#org"},
       "publisher": {"@id": "https://palimpsests.dev/#org"}
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://palimpsests.dev/#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is a tamper-evident audit log?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A tamper-evident audit log is a record in which any later change — an edited, removed or reordered entry — can be detected by someone who did not make it. It does not make a change impossible; it makes it visible. Palimpsests does this with a hash chain: every record names the hash of the one before it, and the chain can be checked without the key that protects the records’ content."
+          }
+        }
+      ]
     }
   ]
 }
@@ -80,6 +109,7 @@
 <link rel="stylesheet" href="/site.css" />
 </head>
 <body>
+<a class="skip" href="#main">Skip to content</a>
 
 <nav>
   <div class="wrap nav">
@@ -105,18 +135,20 @@
       <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
       <a class="hide-sm" href="/integrations/">Integrations</a>
       <a class="hide-sm" href="/runbook/">Runbook</a>
+      <a class="hide-sm" href="/notes/">Notes</a>
       <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
     </div>
   </div>
 </nav>
 
+<main id="main">
 <header id="top" class="hero">
   <div class="wrap">
     <div class="hero__grid">
       <div class="hero__copy" data-reveal>
         <span class="eyebrow">Open source · Apache-2.0 · PALA-1</span>
         <h1 class="display">A tamper-evident audit log for AI agents, <span class="soft">verifiable without the key.</span></h1>
-        <p class="lede hero__sub">Palimpsests records what your agents do, whether the model runs on your own hardware or behind a cloud API. The log stays on your machine, and anyone can check it for edits and gaps without reading a word of it. When the data can’t leave the room, the inference doesn’t either.</p>
+        <p class="lede hero__sub">Palimpsests, by Assault Consulting, records what your agents do, whether the model runs on your own hardware or behind a cloud API. The log stays on your machine, and anyone can check it for edits and gaps without reading a word of it. When the data can’t leave the room, the inference doesn’t either.</p>
         <div class="beats">
           <b>Record the agent</b><span class="dot">·</span><b>keep the log</b><span class="dot">·</span><b>verify without the key</b>
         </div>
@@ -170,6 +202,14 @@
   </div>
 </header>
 
+<section class="blk wrap" id="what">
+  <div class="blk__head" data-reveal>
+    <span class="eyebrow">In one paragraph</span>
+    <h2 class="display">What is a tamper-evident audit log?</h2>
+    <p class="lede" style="max-width:68ch">A tamper-evident audit log is a record in which any later change — an edited, removed or reordered entry — can be detected by someone who did not make it. It does not make a change impossible; it makes it visible. Palimpsests does this with a hash chain: every record names the hash of the one before it, and the chain can be checked without the key that protects the records’ content. <a class="more" href="/notes/what-makes-an-audit-log-tamper-evident/">How it works, and how to build one →</a></p>
+  </div>
+</section>
+
 <section class="record blk" id="record">
   <div class="wrap">
     <div class="blk__head" data-reveal>
@@ -200,23 +240,23 @@
 
     <div class="prov">
       <div class="prov__item" data-reveal>
-        <h4>Hash-chained log · <span class="mono">PALA-1 v1.0</span></h4>
+        <h3>Hash-chained log · <span class="mono">PALA-1 v1.0</span></h3>
         <p>Each entry references the one before it; remove or edit a layer and the chain breaks. The wire format is frozen and independently verified — <a href="https://github.com/Assault-Consulting/Palimpsests/tree/main/docs/specs/pala-1/verification-kit" rel="noopener">reproduce it yourself ↗</a> from the spec and test vectors alone.</p>
       </div>
       <div class="prov__item" data-reveal>
-        <h4>Signed releases · <span class="mono">PEP 740</span></h4>
+        <h3>Signed releases · <span class="mono">PEP 740</span></h3>
         <p>Published to PyPI with Sigstore provenance, so a build can be traced back to the source and workflow that produced it.</p>
       </div>
       <div class="prov__item" data-reveal>
-        <h4>Bill of materials</h4>
+        <h3>Bill of materials</h3>
         <p>A machine-readable SBOM ships with the release — the dependency inventory a Cyber Resilience Act review asks for, ready rather than reconstructed.</p>
       </div>
       <div class="prov__item" data-reveal>
-        <h4>Transparency bridge · <span class="mono">SCITT</span></h4>
+        <h3>Transparency bridge · <span class="mono">SCITT</span></h3>
         <p>One signed statement per published head — no record content leaves the device. Reproduced byte-for-byte twice from the standards alone; one registration, receipt verified, on the record. <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/INTEROP-SCITT.md" rel="noopener">What a receipt proves — and what it doesn’t ↗</a>.</p>
       </div>
       <div class="prov__item" data-reveal>
-        <h4>OSPS Baseline L2 · fuzzed in CI</h4>
+        <h3>OSPS Baseline L2 · fuzzed in CI</h3>
         <p>A self-attested Open Source Project Security baseline, a published threat model, and Atheris fuzzing in the pipeline. <b>Fully open source under Apache-2.0 — every line is public, and you can read, audit, and run all of it.</b></p>
       </div>
     </div>
@@ -232,19 +272,19 @@
 
   <div class="prov">
     <div class="prov__item" data-reveal>
-      <h4>Claude Code · <span class="mono">HTTP hooks</span></h4>
+      <h3>Claude Code · <span class="mono">HTTP hooks</span></h3>
       <p>Three entries in the settings file and nothing to install. Failures are reported, so results are recorded as ok or error.</p>
     </div>
     <div class="prov__item" data-reveal>
-      <h4>Codex · <span class="mono">command hooks</span></h4>
+      <h3>Codex · <span class="mono">command hooks</span></h3>
       <p>A one-file forwarder. Codex has no failure hook, so results are recorded as unobserved rather than guessed.</p>
     </div>
     <div class="prov__item" data-reveal>
-      <h4>OpenTelemetry · <span class="mono">execute_tool spans</span></h4>
+      <h3>OpenTelemetry · <span class="mono">execute_tool spans</span></h3>
       <p>Point an OTLP trace exporter at the local server, and the tool spans your framework already emits become recorded calls.</p>
     </div>
     <div class="prov__item" data-reveal>
-      <h4>LiteLLM · MCP · OpenCode</h4>
+      <h3>LiteLLM · MCP · OpenCode</h3>
       <p>A callback for the gateway, a proxy for stdio MCP servers and a plugin for OpenCode, each with its status written down.</p>
     </div>
   </div>
@@ -252,7 +292,7 @@
   <a class="more" href="/integrations/">All integrations, with setup and limits →</a>
 </section>
 
-<section class="band">
+<section class="band" id="air-gapped">
   <div class="wrap band__in">
     <div data-reveal>
       <span class="eyebrow">For data that isn’t allowed to travel</span>
@@ -327,19 +367,19 @@
 
   <div class="prov">
     <div class="prov__item" data-reveal>
-      <h4>Reviewed by a second person</h4>
+      <h3>Reviewed by a second person</h3>
       <p>Every change — code and docs alike — lands through a pull request reviewed by someone who didn&rsquo;t write it. No direct commits to main.</p>
     </div>
     <div class="prov__item" data-reveal>
-      <h4>Releases that rebuild</h4>
+      <h3>Releases that rebuild</h3>
       <p>Signed with PEP 740 / Sigstore provenance — and reproducible: most recently verified on the v0.10.0 wheel, which rebuilds byte-for-byte to match the artifact published on PyPI.</p>
     </div>
     <div class="prov__item" data-reveal>
-      <h4>Analysed without pause</h4>
+      <h3>Analysed without pause</h3>
       <p>Static analysis and Atheris fuzzing in CI, a published threat model, and an internal, AI-assisted security review with every finding fixed or recorded as an accepted risk.</p>
     </div>
     <div class="prov__item" data-reveal>
-      <h4>Citable, permanently</h4>
+      <h3>Citable, permanently</h3>
       <p>The work behind the code is published as a report with a persistent identifier — <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">DOI 10.5281/zenodo.21978107 ↗</a> — so the design can be cited permanently. The code itself is pinned by release version on PyPI and GitHub.</p>
     </div>
   </div>
@@ -459,15 +499,15 @@
   <!-- latest-notes:start -->
   <div class="prov">
     <div class="prov__item" data-reveal>
-      <h4><a href="/notes/protecting-an-audit-log-from-being-rewritten/">Protecting an audit log from being rewritten from scratch</a></h4>
+      <h3><a href="/notes/protecting-an-audit-log-from-being-rewritten/">Protecting an audit log from being rewritten from scratch</a></h3>
       <p>A hash chain catches an edited record but not a log rebuilt from the first record. What closes that gap, from which record on, and what stays open.</p>
     </div>
     <div class="prov__item" data-reveal>
-      <h4><a href="/notes/can-a-coding-agent-implement-a-spec/">Can a coding agent implement a binary format from its spec alone?</a></h4>
+      <h3><a href="/notes/can-a-coding-agent-implement-a-spec/">Can a coding agent implement a binary format from its spec alone?</a></h3>
       <p>A small, strict test for coding agents. Give one a frozen specification and its test vectors, no reference code, and ask it to reproduce eleven values byte for byte in a language it chooses.</p>
     </div>
     <div class="prov__item" data-reveal>
-      <h4><a href="/notes/anatomy-of-a-tamper-evident-audit-log/">Anatomy of a tamper-evident audit log: PALA-1, a PKCS#11 anchor and SCITT</a></h4>
+      <h3><a href="/notes/anatomy-of-a-tamper-evident-audit-log/">Anatomy of a tamper-evident audit log: PALA-1, a PKCS#11 anchor and SCITT</a></h3>
       <p>The three layers of a Palimpsests audit log taken apart: the PALA-1 hash chain, the chain head on a PKCS#11 token and SCITT receipts. What each one proves alone, and what they prove together.</p>
     </div>
   </div>
@@ -502,6 +542,8 @@
     </div>
   </div>
 </section>
+
+</main>
 
 <footer>
   <div class="wrap foot">

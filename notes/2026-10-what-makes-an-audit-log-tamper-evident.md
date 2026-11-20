@@ -4,7 +4,17 @@ slug: what-makes-an-audit-log-tamper-evident
 date: 2026-10-20
 description: What makes an audit log tamper-evident: hash chains, anchors and witnesses, what each one proves, how to build such a log, and what to ask before trusting the claim.
 tags: audit-log, tamper-evident, security
+seo_title: Tamper-evident audit logs: how they work, how to build one
+seo_description: What makes an audit log tamper-evident: hash chains, anchors and witnesses, what each proves, how to build such a log, and what to ask before trusting it.
+page: /verify-without-reading/
+related: protecting-an-audit-log-from-being-rewritten, anatomy-of-a-tamper-evident-audit-log, checking-an-ai-log-without-reading-it
 ---
+
+## What is a tamper-evident audit log?
+
+A tamper-evident audit log is a record in which any later change — an edited, removed or reordered entry — can be detected by someone who did not make it. It does not make the change impossible. It makes it visible, and says where.
+
+## What the word should mean
 
 "Tamper-evident" appears on a lot of logging products. For an audit log it should mean something specific: if someone changes the log, a person who didn't make the change can detect it later. It doesn't mean the change is impossible. That would be tamper-proof, and no log stored on a computer someone controls can promise that.
 
