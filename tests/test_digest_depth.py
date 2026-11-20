@@ -36,6 +36,11 @@ from palimpsests.server.tool_calls import parse_tool_calls  # noqa: E402
 
 DIGEST = 0x000D  # EVT_PAYLOAD_DIGEST
 DEPTHS = (MAX_DEPTH + 1, 1200, 3000)  # one past the rule; past the old stack; well past
+#: Depths every supported interpreter's JSON parser reads. Past about a
+#: thousand levels the parser itself gives up on Python 3.11 and 3.12 (it
+#: reads tens of thousands on 3.13), and the report is then rejected as
+#: unreadable rather than recorded without a digest.
+READABLE = (MAX_DEPTH + 1, 500)
 
 
 def _text(depth: int, *, array: bool = True) -> str:
@@ -46,7 +51,12 @@ def _text(depth: int, *, array: bool = True) -> str:
 
 
 def _value(depth: int, *, array: bool = True):
-    return json.loads(_text(depth, array=array))
+    """The same value as a Python object, built without the JSON parser:
+    the parser's own depth limit differs between interpreters."""
+    value: object = [] if array else 0
+    for _ in range(depth - 1 if array else depth):
+        value = [value] if array else {"k": value}
+    return value
 
 
 def _tools(log):
@@ -74,9 +84,14 @@ def test_the_limit_is_128_containers_and_one_more_has_no_form():
         with pytest.raises(ValueError, match="nested deeper than 128"):
             canonical_json(_value(MAX_DEPTH + 1, array=array))
     # a scalar is not a level: 128 containers around a number is still 128
-    assert canonical_json(json.loads("[" * 128 + "1" + "]" * 128))
+    inner: object = 1
+    for _ in range(128):
+        inner = [inner]
+    assert canonical_json(inner) == b"[" * 128 + b"1" + b"]" * 128
     # mixed nesting counts both kinds
-    mixed = json.loads('[{"k":' * 64 + "1" + "}]" * 64)
+    mixed: object = 1
+    for _ in range(64):
+        mixed = [{"k": mixed}]
     assert canonical_json(mixed)
     with pytest.raises(ValueError):
         canonical_json([mixed])
@@ -124,7 +139,7 @@ def _hook_body(event, call_id, field, depth):
 
 
 @pytest.mark.parametrize("route", ["/v1/pala/hooks/claude", "/v1/pala/hooks/codex"])
-@pytest.mark.parametrize("depth", DEPTHS)
+@pytest.mark.parametrize("depth", READABLE)
 def test_a_deep_hook_payload_leaves_the_pair_on_the_chain(tmp_path, route, depth):
     log = tmp_path / "h.pala"
     audit = NativeAudit(PalaWriter(log))
@@ -188,7 +203,7 @@ def test_a_call_leaves_pending_only_when_its_result_is_written(tmp_path):
 
 # -- the events route ----------------------------------------------------------
 
-@pytest.mark.parametrize("depth", DEPTHS)
+@pytest.mark.parametrize("depth", READABLE)
 def test_a_deep_argument_on_the_events_route_is_recorded_without_a_digest(tmp_path, depth):
     log = tmp_path / "e.pala"
     audit = NativeAudit(PalaWriter(log))
@@ -291,23 +306,43 @@ def test_a_deep_tool_call_in_the_models_text_does_not_break_the_parser(depth):
 
 # -- past the parser -----------------------------------------------------------
 
-@pytest.mark.parametrize("route, body", [
+_BODIES = [
     ("/v1/pala/hooks/claude", '{"hook_event_name":"PreToolUse","tool_name":"T",'
-                              '"tool_use_id":"x","tool_input":%s}'),
+                              '"tool_use_id":"x","tool_input":DEEP}'),
+    ("/v1/pala/hooks/claude", '{"hook_event_name":"PostToolUse","tool_name":"T",'
+                              '"tool_use_id":"x","tool_response":DEEP}'),
     ("/v1/pala/hooks/codex", '{"hook_event_name":"PreToolUse","tool_name":"T",'
-                             '"tool_use_id":"x","tool_input":%s}'),
+                             '"tool_use_id":"x","tool_input":DEEP}'),
     ("/v1/pala/events", '{"events":[{"type":"tool_call","id":"c","name":"t",'
-                        '"arguments":%s}]}'),
-])
-def test_a_body_too_deep_for_the_parser_is_rejected_and_counted(tmp_path, route, body):
-    """Past some tens of thousands of levels the JSON parser itself gives up.
-    Nothing can be recorded of a body that cannot be read; it is answered
-    4xx, never 500, and the status counts it as rejected."""
-    audit = NativeAudit(PalaWriter(tmp_path / "p.pala"))
+                        '"arguments":DEEP}]}'),
+]
+
+
+@pytest.mark.parametrize("route, body", _BODIES)
+@pytest.mark.parametrize("depth", (1200, 3000, 60_000))
+def test_at_any_depth_a_report_is_recorded_or_rejected_never_a_500(tmp_path, route, body,
+                                                                    depth):
+    """Where the interpreter's JSON parser stops reading differs: about a
+    thousand levels on Python 3.11 and 3.12, tens of thousands on 3.13.
+    Below it the event is recorded without a digest; past it the body
+    cannot be read, the report is answered 4xx and the status counts it as
+    rejected. On neither side is there a 500 or a call left half-written."""
+    log = tmp_path / "p.pala"
+    audit = NativeAudit(PalaWriter(log))
     app = create_app(chat_fn=lambda **k: iter(()), models_fn=lambda: [], audit=audit)
     client = TestClient(app, raise_server_exceptions=False)
-    r = client.post(route, content=body.replace("%s", _text(60_000)),
+    r = client.post(route, content=body.replace("DEEP", _text(depth)),
                     headers={"Content-Type": "application/json"})
-    assert 400 <= r.status_code < 500
-    assert client.get("/v1/pala/status").json()["ingest"][route]["rejected"] == 1
+    rejected = client.get("/v1/pala/status").json()["ingest"][route]["rejected"]
+    app.state.cancel_pending()
     audit.writer.close()
+    with AuditReader.open(log) as reader:
+        assert reader.verify().chain.chain_ok
+        recs = [d for d in reader.records() if d.kind_name in ("TOOL_CALL", "TOOL_RESULT")]
+    if r.status_code == 200:
+        assert rejected == 0 and recs and recs[0].kind_name == "TOOL_CALL"
+        assert not _has_digest(recs[-1] if "tool_response" in body else recs[0])
+        # an open call was closed at the stop, never left without an end
+        assert len(recs) % 2 == 0
+    else:
+        assert 400 <= r.status_code < 500 and rejected == 1 and not recs
