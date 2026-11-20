@@ -57,6 +57,7 @@ METHODS = {
     "tool_result": ["call_seq", "call_hash", "outcome", "result_digest", "span_id"],
     "tools_offered_no_call": ["count", "tools_digest", "span_id", "role"],
     "recovery_truncated_tail": ["role"],
+    "reports_refused": ["route", "empty", "wrong", "accepted", "role"],
     "guard_prefix_release": ["holder_seq", "consumer_count", "span_id", "return_seq"],
     "guard_state_reject": ["detail", "span_id", "return_seq"],
     "guard_tool_loop_limit": ["iterations", "call_seq", "call_hash", "span_id"],
@@ -188,6 +189,9 @@ def test_each_method_writes_the_record_the_document_says(tmp_path):
             written[method] = (names[rec.record_type], rec.kind_name or "—")
     table = _documented_table()
     table.pop("recovery_truncated_tail")  # needs a torn tail: its own test below
+    # its record is itself a remark (the reports_refused advisory), so it is
+    # kept out of the chain "with nothing to remark": tests/test_reports_refused.py
+    table.pop("reports_refused")
     assert written == table
 
 

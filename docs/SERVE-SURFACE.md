@@ -44,7 +44,14 @@ Without a key the serve answers every request and reports
 `"auth_required": false` in its status. That is a serve for one machine;
 see [SECURITY.md](../SECURITY.md).
 
-A refusal is counted (below) and written nowhere on the chain.
+A refusal is counted (below). On a reporting route it is also recorded
+on the chain (since 0.15, inference profile r9): the first refusal on a
+route in a run at once, as a `REPORTS_REFUSED` record with the route and
+the counts, and the counts once more when the serve stops. At most two
+records per route per run — a refusal is caused by a request that failed
+authentication, so it must not be a way to grow the chain. Nothing of the
+refused request is recorded. A refusal on a route that is not a reporting
+route is written nowhere.
 
 ## Reporting tool events — `POST /v1/pala/events`
 

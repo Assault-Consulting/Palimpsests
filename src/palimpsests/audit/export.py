@@ -48,7 +48,7 @@ from palimpsests.audit._header_fields import span
 from palimpsests.audit.pala import KNOWN_RECORD_TYPES, MalformedRecord, body_digest_of, iter_records
 from palimpsests.audit.pala.codec import record_hash
 from palimpsests.audit.pala.incremental import IncrementalVerifier
-from palimpsests.audit.reader import decode_record
+from palimpsests.audit.reader import decode_record, decode_reports_refused
 from typing import TYPE_CHECKING, TextIO
 
 if TYPE_CHECKING:
@@ -121,6 +121,15 @@ def _line(dr, hb: bytes, body_len: int, body_matches: bool) -> dict[str, object]
         # whose failure the recording vantage could not see.
         line["outcome"] = dr.outcome
         line["outcome_name"] = dr.outcome_name
+    refused = decode_reports_refused(dr)
+    if refused is not None:
+        # r9: what the serving layer had counted on one reporting route
+        line["reports_refused"] = {
+            "route": refused.route,
+            "empty_credential": refused.refused_empty,
+            "wrong_credential": refused.refused_wrong,
+            "accepted": refused.accepted,
+        }
     if dr.disposition is not None:
         line["disposition"] = dr.disposition
         line["disposition_name"] = dr.disposition_name

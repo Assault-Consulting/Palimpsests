@@ -1,7 +1,7 @@
 {
-  "$comment": "Inference-profile companion vectors (r2-r8). Deterministic; real crypto, fake entropy \u2014 never derive keys or ids like this outside a test vector. ../test-vectors.json is frozen with the core and is deliberately untouched by these.",
+  "$comment": "Inference-profile companion vectors (r2-r9). Deterministic; real crypto, fake entropy \u2014 never derive keys or ids like this outside a test vector. ../test-vectors.json is frozen with the core and is deliberately untouched by these.",
   "profile": "inference",
-  "profile_revision": "r8",
+  "profile_revision": "r9",
   "generator": "gen_inference_vectors.py",
   "boot_id": "b0071d000000000000000000000000a2",
   "encryption": {
@@ -289,10 +289,63 @@
       "record_hash": "1bb6c51b1b2e2035d26c9dfd1d3d9111dedcfa8b8a0489997e932ed4c97ee397",
       "body_len": 6,
       "body_hex": "010002000c00"
+    },
+    {
+      "label": "boot_3",
+      "note": "A third boot, for the r9 records.",
+      "seq": 27,
+      "record_type": "0x0002",
+      "header_len": 156,
+      "header_hex": "50414c4101009c00020000031b00000000000000b0071d000000000000000000000000c91bb6c51b1b2e2035d26c9dfd1d3d9111dedcfa8b8a0489997e932ed4c97ee3970000000000000000000000000000000000000000000000000000000000000000c0160d1a02000000c0e45e91a30ac21800000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "record_hash": "8918e33d5765c580cc5ae7bb59ca94f7a854e590601feb57fedc24a52cb0569b"
+    },
+    {
+      "label": "writer_open_3",
+      "note": "WRITER_OPEN (kind 13), as at seq 25.",
+      "seq": 28,
+      "record_type": "0x0012",
+      "header_len": 173,
+      "header_hex": "50414c410100ad00120000031c00000000000000b0071d000000000000000000000000c98918e33d5765c580cc5ae7bb59ca94f7a854e590601feb57fedc24a52cb0569b000000000000000000000000000000000000000000000000000000000000000000591c1a0200000000276e91a30ac218000000002a000000871d6de793f872e059b37e8713f5e0ebb1a871cf99243faec1a3aa6d18e4f1f401000d00656e67696e652e6e6174697665",
+      "record_hash": "d17c033a890da55e9da544120c70b07ce5eaa3a49c76bab600c0ca37d640090e",
+      "body_len": 42,
+      "body_hex": "010002000d00040020006578616d706c652d77726974657220312e303b20696e666572656e6365207238"
+    },
+    {
+      "label": "reports_refused_first",
+      "note": "REPORTS_REFUSED (kind 14, r9): the first refusal on a route in this run, recorded at once. One report with an empty credential; none accepted yet.",
+      "seq": 29,
+      "record_type": "0x0012",
+      "header_len": 173,
+      "header_hex": "50414c410100ad00120000031d00000000000000b0071d000000000000000000000000c9d17c033a890da55e9da544120c70b07ce5eaa3a49c76bab600c0ca37d640090e0000000000000000000000000000000000000000000000000000000000000000409b2b1a0200000040697d91a30ac2180000000037000000d001ef263c48f54096388927d5438df10ab60c59e051a0a6144a12497acbec5401000d00656e67696e652e6e6174697665",
+      "record_hash": "4748712900b2550d79614f66bc6e2db220e257af58f1186eeba322cec9a83be8",
+      "body_len": 55,
+      "body_hex": "010002000e00160015002f76312f70616c612f686f6f6b732f636c61756465170004000100000018000400000000001900040000000000"
+    },
+    {
+      "label": "reports_refused_at_stop",
+      "note": "REPORTS_REFUSED (kind 14, r9): the counts as they stood when the serving layer stopped - 4 refused for an empty credential, 22 accepted. The second and last record this route gets in this run.",
+      "seq": 30,
+      "record_type": "0x0012",
+      "header_len": 173,
+      "header_hex": "50414c410100ad00120000031e00000000000000b0071d000000000000000000000000c94748712900b2550d79614f66bc6e2db220e257af58f1186eeba322cec9a83be8000000000000000000000000000000000000000000000000000000000000000080dd3a1a0200000080ab8c91a30ac2180000000037000000052daad6c8a75e0a6576a9ff370af5f9898f268ff070522729029344e3250cb001000d00656e67696e652e6e6174697665",
+      "record_hash": "1e7de819639a458df761c6eb210205aaa0810113ede48d5ed466bd3d0de36990",
+      "body_len": 55,
+      "body_hex": "010002000e00160015002f76312f70616c612f686f6f6b732f636c61756465170004000400000018000400000000001900040016000000"
+    },
+    {
+      "label": "writer_close_3",
+      "note": "WRITER_CLOSE (kind 12), as at seq 26.",
+      "seq": 31,
+      "record_type": "0x0012",
+      "header_len": 173,
+      "header_hex": "50414c410100ad00120000031f00000000000000b0071d000000000000000000000000c91e7de819639a458df761c6eb210205aaa0810113ede48d5ed466bd3d0de369900000000000000000000000000000000000000000000000000000000000000000c01f4a1a02000000c0ed9b91a30ac2180000000006000000a0f0a0a571d4eb6d7dba58437da43d6f196af288291e13fcb2a353974472954b01000d00656e67696e652e6e6174697665",
+      "record_hash": "f715da92af6b83ab1cda2294f83f138c761901e6e3a53f2855ab9af7b140801b",
+      "body_len": 6,
+      "body_hex": "010002000c00"
     }
   ],
-  "chain_head": "1bb6c51b1b2e2035d26c9dfd1d3d9111dedcfa8b8a0489997e932ed4c97ee397",
-  "anchor_head": "1bb6c51b1b2e2035d26c9dfd1d3d9111dedcfa8b8a0489997e932ed4c97ee397",
+  "chain_head": "f715da92af6b83ab1cda2294f83f138c761901e6e3a53f2855ab9af7b140801b",
+  "anchor_head": "f715da92af6b83ab1cda2294f83f138c761901e6e3a53f2855ab9af7b140801b",
   "semantics": {
     "$comment": "Decoded r2/r3 body expectations, so a profile-aware reader can check its tag/kind resolution \u2014 the envelope answers above are checkable with any core verifier.",
     "4": {
@@ -427,6 +480,23 @@
       "kind_name": "WRITER_CLOSE"
     },
     "lifecycle_rule": "r8: a boot that holds WRITER_OPEN and is followed by another boot ends with WRITER_CLOSE, or was stopped without being closed. Here the second boot (seq 24-26) is opened and closed; the first holds no WRITER_OPEN and is not judged. Drop seq 26 and append a third BOOT, and a reader reports the second boot.",
+    "29": {
+      "kind": 14,
+      "kind_name": "REPORTS_REFUSED",
+      "route": "/v1/pala/hooks/claude",
+      "refused_empty": 1,
+      "refused_wrong": 0,
+      "accepted": 0
+    },
+    "30": {
+      "kind": 14,
+      "kind_name": "REPORTS_REFUSED",
+      "route": "/v1/pala/hooks/claude",
+      "refused_empty": 4,
+      "refused_wrong": 0,
+      "accepted": 22
+    },
+    "reports_refused_rule": "r9: counts are as they stood when the record was written, since the serving layer started. At most two records per route per run: the first refusal at once, and the counts once more at the stop.",
     "source_rule": "EVT_SOURCE (0x0011) is present only for a non-default value: 1 (reported-by-client) or, from r7, 2 (derived-from-telemetry); absent means 0 (parsed-from-wire). Seq 8/9 carry no EVT_SOURCE and are byte-identical to their r3 form."
   }
 }

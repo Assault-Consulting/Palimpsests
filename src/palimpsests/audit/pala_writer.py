@@ -99,6 +99,7 @@ from palimpsests.audit.profiles.inference import (  # noqa: F401
     DISP_ACKNOWLEDGED,
     DISP_DISMISSED,
     DISP_ESCALATED,
+    EVT_ACCEPTED,
     EVT_BLOB_DIGEST,
     EVT_CATEGORY,
     EVT_DETAIL,
@@ -110,6 +111,9 @@ from palimpsests.audit.profiles.inference import (  # noqa: F401
     EVT_RECOVERABLE,
     EVT_REF_HASH,
     EVT_REF_SEQ,
+    EVT_REFUSED_EMPTY,
+    EVT_REFUSED_WRONG,
+    EVT_ROUTE,
     EVT_SEVERITY,
     EVT_SOURCE,
     EVT_TOKEN_COUNT,
@@ -128,6 +132,7 @@ from palimpsests.audit.profiles.inference import (  # noqa: F401
     KIND_PREFIX_COPY,
     KIND_PREFIX_WARM,
     KIND_RECOVERY_TRUNCATED_TAIL,
+    KIND_REPORTS_REFUSED,
     KIND_SEGMENT_CONTINUATION,
     KIND_TOOL_CALL,
     KIND_TOOL_RESULT,
@@ -1236,6 +1241,40 @@ class PalaWriter:
     def prefix_warm(self, *, token_count: int | None = None) -> bytes:
         body = self._event_body(KIND_PREFIX_WARM, token_count=token_count)
         return self._emit(RT_EVENT, tlvs=self._origin(ROLE_SCHEDULER), body=body)
+
+    def reports_refused(
+        self,
+        route: str,
+        *,
+        empty: int,
+        wrong: int,
+        accepted: int = 0,
+        role: str = ROLE_NATIVE,
+    ) -> bytes:
+        """Record that reports to ``route`` were refused (EVENT kind 14, r9).
+
+        A client whose reports are refused looks normal from its own side,
+        and the refusals lived only in the serving process's memory. The
+        counts are what the serving layer saw so far on that route: refused
+        for an empty credential, refused for a wrong one, and accepted.
+        Metadata only — nothing of a refused request is recorded.
+        """
+        encoded = route.encode("utf-8")
+        if not encoded or len(encoded) > 64:
+            raise ValueError("route must be 1..64 UTF-8 bytes")
+        for name, value in (("empty", empty), ("wrong", wrong), ("accepted", accepted)):
+            if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value < 2**32:
+                raise ValueError(f"{name} must be an integer in 0..2**32-1")
+        if empty + wrong == 0:
+            raise ValueError("no report was refused: there is nothing to record")
+        body = encode_tlvs([
+            (EVT_KIND, struct.pack("<H", KIND_REPORTS_REFUSED)),
+            (EVT_ROUTE, encoded),
+            (EVT_REFUSED_EMPTY, struct.pack("<I", empty)),
+            (EVT_REFUSED_WRONG, struct.pack("<I", wrong)),
+            (EVT_ACCEPTED, struct.pack("<I", accepted)),
+        ])
+        return self._emit(RT_EVENT, tlvs=self._origin(role), body=body)
 
     def recovery_truncated_tail(self, *, role: str = ROLE_NATIVE) -> bytes:
         """Record that resume removed a torn trailing record (profile §3, kind 7)."""

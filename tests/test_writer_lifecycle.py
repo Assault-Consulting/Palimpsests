@@ -257,9 +257,9 @@ def test_the_serve_closes_its_chain(tmp_path):
 
 def test_the_vectors_show_an_opened_and_closed_boot(tmp_path):
     doc = vectors.load("inference")
-    assert doc["profile_revision"] == "r8" and len(doc["records"]) == 27
-    assert [r["label"] for r in doc["records"][24:]] == ["boot_2", "writer_open",
-                                                         "writer_close"]
+    assert doc["profile_revision"] in ("r8", "r9") and len(doc["records"]) >= 27
+    assert [r["label"] for r in doc["records"][24:27]] == ["boot_2", "writer_open",
+                                                           "writer_close"]
     assert doc["semantics"]["25"]["kind_name"] == "WRITER_OPEN"
     assert doc["semantics"]["26"] == {"kind": 12, "kind_name": "WRITER_CLOSE"}
 
@@ -271,7 +271,7 @@ def test_the_vectors_show_an_opened_and_closed_boot(tmp_path):
     whole.write_bytes(container(doc["records"]))
     with AuditReader.open(whole) as reader:
         ver = reader.verify()
-        assert ver.chain.chain_ok and len(reader.boots()) == 2
+        assert ver.chain.chain_ok and len(reader.boots()) >= 2
         assert [reader.record_at(i).kind_name for i in (25, 26)] == ["WRITER_OPEN",
                                                                     "WRITER_CLOSE"]
         assert reader.record_at(25).detail == doc["semantics"]["25"]["detail"]

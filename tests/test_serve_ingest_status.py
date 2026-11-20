@@ -9,7 +9,8 @@ bearer (run R1); OpenCode without the key got 401 and the tool ran
 (OpenCode run 3); Codex skipped untrusted hooks without a word (run R2).
 ``GET /v1/pala/status`` counts, per ingestion route, what was accepted,
 what the bearer check refused (empty apart from wrong), and what was
-rejected otherwise — and writes nothing to the chain.
+rejected otherwise. Reading the status writes nothing to the chain; since
+profile r9 the refusals themselves are recorded (tests/test_reports_refused.py).
 """
 from __future__ import annotations
 

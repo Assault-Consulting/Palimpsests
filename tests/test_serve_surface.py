@@ -86,7 +86,11 @@ def test_every_route_refuses_without_the_key_in_one_shape(served, path, headers)
     assert r.status_code == 401
     assert r.json()["error"]["code"] == "invalid_api_key"
     assert r.json()["error"]["type"] == "invalid_request_error"
-    assert audit.writer.seq == before  # a refusal is written nowhere on the chain
+    # a reporting route records its first refusal of the run, once (r9);
+    # any other route writes nothing
+    assert audit.writer.seq == before + (1 if path in REPORTING else 0)
+    assert call(path, headers=headers).status_code == 401
+    assert audit.writer.seq == before + (1 if path in REPORTING else 0)
 
 
 def test_without_a_key_the_serve_says_so(tmp_path):

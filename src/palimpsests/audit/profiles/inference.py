@@ -51,6 +51,10 @@ SEG_PREDECESSOR_HEAD = 0x0012  # 32 bytes — head of the previous segment (kind
 SEG_INDEX = 0x0013  # u32 — ordinal of the segment the record opens (kind 11, r6)
 SEG_RETENTION_S = 0x0014  # u64 — retention floor at the cut, 0 = none declared (kind 11, r6)
 SEG_PRIOR_ROOT = 0x0015  # 32 bytes — derived root of [0, seq), from record 0 (kind 11, r6)
+EVT_ROUTE = 0x0016  # UTF-8 <= 64 bytes — the reporting route a count is about (kind 14, r9)
+EVT_REFUSED_EMPTY = 0x0017  # u32 — reports refused for an empty credential (kind 14, r9)
+EVT_REFUSED_WRONG = 0x0018  # u32 — reports refused for a wrong credential (kind 14, r9)
+EVT_ACCEPTED = 0x0019  # u32 — reports accepted on the route so far (kind 14, r9)
 
 # EVT_KIND values — operations (profile §3)
 KIND_MODEL_LOAD = 1
@@ -66,6 +70,7 @@ KIND_TOOLS_OFFERED_NO_CALL = 10  # r4 — tools offered, no structured call prod
 KIND_SEGMENT_CONTINUATION = 11  # r6 — first record of a segment opened after a cut
 KIND_WRITER_CLOSE = 12  # r8 — the writer was closed; the last record it writes
 KIND_WRITER_OPEN = 13  # r8 — a writer that closes with kind 12 began writing here
+KIND_REPORTS_REFUSED = 14  # r9 — reports to a route were refused before being read
 # EVT_KIND values — guard refusals (profile §4), from 100 upward
 KIND_GUARD_PREFIX_RELEASE = 100
 KIND_GUARD_STATE_REJECT = 101
@@ -142,6 +147,10 @@ __all__ = [
     "EVT_TOOLS_OFFERED",
     "EVT_TOOLS_DIGEST",
     "EVT_SOURCE",
+    "EVT_ROUTE",
+    "EVT_REFUSED_EMPTY",
+    "EVT_REFUSED_WRONG",
+    "EVT_ACCEPTED",
     "SEG_PREDECESSOR_HEAD",
     "SEG_INDEX",
     "SEG_RETENTION_S",
@@ -159,6 +168,7 @@ __all__ = [
     "KIND_SEGMENT_CONTINUATION",
     "KIND_WRITER_CLOSE",
     "KIND_WRITER_OPEN",
+    "KIND_REPORTS_REFUSED",
     "KIND_GUARD_PREFIX_RELEASE",
     "KIND_GUARD_STATE_REJECT",
     "KIND_INCIDENT_CANDIDATE",
