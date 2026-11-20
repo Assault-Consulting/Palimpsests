@@ -581,6 +581,12 @@ def create_app(
                 # When a record this serve wrote is on stable storage:
                 # record, group:<seconds> or os (docs/WRITER-SURFACE.md §4).
                 "durability": str(getattr(audit.writer, "durability", "unknown")),
+                # The file being written: the chain's first file until it is
+                # cut, then the current segment.
+                "segment": os.path.basename(str(getattr(audit.writer, "path", ""))) or None,
+                # The thresholds the chain is cut at, and the retention
+                # declared for closed segments; null when it is not cut.
+                "rotation": _rotation_status(getattr(audit, "rotation", None)),
             }
         return {
             "format": "pala-serve-status/1",
@@ -996,8 +1002,28 @@ def _sse_prebuilt(
 DURABILITY_VAR = "PALIMPSESTS_AUDIT_DURABILITY"
 
 
+def _rotation_status(policy) -> dict | None:
+    """A rotation policy as the status route states it, or ``None``."""
+    if policy is None:
+        return None
+    stated = {
+        "max_bytes": policy.max_bytes,
+        "max_records": policy.max_records,
+        "max_age_s": policy.max_age_s,
+        "retention_s": policy.retention_s,
+    }
+    return {k: v for k, v in stated.items() if v is not None}
+
+
 class ServeChainUnavailable(RuntimeError):
     """The serve cannot open its own audit chain, and so does not start."""
+
+
+def default_manifest_path() -> str:
+    """Where the manifest of the serve's segments is, once the chain is cut."""
+    from palimpsests.core import default_config_dir
+
+    return str(default_config_dir() / "serve.pala.segments.json")
 
 
 def default_audit():
@@ -1029,13 +1055,32 @@ def default_audit():
             "use record, group, group:<seconds> or os"
         ) from exc
 
-    path = default_config_dir() / "serve.pala"
+    # Whether the chain is cut into segments as it grows, and the retention
+    # declared for the closed ones. Read like the durability policy: a
+    # value that cannot be read stops the serve.
+    from palimpsests.server.chain_config import live_chain_path, rotation_from_env
+
+    try:
+        rotation = rotation_from_env(os.environ)
+    except ValueError as exc:
+        raise ServeChainUnavailable(str(exc)) from exc
+
+    base = default_config_dir() / "serve.pala"
+    try:
+        # A chain that was ever cut is continued at its live segment,
+        # whatever the policy is now: the first file is a closed segment,
+        # and appending to it would fork the chain.
+        path = live_chain_path(base)
+    except ValueError as exc:
+        raise ServeChainUnavailable(
+            f"cannot tell which file of the serve's audit chain to continue: {exc}"
+        ) from exc
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
         if path.exists() and path.stat().st_size > 0:
-            writer = PalaWriter.open_existing(path, durability=durability)
+            writer = PalaWriter.open_existing(path, rotation=rotation, durability=durability)
         else:
-            writer = PalaWriter(path, durability=durability)
+            writer = PalaWriter(path, rotation=rotation, durability=durability)
     except ChainLocked as exc:
         raise ServeChainUnavailable(
             f"{exc}. A second serve needs a chain of its own: start it with "
@@ -1047,7 +1092,9 @@ def default_audit():
             f"`palimpsests pala verify {path}` shows what is wrong with it; "
             "the serve does not start without its chain."
         ) from exc
-    return NativeAudit(writer)
+    audit = NativeAudit(writer)
+    audit.rotation = rotation  # for the status route and the startup line
+    return audit
 
 
 def main() -> None:
@@ -1148,6 +1195,17 @@ def run_serve(host: str, port: int, api_key: str | None) -> None:
             f"warning: audit durability is '{policy}' ({DURABILITY_VAR}): a loss of "
             f"power can remove the last records written ({lost}) and leave a chain "
             "that still verifies; keep an anchor outside this host",
+            file=sys.stderr,
+        )
+    rotation = _rotation_status(getattr(audit, "rotation", None))
+    if rotation is not None:
+        print(
+            "audit chain is cut into segments at "
+            + ", ".join(f"{k}={v:g}" for k, v in rotation.items() if k != "retention_s")
+            + (f"; declared retention {rotation['retention_s']} s"
+               if "retention_s" in rotation else "; no retention declared")
+            + f". Writing {os.path.basename(audit.writer.path)}; verify the set with "
+            f"`palimpsests pala segment-verify {default_manifest_path()}`",
             file=sys.stderr,
         )
     if api_key is None and host not in _LOCAL_HOSTS:

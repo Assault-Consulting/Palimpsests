@@ -238,6 +238,7 @@ output are described by `palimpsests pala verify --help`.
 | `pala report [--html]` | an attestation document; the verdict lives inside it |
 | `pala bundle` | records + inclusion proofs + verdict in one tar |
 | `pala segment` | cut a chain into retention-ready segments that verify alone |
+| `pala segment-verify` | verify a chain that was cut into segments as one set, from its manifest |
 | `pala consistency` / `consistency-verify` | prove an archived prefix is still a prefix |
 | `pala selftest` | check this build against the vectors packaged in the wheel |
 
@@ -284,6 +285,10 @@ tokens rather than an OOM.
 | `PALIMPSESTS_SERVE_API_KEY` | — | bearer key for `palimpsests serve`; the integrations read the same variable |
 | `PALIMPSESTS_SERVE_URL` | `http://127.0.0.1:11435` | where the integrations look for the serve |
 | `PALIMPSESTS_AUDIT_DURABILITY` | `record` | when a record of the serve's chain is on stable storage: `record` (every record synced before the call returns), `group` / `group:<seconds>` (synced within that window), `os` (the kernel decides — a power loss can remove the last records without a trace). See `docs/WRITER-SURFACE.md` §4 |
+| `PALIMPSESTS_AUDIT_ROTATE_BYTES` | — | cut the serve's chain into segments at this size: bytes, or a number with `KiB`, `MiB`, `GiB` (`docs/RETENTION.md` §3) |
+| `PALIMPSESTS_AUDIT_ROTATE_RECORDS` | — | cut it at this many records per segment |
+| `PALIMPSESTS_AUDIT_ROTATE_AGE` | — | cut it when a segment is this old: seconds, or a number with `s`, `m`, `h`, `d`; the clock starts again when the serve does |
+| `PALIMPSESTS_AUDIT_RETENTION` | — | the retention declared for a closed segment, written into the chain at every cut; needs a threshold above. A declaration: nothing deletes a segment |
 | `PALIMPSESTS_AUDIT_REPORT` | — | set to `0` to disable client-side reporting in the integrations |
 
 ```bash

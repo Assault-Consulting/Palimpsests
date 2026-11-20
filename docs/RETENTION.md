@@ -127,6 +127,48 @@ as a backstop for near-idle writers, not as the primary cut. Segments
 of ≤ 128 MiB also keep cross-boot resume of the live segment well
 under a second (§4: ≈ 4 s/GB).
 
+### Rotation for `palimpsests serve` (0.15)
+
+The serve's chain is one file, `<config>/serve.pala`, unless the
+environment asks for cuts:
+
+| Variable | Cut when the segment being written… |
+|---|---|
+| `PALIMPSESTS_AUDIT_ROTATE_BYTES` | reaches this size — bytes, or `16MiB`, `1GiB` |
+| `PALIMPSESTS_AUDIT_ROTATE_RECORDS` | holds this many records |
+| `PALIMPSESTS_AUDIT_ROTATE_AGE` | is this old — seconds, or `12h`, `7d` |
+| `PALIMPSESTS_AUDIT_RETENTION` | — the retention declared for closed segments (`180d`); needs a threshold |
+
+```bash
+PALIMPSESTS_AUDIT_ROTATE_BYTES=16MiB PALIMPSESTS_AUDIT_RETENTION=180d palimpsests serve
+```
+
+The segments are `serve.pala`, `serve.pala.00001`, `serve.pala.00002` …
+with `serve.pala.segments.json` beside them. Verify them as one set:
+
+```bash
+palimpsests pala segment-verify ~/.config/palimpsests/serve.pala.segments.json
+```
+
+`GET /v1/pala/status` names the segment being written and the policy in
+force. Four things to know:
+
+- **A value that cannot be read stops the serve.** A typo must not
+  quietly become "do not rotate".
+- **A chain that was ever cut is continued at its live segment**, found
+  from the manifest, whatever the policy is now. Removing the variables
+  stops further cuts and nothing else. If the manifest is there and the
+  live segment is not, the serve does not start: beginning again at
+  `serve.pala`, which is a closed segment, would write a second history.
+- **Nothing deletes a segment.** The retention is a declaration, written
+  into the chain at every cut, that a closed segment is kept at least
+  that long. Deleting an expired one is the operator's act — delete the
+  file, keep the manifest. The set then verifies as consistent and not
+  complete, and the manifest still names the head of what is gone.
+- **Prefer bytes or records as the trigger** (above): `ROTATE_AGE` runs
+  on the process's clock and starts again at every restart, so a serve
+  restarted daily never reaches a weekly age.
+
 ### The cut is declared in the chain (0.13, inference profile r6)
 
 A rotating writer now opens every segment after the first with a
