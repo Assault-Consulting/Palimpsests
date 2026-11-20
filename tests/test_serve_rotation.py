@@ -271,6 +271,7 @@ def test_the_status_names_the_segment_and_the_policy(config, monkeypatch):
 
 
 def test_the_entry_point_names_the_setting_and_exits_without_a_traceback(config):
+    pytest.importorskip("uvicorn")  # the entry point imports it before it opens the chain
     env = {**os.environ, "PALIMPSESTS_CONFIG_DIR": str(config), ROTATE_BYTES_VAR: "16MB",
            "PALIMPSESTS_ALLOW_UNENCRYPTED_AUDIT": "1"}
     proc = subprocess.run(
