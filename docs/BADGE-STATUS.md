@@ -149,7 +149,7 @@ live questionnaire is authoritative.*
 | security_review | Met | Documented internal security review — docs/security/AUDIT-2026-07.md (manual review of the audit subsystem, key management, and process boundary; no injection, unsafe-deserialization, or weak-RNG findings), backed by docs/THREAT_MODEL.md and docs/ASSURANCE-CASE.md. |
 | warnings_strict | Met | ruff gate; strict lint on every change. |
 | vulnerability_report_credit | Met | SECURITY.md commits to crediting reporters in release notes (opt-out). |
-| signed_releases | Met | Sigstore keyless signing + PEP 740 attestations on PyPI; SLSA Build L2 provenance. |
+| signed_releases | Met | Sigstore keyless signing + PEP 740 attestations on PyPI; SLSA Build L2 provenance; from 0.15.0 a provenance bundle on each GitHub Release. |
 | hardened_site | Met | Repo + download site on GitHub (known to meet this). Project site palimpsests.dev sets the key hardening headers — CSP, HSTS (2-year max-age, includeSubDomains, preload), Permissions-Policy, Referrer-Policy, X-Content-Type-Options `nosniff`, X-Frame-Options `DENY` — via `site/vercel.json`. Confirmed by external scan: securityheaders.com, 2026-08-14, grade **A** (capped by `unsafe-inline` in script-src; removal tracked as a site improvement). |
 | require_2FA | Met | Both maintainers have GitHub 2FA enabled. *(Account-level setting — confirm in GitHub account/org settings before submitting.)* |
 

@@ -23,7 +23,8 @@ publish job authenticates to PyPI with a short-lived OpenID Connect token
 issued by GitHub for that specific workflow run, scoped by the `pypi`
 environment. This is why the workflow's default permissions are read-only
 and each job additively grants only the one scope it needs — the publish
-job `id-token: write`, the release job `contents: write`.
+job `id-token: write`, the release job `contents: write`, the provenance
+job `id-token: write`, `attestations: write` and `contents: write`.
 
 ## Release signing (provenance / attestations)
 
@@ -68,6 +69,24 @@ Sigstore-aware tooling (for example, `pypi-attestations` / the `sigstore`
 verification flow). The identity to expect is this repository's
 `release.yml` workflow, issued by `token.actions.githubusercontent.com`.
 
+**From the GitHub Release, starting with 0.15.0.** The same wheel and sdist
+are attested a second time by the `provenance` job of `release.yml`, and
+the signed bundle is attached to the release as `palimpsests.intoto.jsonl`:
+a Sigstore bundle carrying an in-toto statement with a SLSA provenance
+predicate, naming both files by SHA-256. With the GitHub CLI:
+
+```
+gh attestation verify palimpsests-X.Y.Z-py3-none-any.whl \
+  --repo Assault-Consulting/Palimpsests
+```
+
+or, with the bundle downloaded from the release, add
+`--bundle palimpsests.intoto.jsonl` to check against that file instead of
+asking GitHub for it. The files on the release and on PyPI are the same
+bytes — one build feeds both — so either attestation covers either copy.
+Releases before 0.15.0 carry no such asset; their attestations are the
+PyPI ones above.
+
 For reference, the first signed release (v0.3.0) recorded a Sigstore
 transparency entry and a `publish/v1` attestation binding the wheel's
 SHA-256 to `release.yml` on `Assault-Consulting/Palimpsests` at
@@ -97,9 +116,10 @@ next step and is not yet done.
 
 ## Scope of the signing (an honest boundary)
 
-The provenance above covers the **PyPI distribution artifacts** (wheel and
+The provenance above covers the **distribution artifacts** (wheel and
 sdist) — which is what "signed releases" means for a Python package, and
-what a downstream installer actually consumes.
+what a downstream installer actually consumes. The SBOM attached to the
+release is not a subject of either attestation.
 
 It does **not** cover the Git tags in the repository. Git tag signing
 (`git tag -s`, GPG/SSH) is a separate mechanism that would additionally
@@ -211,11 +231,17 @@ Two people: whoever opens the release pull request does not merge it.
    ```
 9. The `release.yml` workflow builds, generates the SBOM, publishes to PyPI
    via OIDC (Sigstore attestations generated automatically), and creates the
-   GitHub Release with the wheel, sdist, and SBOM attached.
+   GitHub Release with the wheel, sdist, and SBOM attached. Its last job,
+   `provenance`, attests the two distributions and attaches
+   `palimpsests.intoto.jsonl`. Nothing waits for that job: if it fails, the
+   publication stands — re-run the job from the workflow run's page.
 10. **Confirm what was published**, from outside the repository:
     - on PyPI both files show a **Provenance** section naming `release.yml`;
-    - the GitHub Release exists with the `palimpsests.cdx.json` asset, and
-      the CHANGELOG release link resolves;
+    - the GitHub Release exists with the `palimpsests.cdx.json` and
+      `palimpsests.intoto.jsonl` assets, and the CHANGELOG release link
+      resolves;
+    - `gh attestation verify <wheel> --repo Assault-Consulting/Palimpsests`
+      passes on the wheel downloaded from the release;
     - a clean environment installs it and it checks itself:
       ```
       python -m venv /tmp/rel && /tmp/rel/bin/pip install "palimpsests[serve]==X.Y.Z"
