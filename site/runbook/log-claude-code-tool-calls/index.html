@@ -39,8 +39,8 @@
       "description": "Record every tool call Claude Code makes in a tamper-evident log on your own machine, with three hook entries and a local server. Fingerprints instead of content, and failures marked as failures.",
       "url": "https://palimpsests.dev/runbook/log-claude-code-tool-calls/",
       "mainEntityOfPage": "https://palimpsests.dev/runbook/log-claude-code-tool-calls/",
-      "datePublished": "2026-11-16",
-      "dateModified": "2026-11-16",
+      "datePublished": "2026-11-22",
+      "dateModified": "2026-11-22",
       "inLanguage": "en",
       "proficiencyLevel": "Beginner",
       "image": "https://palimpsests.dev/og.png",
@@ -132,7 +132,7 @@
   <div class="wrap">
     <div class="doc__in">
 <p class="crumbs"><a href="/">Palimpsests</a> / <a href="/runbook/">Runbook</a></p>
-<span class="eyebrow">Runbook · Record what an AI agent does · updated <time datetime="2026-11-16">16 November 2026</time></span>
+<span class="eyebrow">Runbook · Record what an AI agent does · updated <time datetime="2026-11-22">22 November 2026</time></span>
 <h1 class="display">Log Claude Code tool calls on your own machine</h1>
 <p class="lede">Record every tool call Claude Code makes in a tamper-evident log on your own machine, with three hook entries and a local server. Fingerprints instead of content, and failures marked as failures.</p>
 <p>Claude Code thinks on a hosted model, but it acts on your machine: it reads files, edits them and runs commands. Its hooks can report each of those actions as it happens. Palimpsests receives the reports and writes them into a log that cannot be changed without the change showing. The log stays on your machine, and you do not need a local model for this.</p>
@@ -176,13 +176,15 @@ palimpsests serve</code></pre>
 </ul>
 <h2 id="last-checked">Last checked</h2>
 <ul>
+  <li>Linux, Claude Code 2.1.329, <code>main</code> at <code>09c6f59</code> shortly before 0.15.0, 22 November 2026: one call and its result reached the log, in a <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/results/surfaces-2026-11-22-2.md">surface check</a>. On Windows the check cannot isolate Claude Code, so it was not checked there.</li>
+  <li>The commands on this page: palimpsests 0.15.0 from PyPI, Linux, 22 November 2026, with hook reports sent by hand in place of the client.</li>
   <li>Linux, Claude Code 2.1.319, palimpsests 0.14.0, 13 November 2026: one call and its result reached the log, in a surface check.</li>
   <li>Windows 11, Claude Code 2.1.310, palimpsests 0.13.0, 26 October 2026: a real session, eleven calls with their results, the failed file read recorded as <code>error</code>. Four of the 26 hook posts arrived without the key, and why has not been established.</li>
   <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/integrations/COMPATIBILITY.md">Every check, with its date and machine</a></li>
 </ul>
 <h2 id="reference">Reference</h2>
 <ul>
-  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/v0.14.1/integrations/agent-hooks/README.md">Claude Code and Codex hooks: README</a></li>
+  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/v0.15.0/integrations/agent-hooks/README.md">Claude Code and Codex hooks: README</a></li>
   <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/specs/pala-1/independent-runs/traffic-0.14-r1-claude-code/RUN-RECORD.md">The real Claude Code session, recorded</a></li>
   <li><a href="https://palimpsests.dev/notes/audit-log-for-agents-on-cloud-models/">Recording agents that use cloud models</a></li>
 </ul>

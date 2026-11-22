@@ -399,7 +399,7 @@
         <a href="https://eur-lex.europa.eu/eli/reg/2024/1689/oj/eng" rel="noopener">EU AI Act <span class="arr">↗</span></a>
         <span class="reg__cite">Regulation (EU) 2024/1689, as amended · Art. 12, 26(6), 99(4)</span>
       </div>
-      <p class="reg__note">High-risk systems must record events automatically (Art. 12), and deployers must keep those logs for at least six months (Art. 26(6)) — from 2 December 2027, or 2 August 2028 for AI in regulated products. Palimpsests supplies that <b>automatic record-keeping</b>: held locally, verifiable without exposing what it recorded. Breaches of these duties fall under Article 99(4) — up to €15 million or 3% of worldwide annual turnover, and for SMEs the lower of the two. The <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/compliance/EU-AI-ACT-MAPPING.md" rel="noopener">Article 12 mapping ↗</a> sets out, requirement by requirement, what ships today — 24 of 27 rows as of 0.12 — and what is on the roadmap.</p>
+      <p class="reg__note">High-risk systems must record events automatically (Art. 12), and deployers must keep those logs for at least six months (Art. 26(6)) — from 2 December 2027, or 2 August 2028 for AI in regulated products. Palimpsests supplies that <b>automatic record-keeping</b>: held locally, verifiable without exposing what it recorded. Breaches of these duties fall under Article 99(4) — up to €15 million or 3% of worldwide annual turnover, and for SMEs the lower of the two. The <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/compliance/EU-AI-ACT-MAPPING.md" rel="noopener">Article 12 mapping ↗</a> sets out, requirement by requirement, what ships today — 25 of 27 rows as of 0.15 — and what is on the roadmap.</p>
     </div>
 
     <div class="reg">
@@ -499,16 +499,16 @@
   <!-- latest-notes:start -->
   <div class="prov">
     <div class="prov__item" data-reveal>
+      <h3><a href="/notes/ai-on-small-devices-and-the-log-they-keep/">AI on small devices, and the log they keep</a></h3>
+      <p>A device that decides things alone needs a record someone else can check later. What makes that hard on a device, what PALA-1 does about each part, and what it does not do yet.</p>
+    </div>
+    <div class="prov__item" data-reveal>
       <h3><a href="/notes/protecting-an-audit-log-from-being-rewritten/">Protecting an audit log from being rewritten from scratch</a></h3>
       <p>A hash chain catches an edited record but not a log rebuilt from the first record. What closes that gap, from which record on, and what stays open.</p>
     </div>
     <div class="prov__item" data-reveal>
       <h3><a href="/notes/can-a-coding-agent-implement-a-spec/">Can a coding agent implement a binary format from its spec alone?</a></h3>
       <p>A small, strict test for coding agents. Give one a frozen specification and its test vectors, no reference code, and ask it to reproduce eleven values byte for byte in a language it chooses.</p>
-    </div>
-    <div class="prov__item" data-reveal>
-      <h3><a href="/notes/anatomy-of-a-tamper-evident-audit-log/">Anatomy of a tamper-evident audit log: PALA-1, a PKCS#11 anchor and SCITT</a></h3>
-      <p>The three layers of a Palimpsests audit log taken apart: the PALA-1 hash chain, the chain head on a PKCS#11 token and SCITT receipts. What each one proves alone, and what they prove together.</p>
     </div>
   </div>
   <!-- latest-notes:end -->

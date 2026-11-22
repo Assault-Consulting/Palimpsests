@@ -39,8 +39,8 @@
       "description": "Point OpenCode at a model on your own machine through Palimpsests' OpenAI-compatible server, with the configuration printed for you, and know which of its tool calls reach the record.",
       "url": "https://palimpsests.dev/runbook/opencode-with-a-local-model/",
       "mainEntityOfPage": "https://palimpsests.dev/runbook/opencode-with-a-local-model/",
-      "datePublished": "2026-11-16",
-      "dateModified": "2026-11-16",
+      "datePublished": "2026-11-22",
+      "dateModified": "2026-11-22",
       "inLanguage": "en",
       "proficiencyLevel": "Beginner",
       "image": "https://palimpsests.dev/og.png",
@@ -132,7 +132,7 @@
   <div class="wrap">
     <div class="doc__in">
 <p class="crumbs"><a href="/">Palimpsests</a> / <a href="/runbook/">Runbook</a></p>
-<span class="eyebrow">Runbook · Run a model on your own machine · updated <time datetime="2026-11-16">16 November 2026</time></span>
+<span class="eyebrow">Runbook · Run a model on your own machine · updated <time datetime="2026-11-22">22 November 2026</time></span>
 <h1 class="display">Use a local model in OpenCode</h1>
 <p class="lede">Point OpenCode at a model on your own machine through Palimpsests&#x27; OpenAI-compatible server, with the configuration printed for you, and know which of its tool calls reach the record.</p>
 <p>OpenCode is a coding agent for the terminal. It can use any model behind an OpenAI-compatible API, including one on your own machine. This recipe puts the Palimpsests server between OpenCode and Ollama, so the model stays local and the server keeps a record.</p>
@@ -153,7 +153,7 @@ palimpsests serve</code></pre>
 <h3 id="2-print-the-configuration-for-opencode">2. Print the configuration for OpenCode</h3>
 <p>In a second terminal:</p>
 <pre><code>palimpsests-serve --print-opencode-config</code></pre>
-<p>It prints a provider block for <code>opencode.json</code>:</p>
+<p>It prints a provider block for <code>opencode.json</code>. With the key from step 1 set in the shell, the block carries it as <code>apiKey</code>; without a key that line is absent:</p>
 <pre><code>{
   "$schema": "https://opencode.ai/config.json",
   "provider": {
@@ -161,7 +161,8 @@ palimpsests serve</code></pre>
       "npm": "@ai-sdk/openai-compatible",
       "name": "Palimpsests (local, audited)",
       "options": {
-        "baseURL": "http://127.0.0.1:11435/v1"
+        "baseURL": "http://127.0.0.1:11435/v1",
+        "apiKey": "choose-a-long-random-string"
       },
       "models": {
         "MODEL_ID": {
@@ -183,16 +184,16 @@ palimpsests serve</code></pre>
   <li>When the model returns a structured tool call, the call crosses the server and is recorded: the tool's name, fingerprints of its arguments and its result, and how it ended.</li>
   <li>When the model writes the call as text, OpenCode reads that text and runs the tool itself. The server never sees a call. It records only that tools were offered and no structured call came back. OpenCode shows both kinds the same way on screen.</li>
   <li>Measured with OpenCode 1.18.25 and four local models in Ollama: under OpenCode's own system prompt, about 9,500 characters long, none of the four returned structured calls, so no tool call reached the record. With a short prompt, <code>llama3.1:8b</code> returned structured calls for the same tools.</li>
-  <li>To record the tools OpenCode runs either way, use the <a href="https://github.com/Assault-Consulting/Palimpsests/blob/v0.14.1/integrations/opencode/README.md">OpenCode plugin</a>. It reports them from inside OpenCode, marked as reported by the client.</li>
+  <li>To record the tools OpenCode runs either way, use the <a href="https://github.com/Assault-Consulting/Palimpsests/blob/v0.15.0/integrations/opencode/README.md">OpenCode plugin</a>. It reports them from inside OpenCode, marked as reported by the client.</li>
 </ul>
 <h2 id="last-checked">Last checked</h2>
 <ul>
   <li>Windows 11, palimpsests 0.10.0, OpenCode 1.18.25, Ollama 0.33.2, August 2026. <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/specs/pala-1/independent-runs/oleksandr/ws-e-opencode-smoke/WS-E-run-record.md">Run record</a>.</li>
-  <li>The printed configuration on this page is that of palimpsests 0.14.1.</li>
+  <li>The printed configuration on this page is that of palimpsests 0.15.0, printed by the published package on 22 November 2026.</li>
 </ul>
 <h2 id="reference">Reference</h2>
 <ul>
-  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/v0.14.1/integrations/opencode/README.md">OpenCode plugin, with its status on each OpenCode version</a></li>
+  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/v0.15.0/integrations/opencode/README.md">OpenCode plugin, with its status on each OpenCode version</a></li>
   <li><a href="https://palimpsests.dev/integrations/">All integrations and their limits</a></li>
 </ul>
 <h2 id="next">Next</h2>

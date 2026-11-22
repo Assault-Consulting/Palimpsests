@@ -87,6 +87,12 @@ bytes — one build feeds both — so either attestation covers either copy.
 Releases before 0.15.0 carry no such asset; their attestations are the
 PyPI ones above.
 
+For reference, in 0.15.0 the bundle is a Sigstore bundle v0.3 with one
+transparency-log entry and the predicate `https://slsa.dev/provenance/v1`;
+its two subjects are the wheel and the sdist by SHA-256, and it names
+`.github/workflows/release.yml` at `refs/tags/v0.15.0`. The files on the
+release and on PyPI have the same SHA-256.
+
 For reference, the first signed release (v0.3.0) recorded a Sigstore
 transparency entry and a `publish/v1` attestation binding the wheel's
 SHA-256 to `release.yml` on `Assault-Consulting/Palimpsests` at
