@@ -1,6 +1,15 @@
 {
   "_comment": "Facts that dated sources state but a surface report cannot carry. Every entry names its source; scripts/build_compatibility.py renders integrations/COMPATIBILITY.md from this file and results/surfaces-*.md. Do not write a row here that no report or run record states.",
   "reports": {
+    "surfaces-2026-11-22-2.md": {
+      "notes": {
+        "litellm": "run by the AI assistant in its own Linux sandbox VM, not on a machine of the team; repeats the Linux check at the commit the release is cut from, after the serve's start changed (#393). Source: results/surfaces-2026-11-22-2-notes.md",
+        "mcp": "run by the AI assistant in its own Linux sandbox VM, not on a machine of the team; repeats the Linux check at the commit the release is cut from, after the serve's start changed (#393). Source: results/surfaces-2026-11-22-2-notes.md",
+        "opencode": "not installed in the assistant's sandbox; the verdict for 0.15 is the GREEN on Windows in surfaces-2026-11-22.md. Source: results/surfaces-2026-11-22-2-notes.md",
+        "claude-code": "run by the AI assistant in its own Linux sandbox VM, not on a machine of the team; repeats the Linux check at the commit the release is cut from, after the serve's start changed (#393). Source: results/surfaces-2026-11-22-2-notes.md",
+        "otel": "run by the AI assistant in its own Linux sandbox VM, not on a machine of the team; repeats the Linux check at the commit the release is cut from, after the serve's start changed (#393). Source: results/surfaces-2026-11-22-2-notes.md"
+      }
+    },
     "surfaces-2026-11-22.md": {
       "notes": {
         "litellm": "the detail in the report is wrong, the SKIP is right: litellm 1.110.2 is installed but will not import, because its 52 MB litellm/rust_bridge/_native.pyd is blocked by this machine's Application Control policy (Smart App Control on, code-integrity enforcement active). probe_litellm collapses absent and unimportable into one message and leaves the version empty. A condition of the machine, not of the surface; the Windows verdict for LiteLLM is missing from this run. Source: results/surfaces-2026-11-22-notes.md",
