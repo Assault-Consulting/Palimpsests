@@ -38,7 +38,7 @@
       "description": "Palimpsests writes PALA-1 logs that anyone can check for altered, removed or reordered records with no decryption key and without opening a record body.",
       "url": "https://palimpsests.dev/verify-without-reading/",
       "inLanguage": "en",
-      "dateModified": "2026-11-20",
+      "dateModified": "2026-11-22",
       "author": {
         "@id": "https://palimpsests.dev/#org"
       },
@@ -152,7 +152,7 @@
       <span class="eyebrow">Key-free verification · PALA-1</span>
       <h1 class="display">Verify an AI audit log without reading it</h1>
       <p class="lede">Palimpsests writes its audit log in PALA-1, a format that separates the right to verify a log from the right to read it. Anyone can check that no record was altered, removed or reordered — with no decryption key, and without opening a single record body — because the chain hash covers only each record’s 156-byte header.</p>
-      <p class="updated">Updated <time datetime="2026-11-20">20 November 2026</time></p>
+      <p class="updated">Updated <time datetime="2026-11-22">22 November 2026</time></p>
 
       <h2 id="how">How it works</h2>
       <p>Every record's header carries a SHA-256 digest of its body, and names the hash of the record before it. Verification walks the headers — one hash per record — and checks each body against the digest bound into its header. Bodies are never decrypted, so the key that protects their content is never needed, and never handed over.</p>

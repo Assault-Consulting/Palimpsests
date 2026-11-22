@@ -233,3 +233,23 @@ def test_the_site_answers_for_robots_security_and_a_missing_page():
     assert "/404.html" not in (site / "sitemap.xml").read_text(encoding="utf-8")
     manifest = (site / "site.webmanifest").read_text(encoding="utf-8")
     assert "audit log for AI agents" in manifest and "/apple-touch-icon.png" in manifest
+
+
+def test_visible_update_date_of_a_product_page_is_its_sitemap_date() -> None:
+    """A page that says "Updated <date>" says the date the sitemap gives it.
+
+    Both are written by hand when a page changes; this holds them together.
+    """
+    import re
+
+    site = ROOT / "site"
+    module = _load()
+    checked = 0
+    for path, lastmod, *_ in module.STATIC_PAGES:
+        if path == "/":
+            continue
+        page = (site / path.strip("/") / "index.html").read_text(encoding="utf-8")
+        shown = re.findall(r'Updated <time datetime="(\d{4}-\d{2}-\d{2})">', page)
+        assert shown == [lastmod], (path, shown, lastmod)
+        checked += 1
+    assert checked == 5
