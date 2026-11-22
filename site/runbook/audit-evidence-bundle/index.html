@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Audit evidence bundle: one file an auditor can re-check</title>
+<meta name="description" content="Pack a log, the result of checking it and a list of contents into one file the person receiving it can check again without trusting you." />
+<link rel="canonical" href="https://palimpsests.dev/runbook/audit-evidence-bundle/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Andrii Sparysh" />
+<meta name="theme-color" content="#15151f" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Palimpsests" />
+<meta property="og:title" content="Audit evidence bundle: one file an auditor can re-check" />
+<meta property="og:description" content="Pack a log, the result of checking it and a list of contents into one file the person receiving it can check again without trusting you." />
+<meta property="og:url" content="https://palimpsests.dev/runbook/audit-evidence-bundle/" />
+<meta property="og:locale" content="en" />
+<meta property="og:image" content="https://palimpsests.dev/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Palimpsests: a tamper-evident audit log for AI agents, verifiable without the key" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://palimpsests.dev/og.png" />
+<meta name="twitter:title" content="Audit evidence bundle: one file an auditor can re-check" />
+<meta name="twitter:description" content="Pack a log, the result of checking it and a list of contents into one file the person receiving it can check again without trusting you." />
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "TechArticle",
+      "@id": "https://palimpsests.dev/runbook/audit-evidence-bundle/#article",
+      "headline": "Hand an auditor one file of evidence",
+      "description": "Pack the log, the result of checking it and the list of what is inside into one file that the person receiving it can check again without trusting you.",
+      "url": "https://palimpsests.dev/runbook/audit-evidence-bundle/",
+      "mainEntityOfPage": "https://palimpsests.dev/runbook/audit-evidence-bundle/",
+      "datePublished": "2026-11-22",
+      "dateModified": "2026-11-22",
+      "inLanguage": "en",
+      "proficiencyLevel": "Beginner",
+      "image": "https://palimpsests.dev/og.png",
+      "author": {
+        "@type": "Person",
+        "@id": "https://palimpsests.dev/#andrii-sparysh",
+        "name": "Andrii Sparysh",
+        "url": "https://palimpsests.dev/",
+        "jobTitle": "Co-founder, Assault Consulting",
+        "worksFor": {
+          "@id": "https://palimpsests.dev/#org"
+        },
+        "sameAs": [
+          "https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/"
+        ]
+      },
+      "publisher": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "isPartOf": {
+        "@id": "https://palimpsests.dev/runbook/#runbook"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Palimpsests",
+          "item": "https://palimpsests.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Runbook",
+          "item": "https://palimpsests.dev/runbook/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Hand an auditor one file of evidence",
+          "item": "https://palimpsests.dev/runbook/audit-evidence-bundle/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<nav>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Palimpsests home">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="nav__links">
+      <a class="hide-sm" href="/#caps">Capabilities</a>
+      <a class="hide-sm" href="/pala-1/">PALA-1</a>
+      <a class="hide-sm" href="/verify-without-reading/">Verify</a>
+      <a class="hide-sm" href="/eu-ai-act-article-12/">EU AI Act</a>
+      <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
+      <a class="hide-sm" href="/integrations/">Integrations</a>
+      <a class="hide-sm" href="/runbook/">Runbook</a>
+      <a class="hide-sm" href="/notes/">Notes</a>
+      <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<main class="doc" id="main">
+  <div class="wrap">
+    <div class="doc__in">
+<p class="crumbs"><a href="/">Palimpsests</a> / <a href="/runbook/">Runbook</a></p>
+<span class="eyebrow">Runbook · Check and keep the record · updated <time datetime="2026-11-22">22 November 2026</time></span>
+<h1 class="display">Hand an auditor one file of evidence</h1>
+<p class="lede">Pack the log, the result of checking it and the list of what is inside into one file that the person receiving it can check again without trusting you.</p>
+<p>When someone asks for the record, a loose log file is a poor answer. They also need to know what it was checked against, what the result was, and that the file they received is the file you sent. The bundle is one plain <code>tar</code> file with all of that inside. It is not signed and does not need to be: everything in it can be checked again from the published format.</p>
+<h2 id="you-need">You need</h2>
+<ul>
+  <li>A log, and the head you saved for it. See <a href="https://palimpsests.dev/runbook/detect-log-tampering/">check a log for tampering</a>.</li>
+</ul>
+<h2 id="steps">Steps</h2>
+<h3 id="1-make-the-bundle">1. Make the bundle</h3>
+<pre><code>palimpsests pala bundle ~/.config/palimpsests/serve.pala --anchor-file head.txt -o evidence.tar</code></pre>
+<pre><code>bundled 64 record(s) (0 with inclusion proofs) to evidence.tar
+source head: 78ede38854665e99b1552873f6a5ab34468cb86b881ecddde22c73e25224200b
+consistency inside: holds</code></pre>
+<h3 id="2-look-inside">2. Look inside</h3>
+<pre><code>tar tf evidence.tar</code></pre>
+<pre><code>records.pala
+proofs.json
+verification.json
+time-claims.json
+MANIFEST.json</code></pre>
+<ul>
+  <li><code>records.pala</code> is the log, byte for byte.</li>
+  <li><code>verification.json</code> is the result of the check, with the head it was checked against and where that head came from.</li>
+  <li><code>time-claims.json</code> lists every time in the log with how far the writer trusted its clock.</li>
+  <li><code>MANIFEST.json</code> lists the SHA-256 of each of the other files, and the version of the tool that made the bundle.</li>
+</ul>
+<h3 id="3-what-the-receiver-does">3. What the receiver does</h3>
+<pre><code>tar xf evidence.tar
+sha256sum records.pala          # compare with MANIFEST.json
+palimpsests pala verify records.pala --anchor-file head.txt</code></pre>
+<p>They use the head you gave them by another road, not one taken from the bundle. They can also use a reader of their own: the format is published, with test files.</p>
+<h3 id="for-a-person-not-a-program">For a person, not a program</h3>
+<pre><code>palimpsests pala report ~/.config/palimpsests/serve.pala --anchor-file head.txt --html -o report.html</code></pre>
+<p>This writes one page with no scripts and no outside files, stating the verdict and what it rests on.</p>
+<h2 id="what-it-does-not-do">What it does not do</h2>
+<ul>
+  <li><b>It is not signed.</b> The bundle proves nothing about who made it. Its worth is that the receiver can repeat the check.</li>
+  <li><b>A part of a log does not check alone.</b> <code>--from-seq</code> and <code>--to-seq</code> pack a range, and <code>verification.json</code> still describes the whole log. The range's records start in the middle of the chain, so <code>pala verify</code> on them reports a missing beginning.</li>
+  <li><b>The server's log has no inclusion proofs,</b> as the first output line says. Those need a log that carries tree roots in its own records, and the server's log does not.</li>
+  <li><b>A broken log is packed as it is.</b> The result inside says so. The command does not refuse bad evidence.</li>
+  <li><b>The contents are not opened.</b> The bundle holds what the log holds: operations and fingerprints.</li>
+</ul>
+<h2 id="last-checked">Last checked</h2>
+<ul>
+  <li>palimpsests 0.15.0 from PyPI, Linux, 22 November 2026: a log of 64 records written by the server. The bundle's <code>records.pala</code> was the same bytes as the log and checked against the saved head. The outputs above are from that run.</li>
+</ul>
+<h2 id="reference">Reference</h2>
+<ul>
+  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/v0.15.0/docs/specs/bundle/pala-bundle-1.md">The bundle format</a></li>
+  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/v0.15.0/docs/specs/report/pala-verification-report-2.schema.json">The verification report: its schema</a></li>
+  <li><a href="https://palimpsests.dev/verify-without-reading/">Verify without reading</a></li>
+</ul>
+<h2 id="next">Next</h2>
+<ul>
+  <li><a href="/runbook/detect-log-tampering/">Check a log for tampering</a> — Keep a copy of the log&#x27;s latest fingerprint somewhere else, and one command tells you later whether any record was changed, removed or cut off the end.</li>
+  <li><a href="/runbook/prove-a-log-is-append-only/">Prove that a log was only added to</a> — Write down one number and one fingerprint today. Later, a short proof shows that everything the log held then is still its beginning, unchanged.</li>
+  <li><a href="/runbook/rotate-a-hash-chained-log/">Keep a log for six months without filling the disk</a> — Let the server cut its log into pieces as it writes, state how long you keep them, delete old pieces whole, and still check what is left as one chain.</li>
+</ul>
+<div class="related">
+  <a class="btn" href="/runbook/">All runbook pages →</a>
+  <a class="btn" href="/">Palimpsests →</a>
+</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/" aria-label="Palimpsests">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="/notes/">Notes</a>
+      <a href="/runbook/">Runbook</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

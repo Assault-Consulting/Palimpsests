@@ -1002,6 +1002,15 @@ def _sse_prebuilt(
 DURABILITY_VAR = "PALIMPSESTS_AUDIT_DURABILITY"
 
 
+def _threshold(value: float) -> str:
+    """A rotation threshold as the start-up line prints it: every digit.
+
+    ``16MiB`` is 16777216 bytes and is printed so, not as ``1.67772e+07`` —
+    an operator compares this line with what they set.
+    """
+    return str(int(value)) if float(value).is_integer() else f"{value:g}"
+
+
 def _rotation_status(policy) -> dict | None:
     """A rotation policy as the status route states it, or ``None``."""
     if policy is None:
@@ -1201,7 +1210,8 @@ def run_serve(host: str, port: int, api_key: str | None) -> None:
     if rotation is not None:
         print(
             "audit chain is cut into segments at "
-            + ", ".join(f"{k}={v:g}" for k, v in rotation.items() if k != "retention_s")
+            + ", ".join(f"{k}={_threshold(v)}" for k, v in rotation.items()
+                        if k != "retention_s")
             + (f"; declared retention {rotation['retention_s']} s"
                if "retention_s" in rotation else "; no retention declared")
             + f". Writing {os.path.basename(audit.writer.path)}; verify the set with "

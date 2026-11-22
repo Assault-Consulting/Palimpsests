@@ -322,3 +322,16 @@ def test_segment_verify_answers_complete_consistent_inconsistent_unreadable(conf
     assert runner.invoke(cli, ["pala", "segment-verify", str(junk)]).exit_code == 3
     assert runner.invoke(cli, ["pala", "segment-verify",
                                str(config / "nothing.json")]).exit_code == 3
+
+
+@pytest.mark.parametrize(("value", "printed"), [
+    (16 << 20, "16777216"),
+    (2 << 30, "2147483648"),
+    (20, "20"),
+    (604800.0, "604800"),
+    (0.5, "0.5"),
+])
+def test_start_up_line_prints_a_threshold_in_full(value, printed) -> None:
+    from palimpsests.server.openai_api import _threshold
+
+    assert _threshold(value) == printed

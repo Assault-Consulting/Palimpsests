@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Detect log tampering with a hash chain and one command</title>
+<meta name="description" content="Keep the log&#x27;s latest fingerprint somewhere else, and one command tells you later whether a record was changed, removed or cut off the end." />
+<link rel="canonical" href="https://palimpsests.dev/runbook/detect-log-tampering/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Andrii Sparysh" />
+<meta name="theme-color" content="#15151f" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Palimpsests" />
+<meta property="og:title" content="Detect log tampering with a hash chain and one command" />
+<meta property="og:description" content="Keep the log&#x27;s latest fingerprint somewhere else, and one command tells you later whether a record was changed, removed or cut off the end." />
+<meta property="og:url" content="https://palimpsests.dev/runbook/detect-log-tampering/" />
+<meta property="og:locale" content="en" />
+<meta property="og:image" content="https://palimpsests.dev/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Palimpsests: a tamper-evident audit log for AI agents, verifiable without the key" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://palimpsests.dev/og.png" />
+<meta name="twitter:title" content="Detect log tampering with a hash chain and one command" />
+<meta name="twitter:description" content="Keep the log&#x27;s latest fingerprint somewhere else, and one command tells you later whether a record was changed, removed or cut off the end." />
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "TechArticle",
+      "@id": "https://palimpsests.dev/runbook/detect-log-tampering/#article",
+      "headline": "Check a log for tampering",
+      "description": "Keep a copy of the log's latest fingerprint somewhere else, and one command tells you later whether any record was changed, removed or cut off the end.",
+      "url": "https://palimpsests.dev/runbook/detect-log-tampering/",
+      "mainEntityOfPage": "https://palimpsests.dev/runbook/detect-log-tampering/",
+      "datePublished": "2026-11-22",
+      "dateModified": "2026-11-22",
+      "inLanguage": "en",
+      "proficiencyLevel": "Beginner",
+      "image": "https://palimpsests.dev/og.png",
+      "author": {
+        "@type": "Person",
+        "@id": "https://palimpsests.dev/#andrii-sparysh",
+        "name": "Andrii Sparysh",
+        "url": "https://palimpsests.dev/",
+        "jobTitle": "Co-founder, Assault Consulting",
+        "worksFor": {
+          "@id": "https://palimpsests.dev/#org"
+        },
+        "sameAs": [
+          "https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/"
+        ]
+      },
+      "publisher": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "isPartOf": {
+        "@id": "https://palimpsests.dev/runbook/#runbook"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Palimpsests",
+          "item": "https://palimpsests.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Runbook",
+          "item": "https://palimpsests.dev/runbook/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Check a log for tampering",
+          "item": "https://palimpsests.dev/runbook/detect-log-tampering/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<nav>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Palimpsests home">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="nav__links">
+      <a class="hide-sm" href="/#caps">Capabilities</a>
+      <a class="hide-sm" href="/pala-1/">PALA-1</a>
+      <a class="hide-sm" href="/verify-without-reading/">Verify</a>
+      <a class="hide-sm" href="/eu-ai-act-article-12/">EU AI Act</a>
+      <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
+      <a class="hide-sm" href="/integrations/">Integrations</a>
+      <a class="hide-sm" href="/runbook/">Runbook</a>
+      <a class="hide-sm" href="/notes/">Notes</a>
+      <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<main class="doc" id="main">
+  <div class="wrap">
+    <div class="doc__in">
+<p class="crumbs"><a href="/">Palimpsests</a> / <a href="/runbook/">Runbook</a></p>
+<span class="eyebrow">Runbook · Check and keep the record · updated <time datetime="2026-11-22">22 November 2026</time></span>
+<h1 class="display">Check a log for tampering</h1>
+<p class="lede">Keep a copy of the log&#x27;s latest fingerprint somewhere else, and one command tells you later whether any record was changed, removed or cut off the end.</p>
+<p>A Palimpsests log is a chain: every record carries a fingerprint of the one before it. Change a record in the middle and the fingerprints stop matching from there on. The one change a chain cannot show by itself is a cut at the end, because a shorter chain is still a chain. For that you keep the latest fingerprint, called the head, in a second place.</p>
+<p>This page checks a log both ways. It needs no key and never opens what the records hold.</p>
+<h2 id="you-need">You need</h2>
+<ul>
+  <li>A log written by Palimpsests. The server keeps its own at <code>~/.config/palimpsests/serve.pala</code>.</li>
+  <li>A place for a 64-character line that the person who could change the log cannot change: another machine, a ticket, a printed page.</li>
+</ul>
+<h2 id="steps">Steps</h2>
+<h3 id="1-save-the-head">1. Save the head</h3>
+<p>When the server stops, it prints the head:</p>
+<pre><code>audit chain closed: 64 record(s), head 78ede38854665e99b1552873f6a5ab34468cb86b881ecddde22c73e25224200b</code></pre>
+<p>While it runs, ask it:</p>
+<pre><code>curl -s -H "Authorization: Bearer $PALIMPSESTS_SERVE_API_KEY" http://127.0.0.1:11435/v1/pala/status</code></pre>
+<p>The reply has <code>chain.head</code>. Put that line in a file, here <code>head.txt</code>, and keep the file away from the log.</p>
+<h3 id="2-check-the-log-against-it">2. Check the log against it</h3>
+<pre><code>palimpsests pala verify ~/.config/palimpsests/serve.pala --anchor-file head.txt</code></pre>
+<pre><code>consistency: 64 records, chain intact
+anchor: 78ede388… from file head.txt
+completeness: chain head matches the supplied anchor</code></pre>
+<p>The command exits with 0. Nothing was changed, and nothing is missing from the end.</p>
+<h3 id="3-know-what-a-failure-looks-like">3. Know what a failure looks like</h3>
+<p>One byte changed inside a record:</p>
+<pre><code>consistency: BROKEN — body digest mismatch at seq [20]</code></pre>
+<p>The last four records removed:</p>
+<pre><code>consistency: 60 records, chain intact
+completeness: FAILED — the anchored head names no record in this chain — the log was replaced, rolled back, or truncated</code></pre>
+<p>Both exit with 1. The second one is the reason for step 1: the chain is intact, and only the saved head shows that records are gone.</p>
+<h2 id="exit-codes">Exit codes</h2>
+<ul>
+  <li><code>0</code> the chain is intact and its end matches your saved head.</li>
+  <li><code>1</code> a violation: a break, a gap, a changed record, or an end that does not match.</li>
+  <li><code>2</code> the chain is intact, but you gave no head, so a cut at the end would not have been seen.</li>
+  <li><code>3</code> the file could not be read.</li>
+</ul>
+<h2 id="what-it-does-not-tell-you">What it does not tell you</h2>
+<ul>
+  <li><b>A saved head is for one moment.</b> If the log has grown since you saved it, the check fails with "chain extends N record(s) beyond the anchored head". Save the head again each time you stop the server or take a copy, and check a copy against the head of its own moment.</li>
+  <li><b>It says the log was not changed. It does not say the log is true.</b> If a wrong thing was recorded, it is still there, unchanged.</li>
+  <li><b>It does not say who or when.</b> The exit code states the finding, never a cause.</li>
+  <li><b>A head kept next to the log protects nothing.</b> Whoever rewrites the log rewrites the file beside it.</li>
+  <li>A line "advisory: anchor_never_written" is a note that the log holds no anchor record of its own. It does not change the result.</li>
+</ul>
+<h2 id="last-checked">Last checked</h2>
+<ul>
+  <li>palimpsests 0.15.0 from PyPI, Linux, 22 November 2026: a log of 64 records written by the server, checked as on this page. The three outputs above are from that run: intact, one byte changed, and the last four records removed.</li>
+</ul>
+<h2 id="reference">Reference</h2>
+<ul>
+  <li><a href="https://palimpsests.dev/verify-without-reading/">Verify without reading</a></li>
+  <li><a href="https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/">What makes an audit log tamper-evident</a></li>
+  <li><a href="https://palimpsests.dev/notes/protecting-an-audit-log-from-being-rewritten/">Protecting an audit log from being rewritten from scratch</a></li>
+  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/v0.15.0/docs/USAGE.md">Usage: the audit commands</a></li>
+</ul>
+<h2 id="next">Next</h2>
+<ul>
+  <li><a href="/runbook/audit-evidence-bundle/">Hand an auditor one file of evidence</a> — Pack the log, the result of checking it and the list of what is inside into one file that the person receiving it can check again without trusting you.</li>
+  <li><a href="/runbook/prove-a-log-is-append-only/">Prove that a log was only added to</a> — Write down one number and one fingerprint today. Later, a short proof shows that everything the log held then is still its beginning, unchanged.</li>
+  <li><a href="/runbook/rotate-a-hash-chained-log/">Keep a log for six months without filling the disk</a> — Let the server cut its log into pieces as it writes, state how long you keep them, delete old pieces whole, and still check what is left as one chain.</li>
+</ul>
+<div class="related">
+  <a class="btn" href="/runbook/">All runbook pages →</a>
+  <a class="btn" href="/">Palimpsests →</a>
+</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/" aria-label="Palimpsests">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="/notes/">Notes</a>
+      <a href="/runbook/">Runbook</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

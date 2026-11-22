@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>OpenCode plugin: log every tool call, tamper-evident</title>
+<meta name="description" content="Copy one file into OpenCode&#x27;s plugins folder, and each tool it runs is reported to a tamper-evident log on your machine, whichever model is behind it." />
+<link rel="canonical" href="https://palimpsests.dev/runbook/opencode-tool-call-logging/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Andrii Sparysh" />
+<meta name="theme-color" content="#15151f" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Palimpsests" />
+<meta property="og:title" content="OpenCode plugin: log every tool call, tamper-evident" />
+<meta property="og:description" content="Copy one file into OpenCode&#x27;s plugins folder, and each tool it runs is reported to a tamper-evident log on your machine, whichever model is behind it." />
+<meta property="og:url" content="https://palimpsests.dev/runbook/opencode-tool-call-logging/" />
+<meta property="og:locale" content="en" />
+<meta property="og:image" content="https://palimpsests.dev/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Palimpsests: a tamper-evident audit log for AI agents, verifiable without the key" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://palimpsests.dev/og.png" />
+<meta name="twitter:title" content="OpenCode plugin: log every tool call, tamper-evident" />
+<meta name="twitter:description" content="Copy one file into OpenCode&#x27;s plugins folder, and each tool it runs is reported to a tamper-evident log on your machine, whichever model is behind it." />
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "TechArticle",
+      "@id": "https://palimpsests.dev/runbook/opencode-tool-call-logging/#article",
+      "headline": "Log the tools OpenCode runs with a plugin",
+      "description": "Copy one file into OpenCode's plugins folder, and each tool it runs is reported to a tamper-evident log on your machine, whichever model is behind it.",
+      "url": "https://palimpsests.dev/runbook/opencode-tool-call-logging/",
+      "mainEntityOfPage": "https://palimpsests.dev/runbook/opencode-tool-call-logging/",
+      "datePublished": "2026-11-22",
+      "dateModified": "2026-11-22",
+      "inLanguage": "en",
+      "proficiencyLevel": "Beginner",
+      "image": "https://palimpsests.dev/og.png",
+      "author": {
+        "@type": "Person",
+        "@id": "https://palimpsests.dev/#andrii-sparysh",
+        "name": "Andrii Sparysh",
+        "url": "https://palimpsests.dev/",
+        "jobTitle": "Co-founder, Assault Consulting",
+        "worksFor": {
+          "@id": "https://palimpsests.dev/#org"
+        },
+        "sameAs": [
+          "https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/"
+        ]
+      },
+      "publisher": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "isPartOf": {
+        "@id": "https://palimpsests.dev/runbook/#runbook"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Palimpsests",
+          "item": "https://palimpsests.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Runbook",
+          "item": "https://palimpsests.dev/runbook/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Log the tools OpenCode runs with a plugin",
+          "item": "https://palimpsests.dev/runbook/opencode-tool-call-logging/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<nav>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Palimpsests home">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="nav__links">
+      <a class="hide-sm" href="/#caps">Capabilities</a>
+      <a class="hide-sm" href="/pala-1/">PALA-1</a>
+      <a class="hide-sm" href="/verify-without-reading/">Verify</a>
+      <a class="hide-sm" href="/eu-ai-act-article-12/">EU AI Act</a>
+      <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
+      <a class="hide-sm" href="/integrations/">Integrations</a>
+      <a class="hide-sm" href="/runbook/">Runbook</a>
+      <a class="hide-sm" href="/notes/">Notes</a>
+      <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<main class="doc" id="main">
+  <div class="wrap">
+    <div class="doc__in">
+<p class="crumbs"><a href="/">Palimpsests</a> / <a href="/runbook/">Runbook</a></p>
+<span class="eyebrow">Runbook · Record what an AI agent does · updated <time datetime="2026-11-22">22 November 2026</time></span>
+<h1 class="display">Log the tools OpenCode runs with a plugin</h1>
+<p class="lede">Copy one file into OpenCode&#x27;s plugins folder, and each tool it runs is reported to a tamper-evident log on your machine, whichever model is behind it.</p>
+<p>OpenCode runs tools on your machine: it reads files, writes them, runs commands. A plugin inside OpenCode sees each tool as it runs and can report it to Palimpsests, which writes it into a log that cannot be changed without the change showing.</p>
+<p>The plugin is one JavaScript file with no dependencies. It works with a cloud model or a local one.</p>
+<h2 id="you-need">You need</h2>
+<ul>
+  <li>OpenCode.</li>
+  <li>Python 3.11 or newer for the Palimpsests server.</li>
+</ul>
+<h2 id="steps">Steps</h2>
+<h3 id="1-start-the-server-with-a-key">1. Start the server with a key</h3>
+<pre><code>pip install 'palimpsests[serve]'
+export PALIMPSESTS_ALLOW_UNENCRYPTED_AUDIT=1
+export PALIMPSESTS_SERVE_API_KEY=choose-a-long-random-string
+palimpsests serve</code></pre>
+<p>The second line is explained on the <a href="https://palimpsests.dev/runbook/">runbook's first page</a>.</p>
+<h3 id="2-copy-the-plugin">2. Copy the plugin</h3>
+<p>For every project:</p>
+<pre><code>mkdir -p ~/.config/opencode/plugins
+curl -o ~/.config/opencode/plugins/palimpsests-audit.js https://raw.githubusercontent.com/Assault-Consulting/Palimpsests/v0.15.0/integrations/opencode/palimpsests-audit.js</code></pre>
+<p>For one project only, put the file in <code>.opencode/plugins/</code> inside it.</p>
+<h3 id="3-start-opencode-from-a-shell-that-has-the-key">3. Start OpenCode from a shell that has the key</h3>
+<pre><code>export PALIMPSESTS_SERVE_API_KEY=choose-a-long-random-string
+opencode</code></pre>
+<p>The plugin reads the key from that variable. This step is the one people miss.</p>
+<h3 id="4-check">4. Check</h3>
+<pre><code>palimpsests doctor opencode</code></pre>
+<p>If the file is in neither folder, it says so:</p>
+<pre><code>FAIL  palimpsests-audit.js is in neither .opencode/plugins/ nor ~/.config/opencode/plugins/  [opencode_plugin_missing]</code></pre>
+<p>Then ask OpenCode to read a file, and look for the call:</p>
+<pre><code>palimpsests pala export ~/.config/palimpsests/serve.pala | grep '"kind_name":"TOOL_'</code></pre>
+<h2 id="what-is-recorded-and-what-is-not">What is recorded, and what is not</h2>
+<ul>
+  <li>Each tool OpenCode ran: its name, a fingerprint of its arguments, and how it ended.</li>
+  <li>The records are marked <code>reported-by-client</code>. They are OpenCode's report, kept faithfully. They are not the server's own observation.</li>
+  <li>Arguments and outputs go to the Palimpsests server, which keeps only their fingerprints.</li>
+  <li><b>Without the key in the window OpenCode starts from, nothing is recorded and nothing says so.</b> The reports are refused, the tools still run, and the session looks normal. <code>palimpsests doctor opencode</code> shows refused reports, and since 0.15 the server's log keeps a count of them.</li>
+  <li><b>Small local models often do not call a tool at all.</b> They answer with the tool call written out as text, and then no tool runs. That is the model, not a loss in the record.</li>
+  <li><b>Which callbacks OpenCode fires has changed between its versions.</b> On 1.18.31 the result arrived by the plugin's second path, not its first. The plugin's README keeps the status for each version tried.</li>
+</ul>
+<h2 id="last-checked">Last checked</h2>
+<ul>
+  <li>Windows 11, OpenCode 1.19.6, <code>main</code> shortly before 0.15.0, 22 November 2026: one call and its result reached the log, in a <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/results/surfaces-2026-11-22.md">surface check</a>.</li>
+  <li>Linux: OpenCode was not checked on Linux for 0.15.</li>
+  <li><code>palimpsests doctor opencode</code>: palimpsests 0.15.0 from PyPI, Linux, 22 November 2026, with no plugin installed. The line above is from that run.</li>
+  <li>Windows 11, OpenCode 1.18.31, palimpsests 0.13.1: two sessions of ten prompts with a local model, six calls and six results in each, none left without a result.</li>
+  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/integrations/COMPATIBILITY.md">Every check, with its date and machine</a></li>
+</ul>
+<h2 id="reference">Reference</h2>
+<ul>
+  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/v0.15.0/integrations/opencode/README.md">OpenCode plugin: README, with its status on each version</a></li>
+  <li><a href="https://palimpsests.dev/runbook/opencode-with-a-local-model/">Use a local model in OpenCode</a></li>
+  <li><a href="https://palimpsests.dev/integrations/">Integrations</a></li>
+</ul>
+<h2 id="next">Next</h2>
+<ul>
+  <li><a href="/runbook/opencode-with-a-local-model/">Use a local model in OpenCode</a> — Point OpenCode at a model on your own machine through Palimpsests&#x27; OpenAI-compatible server, with the configuration printed for you, and know which of its tool calls reach the record.</li>
+  <li><a href="/runbook/claude-code-hooks-not-working/">Claude Code hooks not working? Find where the reports go missing</a> — A failing hook never stops the agent, so a broken hook looks exactly like a working one. The silent failures we measured, how to spot each, and one command that names them.</li>
+  <li><a href="/runbook/detect-log-tampering/">Check a log for tampering</a> — Keep a copy of the log&#x27;s latest fingerprint somewhere else, and one command tells you later whether any record was changed, removed or cut off the end.</li>
+</ul>
+<div class="related">
+  <a class="btn" href="/runbook/">All runbook pages →</a>
+  <a class="btn" href="/">Palimpsests →</a>
+</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/" aria-label="Palimpsests">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="/notes/">Notes</a>
+      <a href="/runbook/">Runbook</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
