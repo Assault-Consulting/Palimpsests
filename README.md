@@ -12,10 +12,10 @@
 
 **Website: [palimpsests.dev](https://palimpsests.dev)** · **The PALA-1 format: [palimpsests.dev/pala-1](https://palimpsests.dev/pala-1/)**
 
-> **Status: v0.14 — the audit format is the deliverable. A chain now says
-> why its prefix is gone, a tool result says what its recorder could
-> actually see, and coding agents (Claude Code, Codex) and
-> OpenTelemetry-instrumented frameworks report their tool loops onto it
+> **Status: v0.15 — the audit format is the deliverable. A chain now
+> records its writer's opening and closing, so a stop without a close is
+> visible; reports the serve refused are on the chain; and the inference
+> profile revision that 1.0 implements is named (r9)
 > ([what a receipt proves — and what it doesn't](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/INTEROP-SCITT.md)).** The **[PALA-1
 > format](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/specs/pala-1/PALA-1.md)** — *Portable Append-only Log for
 > Audit* — is **frozen at v1.0**: a
@@ -529,6 +529,11 @@ the novelty is in this composition and its seams, not in a new inference kernel.
       codes a consumer can branch on; the SCITT verifier stricter after an
       outside reading of construction v3; and a compatibility table
       generated from dated surface checks.
+- [x] **v0.15 — a chain that says more about its own writing** — a
+      writer's opening and closing on the record (profile r8); refused and
+      rejected reports on the chain (r9); payload digests by RFC 8785 (r7);
+      verification report `/2`; one accepted encoding and a name for a
+      SCITT statement; a serve that cuts its chain into segments.
 - [ ] **Later** — assurance tiers B/C (hardware root of trust, external
       witness); a discrete-GPU run (the integrated GPU flatters every
       prefill-saving mechanism, so these ratios compress on fast prefill); a
