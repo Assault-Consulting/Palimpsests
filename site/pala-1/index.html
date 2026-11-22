@@ -38,7 +38,7 @@
       "description": "PALA-1 is a compact binary format for tamper-evident audit logs, frozen at v1.0 and reproduced from its specification by five independent implementations.",
       "url": "https://palimpsests.dev/pala-1/",
       "inLanguage": "en",
-      "dateModified": "2026-11-20",
+      "dateModified": "2026-11-22",
       "author": {
         "@id": "https://palimpsests.dev/#org"
       },
@@ -166,7 +166,7 @@
       <span class="eyebrow">Tamper-evident audit log · PALA-1 v1.0</span>
       <h1 class="display">PALA-1: a frozen, independently verified audit record format</h1>
       <p class="lede">PALA-1 — Portable Append-only Log for Audit — is a compact binary format for tamper-evident audit trails, frozen at v1.0 on 9 August 2026 and specified byte for byte. Five independent implementations — three by people outside the project at the time of their runs — reproduce it from the specification and test vectors alone. It is described in the Internet-Draft <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener"><code>draft-sparysh-pala-audit</code></a>.</p>
-      <p class="updated">Updated <time datetime="2026-11-20">20 November 2026</time></p>
+      <p class="updated">Updated <time datetime="2026-11-22">22 November 2026</time></p>
 
       <h2 id="record">What a record is</h2>
       <p>Each record is a 156-byte fixed header, optional TLV extensions, and an optional body. Every header names the hash of the record before it, so records form an append-only chain. The chain hash covers the header only; the body is bound to its header by a SHA-256 digest, so a verifier can check every record without reading — or decrypting — a single body.</p>
