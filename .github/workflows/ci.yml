@@ -269,6 +269,48 @@ jobs:
           echo "$out" | grep -q "palimpsests\[encryption\]" || {
             echo "the remedy was not printed"; exit 1; }
 
+  release-rehearsal:
+    name: release-rehearsal
+    runs-on: ubuntu-latest
+    # release.yml runs on a tag and nowhere else, so a release.txt that
+    # cannot be installed is found when the tag is already pushed. This job
+    # runs the build job of release.yml — same Python, same lock file, same
+    # commands — on every change, and publishes nothing. Keep the two in
+    # step: tests/test_release_workflow.py compares them.
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Build sdist and wheel
+        env:
+          LC_ALL: C.UTF-8
+          TZ: UTC
+        run: |
+          python -m pip install --require-hashes -r .github/requirements/release.txt
+          export SOURCE_DATE_EPOCH="$(git log -1 --pretty=%ct)"
+          umask 0022
+          python -m build
+
+      - name: Check metadata
+        run: |
+          python -m twine check dist/*
+
+      - name: Generate SBOM (CycloneDX)
+        run: |
+          python -m venv /tmp/sbom-venv
+          /tmp/sbom-venv/bin/python -m pip install dist/*.whl
+          mkdir -p sbom
+          cyclonedx-py environment /tmp/sbom-venv \
+            --mc-type library \
+            --pyproject pyproject.toml \
+            --output-reproducible \
+            --spec-version 1.6 \
+            --output-format JSON \
+            --output-file sbom/palimpsests.cdx.json
+
   ci-complete:
     name: ci-complete
     # The single fan-in context for branch protection. Requiring individual
@@ -280,7 +322,7 @@ jobs:
     # fails unless all of them succeeded — one stable name, reported on
     # every PR, immune to renames above it.
     if: always()
-    needs: [lint, test, coverage, encrypted-audit, reproducible-build, pala-vectors, clean-room]
+    needs: [lint, test, coverage, encrypted-audit, reproducible-build, pala-vectors, clean-room, release-rehearsal]
     runs-on: ubuntu-latest
     steps:
       - name: Verify all CI jobs succeeded
@@ -292,13 +334,15 @@ jobs:
           echo "reproducible-build: ${{ needs['reproducible-build'].result }}"
           echo "pala-vectors:       ${{ needs['pala-vectors'].result }}"
           echo "clean-room:         ${{ needs['clean-room'].result }}"
+          echo "release-rehearsal:  ${{ needs['release-rehearsal'].result }}"
           if [ "${{ needs.lint.result }}" != "success" ] \
              || [ "${{ needs.test.result }}" != "success" ] \
              || [ "${{ needs.coverage.result }}" != "success" ] \
              || [ "${{ needs['encrypted-audit'].result }}" != "success" ] \
              || [ "${{ needs['reproducible-build'].result }}" != "success" ] \
              || [ "${{ needs['pala-vectors'].result }}" != "success" ] \
-             || [ "${{ needs['clean-room'].result }}" != "success" ]; then
+             || [ "${{ needs['clean-room'].result }}" != "success" ] \
+             || [ "${{ needs['release-rehearsal'].result }}" != "success" ]; then
             echo "one or more required CI jobs did not succeed"
             exit 1
           fi

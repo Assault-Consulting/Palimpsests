@@ -37,6 +37,16 @@ uv pip compile --generate-hashes --universal --python-version 3.11 \
 Dependabot proposes the updates; a changed `.txt` goes through review like
 any other change.
 
+**A proposed update is not compiled with that command.** Dependabot
+resolves for one interpreter and one platform, so its `.txt` can lose the
+pins that carry a marker — `typing-extensions ; python_full_version <
+'3.13'` and the like — and then `pip install --require-hashes` fails on
+the Python the workflow uses. That happened to `release.txt` once, and
+nothing ran it before a tag. Now every lock file is installed by a job on
+each pull request (`release.txt` by `release-rehearsal` in `ci.yml`), so a
+proposal that cannot be installed is red. When one is, recompile the file
+with the command above on the proposal's branch.
+
 ## What is not locked, and why
 
 - **What the tests run against** (`pip install -e ".[dev]"`). A new
