@@ -73,6 +73,41 @@
           "@type": "TechArticle",
           "headline": "Log MCP tool calls with a one-file proxy",
           "url": "https://palimpsests.dev/runbook/mcp-tool-call-logging/"
+        },
+        {
+          "@type": "TechArticle",
+          "headline": "Log LiteLLM tool calls with one callback",
+          "url": "https://palimpsests.dev/runbook/litellm-tool-call-logging/"
+        },
+        {
+          "@type": "TechArticle",
+          "headline": "Record tool calls from OpenTelemetry traces",
+          "url": "https://palimpsests.dev/runbook/opentelemetry-genai-tool-calls/"
+        },
+        {
+          "@type": "TechArticle",
+          "headline": "Log the tools OpenCode runs with a plugin",
+          "url": "https://palimpsests.dev/runbook/opencode-tool-call-logging/"
+        },
+        {
+          "@type": "TechArticle",
+          "headline": "Check a log for tampering",
+          "url": "https://palimpsests.dev/runbook/detect-log-tampering/"
+        },
+        {
+          "@type": "TechArticle",
+          "headline": "Keep a log for six months without filling the disk",
+          "url": "https://palimpsests.dev/runbook/rotate-a-hash-chained-log/"
+        },
+        {
+          "@type": "TechArticle",
+          "headline": "Hand an auditor one file of evidence",
+          "url": "https://palimpsests.dev/runbook/audit-evidence-bundle/"
+        },
+        {
+          "@type": "TechArticle",
+          "headline": "Prove that a log was only added to",
+          "url": "https://palimpsests.dev/runbook/prove-a-log-is-append-only/"
         }
       ]
     },
@@ -174,6 +209,21 @@ export PALIMPSESTS_ALLOW_UNENCRYPTED_AUDIT=1</code></pre>
 <p>A failing hook never stops the agent, so a broken hook looks exactly like a working one. The silent failures we measured, how to spot each, and one command that names them.</p>
 <h3><a href="/runbook/mcp-tool-call-logging/">Log MCP tool calls with a one-file proxy</a></h3>
 <p>Put a small proxy in front of any MCP server that speaks stdio, and every tools/call lands in a tamper-evident log on your machine, with whether it came back ok, as an error or not at all.</p>
+<h3><a href="/runbook/litellm-tool-call-logging/">Log LiteLLM tool calls with one callback</a></h3>
+<p>Add one file to a LiteLLM client or proxy, and every tool the model asks for, with the result your code fed back, lands in a tamper-evident log on your machine.</p>
+<h3><a href="/runbook/opentelemetry-genai-tool-calls/">Record tool calls from OpenTelemetry traces</a></h3>
+<p>An agent framework that already sends OpenTelemetry traces can send them to Palimpsests too. Three variables, and every tool it runs lands in a tamper-evident log.</p>
+<h3><a href="/runbook/opencode-tool-call-logging/">Log the tools OpenCode runs with a plugin</a></h3>
+<p>Copy one file into OpenCode&#x27;s plugins folder, and each tool it runs is reported to a tamper-evident log on your machine, whichever model is behind it.</p>
+<h2 id="check">Check and keep the record</h2>
+<h3><a href="/runbook/detect-log-tampering/">Check a log for tampering</a></h3>
+<p>Keep a copy of the log&#x27;s latest fingerprint somewhere else, and one command tells you later whether any record was changed, removed or cut off the end.</p>
+<h3><a href="/runbook/rotate-a-hash-chained-log/">Keep a log for six months without filling the disk</a></h3>
+<p>Let the server cut its log into pieces as it writes, state how long you keep them, delete old pieces whole, and still check what is left as one chain.</p>
+<h3><a href="/runbook/audit-evidence-bundle/">Hand an auditor one file of evidence</a></h3>
+<p>Pack the log, the result of checking it and the list of what is inside into one file that the person receiving it can check again without trusting you.</p>
+<h3><a href="/runbook/prove-a-log-is-append-only/">Prove that a log was only added to</a></h3>
+<p>Write down one number and one fingerprint today. Later, a short proof shows that everything the log held then is still its beginning, unchanged.</p>
 <div class="related">
   <a class="btn" href="/integrations/">Integrations →</a>
   <a class="btn" href="/">Palimpsests →</a>

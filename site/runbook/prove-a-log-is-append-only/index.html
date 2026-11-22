@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Prove a log is append-only with a consistency proof</title>
+<meta name="description" content="Write down one number and one fingerprint today. Later, a short proof shows that everything the log held then is still its beginning, unchanged." />
+<link rel="canonical" href="https://palimpsests.dev/runbook/prove-a-log-is-append-only/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Andrii Sparysh" />
+<meta name="theme-color" content="#15151f" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Palimpsests" />
+<meta property="og:title" content="Prove a log is append-only with a consistency proof" />
+<meta property="og:description" content="Write down one number and one fingerprint today. Later, a short proof shows that everything the log held then is still its beginning, unchanged." />
+<meta property="og:url" content="https://palimpsests.dev/runbook/prove-a-log-is-append-only/" />
+<meta property="og:locale" content="en" />
+<meta property="og:image" content="https://palimpsests.dev/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Palimpsests: a tamper-evident audit log for AI agents, verifiable without the key" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://palimpsests.dev/og.png" />
+<meta name="twitter:title" content="Prove a log is append-only with a consistency proof" />
+<meta name="twitter:description" content="Write down one number and one fingerprint today. Later, a short proof shows that everything the log held then is still its beginning, unchanged." />
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "TechArticle",
+      "@id": "https://palimpsests.dev/runbook/prove-a-log-is-append-only/#article",
+      "headline": "Prove that a log was only added to",
+      "description": "Write down one number and one fingerprint today. Later, a short proof shows that everything the log held then is still its beginning, unchanged.",
+      "url": "https://palimpsests.dev/runbook/prove-a-log-is-append-only/",
+      "mainEntityOfPage": "https://palimpsests.dev/runbook/prove-a-log-is-append-only/",
+      "datePublished": "2026-11-22",
+      "dateModified": "2026-11-22",
+      "inLanguage": "en",
+      "proficiencyLevel": "Beginner",
+      "image": "https://palimpsests.dev/og.png",
+      "author": {
+        "@type": "Person",
+        "@id": "https://palimpsests.dev/#andrii-sparysh",
+        "name": "Andrii Sparysh",
+        "url": "https://palimpsests.dev/",
+        "jobTitle": "Co-founder, Assault Consulting",
+        "worksFor": {
+          "@id": "https://palimpsests.dev/#org"
+        },
+        "sameAs": [
+          "https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/"
+        ]
+      },
+      "publisher": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "isPartOf": {
+        "@id": "https://palimpsests.dev/runbook/#runbook"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Palimpsests",
+          "item": "https://palimpsests.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Runbook",
+          "item": "https://palimpsests.dev/runbook/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Prove that a log was only added to",
+          "item": "https://palimpsests.dev/runbook/prove-a-log-is-append-only/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<nav>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Palimpsests home">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="nav__links">
+      <a class="hide-sm" href="/#caps">Capabilities</a>
+      <a class="hide-sm" href="/pala-1/">PALA-1</a>
+      <a class="hide-sm" href="/verify-without-reading/">Verify</a>
+      <a class="hide-sm" href="/eu-ai-act-article-12/">EU AI Act</a>
+      <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
+      <a class="hide-sm" href="/integrations/">Integrations</a>
+      <a class="hide-sm" href="/runbook/">Runbook</a>
+      <a class="hide-sm" href="/notes/">Notes</a>
+      <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<main class="doc" id="main">
+  <div class="wrap">
+    <div class="doc__in">
+<p class="crumbs"><a href="/">Palimpsests</a> / <a href="/runbook/">Runbook</a></p>
+<span class="eyebrow">Runbook · Check and keep the record · updated <time datetime="2026-11-22">22 November 2026</time></span>
+<h1 class="display">Prove that a log was only added to</h1>
+<p class="lede">Write down one number and one fingerprint today. Later, a short proof shows that everything the log held then is still its beginning, unchanged.</p>
+<p>Someone looked at your log in March. In June they want to know that the log they saw is still there, with new records added after it and nothing rewritten before. You could send them the whole log twice. A consistency proof says the same thing in a few lines: the first N records of today's log are exactly the N records of then.</p>
+<p>It is the same kind of proof that certificate transparency logs use.</p>
+<h2 id="you-need">You need</h2>
+<ul>
+  <li>A log in one file.</li>
+  <li>A place to keep one number and one 64-character line where the log's owner cannot change them.</li>
+</ul>
+<h2 id="steps">Steps</h2>
+<h3 id="1-today-write-down-the-count-and-the-root">1. Today: write down the count and the root</h3>
+<pre><code>palimpsests pala consistency ~/.config/palimpsests/serve.pala --first 1</code></pre>
+<p>The command prints a small JSON document. Two fields matter now: <code>second</code>, the number of records, and <code>second_root</code>, a fingerprint of all of them together.</p>
+<pre><code>"second": 40
+"second_root": "651553e124439172662f6f11741b3b185174edc9060bb2d5aee9a774f73392de"</code></pre>
+<p>Give both to the person who will ask later, or keep them where they can be trusted.</p>
+<h3 id="2-later-make-the-proof">2. Later: make the proof</h3>
+<p>The log has grown. Ask for a proof that its first 40 records are the old 40:</p>
+<pre><code>palimpsests pala consistency ~/.config/palimpsests/serve.pala --first 40 -o proof.json</code></pre>
+<pre><code>consistency proof 40 -&gt; 64 (4 nodes) written to proof.json</code></pre>
+<h3 id="3-check-it-against-the-saved-root">3. Check it against the saved root</h3>
+<pre><code>palimpsests pala consistency-verify proof.json --first-root 651553e124439172662f6f11741b3b185174edc9060bb2d5aee9a774f73392de</code></pre>
+<pre><code>CONSISTENT: records 0..39 are a prefix of 0..63</code></pre>
+<p>The receiver needs only <code>proof.json</code> and the root they already hold. They do not need the log. With a root that is not the one in the proof, the answer is:</p>
+<pre><code>INCONSISTENT: --first-root differs from the proof's first_root</code></pre>
+<p>and the exit code is 1.</p>
+<h2 id="what-it-does-not-do">What it does not do</h2>
+<ul>
+  <li><b>It says nothing was changed among the first N. It does not say nothing was cut after them.</b> For the end of the log, keep its head; see <a href="https://palimpsests.dev/runbook/detect-log-tampering/">check a log for tampering</a>.</li>
+  <li><b>The proof is only as good as where the root was kept.</b> A root stored beside the log proves nothing. The command says so itself: where the roots came from is your evidence.</li>
+  <li><b>It is not signed.</b> It connects two roots. It does not say who made it.</li>
+  <li><b>It needs the whole log in one file.</b> For a log cut into pieces, the list of pieces records each closed piece's root when it is cut; see <a href="https://palimpsests.dev/runbook/rotate-a-hash-chained-log/">keep a log for six months</a>.</li>
+  <li><b>Step 1 borrows a command made for something else.</b> It asks for a proof from the first record and reads the root out of the answer. It works, and the root is the same one a later proof names; there is no shorter command for it yet.</li>
+</ul>
+<h2 id="last-checked">Last checked</h2>
+<ul>
+  <li>palimpsests 0.15.0 from PyPI, Linux, 22 November 2026: the root taken from a log of 40 records was the <code>first_root</code> of a proof made after the log had grown to 64. The outputs above are from that run, including the wrong root.</li>
+</ul>
+<h2 id="reference">Reference</h2>
+<ul>
+  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/v0.15.0/docs/specs/pala-1/consistency-proof.md">The consistency proof document</a></li>
+  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/v0.15.0/docs/RETENTION.md">Retention: pruning with a proof</a></li>
+  <li><a href="https://palimpsests.dev/notes/protecting-an-audit-log-from-being-rewritten/">Protecting an audit log from being rewritten from scratch</a></li>
+</ul>
+<h2 id="next">Next</h2>
+<ul>
+  <li><a href="/runbook/detect-log-tampering/">Check a log for tampering</a> — Keep a copy of the log&#x27;s latest fingerprint somewhere else, and one command tells you later whether any record was changed, removed or cut off the end.</li>
+  <li><a href="/runbook/audit-evidence-bundle/">Hand an auditor one file of evidence</a> — Pack the log, the result of checking it and the list of what is inside into one file that the person receiving it can check again without trusting you.</li>
+  <li><a href="/runbook/rotate-a-hash-chained-log/">Keep a log for six months without filling the disk</a> — Let the server cut its log into pieces as it writes, state how long you keep them, delete old pieces whole, and still check what is left as one chain.</li>
+</ul>
+<div class="related">
+  <a class="btn" href="/runbook/">All runbook pages →</a>
+  <a class="btn" href="/">Palimpsests →</a>
+</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/" aria-label="Palimpsests">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="/notes/">Notes</a>
+      <a href="/runbook/">Runbook</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

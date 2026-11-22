@@ -79,6 +79,48 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://palimpsests.dev/runbook/litellm-tool-call-logging/</loc>
+    <lastmod>2026-11-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://palimpsests.dev/runbook/opentelemetry-genai-tool-calls/</loc>
+    <lastmod>2026-11-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://palimpsests.dev/runbook/opencode-tool-call-logging/</loc>
+    <lastmod>2026-11-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://palimpsests.dev/runbook/detect-log-tampering/</loc>
+    <lastmod>2026-11-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://palimpsests.dev/runbook/rotate-a-hash-chained-log/</loc>
+    <lastmod>2026-11-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://palimpsests.dev/runbook/audit-evidence-bundle/</loc>
+    <lastmod>2026-11-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://palimpsests.dev/runbook/prove-a-log-is-append-only/</loc>
+    <lastmod>2026-11-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://palimpsests.dev/notes/</loc>
     <lastmod>2026-11-22</lastmod>
     <changefreq>weekly</changefreq>

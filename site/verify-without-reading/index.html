@@ -173,6 +173,7 @@
 palimpsests demo                                # writes and verifies a small audited run
 palimpsests pala verify palimpsests-demo.pala   # the auditor's check — no key needed</code></pre>
       <p>Exit codes: <code>0</code> verified · <code>1</code> violation — the check was made and did not hold · <code>2</code> partial — intact, but no anchor was supplied, so a cut-off end would not have been detected · <code>3</code> unreadable.</p>
+      <p>Step by step: <a href="/runbook/detect-log-tampering/">check a log for tampering</a>, <a href="/runbook/audit-evidence-bundle/">hand an auditor one file of evidence</a>, and <a href="/runbook/prove-a-log-is-append-only/">prove that a log was only added to</a>.</p>
 
       <h2 id="limits">Limits, stated</h2>
       <p>Tamper-evident means a change is detectable, not impossible. An attacker who holds both the encryption key and write access to wherever the anchor is kept can forge the chain and its anchor together. Catching that needs a commitment outside the host — a hardware token or an external transparency service; see <a href="/air-gapped/#anchors">anchors without a network</a>. How each of these pieces fits into a <a href="/notes/what-makes-an-audit-log-tamper-evident/">tamper-evident audit log</a> is explained in a separate note.</p>

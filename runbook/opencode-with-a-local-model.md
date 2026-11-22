@@ -85,7 +85,7 @@ Start OpenCode and choose the Palimpsests model from its list of models.
 - When the model returns a structured tool call, the call crosses the server and is recorded: the tool's name, fingerprints of its arguments and its result, and how it ended.
 - When the model writes the call as text, OpenCode reads that text and runs the tool itself. The server never sees a call. It records only that tools were offered and no structured call came back. OpenCode shows both kinds the same way on screen.
 - Measured with OpenCode 1.18.25 and four local models in Ollama: under OpenCode's own system prompt, about 9,500 characters long, none of the four returned structured calls, so no tool call reached the record. With a short prompt, `llama3.1:8b` returned structured calls for the same tools.
-- To record the tools OpenCode runs either way, use the [OpenCode plugin](https://github.com/Assault-Consulting/Palimpsests/blob/v0.15.0/integrations/opencode/README.md). It reports them from inside OpenCode, marked as reported by the client.
+- To record the tools OpenCode runs either way, use the [OpenCode plugin](https://palimpsests.dev/runbook/opencode-tool-call-logging/). It reports them from inside OpenCode, marked as reported by the client.
 
 ## Last checked
 

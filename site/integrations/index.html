@@ -195,6 +195,7 @@ palimpsests-serve --api-key "$PALIMPSESTS_SERVE_API_KEY"   # http://127.0.0.1:11
 export OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=http/protobuf
 export OTEL_EXPORTER_OTLP_TRACES_HEADERS="Authorization=Bearer $PALIMPSESTS_SERVE_API_KEY"</code></pre>
       <p>OTLP over HTTP only, JSON or protobuf. To record digests of arguments and results, turn on the instrumentation's content capture; without it the pair is recorded with no digests. <b>Results:</b> <code>error</code> for a span with error status, <code>ok</code> otherwise. <b>Tested</b> against a real export from pydantic-ai 2.57.0, and <b>on real traffic</b> with a local model: three pairs per run, failures as <code>error</code>. Note that pydantic-ai stops an agent when a tool raises; the failing span is still exported.</p>
+      <p>Step by step: <a href="/runbook/opentelemetry-genai-tool-calls/">record tool calls from OpenTelemetry traces</a>.</p>
 
       <h2 id="litellm">LiteLLM</h2>
       <p>A one-file callback for the LiteLLM client library or proxy. It reports the model's <code>tool_calls</code> and the <code>role: tool</code> results that come back, which makes it a natural fit when your agents reach hosted models through a LiteLLM gateway.</p>
@@ -203,6 +204,7 @@ from palimpsests_audit import PalimpsestsAudit   # integrations/litellm/palimpse
 litellm.callbacks = [PalimpsestsAudit()]</code></pre>
       <p>Install <code>mcp</code> beside LiteLLM: LiteLLM imports it as soon as a request carries tools, and does not install it itself.</p>
       <p><b>Results:</b> <code>unobserved</code>, because LiteLLM never sees the tool run. <b>On real traffic</b> (LiteLLM 1.106, a local model): ten turns, ten pairs, all <code>unobserved</code> — the three reads of a missing file among them.</p>
+      <p>Step by step: <a href="/runbook/litellm-tool-call-logging/">log LiteLLM tool calls with one callback</a>.</p>
 
       <h2 id="mcp">MCP servers over stdio</h2>
       <p>A one-file proxy in front of any MCP server that speaks standard input and output. It sees both the request and the response of every <code>tools/call</code>, forwards every byte unchanged and never blocks a call.</p>
@@ -214,6 +216,7 @@ litellm.callbacks = [PalimpsestsAudit()]</code></pre>
       <p>A dependency-free plugin you copy into <code>.opencode/plugins/</code>. It reports the tools OpenCode runs, including calls the model wrote as plain text. <b>Status on OpenCode 1.18.31:</b> one reported pair has reached the chain from a real session, a failed <code>read</code> that was bound correctly. A successful result arriving the same way hasn't been observed yet.</p>
 
       <p>To use a local model in OpenCode through the server, see <a href="/runbook/opencode-with-a-local-model/">use a local model in OpenCode</a>, which also says which tool calls reach the record that way.</p>
+      <p>Step by step: <a href="/runbook/opencode-tool-call-logging/">log the tools OpenCode runs with the plugin</a>.</p>
 
       <h2 id="limits">Limits</h2>
       <ul>

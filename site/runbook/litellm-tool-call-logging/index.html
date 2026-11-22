@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LiteLLM logging callback for tool calls, tamper-evident</title>
+<meta name="description" content="Add one file to a LiteLLM client or proxy, and every tool the model asks for, with the result fed back, lands in a tamper-evident log on your machine." />
+<link rel="canonical" href="https://palimpsests.dev/runbook/litellm-tool-call-logging/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Andrii Sparysh" />
+<meta name="theme-color" content="#15151f" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Palimpsests" />
+<meta property="og:title" content="LiteLLM logging callback for tool calls, tamper-evident" />
+<meta property="og:description" content="Add one file to a LiteLLM client or proxy, and every tool the model asks for, with the result fed back, lands in a tamper-evident log on your machine." />
+<meta property="og:url" content="https://palimpsests.dev/runbook/litellm-tool-call-logging/" />
+<meta property="og:locale" content="en" />
+<meta property="og:image" content="https://palimpsests.dev/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Palimpsests: a tamper-evident audit log for AI agents, verifiable without the key" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://palimpsests.dev/og.png" />
+<meta name="twitter:title" content="LiteLLM logging callback for tool calls, tamper-evident" />
+<meta name="twitter:description" content="Add one file to a LiteLLM client or proxy, and every tool the model asks for, with the result fed back, lands in a tamper-evident log on your machine." />
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "TechArticle",
+      "@id": "https://palimpsests.dev/runbook/litellm-tool-call-logging/#article",
+      "headline": "Log LiteLLM tool calls with one callback",
+      "description": "Add one file to a LiteLLM client or proxy, and every tool the model asks for, with the result your code fed back, lands in a tamper-evident log on your machine.",
+      "url": "https://palimpsests.dev/runbook/litellm-tool-call-logging/",
+      "mainEntityOfPage": "https://palimpsests.dev/runbook/litellm-tool-call-logging/",
+      "datePublished": "2026-11-22",
+      "dateModified": "2026-11-22",
+      "inLanguage": "en",
+      "proficiencyLevel": "Beginner",
+      "image": "https://palimpsests.dev/og.png",
+      "author": {
+        "@type": "Person",
+        "@id": "https://palimpsests.dev/#andrii-sparysh",
+        "name": "Andrii Sparysh",
+        "url": "https://palimpsests.dev/",
+        "jobTitle": "Co-founder, Assault Consulting",
+        "worksFor": {
+          "@id": "https://palimpsests.dev/#org"
+        },
+        "sameAs": [
+          "https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/"
+        ]
+      },
+      "publisher": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "isPartOf": {
+        "@id": "https://palimpsests.dev/runbook/#runbook"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Palimpsests",
+          "item": "https://palimpsests.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Runbook",
+          "item": "https://palimpsests.dev/runbook/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Log LiteLLM tool calls with one callback",
+          "item": "https://palimpsests.dev/runbook/litellm-tool-call-logging/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<nav>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Palimpsests home">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="nav__links">
+      <a class="hide-sm" href="/#caps">Capabilities</a>
+      <a class="hide-sm" href="/pala-1/">PALA-1</a>
+      <a class="hide-sm" href="/verify-without-reading/">Verify</a>
+      <a class="hide-sm" href="/eu-ai-act-article-12/">EU AI Act</a>
+      <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
+      <a class="hide-sm" href="/integrations/">Integrations</a>
+      <a class="hide-sm" href="/runbook/">Runbook</a>
+      <a class="hide-sm" href="/notes/">Notes</a>
+      <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<main class="doc" id="main">
+  <div class="wrap">
+    <div class="doc__in">
+<p class="crumbs"><a href="/">Palimpsests</a> / <a href="/runbook/">Runbook</a></p>
+<span class="eyebrow">Runbook · Record what an AI agent does · updated <time datetime="2026-11-22">22 November 2026</time></span>
+<h1 class="display">Log LiteLLM tool calls with one callback</h1>
+<p class="lede">Add one file to a LiteLLM client or proxy, and every tool the model asks for, with the result your code fed back, lands in a tamper-evident log on your machine.</p>
+<p>LiteLLM sits between your code and a model. It sees the model's answer, including the tools the model asks for, and on the next request it sees the results your code sends back. A callback placed there can report both to Palimpsests, which writes them into a log that cannot be changed without the change showing.</p>
+<p>The callback is one Python file that needs nothing beyond LiteLLM. It never blocks a completion and never changes one.</p>
+<h2 id="you-need">You need</h2>
+<ul>
+  <li>Python code that calls models through LiteLLM, or a LiteLLM proxy.</li>
+  <li>Python 3.11 or newer for the Palimpsests server.</li>
+</ul>
+<h2 id="steps">Steps</h2>
+<h3 id="1-start-the-server-with-a-key">1. Start the server with a key</h3>
+<pre><code>pip install 'palimpsests[serve]'
+export PALIMPSESTS_ALLOW_UNENCRYPTED_AUDIT=1
+export PALIMPSESTS_SERVE_API_KEY=choose-a-long-random-string
+palimpsests serve</code></pre>
+<p>The second line is explained on the <a href="https://palimpsests.dev/runbook/">runbook's first page</a>.</p>
+<h3 id="2-download-the-callback">2. Download the callback</h3>
+<pre><code>curl -O https://raw.githubusercontent.com/Assault-Consulting/Palimpsests/v0.15.0/integrations/litellm/palimpsests_audit.py</code></pre>
+<p>Put it next to your code.</p>
+<h3 id="3-register-it">3. Register it</h3>
+<p>In Python:</p>
+<pre><code>import litellm
+from palimpsests_audit import PalimpsestsAudit
+
+litellm.callbacks = [PalimpsestsAudit()]</code></pre>
+<p>For the proxy, put two lines in a <code>custom_callbacks.py</code> beside <code>config.yaml</code>:</p>
+<pre><code>from palimpsests_audit import PalimpsestsAudit
+palimpsests_audit = PalimpsestsAudit()</code></pre>
+<p>and name it in the configuration:</p>
+<pre><code>litellm_settings:
+  callbacks: custom_callbacks.palimpsests_audit</code></pre>
+<p>The callback reads the key from <code>PALIMPSESTS_SERVE_API_KEY</code>, and the server's address from <code>PALIMPSESTS_SERVE_URL</code> when it is not <code>http://127.0.0.1:11435</code>. Set them in the shell your code or proxy starts from.</p>
+<h3 id="4-check">4. Check</h3>
+<pre><code>palimpsests doctor litellm</code></pre>
+<p>After one completion that used a tool and fed the result back:</p>
+<pre><code>ok    the serve answers; its chain holds 5 record(s)  [serve_reachable]
+ok    2 report(s) accepted on /v1/pala/events since the serve started  [reports_arriving]</code></pre>
+<p>And in the log:</p>
+<pre><code>palimpsests pala export ~/.config/palimpsests/serve.pala | grep '"kind_name":"TOOL_'</code></pre>
+<h2 id="what-is-recorded-and-what-is-not">What is recorded, and what is not</h2>
+<ul>
+  <li>A tool the model asked for: its name and a fingerprint of its arguments.</li>
+  <li>A result your code sent back for that call, with the outcome <code>unobserved</code>. LiteLLM never sees the tool run, so the log does not say whether it worked.</li>
+  <li>Both are marked <code>reported-by-client</code>. They are your code's report, kept faithfully. They are not the server's own observation.</li>
+  <li>A call whose result never comes back is closed as <code>cancelled</code> when the server stops.</li>
+  <li>Arguments and results go to the Palimpsests server, which keeps only their fingerprints.</li>
+  <li>Prompts and replies are not recorded.</li>
+  <li><b>Without the key in the shell your code starts from, nothing is recorded and your code sees no error.</b> Run the check in step 4.</li>
+  <li>Once a request carries <code>tools</code>, LiteLLM itself needs the <code>mcp</code> package: <code>pip install litellm mcp</code>.</li>
+</ul>
+<h2 id="last-checked">Last checked</h2>
+<ul>
+  <li>Linux, LiteLLM 1.110.2, palimpsests 0.15.0 from PyPI, 22 November 2026: two completions with LiteLLM's built-in mock answers, no provider, through the callback file from the 0.15.0 tag. One call and its result reached the log, marked <code>reported-by-client</code>, the result <code>unobserved</code>. The <code>doctor</code> output above is from that run.</li>
+  <li>Linux, LiteLLM 1.110.2, <code>main</code> shortly before 0.15.0, 22 November 2026: one call and its result reached the log, in a <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/results/surfaces-2026-11-22-2.md">surface check</a>.</li>
+  <li>Windows: not checked for 0.15. On the machine used, a security policy blocked a library LiteLLM needs.</li>
+  <li>No run with a real provider is on record for this page.</li>
+  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/integrations/COMPATIBILITY.md">Every check, with its date and machine</a></li>
+</ul>
+<h2 id="reference">Reference</h2>
+<ul>
+  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/v0.15.0/integrations/litellm/README.md">LiteLLM callback: README</a></li>
+  <li><a href="https://palimpsests.dev/notes/recording-agent-tool-calls/">Recording agent tool calls</a></li>
+  <li><a href="https://palimpsests.dev/integrations/">Integrations</a></li>
+</ul>
+<h2 id="next">Next</h2>
+<ul>
+  <li><a href="/runbook/opentelemetry-genai-tool-calls/">Record tool calls from OpenTelemetry traces</a> — An agent framework that already sends OpenTelemetry traces can send them to Palimpsests too. Three variables, and every tool it runs lands in a tamper-evident log.</li>
+  <li><a href="/runbook/mcp-tool-call-logging/">Log MCP tool calls with a one-file proxy</a> — Put a small proxy in front of any MCP server that speaks stdio, and every tools/call lands in a tamper-evident log on your machine, with whether it came back ok, as an error or not at all.</li>
+  <li><a href="/runbook/detect-log-tampering/">Check a log for tampering</a> — Keep a copy of the log&#x27;s latest fingerprint somewhere else, and one command tells you later whether any record was changed, removed or cut off the end.</li>
+</ul>
+<div class="related">
+  <a class="btn" href="/runbook/">All runbook pages →</a>
+  <a class="btn" href="/">Palimpsests →</a>
+</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/" aria-label="Palimpsests">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="/notes/">Notes</a>
+      <a href="/runbook/">Runbook</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

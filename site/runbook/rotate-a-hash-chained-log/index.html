@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Log rotation for a hash chain: keep six months, not more</title>
+<meta name="description" content="Cut a hash-chained log into pieces as it is written, state how long you keep them, delete old pieces whole, and still check what is left as one chain." />
+<link rel="canonical" href="https://palimpsests.dev/runbook/rotate-a-hash-chained-log/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Andrii Sparysh" />
+<meta name="theme-color" content="#15151f" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Palimpsests" />
+<meta property="og:title" content="Log rotation for a hash chain: keep six months, not more" />
+<meta property="og:description" content="Cut a hash-chained log into pieces as it is written, state how long you keep them, delete old pieces whole, and still check what is left as one chain." />
+<meta property="og:url" content="https://palimpsests.dev/runbook/rotate-a-hash-chained-log/" />
+<meta property="og:locale" content="en" />
+<meta property="og:image" content="https://palimpsests.dev/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Palimpsests: a tamper-evident audit log for AI agents, verifiable without the key" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://palimpsests.dev/og.png" />
+<meta name="twitter:title" content="Log rotation for a hash chain: keep six months, not more" />
+<meta name="twitter:description" content="Cut a hash-chained log into pieces as it is written, state how long you keep them, delete old pieces whole, and still check what is left as one chain." />
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "TechArticle",
+      "@id": "https://palimpsests.dev/runbook/rotate-a-hash-chained-log/#article",
+      "headline": "Keep a log for six months without filling the disk",
+      "description": "Let the server cut its log into pieces as it writes, state how long you keep them, delete old pieces whole, and still check what is left as one chain.",
+      "url": "https://palimpsests.dev/runbook/rotate-a-hash-chained-log/",
+      "mainEntityOfPage": "https://palimpsests.dev/runbook/rotate-a-hash-chained-log/",
+      "datePublished": "2026-11-22",
+      "dateModified": "2026-11-22",
+      "inLanguage": "en",
+      "proficiencyLevel": "Beginner",
+      "image": "https://palimpsests.dev/og.png",
+      "author": {
+        "@type": "Person",
+        "@id": "https://palimpsests.dev/#andrii-sparysh",
+        "name": "Andrii Sparysh",
+        "url": "https://palimpsests.dev/",
+        "jobTitle": "Co-founder, Assault Consulting",
+        "worksFor": {
+          "@id": "https://palimpsests.dev/#org"
+        },
+        "sameAs": [
+          "https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/"
+        ]
+      },
+      "publisher": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "isPartOf": {
+        "@id": "https://palimpsests.dev/runbook/#runbook"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Palimpsests",
+          "item": "https://palimpsests.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Runbook",
+          "item": "https://palimpsests.dev/runbook/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Keep a log for six months without filling the disk",
+          "item": "https://palimpsests.dev/runbook/rotate-a-hash-chained-log/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<nav>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Palimpsests home">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="nav__links">
+      <a class="hide-sm" href="/#caps">Capabilities</a>
+      <a class="hide-sm" href="/pala-1/">PALA-1</a>
+      <a class="hide-sm" href="/verify-without-reading/">Verify</a>
+      <a class="hide-sm" href="/eu-ai-act-article-12/">EU AI Act</a>
+      <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
+      <a class="hide-sm" href="/integrations/">Integrations</a>
+      <a class="hide-sm" href="/runbook/">Runbook</a>
+      <a class="hide-sm" href="/notes/">Notes</a>
+      <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<main class="doc" id="main">
+  <div class="wrap">
+    <div class="doc__in">
+<p class="crumbs"><a href="/">Palimpsests</a> / <a href="/runbook/">Runbook</a></p>
+<span class="eyebrow">Runbook · Check and keep the record · updated <time datetime="2026-11-22">22 November 2026</time></span>
+<h1 class="display">Keep a log for six months without filling the disk</h1>
+<p class="lede">Let the server cut its log into pieces as it writes, state how long you keep them, delete old pieces whole, and still check what is left as one chain.</p>
+<p>A log that only grows fills the disk. A log that is a chain cannot simply lose its oldest lines, because every record points at the one before it. Palimpsests cuts the chain into pieces at record boundaries and writes down, in the chain itself, what came before each cut. Old pieces can then be deleted whole, and what remains still checks.</p>
+<h2 id="you-need">You need</h2>
+<ul>
+  <li>palimpsests 0.15.0 or newer. The server could not cut its own log before that.</li>
+</ul>
+<h2 id="steps">Steps</h2>
+<h3 id="1-tell-the-server-when-to-cut-and-how-long-you-keep">1. Tell the server when to cut and how long you keep</h3>
+<pre><code>export PALIMPSESTS_AUDIT_ROTATE_BYTES=16MiB
+export PALIMPSESTS_AUDIT_RETENTION=180d
+palimpsests serve</code></pre>
+<p>At start the server says how it will cut, which file it is writing, and the command that checks the set.</p>
+<p>Sizes take <code>KiB</code>, <code>MiB</code> or <code>GiB</code>. The keeping period takes <code>s</code>, <code>m</code>, <code>h</code> or <code>d</code>. You can cut by count with <code>PALIMPSESTS_AUDIT_ROTATE_RECORDS</code>, or by age with <code>PALIMPSESTS_AUDIT_ROTATE_AGE</code>. A record is roughly 200 bytes, so 16 MiB is about a week at ten thousand records a day.</p>
+<h3 id="2-see-the-pieces">2. See the pieces</h3>
+<pre><code>serve.pala
+serve.pala.00001
+serve.pala.00002
+serve.pala.00003
+serve.pala.segments.json</code></pre>
+<p>The first file is closed for good once the first cut is made. The server writes to the last one. The <code>.json</code> file is the list of pieces; keep it for as long as any piece lives.</p>
+<h3 id="3-check-the-whole-set">3. Check the whole set</h3>
+<pre><code>palimpsests pala segment-verify ~/.config/palimpsests/serve.pala.segments.json</code></pre>
+<pre><code>  ok     serve.pala  (seq 0..19)
+  ok     serve.pala.00001  (seq 20..39)
+  ok     serve.pala.00002  (seq 40..59)
+  ok     serve.pala.00003  (being written)
+COMPLETE: 4 segment(s), all present, from a GENESIS.</code></pre>
+<h3 id="4-delete-what-is-older-than-your-period">4. Delete what is older than your period</h3>
+<p>Delete whole files only, oldest first, and never the list or the last piece. Then check again:</p>
+<pre><code>  absent serve.pala  (seq 0..19)
+  ok     serve.pala.00001  (seq 20..39)
+  ok     serve.pala.00002  (seq 40..59)
+  ok     serve.pala.00003  (being written)
+CONSISTENT, NOT COMPLETE: what is present verifies; 1 listed segment(s) are not on disk</code></pre>
+<p>The exit code is 2: nothing is wrong with what is there, and the beginning is gone. The first record of each later piece says what the piece before it ended with and what keeping period was declared, so a reader sees a log that was shortened by a stated rule.</p>
+<h2 id="what-it-does-not-do">What it does not do</h2>
+<ul>
+  <li><b>The server deletes nothing.</b> The keeping period is a statement written into the chain. Deleting is yours to do, by whatever your rules require.</li>
+  <li><b>Six months is your decision, not ours.</b> The EU AI Act asks deployers of high-risk systems to keep logs for at least six months; other rules may ask for longer. This is a tool, not a compliance product.</li>
+  <li><b>Do not delete the piece being written.</b> The server would continue from the last closed piece, and the log would be shorter with nothing in it to show that. Only a head saved elsewhere catches a cut at the end; see <a href="https://palimpsests.dev/runbook/detect-log-tampering/">check a log for tampering</a>.</li>
+  <li><b>A deleted piece is gone.</b> What remains proves it continues the piece that was removed. It does not bring the records back.</li>
+  <li><b>A wrong value stops the server at start,</b> and the message names the variable. <code>16MB</code> is refused; write <code>16MiB</code>.</li>
+</ul>
+<h2 id="last-checked">Last checked</h2>
+<ul>
+  <li>palimpsests 0.15.0 from PyPI, Linux, 22 November 2026: a server cutting every 20 records with a declared 180 days, 67 records in four pieces. The outputs in steps 3 and 4 are from that run, before and after the first piece was deleted. The size setting <code>16MiB</code> was started once and accepted, and <code>16MB</code> was refused with a message naming the variable.</li>
+  <li>A run over weeks, with forced stops, is under way and is not finished.</li>
+</ul>
+<h2 id="reference">Reference</h2>
+<ul>
+  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/v0.15.0/docs/RETENTION.md">Retention: sizes, the six-month duty, cutting and pruning</a></li>
+  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/v0.15.0/docs/SERVE-SURFACE.md">The server's settings</a></li>
+  <li><a href="https://palimpsests.dev/eu-ai-act-article-12/">The EU AI Act, Article 12, requirement by requirement</a></li>
+</ul>
+<h2 id="next">Next</h2>
+<ul>
+  <li><a href="/runbook/detect-log-tampering/">Check a log for tampering</a> — Keep a copy of the log&#x27;s latest fingerprint somewhere else, and one command tells you later whether any record was changed, removed or cut off the end.</li>
+  <li><a href="/runbook/prove-a-log-is-append-only/">Prove that a log was only added to</a> — Write down one number and one fingerprint today. Later, a short proof shows that everything the log held then is still its beginning, unchanged.</li>
+  <li><a href="/runbook/audit-evidence-bundle/">Hand an auditor one file of evidence</a> — Pack the log, the result of checking it and the list of what is inside into one file that the person receiving it can check again without trusting you.</li>
+</ul>
+<div class="related">
+  <a class="btn" href="/runbook/">All runbook pages →</a>
+  <a class="btn" href="/">Palimpsests →</a>
+</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/" aria-label="Palimpsests">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="/notes/">Notes</a>
+      <a href="/runbook/">Runbook</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
