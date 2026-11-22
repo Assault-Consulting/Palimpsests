@@ -177,6 +177,7 @@ palimpsests-serve --api-key "$PALIMPSESTS_SERVE_API_KEY"   # http://127.0.0.1:11
         </tbody>
       </table></div>
       <p>Since 0.13 every result also says what its recorder could see: <code>ok</code> or <code>error</code> where the client reports failures, <code>unobserved</code> where it can't tell a failed call from a successful one. An <code>ok</code> means a result came back, never that the action succeeded.</p>
+      <p>Since 0.15 a report the server did not accept is on the chain too: a request with no key, with a wrong key, or with a body it could not read is counted per route in a <code>REPORTS_REFUSED</code> record, written at the first one. A pair taken from an OpenTelemetry span is marked <code>derived-from-telemetry</code>, apart from a pair a client reported itself.</p>
 
       <h2 id="claude-code">Claude Code</h2>
       <p>Claude Code sends its hooks over HTTP, so there's nothing to install. Add <code>PreToolUse</code>, <code>PostToolUse</code> and <code>PostToolUseFailure</code> entries to <code>~/.claude/settings.json</code>, each pointing at <code>/v1/pala/hooks/claude</code> with your key in the <code>Authorization</code> header. List the key's variable in <code>allowedEnvVars</code>: without it Claude Code sends an empty header and every report is refused while the agent keeps working.</p>

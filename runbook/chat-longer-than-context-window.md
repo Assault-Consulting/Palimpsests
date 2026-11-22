@@ -3,7 +3,7 @@ title: Chat longer than the context window on a small local model
 slug: chat-longer-than-context-window
 group: run
 order: 2
-updated: 2026-11-16
+updated: 2026-11-22
 description: Keep a long conversation going on a model with a small context window. Palimpsests keeps the start and the latest turns, moves the middle to disk, and brings back the parts that matter.
 next: local-openai-compatible-server
 seo_title: Chat longer than the context window on a local model
@@ -90,9 +90,9 @@ Talk past the budget, then ask about something you said near the start, and see 
 ## Last checked
 
 - The fitting and the recall are covered by the package's tests. The repository has no recorded run of this recipe on a real model yet.
-- The commands and Python names on this page are those of palimpsests 0.14.1.
+- The commands and Python names on this page are those of palimpsests 0.15.0, checked against the published package on 22 November 2026.
 
 ## Reference
 
-- [Usage guide: the context-size setting and the Python API](https://github.com/Assault-Consulting/Palimpsests/blob/v0.14.1/docs/USAGE.md)
-- [How the window is kept, in code](https://github.com/Assault-Consulting/Palimpsests/blob/v0.14.1/src/palimpsests/context/window_manager.py)
+- [Usage guide: the context-size setting and the Python API](https://github.com/Assault-Consulting/Palimpsests/blob/v0.15.0/docs/USAGE.md)
+- [How the window is kept, in code](https://github.com/Assault-Consulting/Palimpsests/blob/v0.15.0/src/palimpsests/context/window_manager.py)

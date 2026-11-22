@@ -3,7 +3,7 @@ title: Use a local model in OpenCode
 slug: opencode-with-a-local-model
 group: run
 order: 3
-updated: 2026-11-16
+updated: 2026-11-22
 description: Point OpenCode at a model on your own machine through Palimpsests' OpenAI-compatible server, with the configuration printed for you, and know which of its tool calls reach the record.
 next: local-openai-compatible-server, mcp-tool-call-logging
 seo_title: Use a local model in OpenCode
@@ -41,7 +41,7 @@ In a second terminal:
 palimpsests-serve --print-opencode-config
 ```
 
-It prints a provider block for `opencode.json`:
+It prints a provider block for `opencode.json`. With the key from step 1 set in the shell, the block carries it as `apiKey`; without a key that line is absent:
 
 ```json
 {
@@ -51,7 +51,8 @@ It prints a provider block for `opencode.json`:
       "npm": "@ai-sdk/openai-compatible",
       "name": "Palimpsests (local, audited)",
       "options": {
-        "baseURL": "http://127.0.0.1:11435/v1"
+        "baseURL": "http://127.0.0.1:11435/v1",
+        "apiKey": "choose-a-long-random-string"
       },
       "models": {
         "MODEL_ID": {
@@ -84,14 +85,14 @@ Start OpenCode and choose the Palimpsests model from its list of models.
 - When the model returns a structured tool call, the call crosses the server and is recorded: the tool's name, fingerprints of its arguments and its result, and how it ended.
 - When the model writes the call as text, OpenCode reads that text and runs the tool itself. The server never sees a call. It records only that tools were offered and no structured call came back. OpenCode shows both kinds the same way on screen.
 - Measured with OpenCode 1.18.25 and four local models in Ollama: under OpenCode's own system prompt, about 9,500 characters long, none of the four returned structured calls, so no tool call reached the record. With a short prompt, `llama3.1:8b` returned structured calls for the same tools.
-- To record the tools OpenCode runs either way, use the [OpenCode plugin](https://github.com/Assault-Consulting/Palimpsests/blob/v0.14.1/integrations/opencode/README.md). It reports them from inside OpenCode, marked as reported by the client.
+- To record the tools OpenCode runs either way, use the [OpenCode plugin](https://github.com/Assault-Consulting/Palimpsests/blob/v0.15.0/integrations/opencode/README.md). It reports them from inside OpenCode, marked as reported by the client.
 
 ## Last checked
 
 - Windows 11, palimpsests 0.10.0, OpenCode 1.18.25, Ollama 0.33.2, August 2026. [Run record](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/specs/pala-1/independent-runs/oleksandr/ws-e-opencode-smoke/WS-E-run-record.md).
-- The printed configuration on this page is that of palimpsests 0.14.1.
+- The printed configuration on this page is that of palimpsests 0.15.0, printed by the published package on 22 November 2026.
 
 ## Reference
 
-- [OpenCode plugin, with its status on each OpenCode version](https://github.com/Assault-Consulting/Palimpsests/blob/v0.14.1/integrations/opencode/README.md)
+- [OpenCode plugin, with its status on each OpenCode version](https://github.com/Assault-Consulting/Palimpsests/blob/v0.15.0/integrations/opencode/README.md)
 - [All integrations and their limits](https://palimpsests.dev/integrations/)

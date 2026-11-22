@@ -3,7 +3,7 @@ title: Claude Code hooks not working? Find where the reports go missing
 slug: claude-code-hooks-not-working
 group: record
 order: 2
-updated: 2026-11-16
+updated: 2026-11-22
 description: A failing hook never stops the agent, so a broken hook looks exactly like a working one. The silent failures we measured, how to spot each, and one command that names them.
 next: log-claude-code-tool-calls, mcp-tool-call-logging
 seo_title: Claude Code hooks not working? Find where reports are lost
@@ -55,7 +55,7 @@ palimpsests doctor claude-code
 It does three things. It asks the server what reached its route and what it refused, counting empty keys apart from wrong ones. It sends a test report through the real key check and parsing, with nothing written to the log. And it reads `~/.claude/settings.json`. A broken setup looks like this:
 
 ```text
-ok    the serve answers; its chain holds 2 record(s)  [serve_reachable]
+ok    the serve answers; its chain holds 3 record(s)  [serve_reachable]
 warn  nothing has reached /v1/pala/hooks/claude since the serve started  [reports_none]
       -> are the three hooks in ~/.claude/settings.json, and was a tool used since?
 ok    /v1/pala/hooks/claude would record a call and its result, marked reported-by-client, outcome 'ok' — nothing was written  [dry_run_ok]
@@ -73,16 +73,23 @@ The exit code is 1 if any line says `FAIL`. Warnings do not fail it. `--json` pr
 - `claude_hook_missing`, `claude_hook_other_serve` and `claude_allowed_env_missing`: what is wrong in the settings file.
 - `serve_without_key`: a warning that anything able to reach the port can write to the log.
 
-The same command checks the other integrations: `codex`, `opencode`, `litellm`, `mcp` and `otel`. For Codex it cannot see from outside whether a hook is trusted, and it says so.
+Since 0.15 the log itself keeps the refusals. The first report a route refuses writes a `REPORTS_REFUSED` record with the counts so far, empty keys apart from wrong ones, and another is written when the server stops if the counts have moved. So the question "were reports arriving and being turned away?" has an answer after the server has been restarted, when `doctor` no longer sees it:
+
+```bash
+palimpsests pala export ~/.config/palimpsests/serve.pala | grep '"kind_name":"REPORTS_REFUSED"'
+```
+
+`palimpsests doctor` also checks the other integrations: `codex`, `opencode`, `litellm`, `mcp` and `otel`. For Codex it cannot see from outside whether a hook is trusted, and it says so.
 
 ## Last checked
 
 - The empty key: Windows 11, Claude Code 2.1.310, palimpsests 0.13.0, 26 October 2026. Four of 26 hook posts arrived without the key; why those four has not been established.
 - The untrusted hooks: Windows 11, Codex 0.164.0, palimpsests 0.13.0, 26 October 2026. Nothing was recorded before the hooks were trusted.
-- `palimpsests doctor` exists since 0.14.1, and the output above is its own.
+- `palimpsests doctor` exists since 0.14.1. The output above is its own, from palimpsests 0.15.0 installed from PyPI, Linux, 22 November 2026, with a settings file whose first hook lacks `allowedEnvVars`.
+- The refused report in the log: Linux, palimpsests 0.15.0 from PyPI, 22 November 2026. One hook post without a key was answered 401 and left one `REPORTS_REFUSED` record; `doctor` named it as `reports_refused_empty_bearer`.
 
 ## Reference
 
-- [Claude Code and Codex hooks: README](https://github.com/Assault-Consulting/Palimpsests/blob/v0.14.1/integrations/agent-hooks/README.md)
+- [Claude Code and Codex hooks: README](https://github.com/Assault-Consulting/Palimpsests/blob/v0.15.0/integrations/agent-hooks/README.md)
 - [The real Claude Code session, recorded](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/specs/pala-1/independent-runs/traffic-0.14-r1-claude-code/RUN-RECORD.md)
 - [The real Codex session, recorded](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/specs/pala-1/independent-runs/traffic-0.14-r2-codex/RUN-RECORD.md)

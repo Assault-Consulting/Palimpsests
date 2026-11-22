@@ -21,8 +21,7 @@ embedded). Verify against the consolidated EUR-Lex text when citing.
 frozen at PALA-1 v1.0; the EVT_KIND space grows without any change to
 framing or the hash contract); `Planned (post-0.8)` — on the roadmap,
 not yet scheduled; `Shipped (v0.10)` — present in the v0.10.0 release;
-`Shipped (main)` — merged on `main`, verified at the commit named in
-Provenance, ships with the next tag.
+`Shipped (v0.11)`, `Shipped (v0.12)` — present in that release.
 
 **Provenance.** Verified against the `v0.7.0` tag (`7940dc3`); rows
 marked `Shipped (v0.8)` are verified against the v0.8.0 release. PALA-1
@@ -31,8 +30,11 @@ core and both profiles are frozen at v1.0 (tag `pala1-v1.0`);
 freeze. Capability claims below were checked against the source at
 these tags. Re-checked in full on 2026-08-29 against `main` at
 `ec4d38e` (post-#185); rows marked `Shipped (v0.10)` are verified
-against the v0.10.0 release, rows marked `Shipped (main)` against that
-commit.
+against the v0.10.0 release. Rows marked `Shipped (v0.11)` were merged
+before that re-check and carried the status `Shipped (main)` until
+2026-11-22; they and the `Shipped (v0.12)` row were checked on that date
+against the published 0.15.0 package: the commands, modules and names
+each row cites are present in it.
 
 ---
 
@@ -103,8 +105,8 @@ interfaces.
 | Bounded, explicit degradation when a prefix is absent | Verifying a chain whose prefix is absent — e.g. an archived-away head — reports exactly one explicit violation at position 0 (missing genesis) and verifies the remainder as sound; the loss is visible, never silent. (A truncated *tail* is a different case: it is invisible to the §7.1 chain check and is caught by the anchor, not by a position-0 violation.) | Shipped (v0.7) |
 | Retention guidance for providers (≥ 6 months context) and deployers, with storage math from measured bytes/record | docs/RETENTION.md — measured per-kind footprint (~181 B/record weighted, results/audit-overhead-footprint-v0.7.0.md), archival/pruning at segment boundaries, ~4 s/GB resume cost | Shipped (v0.8) |
 | Segmenting an existing monolith at record boundaries | `pala segment` (#169), manifest `pala-segments/1`; each closed segment verifies standalone from its manifest seed | Shipped (v0.10) |
-| Writer-side rotation for months-long chains | `RotationPolicy` on the writer (#178, #183): record-boundary cuts, span-safe deferral, atomically-updated `pala-segments/1` manifest whose `prev_head` seeds let every closed segment verify alone; trigger math for the six-month duty in RETENTION.md §3 | Shipped (main) |
-| Formal prefix-consistency proofs for pruning | Merkle consistency proofs across pruned prefixes | Planned (post-0.8) |
+| Writer-side rotation for months-long chains | `RotationPolicy` on the writer (#178, #183): record-boundary cuts, span-safe deferral, atomically-updated `pala-segments/1` manifest whose `prev_head` seeds let every closed segment verify alone; trigger math for the six-month duty in RETENTION.md §3 | Shipped (v0.11) |
+| Formal prefix-consistency proofs for pruning | RFC 6962 / 9162 consistency proofs over a chain's record hashes (#228, #230): `pala consistency` / `pala consistency-verify`, document `pala-consistency-proof/1` (`docs/specs/pala-1/consistency-proof.md`), published proof vectors with negative cases; pruning with a proof in RETENTION.md | Shipped (v0.12) |
 
 ## Beyond the requirements
 
@@ -128,13 +130,13 @@ positioned as such:
 - **SCITT/COSE interop**: a chain checkpoint exports as a COSE_Sign1
   Signed Statement in RFC 9943 vocabulary for registration in a
   transparency service (#176); the verified/reported split is stated
-  where the bridge is defined — Shipped (main).
+  where the bridge is defined — Shipped (v0.11).
 - **Hardware-token anchor store — tier B mechanism**: a PKCS#11 anchor
   source behind the existing anchor seams (#179), claim honesty fixed
   in the docs (#180): the mechanism is shipped and tested against a
   hermetic SoftHSM; a tier-B *claim* for a concrete deployment requires
   a real token or HSM — SoftHSM proves the code path, not the tier —
-  Shipped (main).
+  Shipped (v0.11).
 
 ## Other frameworks
 

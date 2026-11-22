@@ -17,7 +17,7 @@ Palimpsests is honest about scope: it supplies the runtime primitives that speci
 - [SCITT transparency bridge](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/INTEROP-SCITT.md): one COSE Signed Statement per published chain head — no record content leaves the device. The statement construction was reproduced byte-for-byte twice from the standards alone, and one registration with a verified receipt is on the public record. The document states what a receipt proves and what it does not.
 - [OpenSSF Best Practices: Gold](https://www.bestpractices.dev/projects/13534) — the highest tier of the programme; each criterion is answered by the project in a public registry entry with its justification, so it can be checked against the repository.
 - Signed releases (PEP 740 / Sigstore), a machine-readable SBOM per build, a published threat model, OSPS Baseline Level 2 self-attestation, and Atheris fuzzing in CI.
-- [EU AI Act Article 12 mapping](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/compliance/EU-AI-ACT-MAPPING.md) — a requirement-by-requirement checklist of what ships today (24 of 27 rows as of v0.12) and what is on the roadmap.
+- [EU AI Act Article 12 mapping](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/compliance/EU-AI-ACT-MAPPING.md) — a requirement-by-requirement checklist of what ships today (25 of 27 rows as of v0.15) and what is on the roadmap.
 - [EU regulatory fit](https://palimpsests.dev/#eu-law): the specific runtime primitive each act leans on, linked to source text.
 - [Internet-Draft draft-sparysh-pala-audit](https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/) — PALA-1 described in an individual submission with Informational status; not an IETF standard and not a working-group document. The specification in the repository remains normative.
 
@@ -47,6 +47,7 @@ The [runbook](https://palimpsests.dev/runbook/): one task per page, in steps, ea
 
 All [notes](https://palimpsests.dev/notes/), newest first; the same list as an [RSS feed](https://palimpsests.dev/notes/feed.xml).
 
+- [AI on small devices, and the log they keep](https://palimpsests.dev/notes/ai-on-small-devices-and-the-log-they-keep/): A device that decides things alone needs a record someone else can check later. What makes that hard on a device, what PALA-1 does about each part, and what it does not do yet.
 - [Protecting an audit log from being rewritten from scratch](https://palimpsests.dev/notes/protecting-an-audit-log-from-being-rewritten/): A hash chain catches an edited record but not a log rebuilt from the first record. What closes that gap, from which record on, and what stays open.
 - [Can a coding agent implement a binary format from its spec alone?](https://palimpsests.dev/notes/can-a-coding-agent-implement-a-spec/): A small, strict test for coding agents. Give one a frozen specification and its test vectors, no reference code, and ask it to reproduce eleven values byte for byte in a language it chooses.
 - [Anatomy of a tamper-evident audit log: PALA-1, a PKCS#11 anchor and SCITT](https://palimpsests.dev/notes/anatomy-of-a-tamper-evident-audit-log/): The three layers of a Palimpsests audit log taken apart: the PALA-1 hash chain, the chain head on a PKCS#11 token and SCITT receipts. What each one proves alone, and what they prove together.

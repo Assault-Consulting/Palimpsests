@@ -39,8 +39,8 @@
       "description": "A failing hook never stops the agent, so a broken hook looks exactly like a working one. The silent failures we measured, how to spot each, and one command that names them.",
       "url": "https://palimpsests.dev/runbook/claude-code-hooks-not-working/",
       "mainEntityOfPage": "https://palimpsests.dev/runbook/claude-code-hooks-not-working/",
-      "datePublished": "2026-11-16",
-      "dateModified": "2026-11-16",
+      "datePublished": "2026-11-22",
+      "dateModified": "2026-11-22",
       "inLanguage": "en",
       "proficiencyLevel": "Beginner",
       "image": "https://palimpsests.dev/og.png",
@@ -132,7 +132,7 @@
   <div class="wrap">
     <div class="doc__in">
 <p class="crumbs"><a href="/">Palimpsests</a> / <a href="/runbook/">Runbook</a></p>
-<span class="eyebrow">Runbook · Record what an AI agent does · updated <time datetime="2026-11-16">16 November 2026</time></span>
+<span class="eyebrow">Runbook · Record what an AI agent does · updated <time datetime="2026-11-22">22 November 2026</time></span>
 <h1 class="display">Claude Code hooks not working? Find where the reports go missing</h1>
 <p class="lede">A failing hook never stops the agent, so a broken hook looks exactly like a working one. The silent failures we measured, how to spot each, and one command that names them.</p>
 <p>A hook is built never to block the agent. That is good for your work and bad for your record: when a hook fails, the agent carries on and nothing tells you. The tools run, and the log stays empty.</p>
@@ -156,7 +156,7 @@
 <p>If the receiver is the Palimpsests server, set up as in <a href="https://palimpsests.dev/runbook/log-claude-code-tool-calls/">log Claude Code tool calls</a>, run:</p>
 <pre><code>palimpsests doctor claude-code</code></pre>
 <p>It does three things. It asks the server what reached its route and what it refused, counting empty keys apart from wrong ones. It sends a test report through the real key check and parsing, with nothing written to the log. And it reads <code>~/.claude/settings.json</code>. A broken setup looks like this:</p>
-<pre><code>ok    the serve answers; its chain holds 2 record(s)  [serve_reachable]
+<pre><code>ok    the serve answers; its chain holds 3 record(s)  [serve_reachable]
 warn  nothing has reached /v1/pala/hooks/claude since the serve started  [reports_none]
       -&gt; are the three hooks in ~/.claude/settings.json, and was a tool used since?
 ok    /v1/pala/hooks/claude would record a call and its result, marked reported-by-client, outcome 'ok' — nothing was written  [dry_run_ok]
@@ -172,16 +172,19 @@ FAIL  the PreToolUse hook's header uses $PALIMPSESTS_SERVE_API_KEY but does not 
   <li><code>claude_hook_missing</code>, <code>claude_hook_other_serve</code> and <code>claude_allowed_env_missing</code>: what is wrong in the settings file.</li>
   <li><code>serve_without_key</code>: a warning that anything able to reach the port can write to the log.</li>
 </ul>
-<p>The same command checks the other integrations: <code>codex</code>, <code>opencode</code>, <code>litellm</code>, <code>mcp</code> and <code>otel</code>. For Codex it cannot see from outside whether a hook is trusted, and it says so.</p>
+<p>Since 0.15 the log itself keeps the refusals. The first report a route refuses writes a <code>REPORTS_REFUSED</code> record with the counts so far, empty keys apart from wrong ones, and another is written when the server stops if the counts have moved. So the question "were reports arriving and being turned away?" has an answer after the server has been restarted, when <code>doctor</code> no longer sees it:</p>
+<pre><code>palimpsests pala export ~/.config/palimpsests/serve.pala | grep '"kind_name":"REPORTS_REFUSED"'</code></pre>
+<p><code>palimpsests doctor</code> also checks the other integrations: <code>codex</code>, <code>opencode</code>, <code>litellm</code>, <code>mcp</code> and <code>otel</code>. For Codex it cannot see from outside whether a hook is trusted, and it says so.</p>
 <h2 id="last-checked">Last checked</h2>
 <ul>
   <li>The empty key: Windows 11, Claude Code 2.1.310, palimpsests 0.13.0, 26 October 2026. Four of 26 hook posts arrived without the key; why those four has not been established.</li>
   <li>The untrusted hooks: Windows 11, Codex 0.164.0, palimpsests 0.13.0, 26 October 2026. Nothing was recorded before the hooks were trusted.</li>
-  <li><code>palimpsests doctor</code> exists since 0.14.1, and the output above is its own.</li>
+  <li><code>palimpsests doctor</code> exists since 0.14.1. The output above is its own, from palimpsests 0.15.0 installed from PyPI, Linux, 22 November 2026, with a settings file whose first hook lacks <code>allowedEnvVars</code>.</li>
+  <li>The refused report in the log: Linux, palimpsests 0.15.0 from PyPI, 22 November 2026. One hook post without a key was answered 401 and left one <code>REPORTS_REFUSED</code> record; <code>doctor</code> named it as <code>reports_refused_empty_bearer</code>.</li>
 </ul>
 <h2 id="reference">Reference</h2>
 <ul>
-  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/v0.14.1/integrations/agent-hooks/README.md">Claude Code and Codex hooks: README</a></li>
+  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/v0.15.0/integrations/agent-hooks/README.md">Claude Code and Codex hooks: README</a></li>
   <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/specs/pala-1/independent-runs/traffic-0.14-r1-claude-code/RUN-RECORD.md">The real Claude Code session, recorded</a></li>
   <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/specs/pala-1/independent-runs/traffic-0.14-r2-codex/RUN-RECORD.md">The real Codex session, recorded</a></li>
 </ul>

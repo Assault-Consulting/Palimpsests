@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI on IoT devices, and the log they keep</title>
+<meta name="description" content="A device that decides alone needs a record others can check. What is hard about logging on a device, and what the PALA-1 format does about each part." />
+<link rel="canonical" href="https://palimpsests.dev/notes/ai-on-small-devices-and-the-log-they-keep/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Andrii Sparysh" />
+<meta name="theme-color" content="#15151f" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Palimpsests" />
+<meta property="og:title" content="AI on IoT devices, and the log they keep" />
+<meta property="og:description" content="A device that decides alone needs a record others can check. What is hard about logging on a device, and what the PALA-1 format does about each part." />
+<meta property="og:url" content="https://palimpsests.dev/notes/ai-on-small-devices-and-the-log-they-keep/" />
+<meta property="og:locale" content="en" />
+<meta property="og:image" content="https://palimpsests.dev/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Palimpsests: a tamper-evident audit log for AI agents, verifiable without the key" />
+<meta property="article:published_time" content="2026-11-22" />
+<meta property="article:author" content="Andrii Sparysh" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://palimpsests.dev/og.png" />
+<meta name="twitter:title" content="AI on IoT devices, and the log they keep" />
+<meta name="twitter:description" content="A device that decides alone needs a record others can check. What is hard about logging on a device, and what the PALA-1 format does about each part." />
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BlogPosting",
+      "@id": "https://palimpsests.dev/notes/ai-on-small-devices-and-the-log-they-keep/#post",
+      "headline": "AI on small devices, and the log they keep",
+      "description": "A device that decides things alone needs a record someone else can check later. What makes that hard on a device, what PALA-1 does about each part, and what it does not do yet.",
+      "url": "https://palimpsests.dev/notes/ai-on-small-devices-and-the-log-they-keep/",
+      "mainEntityOfPage": "https://palimpsests.dev/notes/ai-on-small-devices-and-the-log-they-keep/",
+      "datePublished": "2026-11-22",
+      "dateModified": "2026-11-22",
+      "inLanguage": "en",
+      "keywords": [
+        "iot",
+        "edge-ai",
+        "audit-log",
+        "pala-1"
+      ],
+      "image": "https://palimpsests.dev/og.png",
+      "author": {
+        "@type": "Person",
+        "@id": "https://palimpsests.dev/#andrii-sparysh",
+        "name": "Andrii Sparysh",
+        "url": "https://palimpsests.dev/",
+        "jobTitle": "Co-founder, Assault Consulting",
+        "worksFor": {
+          "@id": "https://palimpsests.dev/#org"
+        },
+        "sameAs": [
+          "https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/"
+        ]
+      },
+      "publisher": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "isPartOf": {
+        "@id": "https://palimpsests.dev/notes/#blog"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Palimpsests",
+          "item": "https://palimpsests.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Notes",
+          "item": "https://palimpsests.dev/notes/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "AI on small devices, and the log they keep",
+          "item": "https://palimpsests.dev/notes/ai-on-small-devices-and-the-log-they-keep/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<nav>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Palimpsests home">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="nav__links">
+      <a class="hide-sm" href="/#caps">Capabilities</a>
+      <a class="hide-sm" href="/pala-1/">PALA-1</a>
+      <a class="hide-sm" href="/verify-without-reading/">Verify</a>
+      <a class="hide-sm" href="/eu-ai-act-article-12/">EU AI Act</a>
+      <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
+      <a class="hide-sm" href="/integrations/">Integrations</a>
+      <a class="hide-sm" href="/runbook/">Runbook</a>
+      <a class="hide-sm" href="/notes/">Notes</a>
+      <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<main class="doc" id="main">
+  <div class="wrap">
+    <div class="doc__in">
+<p class="crumbs"><a href="/">Palimpsests</a> / <a href="/notes/">Notes</a></p>
+<article>
+<span class="eyebrow">Note · <time datetime="2026-11-22">22 November 2026</time> · Andrii Sparysh</span>
+<h1 class="display">AI on small devices, and the log they keep</h1>
+<p>A camera at a gate decides whether to open it. A box in a workshop listens to a motor and decides when to stop the line. A robot in a warehouse chooses its own route. In each of them a model makes the decision, and nobody is standing next to it.</p>
+<p>Later someone asks what the device decided, and why. The owner asks, or an insurer, or an inspector. The answer comes from whatever the device wrote down. So the real question is whether that record can be trusted by a person who did not write it.</p>
+<p>This note is about that record: why it is harder to keep on a device than on a server, and why we think PALA-1 is the right shape for it.</p>
+<h2 id="what-is-hard-about-a-device">What is hard about a device</h2>
+<p>A server sits in a room with power, a network, a clock and an administrator. A device has none of these for certain.</p>
+<ul>
+  <li><b>It does not know the time.</b> A small computer without a clock battery starts in 1970. The network that would correct it may not be there.</li>
+  <li><b>It loses power in the middle of a sentence.</b> Somebody pulls the plug while a record is half written.</li>
+  <li><b>It restarts often,</b> and each restart is a chance to lose the thread.</li>
+  <li><b>It has little storage.</b> Old records have to go, or the device stops.</li>
+  <li><b>It gets overloaded,</b> and then something is dropped.</li>
+  <li><b>It is offline,</b> for hours or for good. There is no cloud to send the log to as it is written.</li>
+  <li><b>Its owner holds it in their hands,</b> with the storage and everything on it.</li>
+  <li><b>What it sees is private.</b> A camera sees faces. A device in a home hears the home.</li>
+  <li><b>It outlives its software.</b> A machine works for ten years or more. The company that wrote its log code may not.</li>
+</ul>
+<p>A log format made for servers assumes most of this away. A plain text file, or one line of JSON per event, says nothing about any of it: a wrong date looks like a right one, a missing hour looks like a quiet hour, and anyone with the file can edit it.</p>
+<h2 id="what-pala-1-does-about-each">What PALA-1 does about each</h2>
+<p>PALA-1 is a format for a log: the exact bytes of each record, and the rules for checking them. Every record carries the hash of the one before it, so a change anywhere shows up in everything after. That part is common. The rest was designed around the list above.</p>
+<p><b>Time.</b> Each record has two clocks: a counter since the device started, which is always there, and the date, which may not be. Next to the date is a field saying how far to believe it: unknown, free-running, a battery clock, or set from outside. A device that does not know the date writes zero and says so, and a reader must report a date written next to "unknown" as an error. Order never depends on the date; it comes from the record's number.</p>
+<p><b>Power cuts.</b> By default the writer returns only after the record is on storage. If the last record was cut in half, the next start removes the half and writes down that it did.</p>
+<p><b>Restarts.</b> Each start writes a record that links to the last record of the previous run. The chain goes through a power cycle unbroken, and a reader can count the restarts. Since version 0.15 a writer also records its own opening and closing, so a run that ended without closing is visible as such.</p>
+<p><b>Little storage.</b> The log can be cut into pieces, and old pieces can be deleted. The first record of each new piece states what came before it and what the keeping period was. A reader who has only the recent pieces sees a log whose beginning is gone and which says why, not a log that looks tampered with.</p>
+<p><b>Overload.</b> If records are dropped, a record is written saying how many and of what kind. That record is never itself dropped. A gap you can see is survivable. A gap you cannot see is a log that lies.</p>
+<p><b>Offline.</b> Checking needs the file and nothing else: no account, no service, no network. The checker's core uses only the Python standard library.</p>
+<p><b>The owner.</b> A chain alone cannot stop its owner from writing a new one. What can is a copy of the latest hash kept somewhere the owner cannot change. That copy is 32 bytes, small enough for almost any link a device has.</p>
+<p><b>Privacy.</b> The chain is checked from the record headers alone. The contents can be encrypted, and the check does not need the key. So an inspector can confirm that nothing was changed or removed without seeing a single face. If the contents must be erased, the key is destroyed, the contents become noise, and the chain still holds.</p>
+<p><b>Ten years.</b> The format is frozen at version 1.0 and published with no rights reserved, together with test files that say byte for byte what a correct reader must produce. Five readers have been written independently, three of them outside this project. A log written today does not depend on our code still running.</p>
+<h2 id="why-this-format-and-not-another">Why this format and not another</h2>
+<p>Four properties matter more on a device than anywhere else.</p>
+<p>It is <b>binary and fixed.</b> A record starts with 156 bytes laid out in a table, and the hash is taken over those bytes as they are. There is no text to normalise and no numbers to round, so two programs cannot disagree about what was hashed. On small hardware that is also simply less work.</p>
+<p>It <b>says what it does not know.</b> The time may be unknown. The level of trust is a field, not a promise. A dropped record is counted. A tool result the recorder could not see is marked as unseen. A log that admits its limits survives questions that a confident one does not.</p>
+<p>It <b>separates the envelope from the meaning.</b> The chain, the clocks and the checks are the core. What an event means lives in a profile on top. Today there is one profile, for AI systems: tool calls, incidents, human oversight, declared deletions. A profile for sensor readings or actuator commands could be added without touching the core or breaking any reader.</p>
+<p>It <b>can be checked by the other side.</b> The point of a record is the person who doubts it. They can use their own reader, written from the document.</p>
+<h2 id="what-it-does-not-do-yet">What it does not do yet</h2>
+<p>We would rather say this here than have you find it.</p>
+<ul>
+  <li><b>There is no writer for a microcontroller.</b> The writer in this project is Python. It fits a gateway or a single-board computer running Linux, not a chip with kilobytes of memory. What the format asks of such a chip is small: SHA-256 twice per record, a fixed header, a counter that survives a restart, and storage that can be appended to. Nobody has built it and run it, so we claim nothing about it.</li>
+  <li><b>Nothing ties the log to the hardware out of the box.</b> The format has a level for a hardware root of trust. This project can keep the anchor in a hardware token, and that path has been tested against a software token only. Saying that one particular device wrote a log needs a real token on that device, and we have not run one. Until then a log proves it was not changed; it does not prove which device wrote it.</li>
+  <li><b>The log is not the truth.</b> It proves what the device recorded, unmodified. If the model was wrong, the log keeps the wrong answer faithfully.</li>
+  <li><b>There is no device profile.</b> The record kinds that exist are about AI systems.</li>
+</ul>
+<h2 id="a-shape-that-works-today">A shape that works today</h2>
+<p>Put the recorder on the gateway, next to the model: the single-board computer that already runs it. Let the gateway write the chain. Send the latest hash, those 32 bytes, somewhere else on a schedule — to the owner's server, to a second device, to paper. Cut the log by size and delete old pieces by the rule you declared. When someone asks, hand them the file and the command:</p>
+<pre><code>palimpsests pala verify device.pala --anchor-file head.txt</code></pre>
+<p>They do not need to trust the device, or us.</p>
+</article>
+<div class="readmore">
+<h2 id="read-next">Read next</h2>
+<ul>
+  <li><a href="/pala-1/">PALA-1: the record format</a> — the page this note belongs to</li>
+  <li><a href="/notes/pala-1-three-design-principles/">PALA-1: three design principles for verifiable audit logs</a></li>
+  <li><a href="/notes/llm-on-an-isolated-network/">Running a language model on an isolated network, with a log you can prove</a></li>
+  <li><a href="/notes/what-makes-an-audit-log-tamper-evident/">Tamper-evident audit logs: how they work and how to build one</a></li>
+</ul>
+</div>
+<div class="related">
+  <a class="btn" href="/notes/">All notes →</a>
+  <a class="btn" href="/">Palimpsests →</a>
+</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/" aria-label="Palimpsests">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="/notes/">Notes</a>
+      <a href="/runbook/">Runbook</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

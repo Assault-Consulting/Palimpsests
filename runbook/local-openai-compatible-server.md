@@ -3,7 +3,7 @@ title: Run a local LLM behind an OpenAI-compatible API
 slug: local-openai-compatible-server
 group: run
 order: 1
-updated: 2026-11-16
+updated: 2026-11-22
 description: Start an OpenAI-compatible server on your own machine in front of Ollama or llama.cpp, point any OpenAI client at it, and keep a tamper-evident record of the tool calls that pass through.
 next: opencode-with-a-local-model, chat-longer-than-context-window
 seo_title: Run a local LLM behind an OpenAI-compatible API
@@ -85,9 +85,9 @@ Stop it first because a file that is still being written can end in half an entr
 ## Last checked
 
 - Windows 11, palimpsests 0.10.0, Ollama 0.33.2, August 2026: the server returned structured tool calls from `llama3.1:8b` and recorded them. [Run record](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/specs/pala-1/independent-runs/oleksandr/ws-e-opencode-smoke/WS-E-run-record.md).
-- The commands on this page are those of palimpsests 0.14.1.
+- The commands on this page are those of palimpsests 0.15.0, run against the published package on Linux on 22 November 2026 without a model behind the server.
 
 ## Reference
 
-- [Usage guide: the server, settings and environment variables](https://github.com/Assault-Consulting/Palimpsests/blob/v0.14.1/docs/USAGE.md)
+- [Usage guide: the server, settings and environment variables](https://github.com/Assault-Consulting/Palimpsests/blob/v0.15.0/docs/USAGE.md)
 - [Air-gapped and on-prem use](https://palimpsests.dev/air-gapped/)

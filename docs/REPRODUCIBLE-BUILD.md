@@ -39,8 +39,36 @@ sha256sum dist/*
 ```
 
 Building a second time into a different directory yields identical hashes.
-For a release, compare those hashes against the artifacts attached to the
-corresponding GitHub Release / published to PyPI: they match byte-for-byte.
+
+### Comparing with a published release
+
+The files on the GitHub Release and on PyPI are the same bytes — one build
+feeds both. Whether **your** rebuild has the same hash as theirs depends on
+one more thing than the source: the compression library your Python was
+built with. The wheel is a zip and the sdist a gzip, and two builds of
+zlib may deflate the same input into different bytes.
+
+Measured on 0.15.0 (2026-11-22): a rebuild from a clean clone of the tag,
+with the release's own locked tools, on a different Python 3.12 build than
+the release runner's, gave archives with **different SHA-256 and identical
+contents** — the same 81 members in the wheel and 784 in the sdist, in the
+same order, each with the same content hash, timestamp and mode. Only the
+compressed sizes differed.
+
+So compare in two steps. The archive hashes first: if they match, you are
+done. If they do not, compare what is inside:
+
+```bash
+python scripts/compare_dist.py dist/<file> <the published file>
+```
+
+It prints `same bytes`, or `same contents (N members); the archives differ
+in compression only`, or `DIFFERENT CONTENTS` with the members that differ,
+and exits 1 in the last case.
+
+A difference in contents is a finding; a difference in compression alone
+is not. The published files' own hashes are what the release's provenance
+(`RELEASING.md`) signs.
 
 ## How CI enforces it
 

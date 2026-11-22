@@ -39,8 +39,8 @@
       "description": "Keep a long conversation going on a model with a small context window. Palimpsests keeps the start and the latest turns, moves the middle to disk, and brings back the parts that matter.",
       "url": "https://palimpsests.dev/runbook/chat-longer-than-context-window/",
       "mainEntityOfPage": "https://palimpsests.dev/runbook/chat-longer-than-context-window/",
-      "datePublished": "2026-11-16",
-      "dateModified": "2026-11-16",
+      "datePublished": "2026-11-22",
+      "dateModified": "2026-11-22",
       "inLanguage": "en",
       "proficiencyLevel": "Beginner",
       "image": "https://palimpsests.dev/og.png",
@@ -132,7 +132,7 @@
   <div class="wrap">
     <div class="doc__in">
 <p class="crumbs"><a href="/">Palimpsests</a> / <a href="/runbook/">Runbook</a></p>
-<span class="eyebrow">Runbook · Run a model on your own machine · updated <time datetime="2026-11-16">16 November 2026</time></span>
+<span class="eyebrow">Runbook · Run a model on your own machine · updated <time datetime="2026-11-22">22 November 2026</time></span>
 <h1 class="display">Chat longer than the context window on a small local model</h1>
 <p class="lede">Keep a long conversation going on a model with a small context window. Palimpsests keeps the start and the latest turns, moves the middle to disk, and brings back the parts that matter.</p>
 <p>A model can read only so much text at once. That limit is its context window, and a small model on modest hardware may have 8,000 tokens or fewer. A long chat outgrows it, and something has to go. Drop the oldest messages and the model forgets what the task was. Drop messages at random and it forgets facts.</p>
@@ -191,12 +191,12 @@ while True:
 <h2 id="last-checked">Last checked</h2>
 <ul>
   <li>The fitting and the recall are covered by the package's tests. The repository has no recorded run of this recipe on a real model yet.</li>
-  <li>The commands and Python names on this page are those of palimpsests 0.14.1.</li>
+  <li>The commands and Python names on this page are those of palimpsests 0.15.0, checked against the published package on 22 November 2026.</li>
 </ul>
 <h2 id="reference">Reference</h2>
 <ul>
-  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/v0.14.1/docs/USAGE.md">Usage guide: the context-size setting and the Python API</a></li>
-  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/v0.14.1/src/palimpsests/context/window_manager.py">How the window is kept, in code</a></li>
+  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/v0.15.0/docs/USAGE.md">Usage guide: the context-size setting and the Python API</a></li>
+  <li><a href="https://github.com/Assault-Consulting/Palimpsests/blob/v0.15.0/src/palimpsests/context/window_manager.py">How the window is kept, in code</a></li>
 </ul>
 <h2 id="next">Next</h2>
 <ul>

@@ -3,7 +3,7 @@ title: Log MCP tool calls with a one-file proxy
 slug: mcp-tool-call-logging
 group: record
 order: 3
-updated: 2026-11-16
+updated: 2026-11-22
 description: Put a small proxy in front of any MCP server that speaks stdio, and every tools/call lands in a tamper-evident log on your machine, with whether it came back ok, as an error or not at all.
 next: claude-code-hooks-not-working, log-claude-code-tool-calls
 seo_title: Log MCP tool calls with a one-file proxy
@@ -35,7 +35,7 @@ The second line is explained on the [runbook's first page](https://palimpsests.d
 ### 2. Download the proxy
 
 ```bash
-curl -O https://raw.githubusercontent.com/Assault-Consulting/Palimpsests/v0.14.1/integrations/mcp/palimpsests_audit_mcp.py
+curl -O https://raw.githubusercontent.com/Assault-Consulting/Palimpsests/v0.15.0/integrations/mcp/palimpsests_audit_mcp.py
 ```
 
 ### 3. Put it in front of your MCP server
@@ -86,12 +86,14 @@ palimpsests pala export ~/.config/palimpsests/serve.pala | grep '"kind_name":"TO
 
 ## Last checked
 
+- Linux and Windows 11 on 22 November 2026, `main` shortly before 0.15.0 (`09c6f59` and `e44fe8f`): one call and its result reached the log, in [surface checks](https://github.com/Assault-Consulting/Palimpsests/blob/main/integrations/COMPATIBILITY.md).
+- `palimpsests doctor mcp` and the export command: palimpsests 0.15.0 from PyPI, Linux, 22 November 2026.
 - Linux on 13 November 2026 and Windows 11 on 14 November 2026, palimpsests 0.14.0: one call and its result reached the log, in surface checks.
 - Windows 11, palimpsests 0.13.0, 26 October 2026: a real Claude Code session through a filesystem server, eleven calls and eleven results. Ten were `ok` and one `error`, for a file that did not exist, each with the real tool name.
 - [Every check, with its date and machine](https://github.com/Assault-Consulting/Palimpsests/blob/main/integrations/COMPATIBILITY.md)
 
 ## Reference
 
-- [MCP proxy: README](https://github.com/Assault-Consulting/Palimpsests/blob/v0.14.1/integrations/mcp/README.md)
+- [MCP proxy: README](https://github.com/Assault-Consulting/Palimpsests/blob/v0.15.0/integrations/mcp/README.md)
 - [The real MCP session, recorded](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/specs/pala-1/independent-runs/traffic-0.14-r5-mcp/RUN-RECORD.md)
 - [Recording agent tool calls](https://palimpsests.dev/notes/recording-agent-tool-calls/)

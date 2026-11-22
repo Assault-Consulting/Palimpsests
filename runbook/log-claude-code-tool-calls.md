@@ -3,7 +3,7 @@ title: Log Claude Code tool calls on your own machine
 slug: log-claude-code-tool-calls
 group: record
 order: 1
-updated: 2026-11-16
+updated: 2026-11-22
 description: Record every tool call Claude Code makes in a tamper-evident log on your own machine, with three hook entries and a local server. Fingerprints instead of content, and failures marked as failures.
 next: claude-code-hooks-not-working, mcp-tool-call-logging
 seo_title: Log Claude Code tool calls on your own machine
@@ -75,12 +75,14 @@ Each line is a call or a result, marked `"source_name": "reported-by-client"`. I
 
 ## Last checked
 
+- Linux, Claude Code 2.1.329, `main` at `09c6f59` shortly before 0.15.0, 22 November 2026: one call and its result reached the log, in a [surface check](https://github.com/Assault-Consulting/Palimpsests/blob/main/results/surfaces-2026-11-22-2.md). On Windows the check cannot isolate Claude Code, so it was not checked there.
+- The commands on this page: palimpsests 0.15.0 from PyPI, Linux, 22 November 2026, with hook reports sent by hand in place of the client.
 - Linux, Claude Code 2.1.319, palimpsests 0.14.0, 13 November 2026: one call and its result reached the log, in a surface check.
 - Windows 11, Claude Code 2.1.310, palimpsests 0.13.0, 26 October 2026: a real session, eleven calls with their results, the failed file read recorded as `error`. Four of the 26 hook posts arrived without the key, and why has not been established.
 - [Every check, with its date and machine](https://github.com/Assault-Consulting/Palimpsests/blob/main/integrations/COMPATIBILITY.md)
 
 ## Reference
 
-- [Claude Code and Codex hooks: README](https://github.com/Assault-Consulting/Palimpsests/blob/v0.14.1/integrations/agent-hooks/README.md)
+- [Claude Code and Codex hooks: README](https://github.com/Assault-Consulting/Palimpsests/blob/v0.15.0/integrations/agent-hooks/README.md)
 - [The real Claude Code session, recorded](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/specs/pala-1/independent-runs/traffic-0.14-r1-claude-code/RUN-RECORD.md)
 - [Recording agents that use cloud models](https://palimpsests.dev/notes/audit-log-for-agents-on-cloud-models/)
