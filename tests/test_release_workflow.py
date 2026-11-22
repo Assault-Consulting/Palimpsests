@@ -72,3 +72,29 @@ def test_document_names_the_asset_the_workflow_uploads() -> None:
     assert ASSET in _jobs()["provenance"]
     assert ASSET in RELEASING
     assert ASSET not in _jobs()["release"]
+
+
+def _run_blocks(job_text: str) -> list[str]:
+    """The shell of every `run:` step, whitespace-normalised."""
+    blocks = re.findall(r"(?ms)^        run: \|\n(.*?)(?=^      - |^  [a-z]|\Z)", job_text)
+    return [" ".join(block.split()) for block in blocks]
+
+
+def test_ci_rehearses_the_build_job_command_for_command() -> None:
+    ci = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+    body = ci.split("\njobs:\n", 1)[1]
+    parts = re.split(r"(?m)^  ([a-z][a-z0-9_-]*):\n", body)
+    ci_jobs = dict(zip(parts[1::2], parts[2::2], strict=True))
+    rehearsal = ci_jobs["release-rehearsal"]
+    build = _jobs()["build"]
+    assert _run_blocks(build)
+    assert _run_blocks(rehearsal) == _run_blocks(build)
+    python = r'python-version: "([0-9.]+)"'
+    assert re.findall(python, rehearsal) == re.findall(python, build)
+    assert "release-rehearsal" in ci_jobs["ci-complete"]
+
+
+def test_release_lock_pins_what_an_older_python_needs() -> None:
+    lock = (ROOT / ".github" / "requirements" / "release.txt").read_text(encoding="utf-8")
+    pinned = set(re.findall(r"(?m)^([a-z0-9-]+)==", lock))
+    assert "typing-extensions" in pinned
