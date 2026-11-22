@@ -8,6 +8,713 @@ API changes.
 
 ## [Unreleased]
 
+## [0.15.0] — 2026-11-22
+
+**The PALA-1 core is unchanged (frozen at v1.0). The inference profile moves
+from r6 to r9, and r9 is the revision Palimpsests 1.0 implements.** This
+release makes a chain say more about its own writing: a writer records its
+opening and its closing, so a stop without a close is visible (r8); reports
+the serve refused or rejected are on the chain (r9); payload digests follow
+RFC 8785, and a value with no canonical form is recorded without a digest
+rather than with a wrong one (r7). The verification report is
+`pala-verification-report/2`. A SCITT statement is accepted in one encoding
+and has a name, `statement_id`. `palimpsests serve` can cut its chain into
+segments, and `palimpsests pala segment-verify` checks the set.
+
+**Breaks a consumer will meet** — each is described under Changed below:
+
+- every chain a writer writes is two records longer per writer run, and the
+  head of a closed chain is the hash of its `WRITER_CLOSE` (r8);
+- the report format string is `pala-verification-report/2`; an empty
+  container without an anchor has the verdict `empty`, not `partial`
+  (`docs/specs/report/MIGRATING-1-TO-2.md`);
+- the inference profile's companion vectors hold three boots (r9);
+- exit code 1 is named `VIOLATION`; the number is unchanged;
+- `verify_statement` refuses a statement that is not in the deterministic
+  encoding, and one followed by further bytes.
+
+Surface checks for this release: `results/surfaces-2026-11-22.md` (Windows:
+the MCP proxy, OpenCode and OTLP) and `results/surfaces-2026-11-22-2.md`
+(Linux: LiteLLM, the MCP proxy, Claude Code and OTLP). **LiteLLM and Claude
+Code were not checked on Windows; OpenCode was not checked on Linux.** No
+probe exists for Codex.
+
+### Security
+
+- **The tools the workflows install are hash-locked.** `build`, `twine` and
+  `cyclonedx-bom` in the release workflow — the tools that produce the
+  published files — and ruff, bandit, xml2rfc, atheris and the vector job's
+  `cryptography` are installed with `pip install --require-hashes` from
+  `.github/requirements/`. Before, they were installed at whatever version
+  was newest that day. What the tests run against stays unlocked, on
+  purpose; `.github/requirements/README.md` says why.
+- **CodeQL analyses every pull request and every push to `main`**, for the
+  Python source and for the workflows themselves, beside Bandit.
+
+- **A deeply nested tool argument or result no longer removes the record of
+  the call.** The canonicalizer recursed once per level, and a value nested
+  past about a thousand levels raised `RecursionError`, which the digest
+  helper did not catch. On the hook routes a deep `tool_input` left nothing
+  on the chain, and a deep `tool_response` left a call without its result —
+  and no longer closed as cancelled when the serve stopped. A tool's output
+  comes from outside (a page, an API, a file), so whoever controlled it
+  could erase the record of the call that fetched it. Now such a value has
+  no canonical form and the event is recorded without a digest, as for NaN.
+- On the hook routes and on `/v1/pala/events` a call leaves the pending
+  table only once its result is written. A result event refused for a
+  digest that is not hex used to consume the call; a corrected report now
+  lands.
+
+- **A payload digest stands for one value, or there is none** (inference
+  profile §11). Two values could share an `EVT_PAYLOAD_DIGEST`:
+  `{"id": 9007199254740992}` and `{"id": 9007199254740993}`, because
+  RFC 8785 writes every number as a double; and `{"a": 1, "a": 2}` had the
+  digest of `{"a": 2}`, because the repetition was gone before the value was
+  digested, while a reader that keeps the first value reads another call.
+  Now an integer beyond ±(2^53 − 1) and an object that repeats a key have no
+  canonical form (RFC 7493 §2.2, §2.3): the event is recorded without a
+  digest, as for NaN.
+- A report whose own object repeats a key — two tool names, two call ids —
+  is rejected (400) on the hook routes, per event on `/v1/pala/events`, and
+  for an OTLP/JSON export: there is no one event to record.
+
+- **A writer stopped without being closed is visible** (inference profile
+  r8). A crash in the middle of a record left a torn tail, which a resumed
+  writer records; a stop *between* two records — a kill, a power cut, which
+  can be someone's choice — left no trace. The writer now writes
+  `WRITER_OPEN` behind its first `GENESIS` or `BOOT` and `WRITER_CLOSE` as
+  its last record, and the reader reports a boot that opened, was followed
+  by another boot, and does not end with a close: advisory
+  `boot_ended_without_close`. The chain is whole either way; the verdict
+  does not change. The last boot of a file is not judged — its writer may
+  be writing still.
+
+- **Reports that the serve refused are now on the chain** (inference profile
+  **r9**). A client that reported without the key, with an empty one or with
+  the wrong one was answered 401 and the calls it meant to report were simply
+  absent from the chain; the refusals were counted only in the memory of the
+  serving process. A new `EVENT` kind 14 `REPORTS_REFUSED` records, per
+  reporting route, how many reports were refused (empty credential apart from
+  a wrong one) and how many were accepted: one record at the first refusal on
+  a route, at once, and one with the counts when the serve stops. A report
+  that was read and rejected — a body that is not a report the route takes,
+  one that cannot be read, one that broke the handler — is counted in the
+  same record (`EVT_REJECTED`), and the first on a route is recorded at once
+  as well. At most three records per route per run, so a request that fails
+  cannot grow the chain. Nothing of the refused or rejected request is
+  recorded; a dry run writes nothing. The reader states each
+  such record as the advisory `reports_refused`; the verdict does not move.
+
+- **A release carries its provenance as a file.** From this version the
+  GitHub Release has a `palimpsests.intoto.jsonl` asset beside the wheel,
+  the sdist and the SBOM: a Sigstore bundle with a SLSA provenance
+  statement naming both distributions by SHA-256, made by a new last job of
+  `release.yml`. `gh attestation verify <file> --repo
+  Assault-Consulting/Palimpsests` checks a downloaded file against it. The
+  PyPI attestations are unchanged; earlier releases have only those.
+  `RELEASING.md` has the commands.
+
+- **`verify_statement` accepts one encoding of a statement.** A COSE_Sign1
+  signature does not cover how the envelope is written or the unprotected
+  header at all, so one signed statement could be written tens of thousands
+  of ways — a longer tag, a longer or indefinite array head, longer or
+  chunked byte strings, an unprotected header that was not even a map — all
+  verifying, all with different hashes. None was a forgery, but a reference
+  by digest, a deduplication or a comparison of two copies depended on who
+  last touched the bytes. Now the envelope, the protected header and the
+  payload must be the RFC 8949 §4.2.1 deterministic encoding, and the
+  unprotected header a definite-length map with no label twice, its count
+  of entries in the shortest form; anything else is refused. A statement
+  with an empty unprotected header then has exactly one sequence of bytes. What the unprotected header holds is not judged: a
+  transparency service writes its receipts there.
+
+- **A loss of power no longer removes the last records without a trace.**
+  The PALA-1 writer handed each record to the operating system and never
+  asked for it to be written out; the kernel does that when it chooses,
+  typically within half a minute. A power loss inside that window — an
+  accident, or a hand on the switch right after an action — took the
+  records with it and left a shorter chain **that verified**. The writer now
+  syncs every record to stable storage before the call that wrote it returns
+  (`Durability.RECORD`, the default), and on `palimpsests serve` a tool call
+  is on disk before the client is told of it. A cut syncs the segment it
+  leaves and the segments manifest, which its crash-ordering relied on and
+  did not have. On macOS the sync is `F_FULLFSYNC`.
+
+  What it cannot cover is stated in `docs/WRITER-SURFACE.md` §4 and
+  `docs/THREAT_MODEL.md` (A8): a drive that acknowledges a sync it has not
+  done; whoever can write to the file, for whom an anchor outside the host
+  remains the answer; and the chain still does not say that a run ended
+  uncleanly.
+
+### Added
+
+- **`assemble_bundle(reader=…)`.** A consumer that holds the chain open
+  hands the reader over and the file is not opened again, as with
+  `build_report`. The bundle is byte-identical either way; `reader` and
+  `anchor_source` together raise `ValueError`.
+- **`__all__` on the public channels that had none**: `pala.proofs`,
+  `pala.bundle`, `timehealth`, `bootstats`, `pala.selftest` and
+  `pala.vectors`. Their result types and format ids are declared with the
+  functions (`InclusionProof`, `BundleResult`, `BUNDLE_FORMAT`,
+  `CONSISTENCY_FORMAT`, …). The contract test now holds every channel
+  module's `__all__` to the surface document.
+
+- **`AuditReader.is_consistent()`** — question one as one answer: the header
+  chain verifies, the container walks to its end, every body matches its
+  header's digest. The export, the bundle and `pala verify` each had this
+  answer; the reader gave only its parts, and a consumer that assembled it as
+  `chain_ok and diagnosis is None` reported a whole chain as "not whole"
+  whenever its anchor lagged.
+- **`Diagnosis.question`** — which of the three questions a diagnosis is
+  about: `consistency`, `completeness`, or `None`. There is one diagnosis for
+  all three, and `unanchored_tail` and `replaced_or_rolled_back` are findings
+  about the anchor, not about the chain. The report carries it as
+  `diagnosis.question` (`pala-verification-report/2` is open to added keys).
+- **The open vocabularies as data** in `palimpsests.audit.reader`:
+  `DIAGNOSIS_PATTERNS`, `DIAGNOSIS_QUESTIONS`, `ADVISORY_CODES`,
+  `VIOLATION_CODES`, `MANIFEST_STATUSES` — what the installed build can say.
+  A consumer that keeps guidance per pattern or a sentence per code can now
+  test that its table covers them.
+- `assurance_tier_name` and `time_trust_name` are importable from
+  `palimpsests.audit.reader` (the same objects as in `palimpsests.audit.names`,
+  which stays), and `palimpsests.audit.report` has an `__all__`.
+
+- **A consumer canary.** `.github/workflows/consumer-canary.yml` runs
+  Auditor's own test suite against every commit and pull request of this
+  package, and weekly; `scripts/consumer_canary.py` compares what fails with
+  a ledger of breaks made on purpose, each with its reason, and fails the
+  check on any failure the ledger does not list. It refuses to report at all
+  if the suite ran against another copy of the package or ran no tests. A
+  signal, not a required check.
+
+- `palimpsests.audit.canonical_json.loads` — `json.loads` that returns a
+  `DuplicateKeys` (a `dict`) for an object that repeats a key, so the
+  repetition is still in sight when the value is digested;
+  `has_duplicate_keys`; `MAX_SAFE_INTEGER`.
+- `docs/specs/pala-1/profiles/payload-digest-vectors.json`: 37 cases as JSON
+  text — 22 with their canonical bytes and digest, 15 that have none, with
+  the reason — for another implementation to check itself against.
+
+- **Inference profile r7.** Additive, and the profile's open issues closed.
+  - **`EVT_SOURCE` value 2, `derived-from-telemetry`:** a tool pair written
+    from an exported telemetry span. `SOURCE_DERIVED_FROM_TELEMETRY` in the
+    writer and the reader; `source_name` gains the name. Value 0 is still
+    written as absence, so no existing record changes by a byte.
+  - **`MERKLE` records are defined for the profile** (§10): a checkpoint
+    whose leaves are the record hashes since the previous checkpoint, that
+    one included. This is what `merkle_checkpoint` has written since 0.10;
+    the profile said until now that an inference chain should not emit one.
+  - **The digests over JSON values use RFC 8785** (JCS, §11): tool arguments
+    and results (`EVT_PAYLOAD_DIGEST`) and the engine's configuration
+    (`ORIGIN_CONFIG_DIGEST`). `palimpsests.audit.canonical_json` implements
+    it, stdlib only, tested against the RFC's own samples.
+  - Issues 3 and 5 are recorded as closed: the add-never-renumber rule, and
+    `ok` as a return and not a confirmed effect.
+  - `inference-vectors.json` gains three records (24 in all); every earlier
+    record is byte-identical. The core vectors are untouched.
+
+- **Inference profile r8:** `EVENT` kinds 12 (`WRITER_CLOSE`) and 13
+  (`WRITER_OPEN`), §3.3. `KIND_WRITER_CLOSE`, `KIND_WRITER_OPEN` and the
+  advisory code in the reader. `WRITER_OPEN` names the release that wrote
+  the boot. `inference-vectors.json` gains a second boot, opened and closed
+  (27 records; every earlier record byte-identical).
+- `PalaWriter(..., lifecycle=False)` writes neither record.
+
+- `PalaWriter.reports_refused(route, *, empty, wrong, accepted=0, rejected=0)`,
+  `NativeAudit.reports_refused`, `ReportsRefusedView` and
+  `decode_reports_refused` in `palimpsests.audit.reader`,
+  `KIND_REPORTS_REFUSED` and the tags `EVT_ROUTE`, `EVT_REFUSED_EMPTY`,
+  `EVT_REFUSED_WRONG`, `EVT_ACCEPTED`, `EVT_REJECTED`. The JSONL export carries the counts
+  under `reports_refused`.
+
+- **An advisory health section in the report.** `build_report(health=True)`
+  and `pala report --health` fill a new `health` key with a fixed-size
+  summary of the health channel: boots, the widest gap between anchors,
+  wall-clock steps and regressions, drift, open spans. Each group names the
+  clock it is measured on. No figure is a threshold and `derive_verdict`
+  does not read the section. The HTML page shows it when it is there.
+  `health_summary(reader)` returns the same section on its own.
+
+- **COSE alg `-19` (Ed25519, RFC 9864) in SCITT statements.**
+  `build_signed_statement(..., alg=ALG_ED25519)` writes it and
+  `verify_statement` accepts it, for v2 and v3 alike. It is an addition to
+  the set of algorithms, not a new construction: against the same statement
+  under `-8` the payload and the `kid` are identical, and one signed byte of
+  the protected header differs. Statements under `-7` and `-8` are unchanged,
+  and the builder's default is still `-7`. A verifier from before 0.15
+  refuses a `-19` statement as an unsupported algorithm. Vector:
+  `docs/interop/scitt-statement-vector-alg19.json`. No independent party has
+  yet reproduced a `-19` statement (`docs/INTEROP-SCITT.md` §9).
+
+- **The SCITT statement API is a public channel** (channel 8 of
+  `docs/INTEGRATION-SURFACE.md`), with a contract and a contract test:
+  `build_signed_statement`, `head_payload`, `verify_statement`,
+  `StatementCheck`. It needs the `[scitt]` extra; a key is a `cryptography`
+  key object the caller loads; it verifies statements and never receipts.
+- **`StatementRefused`, with a `code`.** Every statement `verify_statement`
+  does not accept raises it — 18 codes, listed in `STATEMENT_REFUSAL_CODES`
+  and in the surface document. It is a `ValueError`, so `except ValueError`
+  keeps working. The code names the check that failed, never a cause.
+
+- **Refusal vectors for SCITT statements:**
+  `docs/interop/scitt-statement-refusal-vectors.json`. A refused
+  statement for every one of the 19 refusal codes, 64 cases in all: sixty
+  are a published statement with one change, four are inputs that are not
+  a statement. Each carries the code `verify_statement` refuses it with;
+  the file states the order of the checks, the keys as JWK and the record
+  hashes of the chain the root cases are verified against. Another
+  verifier can compare its refusals with these without running this
+  package. The file regenerates byte for byte from the three published
+  statement vectors, which are unchanged (`docs/INTEROP-SCITT.md` §10).
+
+- `StatementCheck.statement_id`: the SHA-256 of the statement with its
+  unprotected header emptied. The hash of the bytes as built; unchanged when
+  a receipt is attached. The name to refer to a statement by.
+- Two refusal codes: `non_deterministic_encoding` and
+  `unprotected_header_malformed` (21 in all).
+- `docs/interop/scitt-statement-identity-vectors.json`: the id of each
+  published statement, and six statements that verify with something in
+  the unprotected header and keep the same id.
+- 20 cases in `scitt-statement-refusal-vectors.json` for the two codes
+  (84 in all). The 64 cases published before keep their ids, bytes and codes.
+
+- **A segment check says what the manifest declares of the segment:**
+  `SegmentCheck.declared_first_seq`, `declared_last_seq` and
+  `declared_head`, for every listed segment, present or not. A segment
+  deleted under retention was reported by file name alone; the records it
+  held and its head are in the manifest, and are now passed on as declared.
+- **Live reading is a declared channel, provisional:**
+  `palimpsests.audit.tailing.TailingReader`, `TailEvent` and the new
+  `TAIL_EVENT_KINDS` are channel 9 of `docs/INTEGRATION-SURFACE.md`, under
+  the contract test. "Provisional" is a stability class introduced with it:
+  the surface may change in a minor release, named in the changelog. It
+  becomes public, or says why not, before 1.0.
+
+- **`palimpsests serve` can cut its chain into segments.** The writer has
+  rotated since 0.11, but the serve had no way to ask for it: its chain was
+  always the one file `serve.pala`, kept whole or lost whole.
+  `PALIMPSESTS_AUDIT_ROTATE_BYTES`, `PALIMPSESTS_AUDIT_ROTATE_RECORDS` and
+  `PALIMPSESTS_AUDIT_ROTATE_AGE` set the thresholds;
+  `PALIMPSESTS_AUDIT_RETENTION` declares the retention of closed segments in
+  the chain. Sizes take `KiB`, `MiB`, `GiB`; durations `s`, `m`, `h`, `d`. A
+  value that cannot be read stops the serve. Nothing deletes a segment: that
+  stays the operator's act.
+- **`palimpsests pala segment-verify <manifest>`** verifies a segmented chain
+  as one set — every segment on disk, every seam, and the segment still being
+  written. Exit 0 complete, 2 consistent with segments missing, 1
+  inconsistent, 3 not a manifest. `--json` gives
+  `pala-segment-set-verification/1`. Before, the set could be verified only
+  from Python (`verify_segment_set`).
+- `GET /v1/pala/status`: `chain.segment` (the file being written) and
+  `chain.rotation` (the policy in force, or `null`).
+
+- **`decode_shred(record)` and `ShredView`** in `palimpsests.audit.reader`: a
+  KEY_SHRED record's erasure note as fields — `reason` and `reason_name`,
+  `target_seqs`, `detail`, and the destroyed `key_id` (inference profile §8).
+  The published vectors have described that body since r2 and the reader
+  returned none of it. It is the note as the writer declared it; whether the
+  named records exist and carried that key is still what
+  `shredded_targets()` and the `shred_target_*` advisories answer.
+  `DecodedRecord.detail` is unchanged — it is `EVT_DETAIL` on an EVENT or
+  SAFETY body and stays `None` on a KEY_SHRED.
+
+- **The writer has a contract: `docs/WRITER-SURFACE.md`.** What is declared
+  (`palimpsests.audit.pala_writer.__all__`), the rules of a chain's life,
+  the record each method writes, what the writer guarantees — what it writes
+  verifies; one process, many threads; a torn tail is truncated and recorded
+  — and what it does not: **it does not `fsync` each record**, so a power
+  loss can lose the last ones. Public and experimental until 1.0;
+  `tests/test_writer_surface.py` holds the document to the code, the table
+  of methods included.
+- **`palimpsests.audit.testing` — damaged chains for a consumer's tests.**
+  Eight builders, each one named defect made from a well-formed chain
+  (`alter_body`, `break_link`, `violate_must`, `remove_record`,
+  `drop_first_records`, `drop_last_records`, `cut_mid_record`,
+  `not_a_container`), and `DAMAGE`, which states what the reader reports for
+  each. A consumer no longer rewrites bytes at offsets copied from the
+  specification, or goes without the case: `seq_gap` and `record_violation`
+  could not be built through the writer at all.
+- `PalaWriter.incident_candidate(..., return_seq=True)` returns
+  `(seq, record_hash)`, like `tool_call` and the guards: an `OVERSIGHT_ACK`
+  names its candidate by seq, and `writer.seq - 1` read afterwards can be
+  another thread's record.
+
+### Changed
+
+- **A report and a bundle hold no path of the machine that made them.**
+  Read against an anchor file, the report's `anchor.source_detail` and the
+  bundle's `verification.json` carried the file's full path — a directory
+  layout and often a user name, in the two documents made to be sent. They
+  carry the file's name now, as the report already did for a segments
+  manifest; an attempt's `error` that quoted the path names the file too. A
+  bundle is therefore the same bytes on any machine. `Verification.anchor`
+  and `anchor_attempts` of the reader are unchanged and still carry the
+  path, locally.
+
+- **Inference profile §11: a value nested deeper than 128 arrays and objects
+  has no canonical form.** `canonical_json`, `canonical_tool_args_digest`
+  and `canonical_config_digest` raise `ValueError` for one;
+  `palimpsests.audit.canonical_json.MAX_DEPTH` is the limit. RFC 8785 sets
+  none and canonicalizers differ past their own.
+- An OTLP/JSON body nested too deeply to read is answered 400, and a span
+  attribute that is such JSON is recorded without a digest rather than
+  digested as a string.
+
+- **Exit code 1 is named `VIOLATION`, not `TAMPERED`.** The number is
+  unchanged. The check was made and did not hold; a file cut short by a
+  crash, a text file that was never a log and a log someone altered all exit
+  1, and nothing in the tool can tell them apart — so the name no longer
+  picks one. The verdict was already `violation` and the diagnoses already
+  state consistency, never intent; the exit code's name and `--help` now do
+  too. `palimpsests audit verify` prints `VIOLATION: …` where it printed
+  `TAMPERED: …` — the one change to output; anything that matches that word
+  should read the exit code instead. `EXIT_TAMPERED` stays importable as an
+  alias of `EXIT_VIOLATION`.
+
+- `canonical_json`, `canonical_tool_args_digest` and
+  `canonical_config_digest` raise `ValueError` for an integer beyond
+  ±(2^53 − 1); before, it was digested as the nearest double. A number
+  written with a fraction or an exponent is a double as it stands and is
+  digested as before.
+- The reporting routes read the request body themselves. A body that is not
+  JSON, or not one object, is answered 400 in the serve's error shape
+  (`{"error": {"message", "type"}}`); before, the framework answered 422
+  with its own. A report is read whatever its `Content-Type`.
+
+- **The package describes itself by what it is for.** The PyPI summary is
+  "Tamper-evident audit log for AI agents and local LLMs (PALA-1),
+  verifiable without the decryption key", and the keywords lead with the
+  audit log. The summary described a local inference engine and no keyword
+  mentioned an audit. The README's opening sentence follows.
+
+- **A pair recorded from an OpenTelemetry span is marked
+  `derived-from-telemetry`**, not `reported-by-client`. A span is exported
+  after the tool returned and carries the call and its outcome together, so
+  the pair's place in the chain is when the export arrived, not when the
+  call was made — which a reader could not tell from the mark it had.
+  Records already written keep value 1. `source_name` is an open
+  vocabulary; a consumer that branches on exactly two names meets a third.
+  `palimpsests doctor otel` accepts either mark, so it still passes against
+  an older serve; the surface checker's `otel` probe expects the new one.
+- **`ORIGIN_CONFIG_DIGEST` is computed by a new rule.** It was SHA-256 over
+  `key=value` lines with each value as Python's `str()` printed it —
+  reproducible only from Python, and not canonical for a nested value. It is
+  SHA-256 over the configuration as one RFC 8785 object. **Every
+  configuration digest differs from the one 0.14 wrote for the same
+  configuration**, so a chain that spans the upgrade shows a new origin at
+  it. Digests written before compare among themselves, under the earlier
+  rule, which the profile records.
+- **`EVT_PAYLOAD_DIGEST` is pinned to RFC 8785.** It was SHA-256 over what
+  `json.dumps` printed with sorted keys. For a value with no float and no
+  key outside the Basic Multilingual Plane that is the same bytes, and the
+  digest is unchanged. With a float it differs: `1.0` was digested as `1.0`
+  and is digested as `1`, as every other JSON implementation writes it. An
+  integer beyond 2^53 is digested as the double nearest to it. A value with
+  NaN or an infinity is refused with `ValueError`.
+
+- **Every chain a writer writes is two records longer per writer run**, and
+  record counts and seqs move accordingly: `GENESIS` is followed by
+  `WRITER_OPEN`, and `close()` appends `WRITER_CLOSE`.
+- **The head of a closed chain is the hash of its `WRITER_CLOSE`.** A head
+  read from a running writer — or from `GET /v1/pala/status` — and then
+  anchored is the anchor of a chain one record shorter: the closed file
+  extends one record beyond it and is not complete against it. Anchor after
+  the close. `palimpsests serve` prints the closing head when it stops;
+  `head` and `seq` stay readable on a closed writer.
+- The companion vectors hold two boots.
+
+- The inference profile vectors hold a third boot with the two records
+  (32 records, `profile_revision` `r9`); the first 27 records are
+  byte-identical to r8. A consumer that pins the number of records, boots or
+  advisory codes has to move.
+- A refused request on a reporting route now writes one record at its first
+  occurrence per route per run, and so does a rejected one; earlier they
+  wrote none.
+
+- **The verification report is `pala-verification-report/2`.** The format
+  id moves once, for everything that waited on it — `/1`'s schema is closed,
+  so nothing could be added to it. What a consumer does about it:
+  `docs/specs/report/MIGRATING-1-TO-2.md`.
+  - **A fourth verdict, `empty`**, for a container with no records: nothing
+    was checked, and nothing was found intact. It was `partial` before —
+    and, checked against the head of an empty chain (32 zero bytes),
+    `sound`. An empty file that misses a supplied anchor is still a
+    `violation`. A consumer that gates treats `empty` as it treats
+    `partial`: not a failure, not a pass.
+  - **Violation codes**: `chain.violation_codes`, parallel to
+    `chain.violations`, and `diagnosis.code`. The code is what to branch on.
+  - **The manifest's identity**: the `manifest` block names the segments
+    manifest a diagnosis was decided against — file name, status, the
+    SHA-256 of the bytes read — or is `null`.
+  - **The format is open**: a release may add a key; none is removed,
+    renamed or given another meaning without a new id. The verdict set
+    stays closed.
+
+  `/1` is no longer written and is still read: its schema ships in the
+  wheel beside the new one, `derive_verdict` answers a `/1` report by the
+  rule it was written under, and `render_html` renders one.
+- **`pala verify` gives the report's verdict for an empty file.** It says
+  the container holds no records instead of `0 records, chain intact`,
+  `--json` carries `"verdict": "empty"`, and the exit code is 2. With
+  `--anchor` set to 32 zero bytes it exited 0, `verified`, before. The two
+  commands now follow one rule in one order, and a test holds them together.
+
+- **The report has one more top-level key, `health`,** `null` unless it was
+  asked for. `pala-verification-report/2` is open to added keys; a consumer
+  that compares the exact set of top-level keys sees the new one.
+
+- **A key that is not of the type the algorithm means is refused**
+  (`key_type_mismatch`, a 19th refusal code). `-8` and `-19` mean Ed25519
+  and `-7` means P-256. A statement signed with Ed448 under `-8` verified
+  against the Ed448 key, while its `kid` was computed as if the key were
+  Ed25519; it is refused now, and the builder raises `ValueError` rather
+  than write one. A verification key of the wrong type, a private key or no
+  key was reported as `signature_invalid`; it is `key_type_mismatch` now. A
+  wrong key of the right type is still `signature_invalid`.
+
+- **A statement followed by further bytes is refused** (`trailing_bytes`).
+  It verified: the decoder read one item and ignored the rest, so an
+  artifact that was a statement plus something else passed as the statement.
+  The same holds inside the signature: a protected header or a payload that
+  is a CBOR map followed by more bytes is refused, where a payload of that
+  kind was reported as `not deterministic` and accepted. What follows a map
+  can be a second map, and a reader that takes the last item reads other
+  values — the reason a repeated key is refused. The published statements
+  and vectors are unaffected.
+- **`check_statement_against_head` is deprecated**; use `verify_statement`,
+  whose result carries `.payload`. It emits a `DeprecationWarning` and goes
+  at 1.0.
+
+- **A payload that is not in the deterministic encoding is refused**
+  (`non_deterministic_encoding`). Before, it was accepted and reported as
+  `payload_encoding == "not deterministic"`. `payload_encoding` is now always
+  `"deterministic"`; the field stays until 1.0.
+- A statement whose protected header is not in the deterministic encoding
+  is refused; before, it was accepted without a word.
+- Every statement this package builds, and every published statement
+  vector, verifies as before: they were already in the one encoding.
+
+- **A serve whose chain was ever cut continues at its live segment**, found
+  from the manifest, whatever the rotation settings are now. It does not start
+  if the manifest is there and that segment is not: starting again at
+  `serve.pala`, a closed segment, would write a second history.
+
+- **`palimpsests.cli.EXIT_TAMPERED` emits a `DeprecationWarning`.** It was
+  kept as a silent alias of `EXIT_VIOLATION` when the name changed; it now
+  says it goes in 1.0. The value is the same, 1.
+
+- **Writing a record is slower by one disk sync** — hundreds of microseconds
+  to a few milliseconds, by the disk. Measured on one virtual disk, through
+  the writer: 83,000 records/s with no sync, 5,100 with a sync per record,
+  80,000 with `group:0.05`; a physical disk that honours the sync will be
+  slower per record than this one. For a chain where that matters there are
+  `Durability.group(seconds)` — a bounded window — and `Durability.OS`, the
+  behaviour before 0.15.
+  `palimpsests serve` takes the policy from `PALIMPSESTS_AUDIT_DURABILITY`
+  (`record`, `group`, `group:<seconds>`, `os`), refuses to start on a value
+  it cannot read, announces a relaxed policy at start-up, states it in
+  `GET /v1/pala/status` (`chain.durability`), and `palimpsests doctor` flags
+  it (`serve_durability_relaxed`).
+- `PalaWriter.close()` is idempotent, and raises if its last sync fails —
+  after releasing the file and the lock.
+
+### Fixed
+
+- **The evidence bundle says when a log does not hold together.**
+  `verification.json` in a `pala-bundle/1` archive carried the header
+  chain's answer and nothing about bodies, so a body altered after writing
+  was bundled under `chain_ok: true` with no mark, and `pala bundle` printed
+  `chain verdict inside: sound`. And a source cut in the middle of a record
+  made the assembler fail and write nothing, where its own documentation
+  promised that a damaged chain bundles too. Now `verification.json` carries
+  `container` (the walk and the check of every body against its header's
+  digest — the same object as the report's section), `violation_codes`, and
+  **`consistent`**, the one answer to read; a torn source bundles its whole
+  records and says where the walk stopped. `pala verify` was right
+  throughout. **A bundle made by 0.10 to 0.14 has `chain_ok` covering the
+  headers only: run `pala verify` on its `records.pala`.**
+
+- **`assemble_bundle` read the source file whole into memory and then
+  mapped it as well.** It reads through the reader's mapping now.
+- **A range of inclusion proofs rebuilt its checkpoint's whole tree for
+  every record.** `range_proofs`, and so `pala bundle`, cost the size of the
+  range times the size of the checkpoint window. On a chain of one million
+  records checkpointed every 50,000, a bundle of 1,000 records took 63 s; it
+  takes 9 s, nearly all of it the verification of the whole file, and the
+  proofs are the same bytes. Each window's tree is built once now.
+  `docs/INTEGRATION-SURFACE.md` states what a bundle costs: it is for a
+  selection, and a bundle of that whole chain does not fit in 8 GB.
+- The bundle read four header fields at offsets written out in its own
+  module. It takes them from the codec's field map (`HEADER_FIELDS`), like
+  the rest of the package.
+
+- **`build_report` no longer holds the file twice.** Called without a
+  `reader` — as it must be when an anchor is given — it read the whole file
+  into memory and then mapped it as well. The digest and the size now come
+  from the one mapping; the report is byte-identical.
+
+- **Ten modules read header fields at offsets written out beside the code**
+  — `unpack_from("<Q", hb, 12)`, `hb[20:36]` — a second statement of the
+  header's layout that the codec's contract test did not reach. Each now
+  takes the field from the codec's field map by its name
+  (`palimpsests.audit._header_fields`): the health channel, the export, the
+  proofs, the checkpoints, the segments and their set, live reading, the
+  writer's resume scan and the bundle. A test scans those modules for a
+  literal offset. No behaviour changes: bundles and reports are
+  byte-identical, and the timings on a million-record chain are the same.
+
+- A writer named the wrong profile revision in its own `WRITER_OPEN` record:
+  `inference r8`, while it wrote r9's records. It now names r9, and a test
+  holds that statement to the profile document and the packaged vectors.
+
+- **The release tools' lock file could not be installed on the Python the
+  release runs on.** An automated update had recompiled
+  `.github/requirements/release.txt` for one interpreter and dropped the
+  pins that carry a marker, `typing-extensions` among them; `pip install
+  --require-hashes` then refused it on Python 3.12. The release workflow
+  runs only on a tag, so nothing had run it. The file is recompiled, and a
+  `release-rehearsal` job in `ci.yml` now runs the release workflow's build
+  job — same Python, same lock file, same commands — on every change.
+
+- **`verify_statement` raised four other kinds of exception on malformed input**
+  where it promised `ValueError`: `CBORDecodeEOF` and `CBORDecodeError` on
+  bytes that are not CBOR, `TypeError` and `AttributeError` on a message of
+  the wrong shape, and `TypeError` on a signed payload or protected header
+  whose keys mix integers and text. All are `StatementRefused` now. A run of
+  6,000 single-byte mutations of valid v2 and v3 statements is in the suite:
+  the verifier answers every one, accepted or refused.
+
+- **A damaged segment is an answer, not an exception.**
+  `verify_segment_set` raised `MalformedRecord` when a segment of the set was
+  cut in the middle of a record, though everything but "not a manifest" is
+  meant to be an answer. It now reports that segment as not verified, says
+  why, and judges the others on their own.
+- **`verify_segment_set` does not follow a manifest entry that names a
+  path.** An entry whose `file` is not a plain file name — a directory above,
+  an absolute path — is not read, and the set is not called consistent on
+  the strength of it.
+- **`pala segment` looks before it cuts.** A source cut in the middle of a
+  record made it fail after writing the segments before the cut — files on
+  disk and no manifest. It now walks the source first and refuses, writing
+  nothing (exit 3). And it printed `every segment verifies alone` whatever
+  the source was; it now verifies the set it wrote and says so only when it
+  holds — a chain that does not verify is still segmented faithfully, and
+  the command says that the segments do not verify.
+- **A consistency-proof document of the wrong shape is one error.**
+  `ConsistencyProof.from_json` raised `KeyError`, `TypeError` or
+  `AttributeError` depending on what was wrong, and read `2.7` as 2 and
+  `true` as 1. It raises `ValueError` for anything not of the format's shape
+  and coerces nothing; `pala consistency-verify` exits 3 instead of printing
+  a traceback for JSON that is not an object. A well-shaped document that
+  does not hold still reads and verifies `False`.
+
+- `scripts/check_surfaces.py`: a probe's client no longer inherits the
+  variables of a client session the checker is started from. Run from inside a
+  Claude Code session, the `claude-code` probe went RED with no hook post at
+  all: the probe's own client took itself for part of that managed session and
+  held every hook. The surface was intact.
+
+### Documentation
+
+- **`pala-bundle/1` has a specification**, `docs/specs/bundle/pala-bundle-1.md`:
+  the archive, each member's keys, what a damaged source produces, and how
+  to re-verify a bundle without the assembler. The format is declared open —
+  keys are added, never removed, renamed or given another meaning. Every key
+  a 0.10 bundle had is kept and unchanged; the three members other than
+  `verification.json` are byte-identical to what 0.14.1 writes.
+
+- The verification kit's README states the count of independent
+  implementations on record: five, three of them from outside the project.
+
+- `docs/ROADMAP.md` revised for 0.15: where the project stands, and what
+  is left before 1.0.
+
+- **Inference profile r9 is named as the revision Palimpsests 1.0
+  implements** (profile §9.1). From this release r1–r9 are not edited in
+  place — a correction is a new revision — their vectors keep their bytes,
+  and later revisions only add. No open issue is carried into 1.0; what the
+  profile cannot say is stated as a limit where it applies.
+
+- **`RELEASING.md` describes the release as it is done.** The checklist now
+  covers what the last three releases learned outside it: the surface check
+  before a release, gathering the changelog fragments, staging by path,
+  tagging the release commit by its hash, checking the published package from
+  a clean environment, patch releases, and what not to do when something is
+  wrong after the tag. The fragments are gathered by
+  `scripts/assemble_changelog.py`, which lived outside the repository until
+  now; it refuses, and writes nothing, on a fragment it cannot place, and the
+  test suite runs the same parse on every change.
+
+- `docs/INTEROP-SCITT.md` §11, "One statement, one encoding, one name": the
+  rule, the id, what the id is not, and what it does not settle (which bytes
+  a transparency service hashes into its log is that service's rule).
+
+- **`pala-segments/1` has a specification**,
+  `docs/specs/segments/pala-segments-1.md`: its two writers and how their
+  manifests differ, every key, what a reader checks and what it does not
+  follow. The format is declared open to added keys. `consistency-proof.md`
+  now separates a document that is not of the format's shape from one that
+  is and does not hold.
+
+- **The serve's HTTP surface has a contract:** `docs/SERVE-SURFACE.md`. The
+  reporting routes (`/v1/pala/events`, the two hook routes), the bearer
+  check, the dry run, `GET /v1/pala/status` (`pala-serve-status/1`) and the
+  doctor's JSON (`pala-doctor/1`) are **public** from 0.15, with their
+  request and reply shapes written down and held by
+  `tests/test_serve_surface.py`. `POST /v1/traces` is **provisional**: it
+  reads the OpenTelemetry GenAI conventions, which are not stable. The
+  OpenAI-shaped routes are **compatibility**: what is promised about them
+  is what the document states. No behaviour of the serve changes.
+
+- **A runbook on the site, `/runbook/`.** One task per page, in steps, each
+  saying what it needs, how to check that it worked, what it does not record
+  and when it was last checked: a local OpenAI-compatible server, a long chat
+  on a small model, a local model in OpenCode, Claude Code tool calls, Claude
+  Code hooks that report nothing, and MCP tool calls. The pages are built by
+  `scripts/build_notes.py` from `runbook/*.md`, and the build now stops on a
+  link to a page of the site that does not exist.
+
+- **palimpsests.dev: one pass for search engines, link previews and
+  assistants.** The menu no longer disappears on a phone; small text is at
+  least 12.8 px and its contrast at least 4.5:1; every page has a `main`
+  landmark, a skip link and headings that do not skip a level. Titles fit
+  60 characters and descriptions 155, checked by the build. Product pages
+  open with an answer, state when they were updated, carry three to five
+  questions with matching structured data, and list the notes that belong
+  to them; each note says what to read next. A link preview image, a
+  favicon and a touch icon exist; `robots.txt` names the crawlers it means;
+  there is a 404 page and a `security.txt`.
+- The home page's structured data states the released version and its date,
+  written from `CHANGELOG.md` by `scripts/build_notes.py` — a step in
+  `RELEASING.md`, held by a test.
+
+- **The size envelope is measured.** `docs/INTEGRATION-SURFACE.md` gives time
+  and peak memory of `pala verify`, `pala export`, `pala segment` and
+  `pala bundle` on a chain of one million records: 7–23 s and 0.3–0.6 GB
+  for all but a large bundle.
+
+- **A support policy** in `SECURITY.md`: which versions receive fixes now
+  and from 1.0, target times for acknowledging, assessing and fixing a
+  reported vulnerability, what counts as critical for an audit log, when a
+  report is disclosed, and that a critical problem reported by someone
+  running Palimpsests comes before planned work.
+- **A deprecations table** in `docs/INTEGRATION-SURFACE.md`: each name on
+  its way out, since when, until when and what to use instead. A test
+  holds the table to the code in both directions. Reading what earlier
+  releases wrote is stated as not deprecated.
+
+- Surface check on Linux before 0.15 (`results/surfaces-2026-11-20-2.md`):
+  LiteLLM 1.110.2, the MCP proxy, Claude Code 2.1.329 and pydantic-ai 2.71.0
+  over OTLP, four GREEN. The first run of the day and its false RED are kept
+  and explained in `results/surfaces-2026-11-20-notes.md`.
+- Surface checks at the state being released (2026-11-22): Windows
+  (`results/surfaces-2026-11-22.md`) — the MCP proxy, OpenCode 1.19.6 and
+  OTLP GREEN; LiteLLM and Claude Code not checked there. Linux
+  (`results/surfaces-2026-11-22-2.md`) — LiteLLM 1.110.2, the MCP proxy,
+  Claude Code 2.1.329 and OTLP GREEN; OpenCode not checked there. Every
+  surface is GREEN on at least one platform; **LiteLLM and Claude Code are
+  unchecked on Windows in this release.**
+
 ## [0.14.1] — 2026-11-14
 
 **A patch release: no format changes, nothing removed.** The wire, the
@@ -1802,7 +2509,8 @@ Initial release.
   from the OS keychain, falling back to an ephemeral key headless.
 - **CLI** — `chat`, `models`, `engine list` / `engine use`.
 
-[Unreleased]: https://github.com/Assault-Consulting/Palimpsests/compare/v0.14.1...HEAD
+[Unreleased]: https://github.com/Assault-Consulting/Palimpsests/compare/v0.15.0...HEAD
+[0.15.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.15.0
 [0.14.1]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.14.1
 [0.14.0]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.14.0
 [0.13.1]: https://github.com/Assault-Consulting/Palimpsests/releases/tag/v0.13.1

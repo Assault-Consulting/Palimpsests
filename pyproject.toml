@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "palimpsests"
-version = "0.14.1"
+version = "0.15.0"
 description = "Tamper-evident audit log for AI agents and local LLMs (PALA-1), verifiable without the decryption key."
 readme = "README.md"
 requires-python = ">=3.11"
