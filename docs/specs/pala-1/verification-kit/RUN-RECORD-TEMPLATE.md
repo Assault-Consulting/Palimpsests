@@ -8,12 +8,14 @@ is part of this record.
 | Field | Value |
 |---|---|
 | Date of run | |
-| Spec version verified | PALA-1 v1.0 (tag `pala1-v1.0`) — confirm the input digests matched `fetch-inputs.sh` |
-| Implementer (name / handle) | |
-| Contact (email or GitHub) | |
+| Spec version verified | PALA-1 v1.0 (tag `pala1-v1.0`) — *confirm that the SHA-256 of all four inputs matched the digests in the kit README §1.5* |
+| Implementer (name / handle) — *as it should appear in the public record* | |
+| Contact (email or GitHub) — *published with the record unless you write "do not publish"* | |
 | Association with the project | *e.g. "None — no association; never seen the repository internals."* |
-| Eligibility attestation | *Confirm in your own words: you have not read the reference implementations, the production codec, the codec tests, or any earlier run's verifier or logs, and used only the allowed inputs (kit README §1).* |
-| Method disclosure | *Language, approx. size, dependencies (stdlib-only? optional crypto lib for the §4.4 extra?). If an AI agent assisted: state it, and confirm the agent also worked only from the allowed inputs.* |
+| Read before the run | *What you had read about PALA-1 before you decided to do a run — the website, a note, the Internet-Draft, nothing. This does not disqualify (kit README §1.2).* |
+| Eligibility attestation | *Confirm in your own words: from the start of the run you used only what kit README §1.1 allows, and read nothing that §1.2 lists — not the repository, the package, the documents next to the specification, earlier runs, or anything published about the format elsewhere.* |
+| Method disclosure | *Language, approx. size, dependencies (stdlib-only? optional crypto lib for the §4.4 extra?).* |
+| AI assistance | *"None", or: the tool and the model; that it worked under the same boundary (no repository, no web search for PALA-1); and whether the model's training could include this repository, public since 2026-07-06 — "ends before", "ends after" or "not known" (kit README §1.4).* |
 | Time spent (optional) | |
 
 ## §8 Expected results — reproduced values
@@ -30,7 +32,7 @@ where possible.
 | 4 | `breaks` (empty) | | |
 | 5 | `gaps` (empty) | | |
 | 6 | `violations` (empty) | | |
-| 7 | `complete_to_anchor` (against published `anchor_head`) | | |
+| 7 | `complete_to_anchor` (against the top-level `anchor_head` of `test-vectors.json`) | | |
 | 8 | `anchor_head` | | |
 | 9 | `merkle_tree_hash` (recomputed from `merkle.leaves`, not echoed from the record TLV) | | |
 | 10 | `merkle_leaf_count` | | |
@@ -40,7 +42,7 @@ Extras beyond the pass bar (optional, note what you ran): per-record
 `record_hash` recomputation, `body_digest` checks, §4.4 decryption of
 the seq-3 body to the published plaintext.
 
-## §8 Mutation demos (SHOULD — fill in what you ran)
+## §8 Mutation demos (SHOULD — a run that skips them still passes; fill in what you ran)
 
 | Demo | Ran? | Diagnosis matched the spec's promise? |
 |---|---|---|
