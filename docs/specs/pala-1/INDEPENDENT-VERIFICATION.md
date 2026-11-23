@@ -269,3 +269,36 @@ and the runs in §5 say nothing about the bridge.
 | Findings | **Two divergences between the task text and the reference verifier**, raised in his ambiguity log. (1) The task gives the protected header "exactly these labels"; his verifier refuses a fifth label, while the reference verifier read only the content type and passed one. (2) The construction requires deterministic payload encoding; the reference verifier neither checked nor reported it, while his reports it as its own finding, apart from the verdict on the values. Both settled in #328: a foreign or missing protected label is refused, a repeated key in either map is refused, and non-deterministic payload encoding is reported in `payload_encoding`. **And the companion gap B3 logged as U3**, met again: `roots_by_count` could not be recomputed from `consistency-vectors.json` alone; the record hashes are published in it by #328. |
 | Ambiguities logged | **7**, in his README. Besides the two above, five match the intended reading: deterministic key order equals numeric order for these keys; a key 5 of the wrong length fails under the version rule; the proof's roots come from the statements, never from the proof document; `first == second` and `first == 0` are settled before the RFC 9162 algorithm (B3, F1); the Ed25519 range check `S < L` is made explicit. |
 | Status | **Reported; both divergences resolved in #328.** This is the unaffiliated confirmation B3's status asked for: construction v3 verified and reproduced, with the property it exists for, by an implementation and a reader both independent of the project. |
+
+## 8. Profile runs — the inference profile
+
+Sections 1-6 govern the core. The inference profile is a third surface:
+not the envelope and not the SCITT statement, but what the bodies of
+records mean and how the digest of a JSON value is computed. Runs
+against it are recorded here and not in §5, for the reason §7 gives:
+a profile run says nothing about the frozen core, and the runs in §5 say
+nothing about the profile.
+
+**The task is registered before any run.** It is
+[`verification-kit/PROFILE-R9.md`](verification-kit/PROFILE-R9.md): the
+profile at revision r9, the six input files at the tag `v0.15.0` with
+their SHA-256, a pass bar of eight items (P1–P8), four constructed cases
+as a SHOULD, and the same boundary, logging rule and disclosure rule as
+§1, §2 and the kit. The record a run returns is
+`verification-kit/RUN-RECORD-PROFILE-TEMPLATE.md`.
+
+Why r9, and why that tag: r9 is the revision Palimpsests 1.0 implements,
+and r1–r9 are not edited in place from Palimpsests 0.15 on
+(`profiles/inference.md` §9.1). A run against the tag therefore reads
+the text and the vectors that every later release means by "r9". A
+confirmed defect is corrected in a later revision that says what it
+corrects; it does not change what the run read.
+
+What the vectors do not exercise, and so no run through this task can
+confirm: the `MERKLE` checkpoint of profile §10, the `ORIGIN`, session
+and `AGGREGATE` bodies, and the inputs of the digests carried at `seq`
+8–22. The task says so to the implementer.
+
+*No profile run is on record. Rows are added below as runs are
+received; until one is, the profile has not been read independently as
+a whole, and no document of this project says it has.*

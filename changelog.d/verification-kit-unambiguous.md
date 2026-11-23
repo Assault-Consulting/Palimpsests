@@ -4,8 +4,8 @@
   What it tests (the core at `pala1-v1.0`, not a package release, not the
   inference profile as revised since, not the SCITT statement); what may
   be used and what may not, by name — including the `palimpsests` package,
-  the documents next to the specification, the website, the Internet-Draft
-  and a web search; what reading before the run means; the conditions for
+  the documents next to the specification and other people's
+  implementations; what other reading must be listed; the conditions for
   AI assistance; the eleven values by number and which anchor the seventh
   is checked against; the two ways to report and how each is recorded;
   that a recorded run is published, and under which licence. The frozen

@@ -7,6 +7,7 @@
 docs/specs/pala-1/PALA-1.md -text
 docs/specs/pala-1/profiles/robotics.md -text
 docs/specs/pala-1/profiles/inference.md -text
+docs/specs/pala-1/profiles/retention-continuation.md -text
 docs/specs/pala-1/test-vectors.json -text
 docs/specs/pala-1/profiles/inference-vectors.json -text
 docs/specs/pala-1/profiles/payload-digest-vectors.json -text
