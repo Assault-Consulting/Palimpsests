@@ -133,6 +133,26 @@ promises, but the pass bar is the Expected-results block.
 | Ambiguities logged | **3** — (1) the pseudocode inconsistency above (became defect #4); (2) what keys a violation — closed by the §7.1 keying sentence; (3) the `["L"/"R", hash]` proof-entry encoding existed only in the vectors — closed by the §4.3 inclusion-proof paragraph. |
 | Status | The freeze-candidate gate is **passed, with findings resolved in this cycle**: every published §8 value reproduced blind by a fourth independent implementation, and the run's central finding — a pseudocode/prose contradiction that had silently propagated into both in-repo implementations — fixed with the vectors byte-identical and the wire untouched. This is the §11 exit test doing exactly what it was designed to do: a fresh implementation, working from the text alone, caught what the differential test structurally could not (common-mode) and what three prior runs' demo checks had not discriminated. Implementer's re-confirmation of the alignment diff **received** (2026-08-09): *"I have read the §7.1/§4.3 alignment diff (PR #104); the corrected text matches the documented choices A1–A3 of my run. My verifier is unchanged."* — Vladyslav Kurdybaylo. With that, the freeze gate closed; the spec change following this record is Draft → Frozen (v1.0). |
 
+### 5.1 Runs after the freeze
+
+The rows above are the record of how the freeze was earned and are not
+edited. Runs received since then, through the verification kit, are
+listed here; each is archived in full under `independent-runs/`.
+
+| | |
+|---|---|
+| Run | #5 — first run through the self-service kit |
+| Date | 2026-08-18 |
+| Spec tested | PALA-1 v1.0 at the tag `pala1-v1.0`; all four input digests matched the kit's |
+| Implementer | Oleksii Turak — not a committer at the time of the run; a maintainer since. His record states what was and was not read. |
+| Verifier (link) | [`independent-runs/turak/`](independent-runs/turak/README.md) — Perl 5, core modules only; AES-256-GCM written from FIPS 197 and SP 800-38D for the optional decryption extra. |
+| Result | **All 11 §8 values reproduced on the verifier's first execution**, the 7 published demos reproduced, 13 further cases constructed; 140 checks, 0 failures. |
+| Ambiguities logged | **8**, and one specification-completeness gap — see [`independent-runs/turak/RUN-RECORD.md`](independent-runs/turak/RUN-RECORD.md). `CLARIFICATIONS.md` answers the questions the run raised. |
+
+With this run the count is five implementations, three by people outside
+the project at the time of their runs (`CLARIFICATIONS.md`,
+"Implementation count").
+
 ## 6. Conducting an external run
 
 **Self-service:** everything an outside implementer needs — the boundary

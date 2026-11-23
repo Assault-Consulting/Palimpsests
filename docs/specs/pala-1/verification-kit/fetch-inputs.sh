@@ -8,7 +8,15 @@
 # runs' verifiers, which a fresh run must not read.
 #
 # Usage:  sh fetch-inputs.sh
-# Override the ref (e.g. to a commit SHA):  PALA1_REF=<sha> sh fetch-inputs.sh
+#
+# This is the format's tag (pala1-v1.0), not a release of the palimpsests
+# package; the package's version does not change these inputs. The
+# profile documents are the freeze-day copies — later revisions of the
+# inference profile are not part of this exercise.
+#
+# PALA1_REF is for maintainers checking another ref against the frozen
+# digests. Leave it unset for a run: any ref whose files differ from the
+# freeze fails the check below.
 
 set -eu
 
