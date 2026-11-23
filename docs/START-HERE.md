@@ -154,7 +154,9 @@ will tell you otherwise, and the report will not say "confirmed".
   has every command and setting.
 - The format itself, for someone who will implement or audit it:
   `docs/specs/pala-1/PALA-1.md` (frozen, with byte-exact test vectors) and
-  the [verification kit](specs/pala-1/verification-kit/README.md).
+  the [verification kit](specs/pala-1/verification-kit/README.md). Its
+  second track does the same for the inference profile at r9; no such
+  reading is on record yet.
 - How this maps to the EU AI Act's record-keeping duty and to ISO/IEC
   24970: `docs/compliance/`.
 - What we claim and what we do not: `SECURITY.md` and

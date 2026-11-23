@@ -8,14 +8,14 @@ is part of this record.
 | Field | Value |
 |---|---|
 | Date of run | |
-| Spec version verified | PALA-1 v1.0 (tag `pala1-v1.0`) — *confirm that the SHA-256 of all four inputs matched the digests in the kit README §1.5* |
+| Spec version verified | PALA-1 v1.0 (tag `pala1-v1.0`) — *confirm that the SHA-256 of all four inputs matched the digests in the kit README §1.6* |
 | Implementer (name / handle) — *as it should appear in the public record* | |
 | Contact (email or GitHub) — *published with the record unless you write "do not publish"* | |
 | Association with the project | *e.g. "None — no association; never seen the repository internals."* |
-| Read before the run | *What you had read about PALA-1 before you decided to do a run — the website, a note, the Internet-Draft, nothing. This does not disqualify (kit README §1.2).* |
-| Eligibility attestation | *Confirm in your own words: from the start of the run you used only what kit README §1.1 allows, and read nothing that §1.2 lists — not the repository, the package, the documents next to the specification, earlier runs, or anything published about the format elsewhere.* |
+| Other reading | *What else you read about PALA-1, before or during the run — the website, a note, the Internet-Draft, nothing. It does not disqualify (kit README §1.3); list it.* |
+| Eligibility attestation | *Confirm in your own words: you used only what kit README §1.1 allows, and read nothing that §1.2 lists — not the repository, the package, the documents next to the specification, earlier runs, or other people's implementations and reports.* |
 | Method disclosure | *Language, approx. size, dependencies (stdlib-only? optional crypto lib for the §4.4 extra?).* |
-| AI assistance | *"None", or: the tool and the model; that it worked under the same boundary (no repository, no web search for PALA-1); and whether the model's training could include this repository, public since 2026-07-06 — "ends before", "ends after" or "not known" (kit README §1.4).* |
+| AI assistance | *"None", or: the tool and the model; that it worked under the same boundary (no repository, no search for other implementations); and whether the model's training could include this repository, public since 2026-07-06 — "ends before", "ends after" or "not known" (kit README §1.5).* |
 | Time spent (optional) | |
 
 ## §8 Expected results — reproduced values
