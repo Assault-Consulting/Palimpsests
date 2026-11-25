@@ -129,7 +129,7 @@ dev = [
     "pytest>=9.2.0",
     "pytest-httpx>=0.36.2",
     "pytest-cov>=7.1.0",
-    "ruff==0.17.5",
+    "ruff==0.17.6",
     # numpy is the [embeddings] extra in production; dev pulls it so the
     # BlockMemory retrieval path (cosine over stored vectors) runs in CI.
     "numpy>=2.4.6",
