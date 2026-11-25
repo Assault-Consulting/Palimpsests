@@ -3,8 +3,9 @@
 
 """Run a consumer's own test suite against this checkout of the package.
 
-    python scripts/consumer_canary.py deps CONSUMER_DIR [--extra NAME ...]
-    python scripts/consumer_canary.py run  CONSUMER_DIR --expected FILE
+    python scripts/consumer_canary.py deps   CONSUMER_DIR [--extra NAME ...]
+    python scripts/consumer_canary.py extras CONSUMER_DIR [--extra NAME ...]
+    python scripts/consumer_canary.py run    CONSUMER_DIR --expected FILE
 
 A consumer pins a released version, so a change here that breaks it is
 found when it lifts the pin — a release too late. This runs the consumer's
@@ -14,6 +15,12 @@ each with its reason, waiting for the consumer to follow.
 
 ``deps`` prints the consumer's requirements without its requirement on this
 package, so they can be installed around the checkout instead of over it.
+
+``extras`` prints the extras of this package that the consumer asks for
+(``palimpsests[pala,scitt]`` gives ``pala,scitt``), so the checkout is
+installed with the same ones. Without it the checkout gets whatever the
+workflow happened to name, and a consumer that starts using another part
+of the package fails here for want of a dependency, not for a break.
 
 ``run`` exits
 
@@ -41,6 +48,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 PACKAGE = "palimpsests"
 _NAME = re.compile(r"^\s*([A-Za-z0-9][A-Za-z0-9._-]*)")
+_EXTRAS = re.compile(r"^\s*[A-Za-z0-9][A-Za-z0-9._-]*\s*\[([^\]]*)\]")
 
 
 class CanaryError(Exception):
@@ -62,6 +70,49 @@ def requirements(pyproject: Path, extras: list[str]) -> list[str]:
             raise CanaryError(f"{pyproject}: no extra named '{extra}'")
         wanted += optional[extra]
     return [r for r in wanted if not _is_this_package(r)]
+
+
+def package_extras(pyproject: Path, extras: list[str]) -> list[str]:
+    """The extras of this package the consumer asks for, base plus ``extras``.
+
+    Sorted and without repeats; empty when the consumer asks for none.
+    """
+    project = tomllib.loads(pyproject.read_text(encoding="utf-8"))["project"]
+    wanted = list(project.get("dependencies", []))
+    optional = project.get("optional-dependencies", {})
+    for extra in extras:
+        if extra not in optional:
+            raise CanaryError(f"{pyproject}: no extra named '{extra}'")
+        wanted += optional[extra]
+    found: set[str] = set()
+    for requirement in wanted:
+        if not _is_this_package(requirement):
+            continue
+        m = _EXTRAS.match(requirement)
+        if m:
+            found.update(
+                re.sub(r"[-_.]+", "-", name.strip()).lower()
+                for name in m.group(1).split(",")
+                if name.strip()
+            )
+    return sorted(found)
+
+
+def check_extras_exist(extras: list[str], package_pyproject: Path) -> None:
+    """Refuse an extra this checkout does not define.
+
+    pip only warns about one, and the suite would then fail for a missing
+    dependency — which reads as a break this commit made.
+    """
+    project = tomllib.loads(package_pyproject.read_text(encoding="utf-8"))["project"]
+    defined = {
+        re.sub(r"[-_.]+", "-", name).lower() for name in project.get("optional-dependencies", {})
+    }
+    unknown = [extra for extra in extras if extra not in defined]
+    if unknown:
+        raise CanaryError(
+            f"the consumer asks for extras this checkout does not define: {', '.join(unknown)}"
+        )
 
 
 def read_ledger(path: Path) -> dict[str, str]:
@@ -169,6 +220,9 @@ def main(argv: list[str]) -> int:
     deps = sub.add_parser("deps")
     deps.add_argument("consumer", type=Path)
     deps.add_argument("--extra", action="append", default=[])
+    extras = sub.add_parser("extras")
+    extras.add_argument("consumer", type=Path)
+    extras.add_argument("--extra", action="append", default=[])
     runp = sub.add_parser("run")
     runp.add_argument("consumer", type=Path)
     runp.add_argument("--expected", type=Path, required=True)
@@ -176,6 +230,11 @@ def main(argv: list[str]) -> int:
     try:
         if args.command == "deps":
             print("\n".join(requirements(args.consumer / "pyproject.toml", args.extra)))
+            return 0
+        if args.command == "extras":
+            wanted = package_extras(args.consumer / "pyproject.toml", args.extra)
+            check_extras_exist(wanted, Path(__file__).resolve().parents[1] / "pyproject.toml")
+            print(",".join(wanted))
             return 0
         return run(args.consumer, args.expected)
     except (CanaryError, OSError, ET.ParseError, tomllib.TOMLDecodeError) as e:
