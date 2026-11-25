@@ -62,7 +62,12 @@ jobs:
       # on a released version cannot replace the package under test.
       - name: Install this checkout, then the consumer around it
         run: |
-          pip install -e ".[pala]"
+          # With the extras the consumer itself asks of this package, read
+          # from its pyproject — not a list kept here, which went stale the
+          # day the consumer began to use the SCITT bridge.
+          extras="$(python scripts/consumer_canary.py extras _consumer/auditor/sidecar --extra dev)"
+          echo "extras of this package the consumer asks for: ${extras:-none}"
+          pip install -e ".${extras:+[${extras}]}"
           python scripts/consumer_canary.py deps _consumer/auditor/sidecar --extra dev > consumer-requirements.txt
           cat consumer-requirements.txt
           pip install -r consumer-requirements.txt
