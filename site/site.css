@@ -298,6 +298,9 @@ footer{border-top:1px solid var(--rule);padding-block:44px;background:var(--pape
 .doc th,.doc td{text-align:left;vertical-align:top;padding:.6rem .7rem;border-bottom:1px solid var(--rule)}
 .doc th{font-family:"IBM Plex Mono",monospace;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--slate);font-weight:500}
 .note{border-left:2px solid var(--patina);padding-left:14px;color:var(--slate)}
+.map__how{display:block;margin-top:.3rem;color:var(--slate);font-size:.9rem;line-height:1.5}
+.map__status{white-space:nowrap;font-family:"IBM Plex Mono",monospace;font-size:.8rem;color:var(--slate)}
+.doc h4{font-family:"Archivo","Helvetica Neue",sans-serif;font-weight:600;font-size:.98rem;margin:1.3rem 0 .2rem}
 .evidence{margin-top:2.8rem;border:1px solid var(--rule);border-radius:14px;background:var(--plate);padding:20px 22px}
 .evidence h2{margin-top:0;font-size:1.05rem}
 .related{display:flex;flex-wrap:wrap;gap:10px;margin-top:1.6rem}

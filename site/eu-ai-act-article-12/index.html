@@ -38,7 +38,7 @@
       "description": "What Article 12 of the EU AI Act asks of high-risk AI systems, from when, the fines, and the record-keeping Palimpsests supplies on your own hardware.",
       "url": "https://palimpsests.dev/eu-ai-act-article-12/",
       "inLanguage": "en",
-      "dateModified": "2026-11-22",
+      "dateModified": "2026-11-26",
       "author": {
         "@id": "https://palimpsests.dev/#org"
       },
@@ -143,7 +143,7 @@
       <span class="eyebrow">EU AI Act · Art. 12, 19, 26(6), 99</span>
       <h1 class="display">EU AI Act Article 12: automatic logging for high-risk AI systems</h1>
       <p class="lede">Under Article 12 of the EU AI Act, high-risk AI systems must record events automatically over their lifetime, and those logs must be kept for at least six months; for the systems listed in Annex III this applies from 2 December 2027. Palimpsests supplies that record-keeping as a tamper-evident log on your own hardware; the rest of the Act stays with you.</p>
-      <p class="updated">Updated <time datetime="2026-11-22">22 November 2026</time></p>
+      <p class="updated">Updated <time datetime="2026-11-26">26 November 2026</time></p>
 
       <h2 id="asks">What the Act asks</h2>
       <ul>
@@ -177,7 +177,80 @@
       <p><b>Covers:</b> automatic event recording (Article 12); support for keeping those records through retention — segmentation, rotation and prefix proofs; and integrity that anyone can verify without the decryption key.</p>
       <p>Step by step: <a href="/runbook/rotate-a-hash-chained-log/">keep a log for six months without filling the disk</a>.</p>
       <p><b>Does not cover:</b> risk management (Art. 9), data governance (Art. 10), technical documentation (Art. 11), transparency (Art. 13), human oversight (Art. 14), accuracy and robustness (Art. 15), quality management (Art. 17), or conformity assessment (Art. 43).</p>
-      <p>The <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/compliance/EU-AI-ACT-MAPPING.md" rel="noopener">Article 12 mapping</a> sets out, requirement by requirement, what ships today — 25 of 27 rows as of 0.15 — and what is planned.</p>
+      <p>The table below sets out, requirement by requirement, what ships today and what is planned. For agents in particular, see <a href="/ai-agent-audit-trail/">an audit trail for AI agents</a>.</p>
+
+      <!-- mapping:start -->
+      <h2 id="mapping">Requirement by requirement</h2>
+      <p>What Palimpsests does for each thing the Act asks of a log: <b>25 of 27 rows</b> ship today, and each names the release it first shipped in. The rest are planned and say so.</p>
+      <h3 id="article-12-1-automatic-recording-of-events-over-the-system-lifetime">Article 12(1) — automatic recording of events over the system lifetime</h3>
+      <div class="tbl"><table class="map">
+        <thead><tr><th>What, and how</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><b>Append-only record stream; no retroactive modification</b><span class="map__how">Spec §1.2 (header hashing), §4.1 (chain linking + sequence numbers), §7.1 (verification); single locked emit path in the writer; tamper demos (bit-flip, truncation, gap) in §8</span></td><td class="map__status">Shipped in 0.7</td></tr>
+          <tr><td><b>Continuity across restarts</b><span class="map__how">Spec §2.4 (segment boundaries invisible to the chain; <code>BOOT</code> links to the previous boot's head); writer-side resume of an existing chain with cross-boot test</span></td><td class="map__status">Shipped in 0.7</td></tr>
+          <tr><td><b>Recording cannot be silently disabled</b><span class="map__how">No disable/pause API exists; enablement is an engine construction parameter, immutable within a process; degradation under load is itself recorded (<code>SHED</code> records, never-shed semantics)</span></td><td class="map__status">Shipped in 0.7</td></tr>
+          <tr><td><b>Automatic emission, independent of user action</b><span class="map__how">Engine emits at lifecycle points: model announce/load, session spans, KV operations, guard rejections (recorded before the exception is raised), anchor on close</span></td><td class="map__status">Shipped in 0.7</td></tr>
+        </tbody>
+      </table></div>
+      <h3 id="article-12-2-events-relevant-for-the-three-stated-purposes">Article 12(2) — events relevant for the three stated purposes</h3>
+      <h4>(a) Identifying risk situations (Art. 79(1)) and substantial modification</h4>
+      <div class="tbl"><table class="map">
+        <thead><tr><th>What, and how</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><b>Model/weights/configuration change as a first-class event</b><span class="map__how"><code>MODEL_LOAD</code> / <code>MODEL_UNLOAD</code> events carrying the origin triple: SHA-256 digest of the weights file itself and a canonical configuration digest (order-independent, deterministic)</span></td><td class="map__status">Shipped in 0.7</td></tr>
+          <tr><td><b>Safety-relevant rejections recorded</b><span class="map__how"><code>SAFETY</code> class events for guard rejections, written before the exception propagates</span></td><td class="map__status">Shipped in 0.7</td></tr>
+          <tr><td><b>Automatic incident candidates with documented, pre-registered trigger criteria</b><span class="map__how"><code>INCIDENT_CANDIDATE</code> record kind (<code>PalaWriter.incident_candidate()</code>)</span></td><td class="map__status">Shipped in 0.8</td></tr>
+          <tr><td><b>Recorded acknowledgement chain for incident handling</b><span class="map__how"><code>OVERSIGHT_ACK</code> record kind (<code>PalaWriter.oversight_ack()</code>)</span></td><td class="map__status">Shipped in 0.8</td></tr>
+        </tbody>
+      </table></div>
+      <h4>(b) Facilitating post-market monitoring (Art. 72)</h4>
+      <div class="tbl"><table class="map">
+        <thead><tr><th>What, and how</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><b>Header-only verifiability (no keys, no payload content)</b><span class="map__how">The chain and Merkle verification consume record headers only; payload bodies are never needed to verify integrity (spec §1.2)</span></td><td class="map__status">Shipped in 0.7</td></tr>
+          <tr><td><b>Packaged evidence bundle — one attachable, re-verifiable file</b><span class="map__how"><code>pala bundle</code>, format <code>pala-bundle/1</code>: the chain, inclusion proofs, the verification verdict, time-claims, and a manifest with per-member digests; deterministic (same inputs → byte-identical), derived and unsigned — every claim inside is re-verifiable from spec-level operations without this package's code</span></td><td class="map__status">Shipped in 0.10</td></tr>
+          <tr><td><b>Incident timeline reconstruction (supports Art. 73 reporting)</b><span class="map__how">Proved ordering via sequence numbers; session spans (a crash leaves a visibly unclosed span); monotonic deltas per record</span></td><td class="map__status">Shipped in 0.7</td></tr>
+          <tr><td><b>Aggregation-friendly export (JSONL; each line carries sequence, record hash, and anchor reference so integrity is reconstructable from an archive)</b><span class="map__how"><code>pala export jsonl</code> — deterministic, derived, never authoritative</span></td><td class="map__status">Shipped in 0.8</td></tr>
+          <tr><td><b>Syslog / CSV derived exports (explicitly non-authoritative)</b><span class="map__how">Export tooling in the audit package</span></td><td class="map__status">Planned</td></tr>
+        </tbody>
+      </table></div>
+      <h4>(c) Monitoring of operation by deployers (Art. 26(5))</h4>
+      <div class="tbl"><table class="map">
+        <thead><tr><th>What, and how</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><b>Verification without developer tooling</b><span class="map__how"><code>pala verify</code> CLI (exit codes for sound / violation / partial; explicit partial semantics when no anchor is available)</span></td><td class="map__status">Shipped in 0.7</td></tr>
+          <tr><td><b>Independently implementable verification</b><span class="map__how">Written from spec + byte-exact test vectors alone; demonstrated by five verifier implementations, three of them external — the fifth written in Perl from core modules alone (see INDEPENDENT-VERIFICATION.md and <code>independent-runs/</code>) — and reproducible by anyone via the verification kit</span></td><td class="map__status">Shipped in 0.7</td></tr>
+          <tr><td><b>Machine-readable verification verdict with one schema owner</b><span class="map__how">The <code>pala-verification-report/2</code> model (<code>/2</code> since 0.15): the JSON Schema ships in the wheel, <code>checked_at</code> is isolated so two reports of one file differ by a single line, completeness never silently true; the evidence bundle's <code>verification.json</code> carries the same verdict fields; rendered directly by <code>pala report</code> — JSON and a self-contained static HTML page</span></td><td class="map__status">Shipped in 0.10</td></tr>
+          <tr><td><b>Graphical review tooling</b><span class="map__how">Auditor application</span></td><td class="map__status">Planned</td></tr>
+        </tbody>
+      </table></div>
+      <h3 id="article-12-3-minimum-logging-for-remote-biometric-systems-annex-iii-1-a">Article 12(3) — minimum logging for remote biometric systems (Annex III 1(a))</h3>
+      <p>Palimpsests is not a biometric system; Article 12(3) applies to it only by analogy. We treat 12(3) as the strictest logging baseline in the Act and map to it deliberately.</p>
+      <div class="tbl"><table class="map">
+        <thead><tr><th>What, and how</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><b>(a) Period of each use (start/end)</b><span class="map__how"><code>SPAN_START</code> / <code>SPAN_END</code>; <code>wall_clock_ns</code> (Unix epoch, UTC) qualified by an explicit <code>time_trust</code> field; per-record <code>monotonic_ns</code>; verifier-side boot-scoped monotonic/clock drift advisories</span></td><td class="map__status">Shipped in 0.8</td></tr>
+          <tr><td><b>(b) Reference data identification</b><span class="map__how">Stronger than an identifier: SHA-256 digest of the weights file plus configuration digest</span></td><td class="map__status">Shipped in 0.7</td></tr>
+          <tr><td><b>(c) Input data</b><span class="map__how">Hash-by-default design: bodies in the inference profile are metadata-only; <code>body_digest</code> always present; raw payloads are never written by default. Retention of raw payloads, where required, is a deployer-side policy outside the log. Encrypted-payload profiles support cryptographic erasure (§4.4). The design position is stated in docs/RETENTION.md §5</span></td><td class="map__status">Shipped in 0.7</td></tr>
+          <tr><td><b>(d) Identification of natural persons involved in verification (Art. 14(5))</b><span class="map__how">Pseudonymous <code>operator_id</code> (<code>EVT_OPERATOR_ID</code>, 16 bytes) on <code>OVERSIGHT_ACK</code> records; the mapping from identifier to person remains with the deployer — no PII enters the log</span></td><td class="map__status">Shipped in 0.8</td></tr>
+        </tbody>
+      </table></div>
+      <h3 id="article-14-human-oversight-related-not-an-art-12-requirement">Article 14 — human oversight (related, not an Art. 12 requirement)</h3>
+      <p>Oversight actions become part of the tamper-evident record via <code>OVERSIGHT_ACK</code> (with pseudonymous <code>operator_id</code>) — Shipped (v0.8). This mapping claims event recording only; it makes no claims about oversight user interfaces.</p>
+      <h3 id="articles-19-1-and-26-6-log-retention">Articles 19(1) and 26(6) — log retention</h3>
+      <div class="tbl"><table class="map">
+        <thead><tr><th>What, and how</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><b>Archival of whole segments without loss of verifiability</b><span class="map__how">Spec §2.4; verification consumes the file sequence</span></td><td class="map__status">Shipped in 0.7</td></tr>
+          <tr><td><b>Bounded, explicit degradation when a prefix is absent</b><span class="map__how">Verifying a chain whose prefix is absent — e.g. an archived-away head — reports exactly one explicit violation at position 0 (missing genesis) and verifies the remainder as sound; the loss is visible, never silent. (A truncated <i>tail</i> is a different case: it is invisible to the §7.1 chain check and is caught by the anchor, not by a position-0 violation.)</span></td><td class="map__status">Shipped in 0.7</td></tr>
+          <tr><td><b>Retention guidance for providers (≥ 6 months context) and deployers, with storage math from measured bytes/record</b><span class="map__how">docs/RETENTION.md — measured per-kind footprint (~181 B/record weighted, results/audit-overhead-footprint-v0.7.0.md), archival/pruning at segment boundaries, ~4 s/GB resume cost</span></td><td class="map__status">Shipped in 0.8</td></tr>
+          <tr><td><b>Segmenting an existing monolith at record boundaries</b><span class="map__how"><code>pala segment</code>, manifest <code>pala-segments/1</code>; each closed segment verifies standalone from its manifest seed</span></td><td class="map__status">Shipped in 0.10</td></tr>
+          <tr><td><b>Writer-side rotation for months-long chains</b><span class="map__how"><code>RotationPolicy</code> on the writer: record-boundary cuts, span-safe deferral, atomically-updated <code>pala-segments/1</code> manifest whose <code>prev_head</code> seeds let every closed segment verify alone; trigger math for the six-month duty in RETENTION.md §3</span></td><td class="map__status">Shipped in 0.11</td></tr>
+          <tr><td><b>Formal prefix-consistency proofs for pruning</b><span class="map__how">RFC 6962 / 9162 consistency proofs over a chain's record hashes: <code>pala consistency</code> / <code>pala consistency-verify</code>, document <code>pala-consistency-proof/1</code> (<code>docs/specs/pala-1/consistency-proof.md</code>), published proof vectors with negative cases; pruning with a proof in RETENTION.md</span></td><td class="map__status">Shipped in 0.12</td></tr>
+        </tbody>
+      </table></div>
+      <p>The <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/compliance/EU-AI-ACT-MAPPING.md" rel="noopener">full document in the repository</a> adds how each row was verified, what goes beyond the Act's requirements, and how other frameworks map.</p>
+      <!-- mapping:end -->
 
       <h2 id="evidence">Evidence you can hand over</h2>
       <p>When an authority asks for logs, what matters is whether the record itself can be believed. A PALA-1 chain can be verified by the authority on its own machine, from a published specification, without your decryption key — see <a href="/verify-without-reading/">verify without reading</a>.</p>
@@ -235,12 +308,15 @@
       Palimpsests
     </a>
     <div class="foot__links">
+      <a href="/notes/">Notes</a>
+      <a href="/runbook/">Runbook</a>
       <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
       <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
       <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
       <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
       <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
       <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+      <a href="https://securityheaders.com/?q=https%3A%2F%2Fpalimpsests.dev%2F&amp;followRedirects=on" rel="noopener">Security headers</a>
     </div>
     <div class="foot__meta">
       Assault Consulting · Kyiv<br/>

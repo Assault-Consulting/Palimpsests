@@ -17,7 +17,8 @@ Palimpsests is honest about scope: it supplies the runtime primitives that speci
 - [SCITT transparency bridge](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/INTEROP-SCITT.md): one COSE Signed Statement per published chain head — no record content leaves the device. The statement construction was reproduced byte-for-byte twice from the standards alone, and one registration with a verified receipt is on the public record. The document states what a receipt proves and what it does not.
 - [OpenSSF Best Practices: Gold](https://www.bestpractices.dev/projects/13534) — the highest tier of the programme; each criterion is answered by the project in a public registry entry with its justification, so it can be checked against the repository.
 - Signed releases (PEP 740 / Sigstore), a machine-readable SBOM per build, a published threat model, OSPS Baseline Level 2 self-attestation, and Atheris fuzzing in CI.
-- [EU AI Act Article 12 mapping](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/compliance/EU-AI-ACT-MAPPING.md) — a requirement-by-requirement checklist of what ships today (25 of 27 rows as of v0.15) and what is on the roadmap.
+- [EU AI Act Article 12 mapping](https://palimpsests.dev/eu-ai-act-article-12/#mapping) — a requirement-by-requirement table of what ships today (25 of 27 rows as of v0.15) and what is planned; the [source document](https://github.com/Assault-Consulting/Palimpsests/blob/main/docs/compliance/EU-AI-ACT-MAPPING.md) adds how each row was verified.
+- [OpenSSF Scorecard](https://scorecard.dev/viewer/?uri=github.com/Assault-Consulting/Palimpsests) — computed weekly by the OpenSSF from the repository; 8.4 of 10 on 26 November 2026.
 - [EU regulatory fit](https://palimpsests.dev/#eu-law): the specific runtime primitive each act leans on, linked to source text.
 - [Internet-Draft draft-sparysh-pala-audit](https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/) — PALA-1 described in an individual submission with Informational status; not an IETF standard and not a working-group document. The specification in the repository remains normative.
 
@@ -27,6 +28,7 @@ Palimpsests is honest about scope: it supplies the runtime primitives that speci
 - [Verify without reading](https://palimpsests.dev/verify-without-reading/): how anyone checks that no record was altered, removed or reordered, with no decryption key; what the check proves and what it needs.
 - [EU AI Act Article 12](https://palimpsests.dev/eu-ai-act-article-12/): what Articles 12, 19, 26(6) and 99 ask, when they apply, and what a tamper-evident local log does and does not cover. Not legal advice.
 - [Air-gapped](https://palimpsests.dev/air-gapped/): inference and the audit log on hardware you control, time without a trusted clock, anchors without a network, measured numbers and what is not claimed.
+- [An audit trail for AI agents](https://palimpsests.dev/ai-agent-audit-trail/): what an agent does that is worth recording, what makes a log an audit trail, what goes on the record, three ways to connect an agent, and what the trail does not prove.
 - [Integrations](https://palimpsests.dev/integrations/): tool calls from Claude Code, Codex, OpenTelemetry GenAI spans, LiteLLM, MCP and OpenCode on the chain, marked as reported by the client, with what each result can show (ok, error or unobserved), each adapter's status and its limits.
 
 <!-- runbook:start -->
