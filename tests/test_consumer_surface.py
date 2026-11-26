@@ -419,7 +419,7 @@ def test_the_header_field_map_covers_the_fixed_header_and_agrees_with_the_decode
 CHANNELS = {
     "palimpsests.audit.report": ["build_report", "derive_verdict", "VerificationReport",
                                  "REPORT_FORMAT", "REPORT_FORMAT_1", "VERDICTS",
-                                 "health_summary"],
+                                 "health_summary", "NOTES", "HEALTH_BASES"],
     "palimpsests.audit.report_html": ["render_html"],
     "palimpsests.audit.export": ["export_jsonl", "FORMAT"],
     "palimpsests.audit.pala.proofs": ["inclusion_proof", "range_proofs", "chain_root",
@@ -476,7 +476,8 @@ def test_the_scitt_channel_is_declared_and_its_vocabularies_are_the_documented_o
 
     assert set(scitt.__all__) == set(CHANNELS["palimpsests.audit.pala.scitt"])
     assert [f.name for f in dataclasses.fields(scitt.StatementCheck)] == [
-        "version", "payload", "root", "root_status", "payload_encoding", "statement_id"]
+        "version", "payload", "root", "root_status", "payload_encoding", "statement_id",
+        "head_seq"]
     assert issubclass(scitt.StatementRefused, ValueError)
     assert list(inspect.signature(scitt.verify_statement).parameters) == [
         "message", "public_key", "expected_head", "reader"]

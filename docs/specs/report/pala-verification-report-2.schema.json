@@ -118,6 +118,10 @@
         },
         "note": {
           "type": "string"
+        },
+        "note_id": {
+          "const": "checked_at",
+          "description": "The name of the fixed sentence in 'note' (palimpsests.audit.report.NOTES). Written since 0.15.1; absent from reports written before. The name is the contract, the sentence its English."
         }
       }
     },
@@ -337,6 +341,13 @@
         },
         "note": {
           "type": "string"
+        },
+        "note_id": {
+          "enum": [
+            "existence_witness_present",
+            "existence_no_witness"
+          ],
+          "description": "The name of the fixed sentence in 'note' (palimpsests.audit.report.NOTES). Written since 0.15.1; absent from reports written before. The name is the contract, the sentence its English."
         }
       }
     },
@@ -479,6 +490,10 @@
         },
         "note": {
           "const": "advisory items do not affect the verdict"
+        },
+        "note_id": {
+          "const": "advisory",
+          "description": "The name of the fixed sentence in 'note' (palimpsests.audit.report.NOTES). Written since 0.15.1; absent from reports written before. The name is the contract, the sentence its English."
         }
       }
     },
@@ -569,6 +584,10 @@
             "note": {
               "type": "string"
             },
+            "note_id": {
+              "const": "health",
+              "description": "The name of the fixed sentence in 'note' (palimpsests.audit.report.NOTES). Written since 0.15.1; absent from reports written before. The name is the contract, the sentence its English."
+            },
             "boots": {
               "type": "object",
               "required": [
@@ -580,6 +599,10 @@
               "properties": {
                 "basis": {
                   "type": "string"
+                },
+                "basis_id": {
+                  "const": "proved_order",
+                  "description": "The name of what this group is measured on (palimpsests.audit.report.HEALTH_BASES). Written since 0.15.1; absent from reports written before."
                 },
                 "count": {
                   "type": "integer"
@@ -604,6 +627,10 @@
               "properties": {
                 "basis": {
                   "type": "string"
+                },
+                "basis_id": {
+                  "const": "monotonic_in_boot",
+                  "description": "The name of what this group is measured on (palimpsests.audit.report.HEALTH_BASES). Written since 0.15.1; absent from reports written before."
                 },
                 "count": {
                   "type": "integer"
@@ -642,6 +669,10 @@
               "properties": {
                 "basis": {
                   "type": "string"
+                },
+                "basis_id": {
+                  "const": "wall_against_monotonic",
+                  "description": "The name of what this group is measured on (palimpsests.audit.report.HEALTH_BASES). Written since 0.15.1; absent from reports written before."
                 },
                 "step_threshold_ns": {
                   "type": "integer"
@@ -694,6 +725,10 @@
               "properties": {
                 "basis": {
                   "type": "string"
+                },
+                "basis_id": {
+                  "const": "proved_order",
+                  "description": "The name of what this group is measured on (palimpsests.audit.report.HEALTH_BASES). Written since 0.15.1; absent from reports written before."
                 },
                 "closed": {
                   "type": "integer"

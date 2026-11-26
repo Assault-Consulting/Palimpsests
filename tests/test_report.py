@@ -221,3 +221,103 @@ def test_a_reader_and_a_different_anchor_source_are_refused(tmp_path):
     with AuditReader.open(log, anchor=ManualAnchor(head)) as reader:
         with pytest.raises(ValueError, match="not both"):
             build_report(log, anchor_source=ManualAnchor("00" * 32), reader=reader)
+
+
+# --- the report's fixed sentences have names (since 0.15.1) ---------------- #
+
+
+def _schema() -> dict:
+    from pathlib import Path
+
+    return json.loads((
+        Path(__file__).resolve().parents[1]
+        / "docs" / "specs" / "report" / "pala-verification-report-2.schema.json"
+    ).read_text(encoding="utf-8"))
+
+
+def _named(node, key, name_key, found):
+    """Every (text, name) pair under ``node`` for a text key and its name key."""
+    if isinstance(node, dict):
+        if key in node:
+            found.append((node[key], node.get(name_key)))
+        for value in node.values():
+            _named(value, key, name_key, found)
+    elif isinstance(node, list):
+        for value in node:
+            _named(value, key, name_key, found)
+    return found
+
+
+def test_every_fixed_sentence_in_a_report_carries_its_name(tmp_path):
+    from palimpsests.audit.report import HEALTH_BASES, NOTES
+
+    report = build_report(_chain(tmp_path), health=True).data
+    notes = _named(report, "note", "note_id", [])
+    bases = _named(report, "basis", "basis_id", [])
+    assert len(notes) == 4 and len(bases) == 4
+    for text, name in notes:
+        assert name is not None and NOTES[name] == text
+    for text, name in bases:
+        assert name is not None and HEALTH_BASES[name] == text
+    assert {name for _, name in notes} == {
+        "advisory", "health", "checked_at", "existence_no_witness"}
+    assert {name for _, name in bases} == set(HEALTH_BASES)
+
+
+def test_the_tables_of_names_are_exported_and_read_only():
+    from palimpsests.audit import report
+
+    assert {"NOTES", "HEALTH_BASES"} <= set(report.__all__)
+    assert set(report.NOTES) == {
+        "advisory", "health", "checked_at",
+        "existence_witness_present", "existence_no_witness"}
+    assert set(report.HEALTH_BASES) == {
+        "proved_order", "monotonic_in_boot", "wall_against_monotonic"}
+    with pytest.raises(TypeError):
+        report.NOTES["another"] = "x"  # type: ignore[index]
+    with pytest.raises(TypeError):
+        report.HEALTH_BASES["another"] = "x"  # type: ignore[index]
+
+
+def test_the_schema_names_exactly_the_names_the_package_has():
+    from palimpsests.audit.report import HEALTH_BASES, NOTES
+
+    def allowed(node, key, out):
+        if isinstance(node, dict):
+            if key in node and isinstance(node[key], dict):
+                spec = node[key]
+                out.update(spec.get("enum", [spec["const"]] if "const" in spec else []))
+            for value in node.values():
+                allowed(value, key, out)
+        elif isinstance(node, list):
+            for value in node:
+                allowed(value, key, out)
+        return out
+
+    schema = _schema()
+    assert allowed(schema, "note_id", set()) == set(NOTES)
+    assert allowed(schema, "basis_id", set()) == set(HEALTH_BASES)
+    # the one sentence the schema pins is the one the table holds
+    assert schema["properties"]["advisory"]["properties"]["note"]["const"] == NOTES["advisory"]
+
+
+def test_a_report_written_before_the_names_still_validates(tmp_path):
+    """The names are an addition: a 0.15.0 report has none and is still /2."""
+    jsonschema = pytest.importorskip("jsonschema")
+
+    def strip(node):
+        if isinstance(node, dict):
+            return {k: strip(v) for k, v in node.items() if k not in ("note_id", "basis_id")}
+        return [strip(v) for v in node] if isinstance(node, list) else node
+
+    schema = _schema()
+    report = build_report(_chain(tmp_path), health=True).data
+    jsonschema.validate(report, schema)
+    older = strip(report)
+    assert older != report
+    jsonschema.validate(older, schema)
+    for wrong in ("advisory_note", "", None):
+        bad = json.loads(json.dumps(report))
+        bad["advisory"]["note_id"] = wrong
+        with pytest.raises(jsonschema.ValidationError):
+            jsonschema.validate(bad, schema)

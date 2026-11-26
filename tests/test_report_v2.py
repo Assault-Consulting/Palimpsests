@@ -355,6 +355,13 @@ def test_a_v1_report_of_an_empty_container_keeps_its_word_and_the_right_gloss(tm
     v1["diagnosis"] = {
         k: v for k, v in data["diagnosis"].items() if k not in ("code", "question")
     }
+    # 0.14 wrote the fixed sentences without their names
+    def unnamed(node):
+        if isinstance(node, dict):
+            return {k: unnamed(v) for k, v in node.items() if k != "note_id"}
+        return [unnamed(v) for v in node] if isinstance(node, list) else node
+
+    v1 = unnamed(v1)
     v1["verdict"] = derive_verdict(v1)
     assert v1["verdict"] == "partial"
     _validate(v1, 1)
