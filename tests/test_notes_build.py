@@ -253,3 +253,104 @@ def test_visible_update_date_of_a_product_page_is_its_sitemap_date() -> None:
         assert shown == [lastmod], (path, shown, lastmod)
         checked += 1
     assert checked == 5
+
+
+# --- one footer, pages in markdown, the mapping on the site ---------------
+
+
+def _site_pages() -> list:
+    site = ROOT / "site"
+    return [*sorted(site.rglob("index.html")), site / "404.html"]
+
+
+def test_every_page_of_the_site_has_the_same_footer() -> None:
+    import re
+
+    module = _load()
+    for path in _site_pages():
+        found = re.findall(r"<footer>.*?</footer>", path.read_text(encoding="utf-8"), re.S)
+        assert found == [module.FOOTER], path
+    for label in ("Notes", "Runbook", "GitHub", "PyPI", "Internet-Draft", "Security headers"):
+        assert f">{label}</a>" in module.FOOTER, label
+
+
+def test_the_mapping_on_the_site_is_the_document_in_the_repository() -> None:
+    import html
+    import re
+
+    module = _load()
+    source = (ROOT / module.MAPPING_SOURCE).read_text(encoding="utf-8")
+    blocks, rows = module.parse_mapping(source)
+    shipped, total = module.mapping_counts(source)
+    assert (shipped, total) == (sum(r.shipped for r in rows), len(rows))
+    assert total >= 27 and 0 < shipped <= total
+
+    page = (ROOT / "site" / "eu-ai-act-article-12" / "index.html").read_text(encoding="utf-8")
+    block = page.split(module.MAPPING_START, 1)[1].split(module.MAPPING_END, 1)[0]
+    assert module.MAPPING_START + block + module.MAPPING_END == module.mapping_block(source)
+    assert block.count("<tr><td>") == total
+    assert f"{shipped} of {total} rows" in block
+    for row in rows:
+        assert module.inline(row.capability) in block, row.capability
+    # Pull-request numbers stay in the repository document.
+    assert not re.search(r"#\d", html.unescape(re.sub(r"<[^>]+>", " ", block)))
+    # The sections that are not the Act's requirements stay there too.
+    assert "Beyond the requirements" not in block and "Other frameworks" not in block
+
+
+def test_the_row_count_is_quoted_the_same_everywhere() -> None:
+    module = _load()
+    source = (ROOT / module.MAPPING_SOURCE).read_text(encoding="utf-8")
+    shipped, total = module.mapping_counts(source)
+    quote = f"{shipped} of {total} rows"
+    for name in ("index.html", "llms.txt", "eu-ai-act-article-12/index.html"):
+        assert quote in (ROOT / "site" / name).read_text(encoding="utf-8"), name
+
+
+def test_a_mapping_status_the_site_cannot_show_is_refused() -> None:
+    module = _load()
+    assert module.MappingRow("s", "c", "m", "Shipped (v0.12)").status_label == "Shipped in 0.12"
+    assert module.MappingRow("s", "c", "m", "Planned (post-0.8)").status_label == "Planned"
+    for bad in ("Shipped (main)", "Shipped", "Done"):
+        with pytest.raises(ValueError):
+            _ = module.MappingRow("s", "c", "m", bad).status_label
+
+
+def test_pages_written_in_markdown_are_built_listed_and_dated() -> None:
+    import json
+    import re
+
+    module = _load()
+    docs = module.load_doc_pages(ROOT / "pages")
+    assert [d.slug for d in docs] == ["ai-agent-audit-trail"]
+    sitemap = (ROOT / "site" / "sitemap.xml").read_text(encoding="utf-8")
+    llms = (ROOT / "site" / "llms.txt").read_text(encoding="utf-8")
+    for doc in docs:
+        built = (ROOT / "site" / doc.slug / "index.html").read_text(encoding="utf-8")
+        assert built == module.doc_page(doc, module.load_notes(ROOT / "notes"))
+        assert f'Updated <time datetime="{doc.updated.isoformat()}">' in built
+        assert f"<loc>{doc.url}</loc>" in sitemap and doc.url in llms
+        found = re.search(r'<script type="application/ld\+json">\n(.*?)\n</script>', built, re.S)
+        assert found is not None
+        graph = json.loads(found.group(1))["@graph"]
+        faq = [node for node in graph if node["@type"] == "FAQPage"]
+        asked = re.findall(r"(?m)^### (.+)$", doc.body.split("## Questions", 1)[1])
+        assert len(faq) == 1 and [q["name"] for q in faq[0]["mainEntity"]] == asked
+        for question in faq[0]["mainEntity"]:
+            answer = question["acceptedAnswer"]["text"]
+            assert answer and "](" not in answer and "`" not in answer
+        # a page of the site links to it, or nobody finds it
+        link = f'href="{doc.path}"'
+        linked_from = [p for p in _site_pages() if link in p.read_text(encoding="utf-8")]
+        assert len(linked_from) >= 2, doc.path
+
+
+def test_the_scorecard_figure_carries_its_date() -> None:
+    import re
+
+    home = (ROOT / "site" / "index.html").read_text(encoding="utf-8")
+    llms = (ROOT / "site" / "llms.txt").read_text(encoding="utf-8")
+    figure = re.findall(r"(\d\.\d) of 10 on (\d{1,2} \w+ \d{4})", re.sub(r"<[^>]+>", "", home))
+    assert len(figure) == 1, "one dated figure on the home page, so there is one place to update"
+    assert re.findall(r"(\d\.\d) of 10 on (\d{1,2} \w+ \d{4})", llms) == figure
+    assert "scorecard.dev/viewer/?uri=github.com/Assault-Consulting/Palimpsests" in home
