@@ -38,7 +38,7 @@
       "description": "Record the tool calls of Claude Code, Codex, OpenTelemetry frameworks, LiteLLM and MCP servers in a tamper-evident log that stays on your own machine.",
       "url": "https://palimpsests.dev/integrations/",
       "inLanguage": "en",
-      "dateModified": "2026-11-22",
+      "dateModified": "2026-11-26",
       "author": {
         "@id": "https://palimpsests.dev/#org"
       },
@@ -160,7 +160,8 @@
       <span class="eyebrow">Integrations · Claude Code · Codex · OpenTelemetry · LiteLLM · MCP</span>
       <h1 class="display">Audit logging for the tool calls your agents already make</h1>
       <p class="lede">Palimpsests records the tool calls your AI agents already make — from Claude Code, Codex, frameworks instrumented with OpenTelemetry, LiteLLM and MCP servers — in a tamper-evident log on your own machine, whether the model is local or hosted. Each integration below has a recorded run on real traffic. The audit record stays on your machine, even when the model doesn’t.</p>
-      <p class="updated">Updated <time datetime="2026-11-22">22 November 2026</time></p>
+      <p class="updated">Updated <time datetime="2026-11-26">26 November 2026</time></p>
+      <p>New to the idea? Start with <a href="/ai-agent-audit-trail/">an audit trail for AI agents: what it is and how to keep one</a>.</p>
 
       <h2 id="start">Before you start</h2>
       <pre><code>pip install 'palimpsests[serve]'
@@ -286,12 +287,15 @@ litellm.callbacks = [PalimpsestsAudit()]</code></pre>
       Palimpsests
     </a>
     <div class="foot__links">
+      <a href="/notes/">Notes</a>
+      <a href="/runbook/">Runbook</a>
       <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
       <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
       <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
       <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
       <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
       <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+      <a href="https://securityheaders.com/?q=https%3A%2F%2Fpalimpsests.dev%2F&amp;followRedirects=on" rel="noopener">Security headers</a>
     </div>
     <div class="foot__meta">
       Assault Consulting · Kyiv<br/>

@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI agent audit trail: what it is and how to keep one</title>
+<meta name="description" content="An AI agent acts through tools. An audit trail is the record of those actions that someone else can check later: what goes in it, and how to keep one." />
+<link rel="canonical" href="https://palimpsests.dev/ai-agent-audit-trail/" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="author" content="Andrii Sparysh" />
+<meta name="theme-color" content="#15151f" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Palimpsests" />
+<meta property="og:title" content="AI agent audit trail: what it is and how to keep one" />
+<meta property="og:description" content="An AI agent acts through tools. An audit trail is the record of those actions that someone else can check later: what goes in it, and how to keep one." />
+<meta property="og:url" content="https://palimpsests.dev/ai-agent-audit-trail/" />
+<meta property="og:locale" content="en" />
+<meta property="og:image" content="https://palimpsests.dev/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Palimpsests: a tamper-evident audit log for AI agents, verifiable without the key" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://palimpsests.dev/og.png" />
+<meta name="twitter:title" content="AI agent audit trail: what it is and how to keep one" />
+<meta name="twitter:description" content="An AI agent acts through tools. An audit trail is the record of those actions that someone else can check later: what goes in it, and how to keep one." />
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="alternate" type="application/rss+xml" title="Palimpsests notes" href="https://palimpsests.dev/notes/feed.xml" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "TechArticle",
+      "@id": "https://palimpsests.dev/ai-agent-audit-trail/#article",
+      "headline": "An audit trail for AI agents: what it is and how to keep one",
+      "description": "An AI agent acts through tools: it reads files, runs commands, sends requests. An audit trail is the record of those actions that someone else can check later.",
+      "url": "https://palimpsests.dev/ai-agent-audit-trail/",
+      "inLanguage": "en",
+      "dateModified": "2026-11-26",
+      "author": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "publisher": {
+        "@id": "https://palimpsests.dev/#org"
+      },
+      "isPartOf": {
+        "@id": "https://palimpsests.dev/#website"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Palimpsests",
+          "item": "https://palimpsests.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Audit trail for AI agents",
+          "item": "https://palimpsests.dev/ai-agent-audit-trail/"
+        }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://palimpsests.dev/ai-agent-audit-trail/#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Is an audit trail the same as tracing or observability?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Tracing tells the team that runs a system where time and money went, and is usually kept for days or weeks. An audit trail tells someone outside the team what happened, in a form they can check, and it is kept for months or years. One does not replace the other."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does the trail store prompts or the contents of tool calls?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Arguments and results are stored as SHA-256 fingerprints. Their contents never enter the trail."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does it work when the model runs in the cloud?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. What is recorded is the agent's tool calls on your machine, not the model. The trail stays on your hardware whether the model is local or behind an API."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can the owner of the trail rewrite it?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The owner of a file can always write a new file. What stops a quiet rewrite is a copy of the latest fingerprint kept where the owner cannot change it. Without that copy, a trail shows changes inside it but not a replacement of the whole."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Which agents are supported?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Claude Code, Codex, OpenCode, anything that calls models through LiteLLM, any framework that exports OpenTelemetry tool spans, and MCP servers that speak over standard input and output. Each is listed on the integrations page with the run it rests on."
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<nav>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Palimpsests home">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="nav__links">
+      <a class="hide-sm" href="/#caps">Capabilities</a>
+      <a class="hide-sm" href="/pala-1/">PALA-1</a>
+      <a class="hide-sm" href="/verify-without-reading/">Verify</a>
+      <a class="hide-sm" href="/eu-ai-act-article-12/">EU AI Act</a>
+      <a class="hide-sm" href="/air-gapped/">Air-gapped</a>
+      <a class="hide-sm" href="/integrations/">Integrations</a>
+      <a class="hide-sm" href="/runbook/">Runbook</a>
+      <a class="hide-sm" href="/notes/">Notes</a>
+      <a class="btn" href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<main class="doc" id="main">
+  <div class="wrap">
+    <div class="doc__in">
+<p class="crumbs"><a href="/">Palimpsests</a> / Audit trail for AI agents</p>
+<span class="eyebrow">AI agents · audit trail</span>
+<h1 class="display">An audit trail for AI agents: what it is and how to keep one</h1>
+<p class="lede">An AI agent acts through tools: it reads files, runs commands, sends requests. An audit trail is the record of those actions that someone else can check later.</p>
+<p class="updated">Updated <time datetime="2026-11-26">26 November 2026</time></p>
+<h2 id="what-an-agent-does-that-is-worth-recording">What an agent does that is worth recording</h2>
+<p>A model produces text. An agent does things: it reads a file, runs a command, calls an API, writes to a database. Each of those is a tool call, and the tool call is the moment the agent touches something outside itself.</p>
+<p>So the question after the fact is rarely "what did the model say". It is "what did the agent do, in what order, and did each thing work". An audit trail answers that.</p>
+<h2 id="a-log-is-not-yet-an-audit-trail">A log is not yet an audit trail</h2>
+<p>Most agents already write logs. A log becomes an audit trail when a person who did not write it can rely on it. That takes three things.</p>
+<ul>
+  <li><b>The order is fixed.</b> Every record carries a fingerprint of the one before it, so records cannot be moved, removed or inserted without the fingerprints breaking.</li>
+  <li><b>A change shows.</b> Nobody can make a file impossible to edit. What can be done is to make every edit visible, and that is what tamper-evident means. See <a href="https://palimpsests.dev/notes/what-makes-an-audit-log-tamper-evident/">what makes an audit log tamper-evident</a>.</li>
+  <li><b>The other side can check it.</b> The check needs the file and a published format. It does not need your software, your account or your decryption key. See <a href="https://palimpsests.dev/verify-without-reading/">verify without reading</a>.</li>
+</ul>
+<h2 id="what-goes-on-the-record">What goes on the record</h2>
+<p>For each tool call, two records: the call and its result.</p>
+<ul>
+  <li><b>The call</b>: which tool, and a fingerprint of its arguments.</li>
+  <li><b>The result</b>: how it ended. <code>ok</code> means a result came back. <code>error</code> means the tool reported a failure. <code>unobserved</code> means the recorder could not see which, and says so. <code>cancelled</code> means no result ever came.</li>
+  <li><b>Who says so</b>: a record is marked as seen by the server itself, reported by the client, or read out of telemetry. These are different strengths of evidence and are kept apart.</li>
+  <li><b>When</b>: a counter that always runs, and the date together with how far the clock can be believed.</li>
+  <li><b>What went wrong around it</b>: a restart, a writer that stopped without closing, reports that were refused. A gap that is written down is one you can explain later.</li>
+</ul>
+<p>The contents are not stored. Arguments and results go in as fingerprints, so the trail shows that something happened and lets you prove what it was if you kept it, without the trail itself holding private data.</p>
+<h2 id="three-ways-to-connect-an-agent">Three ways to connect an agent</h2>
+<p><b>A hook in the client.</b> Some clients can report each tool call as it happens. This is the closest view of what the agent ran.</p>
+<ul>
+  <li><a href="https://palimpsests.dev/runbook/log-claude-code-tool-calls/">Log Claude Code tool calls on your own machine</a></li>
+  <li><a href="https://palimpsests.dev/runbook/opencode-tool-call-logging/">Log the tools OpenCode runs with a plugin</a></li>
+</ul>
+<p><b>A proxy in front of the tools.</b> The agent talks to its tools through a small program that records each call on the way.</p>
+<ul>
+  <li><a href="https://palimpsests.dev/runbook/mcp-tool-call-logging/">Record the tool calls of an MCP server</a></li>
+</ul>
+<p><b>A callback or telemetry you already have.</b> If the calls already pass through a library or are already exported as traces, the record is taken from there.</p>
+<ul>
+  <li><a href="https://palimpsests.dev/runbook/litellm-tool-call-logging/">Log LiteLLM tool calls with one callback</a></li>
+  <li><a href="https://palimpsests.dev/runbook/opentelemetry-genai-tool-calls/">Record tool calls from OpenTelemetry traces</a></li>
+</ul>
+<p>Every route, with what was run and on which version, is on the <a href="https://palimpsests.dev/integrations/">integrations page</a>.</p>
+<h2 id="where-the-trail-lives">Where the trail lives</h2>
+<p>On your machine. The model may run in the cloud; the tools run where you are, and so does the record of them. Nothing in the trail has to leave your hardware. See <a href="https://palimpsests.dev/notes/audit-log-for-agents-on-cloud-models/">an audit log for agents that run on cloud models</a> and <a href="https://palimpsests.dev/air-gapped/">air-gapped deployments</a>.</p>
+<h2 id="what-it-proves-and-what-it-does-not">What it proves, and what it does not</h2>
+<p>It proves that these reports were made, in this order, and have not been changed since. With the latest fingerprint kept somewhere else, it also proves that nothing was cut off the end.</p>
+<p>It does not prove the rest, and it is better to know that now.</p>
+<ul>
+  <li><b>Not that the tool did what it reported.</b> A result of <code>ok</code> is a report that a result came back.</li>
+  <li><b>Not that everything was reported.</b> A client that runs a tool without telling anyone leaves no record. A hook without its key reports nothing and shows no error; see <a href="https://palimpsests.dev/runbook/claude-code-hooks-not-working/">Claude Code hooks are not recording anything</a>.</li>
+  <li><b>Not that the agent was right.</b> A wrong action is recorded as faithfully as a correct one.</li>
+  <li><b>Not who was at the keyboard.</b> The trail names a client and a session, not a person.</li>
+  <li><b>Not compliance.</b> A trail is evidence you can hand over. Meeting an obligation is still yours to do.</li>
+</ul>
+<h2 id="check-one-yourself">Check one yourself</h2>
+<ul>
+  <li><a href="https://palimpsests.dev/runbook/detect-log-tampering/">Check a log for tampering</a></li>
+  <li><a href="https://palimpsests.dev/runbook/audit-evidence-bundle/">Hand an auditor one file of evidence</a></li>
+  <li><a href="https://palimpsests.dev/runbook/rotate-a-hash-chained-log/">Keep a log for six months without filling the disk</a></li>
+</ul>
+<h2 id="questions">Questions</h2>
+<h3 id="is-an-audit-trail-the-same-as-tracing-or-observability">Is an audit trail the same as tracing or observability?</h3>
+<p>No. Tracing tells the team that runs a system where time and money went, and is usually kept for days or weeks. An audit trail tells someone outside the team what happened, in a form they can check, and it is kept for months or years. One does not replace the other.</p>
+<h3 id="does-the-trail-store-prompts-or-the-contents-of-tool-calls">Does the trail store prompts or the contents of tool calls?</h3>
+<p>No. Arguments and results are stored as SHA-256 fingerprints. Their contents never enter the trail.</p>
+<h3 id="does-it-work-when-the-model-runs-in-the-cloud">Does it work when the model runs in the cloud?</h3>
+<p>Yes. What is recorded is the agent's tool calls on your machine, not the model. The trail stays on your hardware whether the model is local or behind an API.</p>
+<h3 id="can-the-owner-of-the-trail-rewrite-it">Can the owner of the trail rewrite it?</h3>
+<p>The owner of a file can always write a new file. What stops a quiet rewrite is a copy of the latest fingerprint kept where the owner cannot change it. Without that copy, a trail shows changes inside it but not a replacement of the whole.</p>
+<h3 id="which-agents-are-supported">Which agents are supported?</h3>
+<p>Claude Code, Codex, OpenCode, anything that calls models through LiteLLM, any framework that exports OpenTelemetry tool spans, and MCP servers that speak over standard input and output. Each is listed on the integrations page with the run it rests on.</p>
+<div class="related">
+  <a class="btn" href="/integrations/">Integrations →</a>
+  <a class="btn" href="/runbook/">Runbook →</a>
+</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/" aria-label="Palimpsests">
+      <span class="brand__mark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true">
+          <rect width="128" height="128" fill="#15151f"/>
+          <g stroke="#e6dfce" stroke-width="8" stroke-linecap="round" fill="none">
+            <path d="M32 37h32"/><path d="M74 37h6" opacity="0.45"/><path d="M88 37h4" opacity="0.28"/>
+            <path d="M32 55h26"/><path d="M66 55h10" opacity="0.55"/><path d="M84 55h5" opacity="0.32"/>
+            <path d="M32 73h34"/><path d="M74 73h4" opacity="0.4"/><path d="M86 73h6" opacity="0.22"/>
+            <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
+          </g>
+        </svg>
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="/notes/">Notes</a>
+      <a href="/runbook/">Runbook</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="https://github.com/Assault-Consulting/Palimpsests/blob/main/SECURITY.md" rel="noopener">Security</a>
+      <a href="https://securityheaders.com/?q=https%3A%2F%2Fpalimpsests.dev%2F&amp;followRedirects=on" rel="noopener">Security headers</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

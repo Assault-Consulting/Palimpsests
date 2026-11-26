@@ -12,6 +12,18 @@ the home page. Output is deterministic: dates
 come from the front matter, never from the clock, so a re-run on unchanged
 sources changes nothing. tests/test_notes_build.py holds that.
 
+Three more things are built from one source each, so that they cannot
+drift apart:
+
+- a page written in markdown, pages/<slug>.md, becomes site/<slug>/index.html
+  with the same head, menu and footer as every generated page; its
+  "## Questions" section becomes its FAQ structured data;
+- the requirement tables of docs/compliance/EU-AI-ACT-MAPPING.md become the
+  "Requirement by requirement" section of the Article 12 page, with the
+  count of rows that ship computed from them;
+- the footer is one constant, and is stamped into the hand-written pages
+  too.
+
 A link to a page of this site, written as https://palimpsests.dev/<path>,
 must name a page that exists — a static page, a note or a runbook page —
 and a runbook page's `next` list must name runbook pages; the build stops
@@ -40,12 +52,12 @@ AUTHOR = "Andrii Sparysh"
 
 # Static pages and the date each last changed. Update a date when its page changes.
 STATIC_PAGES = [
-    ("/", "2026-11-22", "weekly", "1.0"),
+    ("/", "2026-11-26", "weekly", "1.0"),
     ("/pala-1/", "2026-11-22", "monthly", "0.9"),
     ("/verify-without-reading/", "2026-11-22", "monthly", "0.8"),
-    ("/eu-ai-act-article-12/", "2026-11-22", "monthly", "0.8"),
+    ("/eu-ai-act-article-12/", "2026-11-26", "monthly", "0.8"),
     ("/air-gapped/", "2026-11-20", "monthly", "0.8"),
-    ("/integrations/", "2026-11-22", "monthly", "0.8"),
+    ("/integrations/", "2026-11-26", "monthly", "0.8"),
 ]
 
 NAV = [
@@ -162,6 +174,29 @@ class RunbookIntro:
     seo_description: str = ""
 
 
+@dataclass
+class DocPage:
+    """A page of the site written in markdown: pages/<slug>.md."""
+
+    title: str
+    slug: str
+    updated: date
+    description: str
+    eyebrow: str
+    crumb: str
+    body: str = ""
+    seo_title: str = ""
+    seo_description: str = ""
+
+    @property
+    def path(self) -> str:
+        return f"/{self.slug}/"
+
+    @property
+    def url(self) -> str:
+        return SITE + self.path
+
+
 # ---------------------------------------------------------------- parsing
 
 def _front_matter(path: Path, required: tuple[str, ...]) -> tuple[dict[str, str], str]:
@@ -222,6 +257,25 @@ def parse_recipe(path: Path) -> Recipe:
         seo_title=meta.get("seo_title", ""),
         seo_description=meta.get("seo_description", ""),
     )
+
+
+def parse_doc_page(path: Path) -> DocPage:
+    meta, body = _front_matter(
+        path, ("title", "slug", "updated", "description", "eyebrow", "crumb"))
+    if meta["slug"] != path.stem:
+        raise ValueError(f"{path.name}: slug {meta['slug']!r} is not the file name")
+    return DocPage(
+        title=meta["title"], slug=meta["slug"], updated=date.fromisoformat(meta["updated"]),
+        description=meta["description"], eyebrow=meta["eyebrow"], crumb=meta["crumb"],
+        body=body, seo_title=meta.get("seo_title", ""),
+        seo_description=meta.get("seo_description", ""),
+    )
+
+
+def load_doc_pages(pages_dir: Path) -> list[DocPage]:
+    if not pages_dir.is_dir():
+        return []
+    return [parse_doc_page(p) for p in sorted(pages_dir.glob("*.md"))]
 
 
 def parse_runbook_intro(path: Path) -> RunbookIntro:
@@ -346,9 +400,10 @@ def render(md: str) -> str:
     return "\n".join(out)
 
 
-def site_paths(notes: list[Note], recipes: list[Recipe]) -> set[str]:
+def site_paths(notes: list[Note], recipes: list[Recipe],
+               doc_pages: list[DocPage] | None = None) -> set[str]:
     """Every path of this site a note or a runbook page may link to."""
-    paths = {loc for loc, *_ in STATIC_PAGES}
+    paths = {loc for loc, *_ in STATIC_PAGES} | {d.path for d in doc_pages or []}
     paths |= {"/notes/", "/notes/feed.xml"} | {f"/notes/{n.slug}/" for n in notes}
     if recipes:
         paths |= {"/runbook/"} | {f"/runbook/{r.slug}/" for r in recipes}
@@ -394,6 +449,43 @@ BRAND_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" ari
             <path d="M32 91h22"/><path d="M62 91h8" opacity="0.5"/><path d="M78 91h4" opacity="0.28"/>
           </g>
         </svg>"""
+
+
+FOOTER = f"""<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/" aria-label="Palimpsests">
+      <span class="brand__mark">
+        {BRAND_SVG}
+      </span>
+      Palimpsests
+    </a>
+    <div class="foot__links">
+      <a href="/notes/">Notes</a>
+      <a href="/runbook/">Runbook</a>
+      <a href="{REPO}" rel="noopener">GitHub</a>
+      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
+      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
+      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
+      <a href="{REPO}/blob/main/LICENSE" rel="noopener">License</a>
+      <a href="{REPO}/blob/main/SECURITY.md" rel="noopener">Security</a>
+      <a href="https://securityheaders.com/?q=https%3A%2F%2Fpalimpsests.dev%2F&amp;followRedirects=on" rel="noopener">Security headers</a>
+    </div>
+    <div class="foot__meta">
+      Assault Consulting · Kyiv<br/>
+      Apache-2.0 · Python 3.11+ · latest on PyPI
+    </div>
+  </div>
+</footer>"""
+
+_FOOTER_BLOCK = re.compile(r"<footer>.*?</footer>", re.S)
+
+
+def stamp_footer(target: Path) -> None:
+    """Give a hand-written page the one footer every generated page has."""
+    text = target.read_text(encoding="utf-8")
+    if len(_FOOTER_BLOCK.findall(text)) != 1:
+        raise ValueError(f"{target}: expected exactly one <footer> block")
+    target.write_text(_FOOTER_BLOCK.sub(lambda _: FOOTER, text), encoding="utf-8", newline="\n")
 
 
 def page(path: str, title: str, description: str, graph: list[dict], body: str, *,
@@ -479,30 +571,7 @@ def page(path: str, title: str, description: str, graph: list[dict], body: str, 
   </div>
 </main>
 
-<footer>
-  <div class="wrap foot">
-    <a class="brand" href="/" aria-label="Palimpsests">
-      <span class="brand__mark">
-        {BRAND_SVG}
-      </span>
-      Palimpsests
-    </a>
-    <div class="foot__links">
-      <a href="/notes/">Notes</a>
-      <a href="/runbook/">Runbook</a>
-      <a href="{REPO}" rel="noopener">GitHub</a>
-      <a href="https://pypi.org/project/palimpsests/" rel="noopener">PyPI</a>
-      <a href="https://doi.org/10.5281/zenodo.21978107" rel="noopener">Paper</a>
-      <a href="https://datatracker.ietf.org/doc/draft-sparysh-pala-audit/" rel="noopener">Internet-Draft</a>
-      <a href="{REPO}/blob/main/LICENSE" rel="noopener">License</a>
-      <a href="{REPO}/blob/main/SECURITY.md" rel="noopener">Security</a>
-    </div>
-    <div class="foot__meta">
-      Assault Consulting · Kyiv<br/>
-      Apache-2.0 · Python 3.11+ · latest on PyPI
-    </div>
-  </div>
-</footer>
+{FOOTER}
 
 </body>
 </html>
@@ -656,6 +725,74 @@ def recipe_page(recipe: Recipe, recipes: list[Recipe]) -> str:
                 recipe.seo_description or recipe.description, graph, body)
 
 
+_QUESTIONS = re.compile(r"(?ms)^## Questions\n(.*?)(?=^## |\Z)")
+_MD_LINK = re.compile(r"\[([^\]]+)\]\([^)]+\)")
+
+
+def faq_entities(body: str) -> list[dict]:
+    """The questions of a page's "## Questions" section, as schema.org entities.
+
+    Each "### " heading is a question and the paragraphs under it the answer,
+    in plain text: the structured data says what the page says and no more.
+    """
+    section = _QUESTIONS.search(body)
+    if section is None:
+        return []
+    entities = []
+    for chunk in re.split(r"(?m)^### ", section.group(1))[1:]:
+        question, _, answer = chunk.partition("\n")
+        plain = _MD_LINK.sub(r"\1", " ".join(answer.split())).replace("`", "").replace("**", "")
+        entities.append({"@type": "Question", "name": question.strip(),
+                         "acceptedAnswer": {"@type": "Answer", "text": plain}})
+    return entities
+
+
+def doc_page(doc: DocPage, notes: list[Note]) -> str:
+    graph: list[dict] = [
+        {
+            "@type": "TechArticle",
+            "@id": doc.url + "#article",
+            "headline": doc.title,
+            "description": doc.description,
+            "url": doc.url,
+            "inLanguage": "en",
+            "dateModified": doc.updated.isoformat(),
+            "author": {"@id": SITE + "/#org"},
+            "publisher": {"@id": SITE + "/#org"},
+            "isPartOf": {"@id": SITE + "/#website"},
+        },
+        {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                {"@type": "ListItem", "position": 1, "name": "Palimpsests", "item": SITE + "/"},
+                {"@type": "ListItem", "position": 2, "name": doc.crumb, "item": doc.url},
+            ],
+        },
+    ]
+    questions = faq_entities(doc.body)
+    if questions:
+        graph.append({"@type": "FAQPage", "@id": doc.url + "#faq", "mainEntity": questions})
+    mine = [n for n in notes if n.page == doc.path]
+    more = ""
+    if mine:
+        items = "\n".join(
+            f'  <li><a href="/notes/{n.slug}/">{html.escape(n.title)}</a> — '
+            f"{html.escape(n.seo_description or n.description)}</li>" for n in mine)
+        more = f'<div class="readmore">\n<h2 id="read-more">Read more</h2>\n<ul>\n{items}\n</ul>\n</div>\n'
+    body = f"""<p class="crumbs"><a href="/">Palimpsests</a> / {html.escape(doc.crumb)}</p>
+<span class="eyebrow">{html.escape(doc.eyebrow)}</span>
+<h1 class="display">{html.escape(doc.title)}</h1>
+<p class="lede">{html.escape(doc.description)}</p>
+<p class="updated">Updated <time datetime="{doc.updated.isoformat()}">{human_date(doc.updated)}</time></p>
+{render(doc.body)}
+{more}<div class="related">
+  <a class="btn" href="/integrations/">Integrations →</a>
+  <a class="btn" href="/runbook/">Runbook →</a>
+</div>"""
+    return page(doc.path, doc.seo_title or doc.title,
+                doc.seo_description or doc.description, graph, body)
+
+
 def runbook_page(intro: RunbookIntro, recipes: list[Recipe]) -> str:
     sections = []
     for key, heading in RUNBOOK_GROUPS:
@@ -737,8 +874,10 @@ def feed(notes: list[Note]) -> str:
 
 
 def sitemap(notes: list[Note], intro: RunbookIntro | None = None,
-            recipes: list[Recipe] | None = None) -> str:
+            recipes: list[Recipe] | None = None,
+            doc_pages: list[DocPage] | None = None) -> str:
     rows = list(STATIC_PAGES)
+    rows += [(d.path, d.updated.isoformat(), "monthly", "0.8") for d in doc_pages or []]
     if intro is not None and recipes:
         newest = max([intro.updated, *(r.updated for r in recipes)])
         rows.append(("/runbook/", newest.isoformat(), "weekly", "0.8"))
@@ -832,6 +971,137 @@ def read_more_block(page_path: str, notes: list[Note]) -> str:
             f"        <ul>\n{items}\n        </ul>\n      </div>\n      {READMORE_END}")
 
 
+MAPPING_START = "<!-- mapping:start -->"
+MAPPING_END = "<!-- mapping:end -->"
+MAPPING_SOURCE = "docs/compliance/EU-AI-ACT-MAPPING.md"
+#: The mapping's sections after this heading are about other things than the
+#: Act's own requirements, and stay in the repository document.
+_MAPPING_STOP = "## Beyond the requirements"
+_PR_REFS = re.compile(r"\s*\(#\d+(?:[,/]\s*#?\d+)*(?:,\s*main)?\)")
+_PR_LEAD = re.compile(r"#\d+(?:/#\d+)*;\s*")
+_STATUS = re.compile(r"^(Shipped|Planned)\b(?: \(v?([0-9.]+)\))?")
+
+
+@dataclass
+class MappingRow:
+    section: str
+    capability: str
+    mechanism: str
+    status: str
+
+    @property
+    def shipped(self) -> bool:
+        return self.status.startswith("Shipped")
+
+    @property
+    def status_label(self) -> str:
+        m = _STATUS.match(self.status)
+        if m is None:
+            raise ValueError(f"mapping status not understood: {self.status!r}")
+        if m.group(1) == "Shipped":
+            if not m.group(2):
+                raise ValueError(f"a shipped row names no release: {self.status!r}")
+            return f"Shipped in {m.group(2)}"
+        return "Planned"
+
+
+def _without_pr_numbers(text: str) -> str:
+    """Pull-request numbers are the repository's evidence, not the reader's."""
+    return _PR_LEAD.sub("", _PR_REFS.sub("", text))
+
+
+def parse_mapping(md: str) -> tuple[list[tuple[str, object]], list[MappingRow]]:
+    """The requirement sections of the mapping document, in order.
+
+    Returns the blocks to render — ("h2" | "h3" | "p", text) and
+    ("table", [rows]) — and every row, for counting.
+    """
+    start = md.index("\n## Article 12(1)")
+    body = md[start:md.index(_MAPPING_STOP)]
+    blocks: list[tuple[str, object]] = []
+    rows: list[MappingRow] = []
+    section = ""
+    para: list[str] = []
+    table: list[MappingRow] = []
+
+    def flush() -> None:
+        if para:
+            blocks.append(("p", " ".join(para)))
+            para.clear()
+        if table:
+            blocks.append(("table", list(table)))
+            table.clear()
+
+    for line in body.splitlines():
+        if line.startswith("## "):
+            flush()
+            section = line[3:].strip()
+            blocks.append(("h2", section))
+        elif line.startswith("### "):
+            flush()
+            blocks.append(("h3", line[4:].strip()))
+        elif line.startswith("|"):
+            cells = [c.strip() for c in line.strip().strip("|").split("|")]
+            if len(cells) != 3:
+                raise ValueError(f"mapping row does not have three cells: {line!r}")
+            if set(cells[0]) <= {"-"} or cells[2] == "Status":
+                continue
+            if para:
+                blocks.append(("p", " ".join(para)))
+                para.clear()
+            row = MappingRow(section, cells[0], _without_pr_numbers(cells[1]), cells[2])
+            table.append(row)
+            rows.append(row)
+        elif not line.strip():
+            flush()
+        else:
+            para.append(_without_pr_numbers(line.strip()))
+    flush()
+    return blocks, rows
+
+
+def mapping_block(md: str) -> str:
+    """The mapping as a section of the Article 12 page, built from the document."""
+    blocks, rows = parse_mapping(md)
+    shipped = sum(r.shipped for r in rows)
+    out = [
+        MAPPING_START,
+        '      <h2 id="mapping">Requirement by requirement</h2>',
+        f"      <p>What Palimpsests does for each thing the Act asks of a log: <b>{shipped} of "
+        f"{len(rows)} rows</b> ship today, and each names the release it first shipped in. "
+        "The rest are planned and say so.</p>",
+    ]
+    for kind, value in blocks:
+        if kind == "h2":
+            out.append(f'      <h3 id="{anchor_id(str(value))}">{inline(str(value))}</h3>')
+        elif kind == "h3":
+            out.append(f"      <h4>{inline(str(value))}</h4>")
+        elif kind == "p":
+            out.append(f"      <p>{inline(str(value))}</p>")
+        else:
+            body = "\n".join(
+                f"          <tr><td><b>{inline(r.capability)}</b>"
+                f'<span class="map__how">{inline(r.mechanism)}</span></td>'
+                f'<td class="map__status">{html.escape(r.status_label)}</td></tr>'
+                for r in value  # type: ignore[union-attr]
+            )
+            out.append(
+                '      <div class="tbl"><table class="map">\n'
+                "        <thead><tr><th>What, and how</th><th>Status</th></tr></thead>\n"
+                f"        <tbody>\n{body}\n        </tbody>\n      </table></div>")
+    out.append(
+        f'      <p>The <a href="{REPO}/blob/main/{MAPPING_SOURCE}" rel="noopener">full document '
+        "in the repository</a> adds how each row was verified, what goes beyond the Act's "
+        "requirements, and how other frameworks map.</p>")
+    out.append(f"      {MAPPING_END}")
+    return "\n".join(out)
+
+
+def mapping_counts(md: str) -> tuple[int, int]:
+    _, rows = parse_mapping(md)
+    return sum(r.shipped for r in rows), len(rows)
+
+
 _RELEASE = re.compile(r"^## \[(\d+\.\d+\.\d+)\] — (\d{4}-\d{2}-\d{2})$", re.M)
 
 
@@ -861,14 +1131,25 @@ def stamp_release(home: Path, release: tuple[str, str]) -> None:
 
 # ---------------------------------------------------------------- build
 
-def build(notes_dir: Path, site_dir: Path, runbook_dir: Path | None = None) -> None:
+def build(notes_dir: Path, site_dir: Path, runbook_dir: Path | None = None,
+          pages_dir: Path | None = None) -> None:
     notes = load_notes(notes_dir)
     intro, recipes = load_runbook(runbook_dir or notes_dir.parent / "runbook")
+    doc_pages = load_doc_pages(pages_dir or notes_dir.parent / "pages")
+    for d in doc_pages:
+        if d.path in {loc for loc, *_ in STATIC_PAGES}:
+            raise ValueError(f"pages/{d.slug}.md: {d.path} is already a hand-written page")
     sources = {f"notes/{n.slug}": n.body for n in notes}
     sources |= {f"runbook/{r.slug}": r.body for r in recipes}
+    sources |= {f"pages/{d.slug}": d.body for d in doc_pages}
     if intro is not None:
         sources["runbook/index"] = intro.body
-    check_site_links(sources, site_paths(notes, recipes))
+    check_site_links(sources, site_paths(notes, recipes, doc_pages))
+
+    for d in doc_pages:
+        (site_dir / d.slug).mkdir(exist_ok=True)
+        (site_dir / d.slug / "index.html").write_text(
+            doc_page(d, notes), encoding="utf-8", newline="\n")
 
     if intro is not None and recipes:
         book = site_dir / "runbook"
@@ -886,7 +1167,7 @@ def build(notes_dir: Path, site_dir: Path, runbook_dir: Path | None = None) -> N
     out.mkdir(parents=True, exist_ok=True)
     by_slug = {n.slug: n for n in notes}
     for n in notes:
-        if n.page and n.page not in PRODUCT_PAGES:
+        if n.page and n.page not in PRODUCT_PAGES and n.page not in {d.path for d in doc_pages}:
             raise ValueError(f"notes/{n.slug}: page {n.page!r} is not a product page")
         for slug in n.related:
             if slug not in by_slug or slug == n.slug:
@@ -896,7 +1177,7 @@ def build(notes_dir: Path, site_dir: Path, runbook_dir: Path | None = None) -> N
                                                  newline="\n")
     (out / "index.html").write_text(index_page(notes), encoding="utf-8", newline="\n")
     (out / "feed.xml").write_text(feed(notes), encoding="utf-8", newline="\n")
-    (site_dir / "sitemap.xml").write_text(sitemap(notes, intro, recipes), encoding="utf-8",
+    (site_dir / "sitemap.xml").write_text(sitemap(notes, intro, recipes, doc_pages), encoding="utf-8",
                                           newline="\n")
 
     replace_block(site_dir / "llms.txt", LLMS_START, LLMS_END, llms_block(notes))
@@ -907,6 +1188,15 @@ def build(notes_dir: Path, site_dir: Path, runbook_dir: Path | None = None) -> N
         if target.is_file() and READMORE_START in target.read_text(encoding="utf-8"):
             replace_block(target, READMORE_START, READMORE_END,
                           read_more_block(page_path, notes))
+    mapping = notes_dir.parent / MAPPING_SOURCE
+    article_12 = site_dir / "eu-ai-act-article-12" / "index.html"
+    if mapping.is_file() and article_12.is_file():
+        replace_block(article_12, MAPPING_START, MAPPING_END,
+                      mapping_block(mapping.read_text(encoding="utf-8")))
+    for loc, *_ in STATIC_PAGES:
+        target = site_dir / loc.strip("/") / "index.html" if loc != "/" else site_dir / "index.html"
+        if target.is_file():
+            stamp_footer(target)
     release = latest_release(notes_dir.parent / "CHANGELOG.md")
     if release is not None:
         stamp_release(site_dir / "index.html", release)
