@@ -94,6 +94,18 @@ new format id.
   consumer that keeps a table of its own (guidance per pattern, a
   sentence per code) tests that the table covers these, and learns of a
   new member from a failing test instead of from a user's screen.
+- **The report's fixed sentences have names** (since 0.15.1): `NOTES` and
+  `HEALTH_BASES` in `palimpsests.audit.report`. A sentence that is the
+  same in every report — "advisory items do not affect the verdict", the
+  clock a health group is measured on — appears in the report beside its
+  name: `note_id` next to `note`, `basis_id` next to `basis`. The name is
+  the contract and does not change; the sentence is its English and may be
+  corrected. A consumer that shows a report in another language
+  translates by name, and holds its English to these tables by test.
+  Text without a name — a diagnosis narrative, an advisory item's detail,
+  an anchor reason — is about one chain and is shown as the package wrote
+  it. A report written by 0.15.0 has no names and is still a valid `/2`
+  report: the names are an addition, which the format allows.
 
 The structural rules — one place to import from, no removal or rename
 within a major, deprecation over one minor — take effect at 1.0. Until
@@ -177,10 +189,20 @@ deployment may say on the strength of it).
   Ed25519 or P-256 private key to sign, the matching public key to
   verify. The module reads no key files and holds no keys. Which key is
   trusted is the caller's decision and the whole of the claim.
-- **One verifier: `verify_statement(message, public_key, expected_head,
-  reader=None)`.** It returns a `StatementCheck` — `version` (`v2` /
-  `v3`), `payload`, `root`, `root_status`, `payload_encoding`,
-  `statement_id` — or raises.
+- **One verifier: `verify_statement(message, public_key,
+  expected_head=None, reader=None)`.** It returns a `StatementCheck` —
+  `version` (`v2` / `v3`), `payload`, `root`, `root_status`,
+  `payload_encoding`, `statement_id`, `head_seq` — or raises.
+- **The head can come from the chain** (since 0.15.1). With a `reader`
+  and no `expected_head`, the statement is compared with the hash of the
+  record at its own `last_seq` in that chain — the question "is this
+  statement about this chain", for a chain that may have grown since the
+  statement was signed. The caller does not read the payload to choose a
+  head. The statement's range is judged first; a chain with no record at
+  that seq is `chain_too_short`; `head_seq` in the result is the seq
+  compared at, and is `None` when the caller supplied the head. With
+  neither a head nor a reader the statement is refused as
+  `head_mismatch`, as before.
   `check_statement_against_head` is deprecated since 0.15 and goes at
   1.0 ([Deprecations](#deprecations)); it returned the payload alone and could not say what was
   established about a root.
@@ -465,7 +487,8 @@ never "healthy".
   `step_catalog`, `drift_series` and `boot_statistics` itself.
 - **Each group names its clock** in `basis`: proved order, the monotonic
   clock within one boot, or the writer's wall clock against it. A figure
-  on the wall clock is the writer's claim.
+  on the wall clock is the writer's claim. Since 0.15.1 `basis_id` beside
+  it is the name of that sentence in `HEALTH_BASES`.
 - `anchors.widest_gap_ns` counts the edges (boot start to the first
   anchor, the last anchor to the boot's end): an existed-by bracket for a
   record of that boot is never narrower.

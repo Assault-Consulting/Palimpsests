@@ -774,6 +774,9 @@ class StatementCheck:
     payload in any other encoding is refused
     (``non_deterministic_encoding``), no longer reported. The field stays
     until 1.0 so that code reading it keeps working.
+
+    ``head_seq`` (since 0.15.1) says where the expected head came from; see
+    the field.
     """
 
     version: str  # "v2" | "v3"
@@ -782,6 +785,12 @@ class StatementCheck:
     root_status: str
     payload_encoding: str  # always "deterministic" since 0.15; removed in 1.0
     statement_id: bytes = b""  # SHA-256, 32 bytes
+    #: The seq of the record whose hash the statement's head was compared
+    #: with, when the head was taken from the chain (``verify_statement``
+    #: called with a reader and no ``expected_head``). ``None`` when the
+    #: caller supplied the head: the function then knows the 32 bytes, not
+    #: which record they belong to.
+    head_seq: int | None = None
 
 
 def _distinct_keys(raw: bytes, decoded: dict, what: str, malformed: str) -> None:
@@ -843,7 +852,7 @@ def _decode_payload(payload: bytes) -> dict:
 
 
 def verify_statement(
-    message: bytes, public_key: Any, expected_head: bytes, *, reader: Any = None
+    message: bytes, public_key: Any, expected_head: bytes | None = None, *, reader: Any = None
 ) -> StatementCheck:
     """Verify signature AND commitment, v2 or v3, by the signed content type.
 
@@ -871,6 +880,19 @@ def verify_statement(
     compared; without it the root is reported as carried, not
     recomputed.
 
+    **The head to compare with** is ``expected_head`` when given. When it
+    is omitted (since 0.15.1) a ``reader`` is required, and the head is
+    taken from the chain: the hash of the record at the statement's own
+    ``last_seq``. This is the question "is this statement about *this*
+    chain", asked of a chain that may have grown since the statement was
+    signed — without the caller reading the payload first to learn which
+    record to look at. The statement's range is checked before the chain
+    is consulted; a chain with no record at ``last_seq`` is refused as
+    ``chain_too_short``; the result's ``head_seq`` is the seq compared
+    at. With neither a head nor a reader there is nothing to compare the
+    statement with, and it is refused as ``head_mismatch``, as it always
+    was for a head that is not 32 bytes.
+
     Raises :class:`StatementRefused` — a ``ValueError`` — for every
     statement it does not accept, malformed bytes included; ``.code`` is
     one of :data:`STATEMENT_REFUSAL_CODES`. A message, a protected header
@@ -881,21 +903,40 @@ def verify_statement(
     """
     payload = _cose_verify1(message, public_key)
     decoded = _decode_payload(payload)
+
+    def check_range() -> None:
+        first, last = decoded.get(_PAYLOAD_FIRST_SEQ), decoded.get(_PAYLOAD_LAST_SEQ)
+        if not (
+            type(first) is int and type(last) is int and 0 <= first <= last
+        ):
+            # The builder refuses an inverted range; a verifier must too. The
+            # root depends only on last_seq, so an inverted statement would
+            # otherwise verify with a root correct for its last_seq (bridge
+            # run B3, F4).
+            raise StatementRefused(
+                "range_invalid", "a statement's range must satisfy 0 <= first_seq <= last_seq")
+
+    head_seq: int | None = None
+    if expected_head is None and reader is not None:
+        # The head comes from the chain, at the seq the *signed* payload
+        # names — so the range is judged first: a seq that is not a seq
+        # must not be looked up.
+        check_range()
+        head_seq = decoded[_PAYLOAD_LAST_SEQ]
+        record = reader.record_by_seq(head_seq)
+        if record is None:
+            raise StatementRefused(
+                "chain_too_short",
+                f"the chain at hand has no record {head_seq}; the statement's head "
+                "cannot be compared with it")
+        expected_head = record.record_hash
     if decoded.get(_PAYLOAD_HEAD) != expected_head:
         raise StatementRefused(
             "head_mismatch", "statement does not commit to the expected chain head")
     if decoded.get(_PAYLOAD_FORMAT) != FORMAT_ID:
         raise StatementRefused(
             "format_id_mismatch", f"statement format id is not {FORMAT_ID!r}")
-    first, last = decoded.get(_PAYLOAD_FIRST_SEQ), decoded.get(_PAYLOAD_LAST_SEQ)
-    if not (
-        type(first) is int and type(last) is int and 0 <= first <= last
-    ):
-        # The builder refuses an inverted range; a verifier must too. The root
-        # depends only on last_seq, so an inverted statement would otherwise
-        # verify with a root correct for its last_seq (bridge run B3, F4).
-        raise StatementRefused(
-            "range_invalid", "a statement's range must satisfy 0 <= first_seq <= last_seq")
+    check_range()
     protected, phdr, _payload, sig = _cose_parts(message)
     ctype = phdr.get(_HDR_CONTENT_TYPE)
     encoding = "deterministic"  # anything else was refused above
@@ -909,7 +950,7 @@ def verify_statement(
                 f"{_keys(decoded)} (a root under the v2 content type is not read)"
             )
         _check_protected_labels(phdr)
-        return StatementCheck("v2", decoded, None, "absent", encoding, sid)
+        return StatementCheck("v2", decoded, None, "absent", encoding, sid, head_seq)
     if ctype != CONTENT_TYPE_V3:
         raise StatementRefused(
             "content_type_unknown", f"unknown statement content type {ctype!r}")
@@ -923,7 +964,8 @@ def verify_statement(
         raise StatementRefused("root_malformed", f"a v3 root is {_HEAD_LEN} bytes")
     _check_protected_labels(phdr)
     if reader is None:
-        return StatementCheck("v3", decoded, root, "carried, not recomputed", encoding, sid)
+        return StatementCheck(
+            "v3", decoded, root, "carried, not recomputed", encoding, sid, head_seq)
     from palimpsests.audit.pala.proofs import chain_root
 
     last_seq = decoded[_PAYLOAD_LAST_SEQ]
@@ -941,7 +983,7 @@ def verify_statement(
             "the statement's root is not the derived root over records "
             f"0..{last_seq} of this chain"
         )
-    return StatementCheck("v3", decoded, root, "recomputed", encoding, sid)
+    return StatementCheck("v3", decoded, root, "recomputed", encoding, sid, head_seq)
 
 
 def check_statement_against_head(

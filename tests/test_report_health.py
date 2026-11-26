@@ -84,11 +84,12 @@ def test_the_summary_is_what_the_health_channel_computes(two_boots):
         assert health == health_summary(reader)
 
     assert health["boots"] == {
-        "basis": "proved order", "count": 2,
+        "basis": "proved order", "basis_id": "proved_order", "count": 2,
         "resumed_after_truncated_tail": 0, "with_time_trust_change": 0}
     # boot A's gaps: 0→10, 10→40, 40→100 s. The edge to the boot's end is the widest.
     assert health["anchors"] == {
         "basis": "the monotonic clock, within one boot",
+        "basis_id": "monotonic_in_boot",
         "count": 2, "boots_without_anchor": 1,
         "widest_gap_ns": 60 * S, "widest_gap_boot_first_seq": 0}
     assert health["anchors"]["widest_gap_ns"] == max(
@@ -100,12 +101,13 @@ def test_the_summary_is_what_the_health_channel_computes(two_boots):
     assert len(steps) == 2 and wall["drift_boots_measured"] == len(slopes) == 2
     assert wall["drift_slope_ppm_min"] == round(min(slopes), 3)
     assert wall["drift_slope_ppm_max"] == round(max(slopes), 3)
-    assert health["spans"] == {"basis": "proved order", "closed": 0, "open": 0}
+    assert health["spans"] == {
+        "basis": "proved order", "basis_id": "proved_order", "closed": 0, "open": 0}
 
 
 def test_every_group_names_the_clock_it_is_measured_on(two_boots):
     health = build_report(two_boots, health=True).data["health"]
-    groups = {k: v for k, v in health.items() if k != "note"}
+    groups = {k: v for k, v in health.items() if k not in ("note", "note_id")}
     assert set(groups) == {"boots", "anchors", "wall_clock", "spans"}
     assert all(isinstance(g["basis"], str) and g["basis"] for g in groups.values())
     assert "wall clock" in groups["wall_clock"]["basis"]
@@ -169,9 +171,11 @@ def test_both_shapes_validate_and_the_schema_names_every_key(two_boots):
     declared = schema["properties"]["health"]["oneOf"][1]["properties"]
     health = build_report(two_boots, health=True).data["health"]
     for group, body in health.items():
-        if group == "note":
+        if group in ("note", "note_id"):
             continue
-        assert set(body) == set(declared[group]["properties"]) == set(declared[group]["required"])
+        assert set(body) == set(declared[group]["properties"])
+        # the name beside the basis came later, so a report without it stays valid
+        assert set(body) - {"basis_id"} == set(declared[group]["required"])
     broken = build_report(two_boots, health=True).data
     del broken["health"]["anchors"]["basis"]
     with pytest.raises(jsonschema.ValidationError):
@@ -210,6 +214,7 @@ def test_a_real_writer_chain_and_the_command(tmp_path):
     assert result.exit_code == 0, result.output
     health = json.loads(out.read_text(encoding="utf-8"))["health"]
     assert health["boots"]["count"] == 1 and health["anchors"]["count"] == 1
-    assert health["spans"] == {"basis": "proved order", "closed": 1, "open": 1}
+    assert health["spans"] == {
+        "basis": "proved order", "basis_id": "proved_order", "closed": 1, "open": 1}
     plain = CliRunner().invoke(app, ["pala", "report", str(log)])
     assert json.loads(plain.output)["health"] is None

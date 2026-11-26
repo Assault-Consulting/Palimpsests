@@ -33,14 +33,18 @@ from __future__ import annotations
 import json
 import palimpsests
 import time
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from hashlib import sha256
 from palimpsests.audit.anchors import _portable_detail, _portable_error
 from palimpsests.audit.pala.codec import RT_WITNESS
 from palimpsests.audit.reader import AuditReader
 from pathlib import Path
+from types import MappingProxyType
 
 __all__ = [
+    "HEALTH_BASES",
+    "NOTES",
     "REPORT_FORMAT",
     "REPORT_FORMAT_1",
     "VERDICTS",
@@ -57,13 +61,47 @@ REPORT_FORMAT_1 = "pala-verification-report/1"
 #: set is closed: a fifth verdict would be a new format id.
 VERDICTS = ("sound", "partial", "empty", "violation")
 SPEC_ID = "PALA-1 v1.0"
-_ADVISORY_NOTE = "advisory items do not affect the verdict"
+#: The report's fixed sentences, by name. Each is the same text in every
+#: report — it is about the report, not about any one chain — and appears
+#: there beside its name (``note_id``). A consumer that shows the report in
+#: another language translates a *name*; matching on the English would break
+#: silently the day a word changes. The names are stable; the wording may be
+#: corrected. Text without a name (a diagnosis narrative, a record's
+#: detail) is about one chain and is shown as written.
+NOTES: Mapping[str, str] = MappingProxyType({
+    "advisory": "advisory items do not affect the verdict",
+    "health": (
+        "advisory: the record's own account of its clocks and its anchoring, taken from "
+        "its headers; no figure is a threshold and none affects the verdict"
+    ),
+    "checked_at": "the auditing machine's clock",
+    "existence_witness_present": (
+        "witness records present; receipts are not verified by this tool"
+    ),
+    "existence_no_witness": (
+        "no WITNESS record in this chain; receipts held outside the "
+        "chain (for example SCITT) are not consulted by this report"
+    ),
+})
+
+#: What each group of the ``health`` section is measured on, by name
+#: (``basis_id`` in the report, beside ``basis``). The same rule as
+#: :data:`NOTES`: the name is the contract, the sentence is its English.
+HEALTH_BASES: Mapping[str, str] = MappingProxyType({
+    "proved_order": "proved order",
+    "monotonic_in_boot": "the monotonic clock, within one boot",
+    "wall_against_monotonic": (
+        "the writer's wall clock against its monotonic clock, within one boot"
+    ),
+})
 
 
-_HEALTH_NOTE = (
-    "advisory: the record's own account of its clocks and its anchoring, taken from "
-    "its headers; no figure is a threshold and none affects the verdict"
-)
+def _note(name: str) -> dict[str, str]:
+    return {"note": NOTES[name], "note_id": name}
+
+
+def _basis(name: str) -> dict[str, str]:
+    return {"basis": HEALTH_BASES[name], "basis_id": name}
 
 
 def health_summary(reader: AuditReader) -> dict:
@@ -88,16 +126,16 @@ def health_summary(reader: AuditReader) -> dict:
     widest = max(anchored, key=lambda b: b.anchors.widest_anchor_gap_ns, default=None)
     largest = max(steps, key=lambda s: abs(s.delta_ns), default=None)
     return {
-        "note": _HEALTH_NOTE,
+        **_note("health"),
         "boots": {
-            "basis": "proved order",
+            **_basis("proved_order"),
             "count": len(boots),
             "resumed_after_truncated_tail": sum(
                 b.view.recovery_seq is not None for b in boots),
             "with_time_trust_change": sum(len(b.view.time_trust_values) > 1 for b in boots),
         },
         "anchors": {
-            "basis": "the monotonic clock, within one boot",
+            **_basis("monotonic_in_boot"),
             "count": sum(b.anchors.count for b in boots),
             "boots_without_anchor": sum(b.anchors.count == 0 for b in boots),
             # boot start to first anchor and last anchor to boot end count
@@ -106,7 +144,7 @@ def health_summary(reader: AuditReader) -> dict:
             "widest_gap_boot_first_seq": widest.view.first_seq if widest else None,
         },
         "wall_clock": {
-            "basis": "the writer's wall clock against its monotonic clock, within one boot",
+            **_basis("wall_against_monotonic"),
             "step_threshold_ns": STEP_THRESHOLD_NS,
             "steps": sum(s.kind == "step" for s in steps),
             "regressions": sum(s.kind == "regression" for s in steps),
@@ -118,7 +156,7 @@ def health_summary(reader: AuditReader) -> dict:
             "drift_slope_ppm_max": round(max(slopes), 3) if slopes else None,
         },
         "spans": {
-            "basis": "proved order",
+            **_basis("proved_order"),
             "closed": sum(b.spans.closed for b in boots),
             "open": sum(b.spans.open for b in boots),
         },
@@ -357,7 +395,7 @@ def build_report(
         },
         "checked_at": {
             "wall_ns": time.time_ns(),
-            "note": "the auditing machine's clock",
+            **_note("checked_at"),
         },
         "container": {
             "well_formed": container.well_formed,
@@ -405,15 +443,10 @@ def build_report(
         },
         "existence": {
             "external_pins": witness_pins,
-            "note": (
-                "witness records present; receipts are not verified by this tool"
-                if witness_pins
-                # What was checked, not what a tier allows: external_pins are
-                # the WITNESS records in this chain, and the tier is never read
-                # here — a tier-A head can be registered and receipted.
-                else "no WITNESS record in this chain; receipts held outside the "
-                "chain (for example SCITT) are not consulted by this report"
-            ),
+            # What was checked, not what a tier allows: external_pins are
+            # the WITNESS records in this chain, and the tier is never read
+            # here — a tier-A head can be registered and receipted.
+            **_note("existence_witness_present" if witness_pins else "existence_no_witness"),
         },
         "diagnosis": (
             {
@@ -455,7 +488,7 @@ def build_report(
                 {"code": i.code, "at_seq": i.at_seq, "detail": i.detail}
                 for i in ver.advisory.items
             ],
-            "note": _ADVISORY_NOTE,
+            **_note("advisory"),
         },
         "safety": safety,
         # Advisory, and only when asked for (``health=True``): ``None``

@@ -379,3 +379,86 @@ def test_the_builders_own_errors_stay_plain_value_errors():
         with pytest.raises(ValueError) as info:
             call()
         assert not isinstance(info.value, StatementRefused)
+
+
+# --- the head taken from the chain (since 0.15.1) ---------------------------
+
+
+def _about(head, last_seq, root=None):
+    return scitt.build_signed_statement(
+        head, first_seq=0, last_seq=last_seq, key=KEY, issuer="i", subject="s",
+        alg=scitt.ALG_EDDSA, root=root)
+
+
+def test_a_statement_signed_earlier_is_checked_against_the_grown_chain(tmp_path):
+    """The chain has six records; the statement was signed when it had four."""
+    from palimpsests.audit.pala.proofs import chain_root
+
+    path, head, _root = _chain(tmp_path)
+    with AuditReader.open(path) as r:
+        earlier = r.record_by_seq(3).record_hash
+        v2 = _about(earlier, 3)
+        check = verify_statement(v2, PUB, reader=r)
+        assert (check.version, check.head_seq, check.root_status) == ("v2", 3, "absent")
+        assert check.payload == verify_statement(v2, PUB, earlier).payload
+
+        v3 = _about(earlier, 3, root=chain_root(r, 4))
+        check = verify_statement(v3, PUB, reader=r)
+        assert (check.version, check.head_seq, check.root_status) == ("v3", 3, "recomputed")
+
+        latest = verify_statement(_about(head, 5), PUB, reader=r)
+        assert latest.head_seq == 5
+
+
+def test_a_head_the_caller_supplies_names_no_record(tmp_path):
+    path, head, _root = _chain(tmp_path)
+    with AuditReader.open(path) as r:
+        assert verify_statement(_about(head, 5), PUB, head, reader=r).head_seq is None
+    assert verify_statement(_about(head, 5), PUB, head).head_seq is None
+
+
+def test_a_statement_about_another_chain_is_a_head_mismatch(tmp_path):
+    path, _head, _root = _chain(tmp_path)
+    with AuditReader.open(path) as r:
+        # a real seq of this chain, and a head that is not this chain's
+        assert _refused(_about(HEAD, 3), head=None, reader=r).code == "head_mismatch"
+        # the right head, claimed for the wrong record
+        wrong_seq = _about(r.record_by_seq(3).record_hash, 4)
+        assert _refused(wrong_seq, head=None, reader=r).code == "head_mismatch"
+
+
+def test_a_statement_beyond_the_chain_is_too_short_with_or_without_a_root(tmp_path):
+    path, head, root = _chain(tmp_path)
+    with AuditReader.open(path) as r:
+        assert _refused(_about(head, 50), head=None, reader=r).code == "chain_too_short"
+        assert _refused(_about(head, 50, root=root), head=None, reader=r).code == "chain_too_short"
+        assert _refused(_about(head, 6), head=None, reader=r).code == "chain_too_short"
+
+
+def test_the_range_is_judged_before_the_chain_is_asked(tmp_path):
+    path, _head, _root = _chain(tmp_path)
+
+    class Tripwire:
+        def record_by_seq(self, seq):
+            raise AssertionError(f"the chain was asked for seq {seq!r}")
+
+    for change in (
+        lambda d: d.__setitem__(3, -1),
+        lambda d: d.__setitem__(3, "5"),
+        lambda d: d.__setitem__(3, True),
+        lambda d: d.__setitem__(2, 9),
+    ):
+        assert _refused(_with_payload(change), head=None, reader=Tripwire()).code == "range_invalid"
+
+
+def test_without_a_head_or_a_chain_there_is_nothing_to_compare_with():
+    assert _refused(_statement(), head=None).code == "head_mismatch"
+
+
+def test_a_signature_is_checked_before_the_chain_is_asked(tmp_path):
+    path, head, _root = _chain(tmp_path)
+    other = ed25519.Ed25519PrivateKey.generate().public_key()
+    with AuditReader.open(path) as r:
+        with pytest.raises(scitt.StatementRefused) as refused:
+            verify_statement(_about(head, 5), other, reader=r)
+        assert refused.value.code == "signature_invalid"
